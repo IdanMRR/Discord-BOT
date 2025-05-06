@@ -1,0 +1,35 @@
+TICKET TRANSCRIPT #0003
+==========================================================
+
+Server: Coding API
+Category: support
+Created by: soggra (471204846855258123)
+Created at: 05.05.2025, 15:43
+Closed by: soggra (471204846855258123)
+Closed at: 05.05.2025, 17:48
+
+CHAT HISTORY:
+==========================================================
+
+[05.05.2025, 18:43] BotAI: <@471204846855258123> Welcome to your ticket! A staff member will be with you shortly.
+[🛠️ Support | Ticket #0003]
+<@471204846855258123> has opened a new ticket in the **Support** category.
+
+Our staff team will assist you as soon as possible. Please provide details about your request below.
+
+[05.05.2025, 18:43] BotAI: <@525342157834289163>
+[➕ User Added to Ticket]
+<@525342157834289163> has been added to this ticket by <@471204846855258123>.
+
+[05.05.2025, 20:48] BotAI: 📄 Transcript generated for this ticket.
+[Attachments: ticket-0003-transcript.txt]
+
+[05.05.2025, 20:48] BotAI: 
+[🔒 Ticket Closed]
+This ticket was closed by <@471204846855258123>
+
+[05.05.2025, 20:48] BotAI: The ticket has been closed. You can delete the ticket or reopen it using the buttons below.
+
+==========================================================
+Transcript generated on 05.05.2025, 20:48
+Coded by IdanMR

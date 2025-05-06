@@ -1,0 +1,22 @@
+TICKET TRANSCRIPT #0006
+==========================================================
+
+Server: Coding API
+Category: other
+Created by: soggra (471204846855258123)
+Created at: 05.05.2025, 21:08
+Closed by: soggra (471204846855258123)
+Closed at: 06.05.2025, 00:09
+
+CHAT HISTORY:
+==========================================================
+
+[06.05.2025, 00:08] BotAI: <@471204846855258123> Welcome to your ticket! A staff member will be with you shortly.
+[📝 Other | Ticket #0006]
+<@471204846855258123> has opened a new ticket in the **Other** category.
+
+Our staff team will assist you as soon as possible. Please provide details about your request below.
+
+==========================================================
+Transcript generated on 06.05.2025, 00:09
+Coded by IdanMR
