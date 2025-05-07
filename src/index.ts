@@ -5,6 +5,7 @@ import { connectToDatabase } from './database/connection';
 import { createSuccessEmbed, createErrorEmbed } from './utils/embeds';
 import * as dotenv from 'dotenv';
 import { Command, loadCommands, registerCommands } from './command-handler';
+import { setClient } from './utils/client-utils';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,9 @@ const client = new Client({
   ],
   partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
 });
+
+// Set the client instance for use across the application
+setClient(client);
 
 // Connect to database
 connectToDatabase()

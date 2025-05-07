@@ -7,7 +7,7 @@ import {
   VerificationQuestion
 } from './verification-config';
 import { Colors } from '../../utils/embeds';
-import { logInfo, logError } from '../../utils/logger';
+import { logInfo, logError, logWarning } from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { createCanvas } from 'canvas';
 
@@ -91,10 +91,14 @@ export async function handleCaptchaAnswerClick(interaction: ButtonInteraction): 
     const { guildId, user } = interaction;
     
     if (!guildId) {
-      await interaction.reply(convertEphemeralToFlags({
-        content: 'This command can only be used in a server.',
-        flags: MessageFlags.Ephemeral
-      }));
+      try {
+        await interaction.reply(convertEphemeralToFlags({
+          content: 'This command can only be used in a server.',
+          flags: MessageFlags.Ephemeral
+        }));
+      } catch (replyError) {
+        logError('Verification', `Error replying to interaction: ${replyError}`);
+      }
       return false;
     }
     
@@ -103,10 +107,14 @@ export async function handleCaptchaAnswerClick(interaction: ButtonInteraction): 
     const attempt = verificationAttempts.get(attemptKey);
     
     if (!attempt) {
-      await interaction.reply(convertEphemeralToFlags({
-        content: 'Your verification attempt has expired. Please try again.',
-        flags: MessageFlags.Ephemeral
-      }));
+      try {
+        await interaction.reply(convertEphemeralToFlags({
+          content: 'Your verification attempt has expired. Please try again.',
+          flags: MessageFlags.Ephemeral
+        }));
+      } catch (replyError) {
+        logError('Verification', `Error replying to interaction: ${replyError}`);
+      }
       return false;
     }
     
@@ -131,26 +139,16 @@ export async function handleCaptchaAnswerClick(interaction: ButtonInteraction): 
     modal.addComponents(actionRow);
     
     // Show the modal
-    await interaction.showModal(modal);
-    
-    logInfo('Verification', `Showed CAPTCHA answer modal to user ${interaction.user.tag}`);
-    
-    return true;
+    try {
+      await interaction.showModal(modal);
+      logInfo('Verification', `Showed CAPTCHA answer modal to user ${interaction.user.tag}`);
+      return true;
+    } catch (modalError) {
+      logError('Verification', `Error showing modal: ${modalError}`);
+      return false;
+    }
   } catch (error) {
     logError('Verification', `Error handling CAPTCHA answer button: ${error}`);
-    
-    // Only try to reply if the interaction hasn't been acknowledged yet
-    if (!interaction.replied && !interaction.deferred) {
-      try {
-        await interaction.reply(convertEphemeralToFlags({
-          content: 'There was an error processing your answer. Please try again.',
-          flags: MessageFlags.Ephemeral
-        }));
-      } catch (replyError) {
-        logError('Verification', `Failed to send error reply: ${replyError}`);
-      }
-    }
-    
     return false;
   }
 }
@@ -268,16 +266,54 @@ async function handleButtonVerification(
     // Defer the reply to give us time to process
     await interaction.deferReply(convertEphemeralToFlags({ ephemeral: true }));
     
+    logInfo('Verification', `User ${interaction.user.tag} clicked button verification, processing...`);
+    
+    // Get server settings to check member logs channel
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(interaction.guildId!);
+    logInfo('Verification', `Server settings for guild ${interaction.guildId}: member_log_channel_id=${serverSettings.member_log_channel_id}, mod_log_channel_id=${serverSettings.mod_log_channel_id}`);
+    
     // Simple button verification - just assign the role
     const roleAssigned = await assignVerificationRole(interaction, settings);
     
     if (!roleAssigned) {
+      logError('Verification', `Failed to assign verification role to user ${interaction.user.tag}`);
       await interaction.editReply({
         content: 'Failed to assign verification role. Please contact a server administrator.'
       });
       return false;
     }
     
+    // Directly send to member logs channel as a backup for button verification
+    try {
+      if (serverSettings && serverSettings.member_log_channel_id) {
+        const memberLogChannel = await interaction.guild?.channels.fetch(serverSettings.member_log_channel_id) as TextChannel;
+        if (memberLogChannel && memberLogChannel.isTextBased()) {
+          logInfo('Verification', `Sending button verification success log directly to member logs channel ${memberLogChannel.id}`);
+          
+          // Create account age string
+          const accountCreated = interaction.user.createdAt;
+          const accountAge = Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24));
+          
+          const successEmbed = new EmbedBuilder()
+            .setColor(Colors.SUCCESS)
+            .setTitle('✅ Button Verification Successful')
+            .setDescription(`User: <@${interaction.user.id}> (${interaction.user.tag})`)
+            .addFields([
+              { name: 'User ID', value: interaction.user.id, inline: true },
+              { name: 'Verification Type', value: settings.type, inline: true },
+              { name: 'Account Age', value: `${accountAge} days`, inline: true }
+            ])
+            .setTimestamp();
+          
+          await memberLogChannel.send({ embeds: [successEmbed] });
+        }
+      }
+    } catch (memberLogError) {
+      logError('Verification', `Error sending to member logs channel: ${memberLogError}`);
+    }
+    
+    logInfo('Verification', `Button verification successful for user ${interaction.user.tag}`);
     await interaction.editReply({
       content: 'You have been verified! Welcome to the server.'
     });
@@ -316,6 +352,11 @@ async function handleCaptchaVerification(
   settings: VerificationSettings
 ): Promise<boolean> {
   try {
+    // First, defer the reply to give us time to generate the CAPTCHA
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(error => {
+      logError('Verification', `Error deferring reply: ${error}`);
+    });
+    
     // Generate a simple CAPTCHA (6 random alphanumeric characters)
     const captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let captchaText = '';
@@ -324,79 +365,99 @@ async function handleCaptchaVerification(
     }
     
     // Generate the CAPTCHA image
-    const captchaImageBuffer = await generateCaptchaImage(captchaText);
-    const captchaAttachment = new AttachmentBuilder(captchaImageBuffer, { name: 'captcha.png' });
+    let captchaBuffer: Buffer;
+    try {
+      captchaBuffer = await generateCaptchaImage(captchaText);
+    } catch (captchaError) {
+      logError('Verification', `Error generating CAPTCHA image: ${captchaError}`);
+      await interaction.editReply({
+        content: 'There was an error with the verification system. Please try again in a few moments.'
+      }).catch(replyError => {
+        logError('Verification', `Error editing reply after CAPTCHA generation error: ${replyError}`);
+      });
+      return false;
+    }
     
-    // Create verification embed with CAPTCHA image
-    const verifyEmbed = new EmbedBuilder()
-      .setColor(Colors.PRIMARY)
-      .setTitle('reCAPTCHA Verification')
-      .setDescription('Click the button to verify ➡️')
-      .setImage('attachment://captcha.png')
-      .setFooter({ text: `• Made By Soggra` });
-    
-    // Create the answer button
-    const answerButton = new ButtonBuilder()
-      .setCustomId(`captcha_answer_${interaction.guildId}`)
-      .setLabel('Answer')
-      .setStyle(ButtonStyle.Primary)
-      .setEmoji('📝');
-    
-    const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(answerButton);
+    // Create an attachment from the buffer
+    const captchaAttachment = new AttachmentBuilder(captchaBuffer)
+      .setName('captcha.png');
     
     // Store the CAPTCHA text for verification
     const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
-    
-    // Clear any existing timeout for this user
-    const existingAttempt = verificationAttempts.get(attemptKey);
-    if (existingAttempt?.timeout) {
-      clearTimeout(existingAttempt.timeout);
-    }
-    
-    // Set a fixed 5-minute timeout for verification
-    const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
-    
     verificationAttempts.set(attemptKey, {
       userId: interaction.user.id,
       guildId: interaction.guildId!,
       questionId: captchaText,
       attempts: 0,
       timeout: setTimeout(() => {
-        // Delete the attempt and notify user if possible
         verificationAttempts.delete(attemptKey);
-        logInfo('Verification', `Verification attempt expired for user ${interaction.user.tag} in guild ${interaction.guildId}`);
-      }, FIVE_MINUTES)
+      }, (settings.timeout_minutes || 10) * 60 * 1000)
     });
     
-    // Send the message with the CAPTCHA
-    await interaction.reply(convertEphemeralToFlags({ embeds: [verifyEmbed],
-      components: [row],
-      files: [captchaAttachment],
-      flags: MessageFlags.Ephemeral
-     }));
+    // Create a row of buttons for the CAPTCHA verification
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('captcha_answer_' + interaction.user.id)
+          .setLabel('Enter CAPTCHA code')
+          .setStyle(ButtonStyle.Primary)
+      );
     
-    logInfo('Verification', `Successfully showed CAPTCHA to user ${interaction.user.tag} (expires in 5 minutes)`);
+    // Send the CAPTCHA image with the button
+    try {
+      await interaction.editReply({
+        content: 'Please solve the CAPTCHA by entering the code shown in the image below:',
+        files: [captchaAttachment],
+        components: [row]
+      });
+    } catch (editError) {
+      logError('Verification', `Error editing reply to send CAPTCHA image: ${editError}`);
+      // Clean up the verification attempt
+      const attempt = verificationAttempts.get(attemptKey);
+      if (attempt?.timeout) clearTimeout(attempt.timeout);
+      verificationAttempts.delete(attemptKey);
+      return false;
+    }
+    
+    logInfo('Verification', `Successfully sent CAPTCHA image to user ${interaction.user.tag}`);
     return true;
   } catch (error) {
     logError('Verification', `Error handling CAPTCHA verification: ${error}`);
     
-    // Only try to reply if the interaction hasn't been acknowledged yet
-    if (!interaction.replied && !interaction.deferred) {
-      try {
-        await interaction.reply(convertEphemeralToFlags({
+    // Clean up the verification attempt
+    const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
+    if (verificationAttempts.has(attemptKey)) {
+      const attempt = verificationAttempts.get(attemptKey);
+      if (attempt?.timeout) clearTimeout(attempt.timeout);
+      verificationAttempts.delete(attemptKey);
+    }
+    
+    // Try to update the reply with an error message
+    try {
+      if (interaction.deferred) {
+        await interaction.editReply({
           content: 'There was an error with the verification system. Please try again in a few moments.',
-          flags: MessageFlags.Ephemeral
-        }));
-      } catch (replyError) {
-        logError('Verification', `Failed to send error reply: ${replyError}`);
+          files: [],
+          components: []
+        }).catch(() => {
+          // Ignore error if we can't edit reply
+        });
       }
+    } catch (replyError) {
+      // Just log the error, but don't throw
+      logError('Verification', `Error sending error message: ${replyError}`);
     }
     
     return false;
   }
 }
 
+/**
+ * Handle CAPTCHA verification modal submission
+ * 
+ * @param interaction The modal submission interaction
+ * @returns Promise resolving to true if successful
+ */
 /**
  * Handle custom question verification
  * 
@@ -565,34 +626,24 @@ async function handleAgeVerification(
   }
 }
 
-/**
- * Assign the verification role to a user
- * 
- * @param interaction The interaction that triggered verification
- * @param settings The verification settings
- * @returns Promise resolving to true if successful
- */
-/**
- * Handle CAPTCHA verification modal submission
- * 
- * @param interaction The modal submission interaction
- * @returns Promise resolving to true if successful
- */
 export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteraction): Promise<boolean> {
+  // Immediately defer the reply to give us time to process
   try {
-    // Defer the reply to ensure we can respond properly
-    await interaction.deferReply(convertEphemeralToFlags({ ephemeral: true }));
-
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  } catch (deferError) {
+    logError('Verification', `Error deferring reply in CAPTCHA modal submission: ${deferError}`);
+    // Continue anyway since we'll try to editReply later
+  }
+  
+  try {
     const { guildId, user } = interaction;
     
     if (!guildId) {
-      const errorEmbed = new EmbedBuilder()
-        .setColor(Colors.ERROR)
-        .setTitle('❌ Verification Error')
-        .setDescription('This command can only be used in a server.')
-        .setFooter({ text: `• Made By Soggra` });
-        
-      await interaction.editReply({ embeds: [errorEmbed] });
+      try {
+        await interaction.editReply({ content: 'This command can only be used in a server.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
       return false;
     }
     
@@ -600,35 +651,49 @@ export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteracti
     const settings = await getVerificationSettings(guildId);
     
     if (!settings || !settings.enabled) {
-      const errorEmbed = new EmbedBuilder()
-        .setColor(Colors.ERROR)
-        .setTitle('❌ Verification Error')
-        .setDescription('Verification is not enabled on this server.')
-        .setFooter({ text: `• Made By Soggra` });
-        
-      await interaction.editReply({ embeds: [errorEmbed] });
+      try {
+        await interaction.editReply({ content: 'Verification is not enabled on this server.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
       return false;
     }
+    
+    // Debug verify settings log channel
+    logInfo('Verification', `Verification settings for guild ${guildId}: log_channel_id=${settings.log_channel_id}`);
+    
+    // Get server settings to check member logs channel
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(guildId);
+    logInfo('Verification', `Server settings for guild ${guildId}: member_log_channel_id=${serverSettings.member_log_channel_id}, mod_log_channel_id=${serverSettings.mod_log_channel_id}`);
     
     // Get the verification attempt
     const attemptKey = `${guildId}-${user.id}`;
     const attempt = verificationAttempts.get(attemptKey);
     
     if (!attempt) {
-      const errorEmbed = new EmbedBuilder()
-        .setColor(Colors.ERROR)
-        .setTitle('❌ Verification Expired')
-        .setDescription('Your verification attempt has expired. Please try again.')
-        .setFooter({ text: `• Made By Soggra` });
-        
-      await interaction.editReply({ embeds: [errorEmbed] });
+      try {
+        await interaction.editReply({ content: 'Your verification attempt has expired. Please try again.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
       return false;
     }
     
-    logInfo('Verification', `Processing CAPTCHA modal submission from user ${interaction.user.tag}`);
-    
     // Get the input from the modal
-    const captchaInput = interaction.fields.getTextInputValue('captcha_input');
+    let captchaInput: string;
+    try {
+      captchaInput = interaction.fields.getTextInputValue('captcha_input');
+      logInfo('Verification', `User ${user.tag} submitted CAPTCHA: ${captchaInput}, expected: ${attempt.questionId}`);
+    } catch (inputError) {
+      logError('Verification', `Error getting CAPTCHA input: ${inputError}`);
+      try {
+        await interaction.editReply({ content: 'An error occurred during verification. Please try again.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
+      return false;
+    }
     
     // Check if the input matches the CAPTCHA
     if (captchaInput.toUpperCase() !== attempt.questionId) {
@@ -644,27 +709,53 @@ export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteracti
         verificationAttempts.delete(attemptKey);
         
         // Log the failed verification
-        await logVerificationAttempt(interaction, settings, false, 'Too many failed CAPTCHA attempts');
+        logInfo('Verification', `User ${user.tag} failed verification after 3 attempts`);
         
-        const failedEmbed = new EmbedBuilder()
-          .setColor(Colors.ERROR)
-          .setTitle('❌ Verification Failed')
-          .setDescription('Too many failed attempts. Please try again later.')
-          .setFooter({ text: `• Made By Soggra` });
-          
-        await interaction.editReply({ embeds: [failedEmbed] });
+        // Send to logs - guaranteed to send to member logs if available
+        try {
+          await logVerificationAttempt(interaction, settings, false, "Too many failed CAPTCHA attempts");
+        } catch (logErrorObj) {
+          logError('Verification', `Error logging verification attempt: ${logErrorObj}`);
+        }
+        
+        // Directly send to member logs as well if it exists (redundant but ensures logs are sent)
+        try {
+          if (serverSettings && serverSettings.member_log_channel_id) {
+            const memberLogChannel = await interaction.guild?.channels.fetch(serverSettings.member_log_channel_id) as TextChannel;
+            if (memberLogChannel && memberLogChannel.isTextBased()) {
+              logInfo('Verification', `Sending verification failure log directly to member logs channel ${memberLogChannel.id}`);
+              const failureEmbed = new EmbedBuilder()
+                .setColor(Colors.ERROR)
+                .setTitle('❌ Verification Failed')
+                .setDescription(`User: <@${interaction.user.id}> (${interaction.user.tag})`)
+                .addFields([
+                  { name: 'User ID', value: interaction.user.id, inline: true },
+                  { name: 'Verification Type', value: settings.type, inline: true },
+                  { name: 'Reason', value: 'Failed CAPTCHA verification after 3 attempts', inline: false }
+                ])
+                .setTimestamp();
+              
+              await memberLogChannel.send({ embeds: [failureEmbed] });
+            }
+          }
+        } catch (memberLogError) {
+          logError('Verification', `Error sending to member logs channel: ${memberLogError}`);
+        }
+        
+        try {
+          await interaction.editReply({ content: 'Too many failed attempts. Please try again later.' });
+        } catch (replyError) {
+          logError('Verification', `Error editing reply: ${replyError}`);
+        }
         
         return false;
       }
       
-      const incorrectEmbed = new EmbedBuilder()
-        .setColor(Colors.WARNING)
-        .setTitle('⚠️ Incorrect CAPTCHA')
-        .setDescription(`The code you entered does not match the one shown.`)
-        .addFields({ name: 'Attempts Remaining', value: `${3 - attempt.attempts}`, inline: true })
-        .setFooter({ text: `• Made By Soggra` });
-        
-      await interaction.editReply({ embeds: [incorrectEmbed] });
+      try {
+        await interaction.editReply({ content: `Incorrect code. Please try again. You have ${3 - attempt.attempts} attempts remaining.` });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
       
       return false;
     }
@@ -676,59 +767,41 @@ export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteracti
     verificationAttempts.delete(attemptKey);
     
     // Assign the verification role
+    logInfo('Verification', `User ${user.tag} successfully verified, calling assignVerificationRole`);
     const roleAssigned = await assignVerificationRole(interaction, settings);
     
-    if (roleAssigned) {
-      const successEmbed = new EmbedBuilder()
-        .setColor(Colors.SUCCESS)
-        .setTitle('✅ Verification Successful')
-        .setDescription('You have been verified! Welcome to the server.')
-        .setFooter({ text: `• Made By Soggra` })
-        .setTimestamp();
-        
-      if (settings.role_id) {
-        const role = interaction.guild?.roles.cache.get(settings.role_id);
-        if (role) {
-          successEmbed.addFields({ name: 'Role Assigned', value: role.name, inline: true });
-        }
+    if (!roleAssigned) {
+      logError('Verification', `Failed to assign verification role to user ${user.tag}`);
+      try {
+        await interaction.editReply({ content: 'Failed to assign verification role. Please contact a server administrator.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
       }
-        
-      await interaction.editReply({ embeds: [successEmbed] });
+      return false;
     } else {
-      const errorEmbed = new EmbedBuilder()
-        .setColor(Colors.WARNING)
-        .setTitle('⚠️ Partially Verified')
-        .setDescription('Your verification was successful, but there was an issue assigning the verification role. Please contact a server administrator.')
-        .setFooter({ text: `• Made By Soggra` })
-        .setTimestamp();
-        
-      await interaction.editReply({ embeds: [errorEmbed] });
+      logInfo('Verification', `Successfully assigned verification role to user ${user.tag}`);
+      
+      try {
+        await interaction.editReply({ content: 'You have been verified! Welcome to the server.' });
+      } catch (replyError) {
+        logError('Verification', `Error editing reply: ${replyError}`);
+      }
     }
     
     return true;
   } catch (error) {
     logError('Verification', `Error handling CAPTCHA modal submit: ${error}`);
-    // Ensure reply if not already handled
-    if (!interaction.replied && !interaction.deferred) {
-        try {
-            await interaction.reply(convertEphemeralToFlags({ content: 'An error occurred processing your CAPTCHA. Please try again.', flags: MessageFlags.Ephemeral }));
-        } catch (replyError) {
-            logError('Verification', `Failed to send CAPTCHA error reply: ${replyError}`);
-        }
-    } else if (interaction.replied && !interaction.deferred) { // Check if already replied but not deferred (e.g. from a quick fail path)
-        // If already replied, we might need to followUp if the initial reply wasn't ephemeral or suitable
-        // For now, assume initial reply was sufficient or log if further action needed.
-    } else if (interaction.deferred) { // Standard case: was deferred
-        try {
-            await interaction.editReply({ content: 'An error occurred processing your CAPTCHA. Please try again.' });
-        } catch (editError) {
-            logError('Verification', `Failed to edit CAPTCHA deferred reply: ${editError}`);
-        }
+    
+    try {
+      await interaction.editReply({ content: 'An error occurred during verification. Please try again later or contact a server administrator.' });
+    } catch (replyError) {
+      // If we can't reply, just log it
+      console.error('Failed to send error message:', replyError);
     }
+    
     return false;
   }
 }
-
 /**
  * Assign the verification role to a user
  * 
@@ -741,6 +814,24 @@ async function assignVerificationRole(
   settings: VerificationSettings
 ): Promise<boolean> {
   try {
+    // Add detailed logging to help diagnose the issue
+    logInfo('Verification', `Starting verification role assignment for user ${interaction.user.tag} (${interaction.user.id}) in guild ${interaction.guildId}`);
+    
+    if (!settings.log_channel_id) {
+      logWarning('Verification', `No log_channel_id configured in verification settings for guild ${interaction.guildId}`);
+      
+      // Try to get server settings to find member logs channel
+      try {
+        const { settingsManager } = await import('../../utils/settings');
+        const serverSettings = await settingsManager.getSettings(interaction.guildId!);
+        logInfo('Verification', `Server settings found: log_channel=${serverSettings.log_channel_id}, mod_log=${serverSettings.mod_log_channel_id}, member_log=${serverSettings.member_log_channel_id}`);
+      } catch (settingsError) {
+        logError('Verification', `Error fetching server settings: ${settingsError}`);
+      }
+    } else {
+      logInfo('Verification', `Verification settings log_channel_id is set to: ${settings.log_channel_id}`);
+    }
+    
     if (!settings.role_id) {
       logError('Verification', `No verification role configured for guild ${interaction.guildId}`);
       return false;
@@ -768,8 +859,12 @@ async function assignVerificationRole(
     // Add the role to the member
     try {
       await member.roles.add(settings.role_id);
+      logInfo('Verification', `Role ${settings.role_id} successfully added to user ${interaction.user.tag}`);
+      
       // Log the successful verification and role assignment is handled here
-      await logVerificationAttempt(interaction, settings, true);
+      logInfo('Verification', `Calling logVerificationAttempt for successful verification of user ${interaction.user.tag}`);
+      const logResult = await logVerificationAttempt(interaction, settings, true);
+      logInfo('Verification', `logVerificationAttempt returned: ${logResult}`);
       
       // Send welcome message if configured
       if (settings.welcome_message && settings.welcome_channel_id) {
@@ -777,6 +872,7 @@ async function assignVerificationRole(
           const welcomeChannel = await interaction.guild?.channels.fetch(settings.welcome_channel_id) as TextChannel;
           
           if (welcomeChannel && welcomeChannel.isTextBased()) {
+            logInfo('Verification', `Sending welcome message to channel ${welcomeChannel.name} (${welcomeChannel.id})`);
             const welcomeEmbed = new EmbedBuilder()
               .setColor(Colors.SUCCESS)
               .setTitle('🎉 New Member Verified')
@@ -788,10 +884,15 @@ async function assignVerificationRole(
               content: `Welcome <@${interaction.user.id}>!`,
               embeds: [welcomeEmbed]
             });
+            logInfo('Verification', `Welcome message sent successfully`);
+          } else {
+            logWarning('Verification', `Welcome channel ${settings.welcome_channel_id} not found or is not a text channel`);
           }
         } catch (error) {
           logError('Verification', `Error sending welcome message: ${error}`);
         }
+      } else {
+        logInfo('Verification', `No welcome message configured. welcome_message: ${settings.welcome_message}, welcome_channel_id: ${settings.welcome_channel_id}`);
       }
       
       return true;
@@ -821,40 +922,183 @@ async function logVerificationAttempt(
   reason?: string
 ): Promise<boolean> {
   try {
-    if (!settings.log_channel_id) {
-      return false;
+    // Import settings manager
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(interaction.guildId!);
+    
+    // Log to console for debugging
+    logInfo('Verification', `Attempting to log verification attempt for user ${interaction.user.tag} (${interaction.user.id}) in guild ${interaction.guildId} - Success: ${success}`);
+    
+    // ALWAYS send to member logs if available
+    let memberLogSent = false;
+    
+    if (serverSettings && serverSettings.member_log_channel_id) {
+      try {
+        const memberLogChannel = await interaction.guild?.channels.fetch(serverSettings.member_log_channel_id) as TextChannel;
+        
+        if (memberLogChannel && memberLogChannel.isTextBased()) {
+          // Create account age string
+          const accountCreated = interaction.user.createdAt;
+          const accountAge = Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Get more detailed user info
+          const member = interaction.member as GuildMember;
+          const joinedAt = member?.joinedAt;
+          const joinedAgo = joinedAt ? Math.floor((Date.now() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) : 'Unknown';
+          
+          // Create a more detailed embed with improved formatting
+          const embed = new EmbedBuilder()
+            .setColor(success ? Colors.SUCCESS : Colors.ERROR)
+            .setTitle(`${success ? '✅' : '❌'} Verification ${success ? 'Successful' : 'Failed'}`)
+            .setDescription(`**User:** <@${interaction.user.id}> (${interaction.user.tag})`)
+            .addFields([
+              { name: 'User ID', value: interaction.user.id, inline: true },
+              { name: 'Verification Type', value: settings.type, inline: true },
+              { name: 'Account Age', value: `${accountAge} days`, inline: true },
+              { name: 'Created On', value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>`, inline: false },
+              { name: 'Joined Server', value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:R>` : 'Unknown', inline: true },
+              { name: 'Member For', value: `${joinedAgo} days`, inline: true }
+            ])
+            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 128 }))
+            .setTimestamp()
+            .setFooter({ text: `Verification • ${interaction.guild?.name || 'Unknown Server'}` });
+          
+          if (!success && reason) {
+            embed.addFields([{ name: 'Failure Reason', value: reason }]);
+          }
+          
+          // Send to member logs
+          await memberLogChannel.send({ embeds: [embed] });
+          logInfo('Verification', `Successfully sent verification log to member logs channel`);
+          
+          // If verification settings don't have a log channel, update them
+          if (!settings.log_channel_id) {
+            settings.log_channel_id = serverSettings.member_log_channel_id;
+            // Import and use saveVerificationSettings function
+            const { saveVerificationSettings } = await import('./verification-config');
+            await saveVerificationSettings(interaction.guildId!, settings);
+            logInfo('Verification', `Updated verification settings to use member log channel`);
+          }
+          
+          memberLogSent = true;
+        }
+      } catch (memberLogError) {
+        logError('Verification', `Error sending to member logs channel: ${memberLogError}`);
+      }
     }
     
-    const logChannel = await interaction.guild?.channels.fetch(settings.log_channel_id) as TextChannel;
-    
-    if (!logChannel || !logChannel.isTextBased()) {
-      return false;
+    // As a fallback, try to send to mod logs
+    if (!memberLogSent && serverSettings && serverSettings.mod_log_channel_id) {
+      try {
+        const modLogChannel = await interaction.guild?.channels.fetch(serverSettings.mod_log_channel_id) as TextChannel;
+        
+        if (modLogChannel && modLogChannel.isTextBased()) {
+          // Create account age string
+          const accountCreated = interaction.user.createdAt;
+          const accountAge = Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Get more detailed user info
+          const member = interaction.member as GuildMember;
+          const joinedAt = member?.joinedAt;
+          const joinedAgo = joinedAt ? Math.floor((Date.now() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) : 'Unknown';
+          
+          // Create a more detailed embed with improved formatting
+          const embed = new EmbedBuilder()
+            .setColor(success ? Colors.SUCCESS : Colors.ERROR)
+            .setTitle(`${success ? '✅' : '❌'} Verification ${success ? 'Successful' : 'Failed'}`)
+            .setDescription(`**User:** <@${interaction.user.id}> (${interaction.user.tag})`)
+            .addFields([
+              { name: 'User ID', value: interaction.user.id, inline: true },
+              { name: 'Verification Type', value: settings.type, inline: true },
+              { name: 'Account Age', value: `${accountAge} days`, inline: true },
+              { name: 'Created On', value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>`, inline: false },
+              { name: 'Joined Server', value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:R>` : 'Unknown', inline: true },
+              { name: 'Member For', value: `${joinedAgo} days`, inline: true }
+            ])
+            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 128 }))
+            .setTimestamp()
+            .setFooter({ text: `Verification • ${interaction.guild?.name || 'Unknown Server'}` });
+          
+          if (!success && reason) {
+            embed.addFields([{ name: 'Failure Reason', value: reason }]);
+          }
+          
+          // Send to mod logs
+          await modLogChannel.send({ embeds: [embed] });
+          logInfo('Verification', `Successfully sent verification log to mod logs channel`);
+          
+          // If verification settings don't have a log channel, update them
+          if (!settings.log_channel_id) {
+            settings.log_channel_id = serverSettings.mod_log_channel_id;
+            // Import and use saveVerificationSettings function
+            const { saveVerificationSettings } = await import('./verification-config');
+            await saveVerificationSettings(interaction.guildId!, settings);
+            logInfo('Verification', `Updated verification settings to use mod log channel`);
+          }
+          
+          return true;
+        }
+      } catch (modLogError) {
+        logError('Verification', `Error sending to mod logs channel: ${modLogError}`);
+      }
     }
     
-    // Create account age string
-    const accountCreated = interaction.user.createdAt;
-    const accountAge = Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24));
-    
-    const embed = new EmbedBuilder()
-      .setColor(success ? Colors.SUCCESS : Colors.ERROR)
-      .setTitle(`${success ? '✅' : '❌'} Verification ${success ? 'Successful' : 'Failed'}`)
-      .setDescription(`User: <@${interaction.user.id}> (${interaction.user.tag})`)
-      .addFields([
-        { name: 'User ID', value: interaction.user.id, inline: true },
-        { name: 'Verification Type', value: settings.type, inline: true },
-        { name: 'Account Age', value: `${accountAge} days`, inline: true }
-      ])
-      .setTimestamp();
-    
-    if (!success && reason) {
-      embed.addFields([{ name: 'Failure Reason', value: reason }]);
+    // If we successfully sent to member logs, return true
+    if (memberLogSent) {
+      return true;
     }
     
-    await logChannel.send({ embeds: [embed] });
+    // Try the verification-specific log channel as last resort
+    if (settings.log_channel_id) {
+      try {
+        const logChannel = await interaction.guild?.channels.fetch(settings.log_channel_id) as TextChannel;
+        
+        if (logChannel && logChannel.isTextBased()) {
+          // Create account age string
+          const accountCreated = interaction.user.createdAt;
+          const accountAge = Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Get more detailed user info
+          const member = interaction.member as GuildMember;
+          const joinedAt = member?.joinedAt;
+          const joinedAgo = joinedAt ? Math.floor((Date.now() - joinedAt.getTime()) / (1000 * 60 * 60 * 24)) : 'Unknown';
+          
+          // Create a more detailed embed with improved formatting
+          const embed = new EmbedBuilder()
+            .setColor(success ? Colors.SUCCESS : Colors.ERROR)
+            .setTitle(`${success ? '✅' : '❌'} Verification ${success ? 'Successful' : 'Failed'}`)
+            .setDescription(`**User:** <@${interaction.user.id}> (${interaction.user.tag})`)
+            .addFields([
+              { name: 'User ID', value: interaction.user.id, inline: true },
+              { name: 'Verification Type', value: settings.type, inline: true },
+              { name: 'Account Age', value: `${accountAge} days`, inline: true },
+              { name: 'Created On', value: `<t:${Math.floor(accountCreated.getTime() / 1000)}:F>`, inline: false },
+              { name: 'Joined Server', value: joinedAt ? `<t:${Math.floor(joinedAt.getTime() / 1000)}:R>` : 'Unknown', inline: true },
+              { name: 'Member For', value: `${joinedAgo} days`, inline: true }
+            ])
+            .setThumbnail(interaction.user.displayAvatarURL({ extension: 'png', size: 128 }))
+            .setTimestamp()
+            .setFooter({ text: `Verification • ${interaction.guild?.name || 'Unknown Server'}` });
+          
+          if (!success && reason) {
+            embed.addFields([{ name: 'Failure Reason', value: reason }]);
+          }
+          
+          // Send to verification log channel
+          await logChannel.send({ embeds: [embed] });
+          logInfo('Verification', `Successfully sent verification log to verification log channel`);
+          return true;
+        }
+      } catch (logChannelError) {
+        logError('Verification', `Error sending to verification log channel: ${logChannelError}`);
+      }
+    }
     
-    return true;
+    // If we get here, we failed to send logs anywhere
+    logWarning('Verification', `Failed to send verification logs to any channel for user ${interaction.user.tag}`);
+    return false;
   } catch (error) {
-    logError('Verification', `Error logging verification attempt: ${error}`);
+    logError('Verification', `Error in logVerificationAttempt: ${error}`);
     return false;
   }
 }
@@ -873,8 +1117,9 @@ export async function createVerificationMessage(
   settings: VerificationSettings
 ): Promise<string | null> {
   try {
-    // Get the client directly from the main index file
-    const client = require('../../index').client;
+    // Get the client from cache or parameters
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
     
     if (!client) {
       logError('Verification', 'Discord client is not initialized');

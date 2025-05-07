@@ -60,7 +60,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const leaderboardEmbed = new EmbedBuilder()
       .setColor('#5865F2')
       .setTitle(`🏆 Invite Leaderboard for ${guild.name}`)
-      .setThumbnail(guild.iconURL() || '')
       .setDescription(`
 **Server Stats:**
 • **${serverStats.totalInvites}** total invites
@@ -76,6 +75,12 @@ ${pageInviters.length > 0
       `)
       .setFooter({ text: `Page ${page}/${maxPage} • Made By Soggra` })
       .setTimestamp();
+    
+    // Only set thumbnail if guild has an icon
+    const guildIcon = guild.iconURL();
+    if (guildIcon) {
+      leaderboardEmbed.setThumbnail(guildIcon);
+    }
     
     // Create pagination buttons if needed
     const components = [];

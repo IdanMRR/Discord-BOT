@@ -5,7 +5,10 @@ import {
   Guild, 
   Message,
   PartialGuildMember,
-  Events
+  Events,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
@@ -143,77 +146,69 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     logInfo('MemberEvents', `Member joined: ${member.user.tag} (${member.id}) in guild ${guild.name} (${guild.id})`);
     
     const config = getMemberEventConfig(guild.id);
-    logInfo('MemberEvents', `Retrieved config for guild ${guild.id}: ${JSON.stringify(config)}`);
     
     if (!config.enabled) {
       logInfo('MemberEvents', `Welcome messages disabled for guild ${guild.id}`);
       return;
     }
     
-    if (!config.welcome_channel_id) {
-      logInfo('MemberEvents', `No welcome channel configured for guild ${guild.id}`);
-      return;
+    // Get server settings to check if invite tracking is enabled
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(guild.id);
+    
+    // If member_log_channel_id exists, assume the invite tracker is handling the detailed logs
+    // so we'll only send the public welcome message, not the logs message
+    const inviteTrackingEnabled = serverSettings && serverSettings.member_log_channel_id;
+    
+    // Only process welcome channel message - don't send to member logs
+    if (config.welcome_channel_id && config.welcome_message) {
+      try {
+        logInfo('MemberEvents', `Fetching welcome channel ${config.welcome_channel_id} for guild ${guild.id}`);
+        const welcomeChannel = await guild.channels.fetch(config.welcome_channel_id) as TextChannel;
+        
+        if (!welcomeChannel) {
+          logError('MemberEvents', `Welcome channel ${config.welcome_channel_id} not found in guild ${guild.id}`);
+        } else if (!welcomeChannel.isTextBased()) {
+          logError('MemberEvents', `Welcome channel ${config.welcome_channel_id} is not a text channel in guild ${guild.id}`);
+        } else {
+          const memberCount = guild.memberCount;
+          
+          logInfo('MemberEvents', `Creating welcome embed for ${member.user.tag} in guild ${guild.name}`);
+          
+          // Create welcome embed - RESTORED TO ORIGINAL FORMAT
+          const welcomeEmbed = new EmbedBuilder()
+            .setColor(Colors.SUCCESS)
+            .setTitle('Joined Member')
+            .setDescription(`Welcome <@${member.id}> to- ${guild.name}`)
+            .setThumbnail(member.user.displayAvatarURL())
+            .setFooter({ text: `Coding API - Welcome System • Made By Soggra • Today at ${new Date().toLocaleTimeString()}` })
+            .setTimestamp();
+          
+          // Send welcome message with embed
+          const welcomeMessage = await welcomeChannel.send({
+            embeds: [welcomeEmbed]
+          });
+          
+          // Add member count as a disabled button styled like a reaction
+          const memberCountButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId('member_count')
+              .setLabel(`👑 YOU ARE OUR ${memberCount}TH MEMBER!`)
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(true)
+          );
+          await welcomeChannel.send({
+            components: [memberCountButton]
+          });
+          
+          logInfo('MemberEvents', `Sent welcome message for ${member.user.tag} in guild ${guild.name}`);
+        }
+      } catch (error) {
+        logError('MemberEvents', `Error sending welcome message: ${error}`);
+      }
     }
-    
-    if (!config.welcome_message) {
-      logInfo('MemberEvents', `No welcome message configured for guild ${guild.id}`);
-      return;
-    }
-    
-    logInfo('MemberEvents', `Fetching welcome channel ${config.welcome_channel_id} for guild ${guild.id}`);
-    const welcomeChannel = await guild.channels.fetch(config.welcome_channel_id) as TextChannel;
-    
-    if (!welcomeChannel) {
-      logError('MemberEvents', `Welcome channel ${config.welcome_channel_id} not found in guild ${guild.id}`);
-      return;
-    }
-    
-    if (!welcomeChannel.isTextBased()) {
-      logError('MemberEvents', `Welcome channel ${config.welcome_channel_id} is not a text channel in guild ${guild.id}`);
-      return;
-    }
-    
-    const memberCount = guild.memberCount;
-    
-    logInfo('MemberEvents', `Creating welcome embed for ${member.user.tag} in guild ${guild.name}`);
-    // Create a blue bar on the left side using a blue color
-    const welcomeEmbed = new EmbedBuilder()
-      .setColor('#5865F2') // Discord blue color
-      .setTitle('Joined Member')
-      .setDescription(`Welcome <@${member.id}> to - ${guild.name} Server.\n\n${guild.name} - Welcome System`)
-      .setFooter({ text: `\u2022 Made By Soggra` })
-      .setTimestamp();
-    
-    logInfo('MemberEvents', `Sending welcome message to channel ${welcomeChannel.name} (${welcomeChannel.id})`);
-    const welcomeMessage = await welcomeChannel.send({
-      content: `Welcome <@${member.id}>!`,
-      embeds: [welcomeEmbed]
-    });
-    
-    // Add a reaction to the welcome message with member count
-    try {
-      // Create a separate member count message that will be sent as a reply to the welcome message
-      const countEmbed = new EmbedBuilder()
-        .setColor('#1e1f22') // Dark background color like in the photo
-        .setDescription(`**YOU ARE OUR ${memberCount}TH MEMBER!**`)
-        .setFooter({ text: `\u2022 Made By Soggra` })
-        // Make the embed more prominent like in the image
-        .setAuthor({ name: ' ' }) // Empty author to add spacing at top
-        .setTimestamp(); // Add timestamp for better appearance
-      
-      // Send the member count as a separate message, not a reply
-      await welcomeChannel.send({
-        embeds: [countEmbed]
-      });
-      
-      logInfo('MemberEvents', `Added member count reaction to welcome message for ${member.user.tag}`);
-    } catch (reactionError) {
-      logError('MemberEvents', `Error adding member count reaction: ${reactionError}`);
-    }
-    
-    logInfo('MemberEvents', `Successfully sent welcome message for ${member.user.tag} in guild ${guild.name}`);
   } catch (error) {
-    logError('MemberEvents', `Error sending welcome message for ${member?.user?.tag || 'unknown user'}: ${error}`);
+    logError('MemberEvents', `Error handling member join: ${error}`);
   }
 }
 
@@ -227,39 +222,53 @@ async function handleMemberLeave(member: GuildMember | PartialGuildMember): Prom
     const { guild } = member;
     const config = getMemberEventConfig(guild.id);
     
-    if (!config.enabled || !config.leave_channel_id || !config.leave_message) {
+    if (!config.enabled) {
       return;
     }
     
-    const leaveChannel = await guild.channels.fetch(config.leave_channel_id) as TextChannel;
+    // Get server settings to check if invite tracking is enabled
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(guild.id);
     
-    if (!leaveChannel || !leaveChannel.isTextBased()) {
-      logError('MemberEvents', `Leave channel ${config.leave_channel_id} not found or not a text channel in guild ${guild.id}`);
-      return;
+    // If member_log_channel_id exists, assume the invite tracker is handling the detailed logs
+    // so we'll only send the public leave message, not the logs message
+    const inviteTrackingEnabled = serverSettings && serverSettings.member_log_channel_id;
+    
+    // Only process leave channel message
+    if (config.leave_channel_id && config.leave_message) {
+      try {
+        const leaveChannel = await guild.channels.fetch(config.leave_channel_id) as TextChannel;
+        
+        if (!leaveChannel || !leaveChannel.isTextBased()) {
+          logError('MemberEvents', `Leave channel ${config.leave_channel_id} not found or not a text channel in guild ${guild.id}`);
+        } else {
+          const memberCount = guild.memberCount;
+          
+          // Get the user tag if available (for partial members)
+          const userTag = member.user?.tag || 'Unknown User';
+          
+          const leaveEmbed = new EmbedBuilder()
+            .setColor(Colors.ERROR)
+            .setTitle('👋 Member Left')
+            .setDescription(config.leave_message.replace('{user}', member.user ? `<@${member.id}>` : userTag))
+            .setThumbnail(member.user?.displayAvatarURL() || null)
+            .addFields([
+              { name: 'Member Count', value: `${memberCount} members`, inline: true },
+              { name: 'Joined Server', value: member.joinedAt ? `<t:${Math.floor(member.joinedAt.getTime() / 1000)}:R>` : 'Unknown', inline: true }
+            ])
+            .setFooter({ text: `Coding API - Leave System • Made By Soggra • Today at ${new Date().toLocaleTimeString()}` })
+            .setTimestamp();
+          
+          await leaveChannel.send({
+            embeds: [leaveEmbed]
+          });
+          
+          logInfo('MemberEvents', `Sent leave message for ${userTag} in guild ${guild.name}`);
+        }
+      } catch (error) {
+        logError('MemberEvents', `Error sending leave message: ${error}`);
+      }
     }
-    
-    const memberCount = guild.memberCount;
-    
-    // Get the user tag if available (for partial members)
-    const userTag = member.user?.tag || 'Unknown User';
-    
-    const leaveEmbed = new EmbedBuilder()
-      .setColor(Colors.ERROR)
-      .setTitle('👋 Member Left')
-      .setDescription(config.leave_message.replace('{user}', member.user ? `<@${member.id}>` : userTag))
-      .setThumbnail(member.user?.displayAvatarURL() || null)
-      .addFields([
-        { name: 'Member Count', value: `${memberCount} members`, inline: true },
-        { name: 'Joined Server', value: member.joinedAt ? `<t:${Math.floor(member.joinedAt.getTime() / 1000)}:R>` : 'Unknown', inline: true }
-      ])
-      .setFooter({ text: `• Made By Soggra` })
-      .setTimestamp();
-    
-    await leaveChannel.send({
-      embeds: [leaveEmbed]
-    });
-    
-    logInfo('MemberEvents', `Sent leave message for ${userTag} in guild ${guild.name}`);
   } catch (error) {
     logError('MemberEvents', `Error sending leave message: ${error}`);
   }
@@ -318,10 +327,12 @@ export function initializeMemberEvents(): void {
     // Load all configurations from the database
     loadAllConfigurations();
     
-    // Listen for new members
+    // Listen for new members - but ONLY if invite tracking isn't active
+    // since invite tracker will handle the detailed logs
     client.on(Events.GuildMemberAdd, handleMemberJoin);
     
-    // Listen for members leaving
+    // Listen for members leaving - but ONLY if invite tracking isn't active 
+    // since invite tracker will handle the detailed logs
     client.on(Events.GuildMemberRemove, handleMemberLeave);
     
     // Listen for messages to show member count

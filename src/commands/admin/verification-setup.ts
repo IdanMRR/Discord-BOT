@@ -10,39 +10,44 @@ import { createVerificationMessage } from '../../handlers/verification/verificat
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+import { settingsManager } from '../../utils/settings';
 
 export const data = new SlashCommandBuilder()
   .setName('verification-setup')
-  .setDescription('Set up the verification system for your server')
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDescription('Configure the verification system for your server')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand(subcommand =>
     subcommand
       .setName('enable')
-      .setDescription('Enable verification for your server')
-      .addStringOption(option =>
-        option.setName('type')
+      .setDescription('Enable the verification system')
+      .addStringOption(option => 
+        option
+          .setName('type')
           .setDescription('The type of verification to use')
           .setRequired(true)
           .addChoices(
-            { name: 'Button (Simple Click)', value: 'button' },
-            { name: 'CAPTCHA', value: 'captcha' },
-            { name: 'Custom Question', value: 'custom_question' },
-            { name: 'Age Verification', value: 'age_verification' }
+            { name: 'Button (Simple Click)', value: VerificationType.BUTTON },
+            { name: 'CAPTCHA (Code Entry)', value: VerificationType.CAPTCHA },
+            { name: 'Custom Question', value: VerificationType.CUSTOM_QUESTION },
+            { name: 'Age Verification', value: VerificationType.AGE_VERIFICATION }
           )
       )
       .addRoleOption(option =>
-        option.setName('role')
+        option
+          .setName('role')
           .setDescription('The role to assign to verified users')
           .setRequired(true)
       )
       .addChannelOption(option =>
-        option.setName('channel')
+        option
+          .setName('channel')
           .setDescription('The channel to send the verification message in')
           .setRequired(true)
           .addChannelTypes(ChannelType.GuildText)
       )
       .addChannelOption(option =>
-        option.setName('log_channel')
+        option
+          .setName('log_channel')
           .setDescription('The channel to log verification attempts in')
           .setRequired(false)
           .addChannelTypes(ChannelType.GuildText)
@@ -127,12 +132,17 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('status')
       .setDescription('Check the current verification settings')
+  )
+  .addSubcommand(subcommand =>
+    subcommand
+      .setName('diagnose')
+      .setDescription('Check and fix verification system settings')
   );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const subcommand = interaction.options.getSubcommand();
+  
   try {
-    const subcommand = interaction.options.getSubcommand();
-    
     switch (subcommand) {
       case 'enable':
         await handleEnableVerification(interaction);
@@ -166,22 +176,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await handleStatus(interaction);
         break;
       
+      case 'diagnose':
+        await handleDiagnoseVerification(interaction);
+        break;
+      
       default:
-        await interaction.reply({ 
-          content: 'Unknown subcommand. Please try again.',
-          flags: MessageFlags.Ephemeral
-         });
+        await interaction.reply('Unknown subcommand.');
     }
   } catch (error) {
     logError('Verification Setup', `Error executing command: ${error}`);
     
     try {
-      const content = 'An error occurred while executing this command. Please try again later.';
-      
       if (interaction.deferred) {
-        await interaction.editReply({ content });
+        await interaction.editReply('An error occurred while setting up verification. Please try again.');
       } else {
-        await interaction.reply({  content, flags: MessageFlags.Ephemeral  });
+        await interaction.reply('An error occurred while setting up verification. Please try again.');
       }
     } catch (replyError) {
       console.error('Failed to send error message:', replyError);
@@ -676,6 +685,271 @@ async function handleStatus(interaction: ChatInputCommandInteraction) {
       ]);
     }
   }
+  
+  await interaction.editReply({ embeds: [embed] });
+}
+
+/**
+ * Handle diagnosing and fixing verification
+ */
+async function handleDiagnoseVerification(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  
+  // Get current verification settings
+  const settings = await getVerificationSettings(interaction.guildId!);
+  
+  if (!settings) {
+    await interaction.editReply('Failed to get verification settings. Please try again.');
+    return;
+  }
+  
+  // Check if verification is enabled
+  if (!settings.enabled) {
+    await interaction.editReply('Verification is not enabled for this server. Enable it first with `/verification-setup enable`.');
+    return;
+  }
+  
+  // Create diagnostic results
+  const diagnosticResults: { name: string; value: string; isError: boolean }[] = [];
+  let fixesApplied = false;
+  
+  // Check if role exists
+  let role = null;
+  if (settings.role_id) {
+    try {
+      role = await interaction.guild!.roles.fetch(settings.role_id);
+      if (role) {
+        diagnosticResults.push({
+          name: "Verification Role",
+          value: `✅ Role found: <@&${role.id}>`,
+          isError: false
+        });
+      } else {
+        diagnosticResults.push({
+          name: "Verification Role",
+          value: `❌ Role not found with ID ${settings.role_id}`,
+          isError: true
+        });
+      }
+    } catch (error) {
+      diagnosticResults.push({
+        name: "Verification Role",
+        value: `❌ Error fetching role: ${error}`,
+        isError: true
+      });
+    }
+  } else {
+    diagnosticResults.push({
+      name: "Verification Role",
+      value: "❌ No role set for verification",
+      isError: true
+    });
+  }
+  
+  // Check if channel exists
+  let channel = null;
+  if (settings.channel_id) {
+    try {
+      channel = await interaction.guild!.channels.fetch(settings.channel_id);
+      if (channel) {
+        diagnosticResults.push({
+          name: "Verification Channel",
+          value: `✅ Channel found: <#${channel.id}>`,
+          isError: false
+        });
+      } else {
+        diagnosticResults.push({
+          name: "Verification Channel",
+          value: `❌ Channel not found with ID ${settings.channel_id}`,
+          isError: true
+        });
+      }
+    } catch (error) {
+      diagnosticResults.push({
+        name: "Verification Channel",
+        value: `❌ Error fetching channel: ${error}`,
+        isError: true
+      });
+    }
+  } else {
+    diagnosticResults.push({
+      name: "Verification Channel",
+      value: "❌ No channel set for verification message",
+      isError: true
+    });
+  }
+  
+  // Check if log channel exists
+  let logChannel = null;
+  let logChannelFixed = false;
+  
+  if (settings.log_channel_id) {
+    try {
+      logChannel = await interaction.guild!.channels.fetch(settings.log_channel_id);
+      if (logChannel && logChannel.isTextBased()) {
+        diagnosticResults.push({
+          name: "Log Channel",
+          value: `✅ Log channel found: <#${logChannel.id}>`,
+          isError: false
+        });
+      } else {
+        diagnosticResults.push({
+          name: "Log Channel",
+          value: `❌ Log channel not found or not a text channel: ${settings.log_channel_id}`,
+          isError: true
+        });
+        
+        // Get server settings to check for mod log or member log channel
+        const serverSettings = await settingsManager.getSettings(interaction.guild!.id);
+        
+        if (serverSettings && serverSettings.mod_log_channel_id) {
+          // Try to use the mod log channel instead
+          try {
+            const modLogChannel = await interaction.guild!.channels.fetch(serverSettings.mod_log_channel_id);
+            if (modLogChannel && modLogChannel.isTextBased()) {
+              settings.log_channel_id = serverSettings.mod_log_channel_id;
+              await saveVerificationSettings(interaction.guildId!, settings);
+              diagnosticResults.push({
+                name: "Fix Applied",
+                value: `✅ Updated log channel to mod log channel: <#${modLogChannel.id}>`,
+                isError: false
+              });
+              logChannelFixed = true;
+              fixesApplied = true;
+            }
+          } catch (error) {
+            // Skip if there's an error
+          }
+        }
+        
+        if (!logChannelFixed && serverSettings && serverSettings.member_log_channel_id) {
+          // Try to use the member log channel as a fallback
+          try {
+            const memberLogChannel = await interaction.guild!.channels.fetch(serverSettings.member_log_channel_id);
+            if (memberLogChannel && memberLogChannel.isTextBased()) {
+              settings.log_channel_id = serverSettings.member_log_channel_id;
+              await saveVerificationSettings(interaction.guildId!, settings);
+              diagnosticResults.push({
+                name: "Fix Applied",
+                value: `✅ Updated log channel to member log channel: <#${memberLogChannel.id}>`,
+                isError: false
+              });
+              logChannelFixed = true;
+              fixesApplied = true;
+            }
+          } catch (error) {
+            // Skip if there's an error
+          }
+        }
+      }
+    } catch (error) {
+      diagnosticResults.push({
+        name: "Log Channel",
+        value: `❌ Error fetching log channel: ${error}`,
+        isError: true
+      });
+    }
+  } else {
+    diagnosticResults.push({
+      name: "Log Channel",
+      value: "❌ No log channel set for verification attempts",
+      isError: true
+    });
+    
+    // Try to find a suitable log channel from server settings
+    const serverSettings = await settingsManager.getSettings(interaction.guild!.id);
+    
+    if (serverSettings && serverSettings.mod_log_channel_id) {
+      try {
+        const modLogChannel = await interaction.guild!.channels.fetch(serverSettings.mod_log_channel_id);
+        if (modLogChannel && modLogChannel.isTextBased()) {
+          settings.log_channel_id = serverSettings.mod_log_channel_id;
+          await saveVerificationSettings(interaction.guildId!, settings);
+          diagnosticResults.push({
+            name: "Fix Applied",
+            value: `✅ Set log channel to mod log channel: <#${modLogChannel.id}>`,
+            isError: false
+          });
+          logChannelFixed = true;
+          fixesApplied = true;
+        }
+      } catch (error) {
+        // Skip if there's an error
+      }
+    }
+    
+    if (!logChannelFixed && serverSettings && serverSettings.member_log_channel_id) {
+      try {
+        const memberLogChannel = await interaction.guild!.channels.fetch(serverSettings.member_log_channel_id);
+        if (memberLogChannel && memberLogChannel.isTextBased()) {
+          settings.log_channel_id = serverSettings.member_log_channel_id;
+          await saveVerificationSettings(interaction.guildId!, settings);
+          diagnosticResults.push({
+            name: "Fix Applied",
+            value: `✅ Set log channel to member log channel: <#${memberLogChannel.id}>`,
+            isError: false
+          });
+          logChannelFixed = true;
+          fixesApplied = true;
+        }
+      } catch (error) {
+        // Skip if there's an error
+      }
+    }
+  }
+  
+  // Check verification message
+  if (settings.message_id && settings.channel_id) {
+    try {
+      const messageChannel = await interaction.guild!.channels.fetch(settings.channel_id) as TextChannel;
+      if (messageChannel && messageChannel.isTextBased()) {
+        try {
+          const message = await messageChannel.messages.fetch(settings.message_id);
+          if (message) {
+            diagnosticResults.push({
+              name: "Verification Message",
+              value: "✅ Verification message found",
+              isError: false
+            });
+          } else {
+            diagnosticResults.push({
+              name: "Verification Message",
+              value: "❌ Verification message not found",
+              isError: true
+            });
+          }
+        } catch (error) {
+          diagnosticResults.push({
+            name: "Verification Message",
+            value: `❌ Error fetching verification message: ${error}`,
+            isError: true
+          });
+        }
+      }
+    } catch (error) {
+      // Already covered in channel check
+    }
+  } else {
+    diagnosticResults.push({
+      name: "Verification Message",
+      value: "❌ No verification message ID set",
+      isError: true
+    });
+  }
+  
+  // Create embed for diagnostic results
+  const embed = new EmbedBuilder()
+    .setColor(fixesApplied ? Colors.SUCCESS : Colors.INFO)
+    .setTitle("Verification System Diagnostic")
+    .setDescription(`Diagnostic results for your verification system. ${fixesApplied ? '**Fixes have been automatically applied.**' : ''}`)
+    .addFields(
+      diagnosticResults.map(result => ({
+        name: result.name,
+        value: result.value,
+        inline: false
+      }))
+    )
+    .setFooter({ text: "Use /verification-setup enable to reconfigure verification if needed" });
   
   await interaction.editReply({ embeds: [embed] });
 }

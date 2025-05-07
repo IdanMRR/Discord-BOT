@@ -18,7 +18,7 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
+import { logInfo, logError, logWarning, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
 
 import { db } from '../../database/sqlite';
@@ -73,6 +73,17 @@ export const data = new SlashCommandBuilder()
       .setDescription('Set up member verification system')
       .setRequired(false)
   )
+  .addStringOption(option =>
+    option.setName('verification_type')
+      .setDescription('The type of verification to use (REQUIRED if setting up verification)')
+      .setRequired(false)
+      .addChoices(
+        { name: 'Button (Simple Click)', value: 'button' },
+        { name: 'CAPTCHA', value: 'captcha' },
+        { name: 'Custom Question', value: 'custom_question' },
+        { name: 'Age Verification', value: 'age_verification' }
+      )
+  )
   .addBooleanOption(option =>
     option.setName('setup_member_events')
       .setDescription('Set up welcome/leave messages and member count tracking')
@@ -102,14 +113,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const staffRole = interaction.options.getRole('staff_role') as Role;
     const setupAll = interaction.options.getBoolean('setup_all') ?? false;
     
-    // If setup_all is true, enable all setup options
+    // If setup_all is true, enable all setup options but still require verification_type if enabling verification
     const createCategories = setupAll ? true : (interaction.options.getBoolean('create_categories') ?? true);
     const setupTickets = setupAll ? true : (interaction.options.getBoolean('setup_tickets') ?? true);
     const setupLogs = setupAll ? true : (interaction.options.getBoolean('setup_logs') ?? true);
     const setupWelcome = setupAll ? true : (interaction.options.getBoolean('setup_welcome') ?? true);
     const setupRules = setupAll ? true : (interaction.options.getBoolean('setup_rules') ?? true);
     const setupInviteTracking = setupAll ? true : (interaction.options.getBoolean('setup_invite_tracking') ?? false);
-    const setupVerification = setupAll ? true : (interaction.options.getBoolean('setup_verification') ?? false);
+    const verificationType = interaction.options.getString('verification_type');
+    
+    // Only enable verification if a type is provided (even with setup_all)
+    const setupVerification = (setupAll || interaction.options.getBoolean('setup_verification')) ? (verificationType !== null) : false;
+    
     const setupMemberEvents = setupAll ? true : (interaction.options.getBoolean('setup_member_events') ?? false);
     const language = interaction.options.getString('language') as Language || 'en';
 
@@ -172,8 +187,28 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     
     // Set up verification system first if requested (before welcome/rules)
     if (setupVerification) {
-      await setupVerificationSystem(interaction, staffRole);
-      successMessages.push('✅ Verification system set up');
+      // If verification type is not provided, ask the user to provide it
+      if (!verificationType) {
+        const verificationTypeEmbed = new EmbedBuilder()
+          .setColor(Colors.INFO)
+          .setTitle('⚠️ Verification Type Required')
+          .setDescription('You must select a verification type to set up the verification system.')
+          .addFields([
+            { name: 'Available Verification Types', value: '• Button (Simple Click) - Users click a button to verify\n• CAPTCHA - Users solve a CAPTCHA\n• Custom Question - Users answer custom questions\n• Age Verification - Users verify their age' },
+            { name: 'How to Set Up', value: 'Run the command again with the verification type option:\n`/server-setup setup_verification:True verification_type:[Your Choice]`' }
+          ]);
+        
+        await interaction.editReply({ embeds: [verificationTypeEmbed] });
+        // Mark setup as failed
+        successMessages.push('❌ Verification system setup failed - verification type required');
+        
+        // Continue with other setups instead of returning
+        // This allows other systems to still be set up even if verification fails
+      } else {
+        // Only set up verification if type is provided
+        await setupVerificationSystem(interaction, staffRole, verificationType);
+        successMessages.push('✅ Verification system set up');
+      }
     }
     
     // Set up rules channel if requested - but don't send messages if verification is enabled
@@ -197,8 +232,59 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Set up invite tracking system if requested
     if (setupInviteTracking) {
       try {
-        // Create a welcome channel if it doesn't exist
+        // Get current server settings
         const settings = await settingsManager.getSettings(interaction.guild!.id);
+        
+        // Check if member logs exist, which is required for invite tracking
+        if (!settings || !settings.member_log_channel_id) {
+          logWarning('Server Setup', `No member logs channel found. Setting up logging channels first.`);
+          
+          // Set up logging channels if they don't exist
+          if (!settings || !settings.member_log_channel_id) {
+            // Create or get the logs category
+            let logsCategory = interaction.guild!.channels.cache.find(channel => 
+              channel.type === ChannelType.GuildCategory && channel.name.toLowerCase() === 'logs'
+            ) as CategoryChannel;
+            
+            if (!logsCategory) {
+              logsCategory = await interaction.guild!.channels.create({
+                name: 'LOGS',
+                type: ChannelType.GuildCategory,
+              });
+              logInfo('Server Setup', `Created logs category in ${interaction.guild!.name}`);
+            }
+            
+            // Create the member logs channel
+            const memberLogsChannel = await interaction.guild!.channels.create({
+              name: 'member-logs',
+              type: ChannelType.GuildText,
+              parent: logsCategory.id,
+              permissionOverwrites: [
+                {
+                  id: interaction.guild!.roles.everyone.id,
+                  deny: [PermissionsBitField.Flags.ViewChannel]
+                },
+                {
+                  id: interaction.client.user!.id,
+                  allow: [
+                    PermissionsBitField.Flags.ViewChannel,
+                    PermissionsBitField.Flags.SendMessages,
+                    PermissionsBitField.Flags.ManageMessages
+                  ]
+                }
+              ]
+            });
+            
+            // Update settings with member logs channel
+            await settingsManager.updateSettings(interaction.guild!.id, {
+              member_log_channel_id: memberLogsChannel.id
+            });
+            
+            logInfo('Server Setup', `Created member logs channel for invite tracking in ${interaction.guild!.name}`);
+          }
+        }
+        
+        // Create a welcome channel if it doesn't exist (as a public-facing channel)
         if (!settings || !settings.welcome_channel_id) {
           const welcomeChannel = await interaction.guild!.channels.create({
             name: 'welcome',
@@ -226,11 +312,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
           
           // Update settings with welcome channel
-          if (!settings) {
+          const updatedSettings = await settingsManager.getSettings(interaction.guild!.id);
+          if (!updatedSettings) {
             await settingsManager.updateSettings(interaction.guild!.id, { welcome_channel_id: welcomeChannel.id });
           } else {
-            settings.welcome_channel_id = welcomeChannel.id;
-            await settingsManager.updateSettings(interaction.guild!.id, settings);
+            updatedSettings.welcome_channel_id = welcomeChannel.id;
+            await settingsManager.updateSettings(interaction.guild!.id, updatedSettings);
           }
           
           // Configure member events to use this channel
@@ -246,13 +333,52 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           logInfo('Server Setup', `Created welcome channel for invite tracking in ${interaction.guild!.name}`);
         }
         
+        // Send example of what invite tracking looks like to the member-logs channel
+        try {
+          // Get the final settings after all the updates
+          const finalSettings = await settingsManager.getSettings(interaction.guild!.id);
+          
+          if (finalSettings && finalSettings.member_log_channel_id) {
+            const memberLogsChannel = await interaction.guild!.channels.fetch(finalSettings.member_log_channel_id) as TextChannel;
+            
+            if (memberLogsChannel && memberLogsChannel.isTextBased()) {
+              // Show an example invite tracking log
+              const exampleEmbed = new EmbedBuilder()
+                .setColor('#5865F2')
+                .setTitle('👋 Invite Tracking Configuration')
+                .setDescription(`This channel will receive all member join and leave logs with invite information.`)
+                .addFields([
+                  { 
+                    name: 'Invite Tracking', 
+                    value: 'The bot will track which invites are used when members join the server.' 
+                  },
+                  { 
+                    name: 'Join Logs', 
+                    value: 'You will see who invited each new member, along with server stats.'
+                  },
+                  { 
+                    name: 'Leave Logs', 
+                    value: 'When members leave, you will see who invited them and if they might be fake invites.'
+                  }
+                ])
+                .setFooter({ text: '• Made By Soggra' })
+                .setTimestamp();
+              
+              await memberLogsChannel.send({ embeds: [exampleEmbed] });
+              logInfo('Server Setup', `Sent invite tracking configuration message to member logs channel`);
+            }
+          }
+        } catch (error) {
+          logError('Server Setup', `Error sending invite tracking configuration: ${error}`);
+        }
+        
         // Initialize invite tracker on the client
         await initializeInviteTracker(interaction.client);
         
         logInfo('Server Setup', `Set up invite tracking system in ${interaction.guild!.name}`);
         successMessages.push('✅ Invite tracking system set up');
       } catch (error) {
-        logError('Server Setup', `Error setting up invite tracking: ${error}`);
+        logError('Server Setup', `Error setting up invite tracking system: ${error}`);
       }
     }
 
@@ -647,8 +773,11 @@ async function setupLanguage(interaction: ChatInputCommandInteraction, language:
 
 /**
  * Set up verification system
+ * @param interaction The interaction
+ * @param staffRole The staff role
+ * @param verificationType Optional verification type to use
  */
-async function setupVerificationSystem(interaction: ChatInputCommandInteraction, staffRole: Role): Promise<void> {
+async function setupVerificationSystem(interaction: ChatInputCommandInteraction, staffRole: Role, verificationType?: string): Promise<void> {
   try {
     // Create verification channel
     const verificationChannel = await interaction.guild!.channels.create({
@@ -692,10 +821,29 @@ async function setupVerificationSystem(interaction: ChatInputCommandInteraction,
       reason: 'Role for verified members'
     });
     
+    // Determine verification type
+    let verType = VerificationType.BUTTON; // Default to button verification
+    
+    if (verificationType) {
+      switch (verificationType) {
+        case 'captcha':
+          verType = VerificationType.CAPTCHA;
+          break;
+        case 'custom_question':
+          verType = VerificationType.CUSTOM_QUESTION;
+          break;
+        case 'age_verification':
+          verType = VerificationType.AGE_VERIFICATION;
+          break;
+        default:
+          verType = VerificationType.BUTTON;
+      }
+    }
+    
     // Set up verification settings
     const settings: any = {
       enabled: true,
-      type: VerificationType.BUTTON,
+      type: verType,
       role_id: verifiedRole.id,
       channel_id: verificationChannel.id
     };
@@ -734,7 +882,7 @@ async function setupVerificationSystem(interaction: ChatInputCommandInteraction,
             .addFields([
               { name: 'Verification Channel', value: `<#${verificationChannel.id}>`, inline: true },
               { name: 'Verified Role', value: `<@&${verifiedRole.id}>`, inline: true },
-              { name: 'Verification Type', value: 'Button Verification', inline: true },
+              { name: 'Verification Type', value: getVerificationTypeName(verType), inline: true },
               { name: 'Next Steps', value: 'Use `/verification-setup` to customize verification settings.' }
             ])
             .setFooter({ text: `Coded by IdanMR • Today at ${timeString}` });
@@ -857,6 +1005,10 @@ export async function setupMemberEventsSystem(interaction: ChatInputCommandInter
         parent: communityCategory.id
       });
       logInfo('Server Setup', `Created welcome channel in ${guild.name}`);
+    } else if (welcomeChannel.parentId !== communityCategory.id) {
+      // Move the channel to the community category if it's not already there
+      await welcomeChannel.setParent(communityCategory.id);
+      logInfo('Server Setup', `Moved welcome channel to community category in ${guild.name}`);
     }
     
     // Create leave channel if it doesn't exist
@@ -871,6 +1023,10 @@ export async function setupMemberEventsSystem(interaction: ChatInputCommandInter
         parent: communityCategory.id
       });
       logInfo('Server Setup', `Created goodbye channel in ${guild.name}`);
+    } else if (leaveChannel.parentId !== communityCategory.id) {
+      // Move the channel to the community category if it's not already there
+      await leaveChannel.setParent(communityCategory.id);
+      logInfo('Server Setup', `Moved goodbye channel to community category in ${guild.name}`);
     }
     
     // Create default welcome and leave messages
@@ -887,7 +1043,20 @@ export async function setupMemberEventsSystem(interaction: ChatInputCommandInter
       true // Enable member count tracking
     );
     
-    // Provide some example messages in the channels
+    // Get settings to find member logs channel
+    const settings = await settingsManager.getSettings(guild.id);
+    let memberLogsChannel: TextChannel | null = null;
+    
+    // Try to get the member logs channel - this is where we should send the configuration info
+    if (settings && settings.member_log_channel_id) {
+      try {
+        memberLogsChannel = await guild.channels.fetch(settings.member_log_channel_id) as TextChannel;
+      } catch (error) {
+        logError('Server Setup', `Error fetching member logs channel: ${error}`);
+      }
+    }
+    
+    // Prepare configuration embeds
     const welcomeEmbed = new EmbedBuilder()
       .setColor(Colors.SUCCESS)
       .setTitle('👋 Member Welcome Configuration')
@@ -908,8 +1077,25 @@ export async function setupMemberEventsSystem(interaction: ChatInputCommandInter
       ])
       .setFooter({ text: '• Made By Soggra' });
     
-    await welcomeChannel.send({ embeds: [welcomeEmbed] });
-    await leaveChannel.send({ embeds: [leaveEmbed] });
+    // Send config messages to the member logs channel if available, otherwise to welcome/leave channels
+    if (memberLogsChannel) {
+      try {
+        // Send both configuration messages to member logs
+        await memberLogsChannel.send({ embeds: [welcomeEmbed] });
+        await memberLogsChannel.send({ embeds: [leaveEmbed] });
+        logInfo('Server Setup', `Sent member events configuration to member logs channel in ${guild.name}`);
+      } catch (error) {
+        logError('Server Setup', `Error sending to member logs channel: ${error}`);
+        
+        // Fall back to sending to welcome/leave channels if member logs fails
+        await welcomeChannel.send({ embeds: [welcomeEmbed] });
+        await leaveChannel.send({ embeds: [leaveEmbed] });
+      }
+    } else {
+      // No member logs channel, so send to individual welcome/leave channels
+      await welcomeChannel.send({ embeds: [welcomeEmbed] });
+      await leaveChannel.send({ embeds: [leaveEmbed] });
+    }
     
     logInfo('Server Setup', `Set up member events system in ${guild.name}`);
   } catch (error) {
@@ -919,66 +1105,22 @@ export async function setupMemberEventsSystem(interaction: ChatInputCommandInter
 }
 
 /**
- * Set up invite tracking system
-async function setupInviteTrackingSystem(interaction: ChatInputCommandInteraction): Promise<void> {
-  try {
-    // Check if welcome channel exists, which is required for invite tracking
-    const settings = await settingsManager.getSettings(interaction.guild!.id);
-    if (!settings || !settings.welcome_channel_id) {
-      // Create a welcome channel if it doesn't exist
-      const welcomeChannel = await interaction.guild!.channels.create({
-        name: 'welcome',
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          {
-            id: interaction.guild!.roles.everyone.id,
-            allow: [
-              PermissionsBitField.Flags.ViewChannel,
-              PermissionsBitField.Flags.ReadMessageHistory
-            ],
-            deny: [
-              PermissionsBitField.Flags.SendMessages
-            ]
-          },
-          {
-            id: interaction.client.user!.id,
-            allow: [
-              PermissionsBitField.Flags.ViewChannel,
-              PermissionsBitField.Flags.SendMessages,
-              PermissionsBitField.Flags.ManageMessages
-            ]
-          }
-        ]
-      });
-      
-      // Update settings with welcome channel
-      if (!settings) {
-        await settingsManager.updateSettings(interaction.guild!.id, { welcome_channel_id: welcomeChannel.id });
-      } else {
-        settings.welcome_channel_id = welcomeChannel.id;
-        await settingsManager.updateSettings(interaction.guild!.id, settings);
-      }
-      
-      // Configure member events to use this channel
-      await configureMemberEvents(
-        interaction.guild!.id,
-        welcomeChannel.id,
-        undefined, // No leave channel
-        'Welcome to the server, {user}! We hope you enjoy your stay.',
-        undefined, // Default leave message
-        true // Show member count
-      );
-      
-      logInfo('Server Setup', `Created welcome channel for invite tracking in ${interaction.guild!.name}`);
-    }
-    
-    // Initialize invite tracker on the client
-    await initializeInviteTracker(interaction.client);
-    
-    logInfo('Server Setup', `Set up invite tracking system in ${interaction.guild!.name}`);
-  } catch (error) {
-    logError('Server Setup', `Error setting up invite tracking system: ${error}`);
-    throw error;
+ * Helper function to get the verification type name
+ * @param type The verification type
+ * @returns The verification type name
+ */
+function getVerificationTypeName(type: VerificationType): string {
+  switch (type) {
+    case VerificationType.BUTTON:
+      return 'Button Verification';
+    case VerificationType.CAPTCHA:
+      return 'CAPTCHA Verification';
+    case VerificationType.CUSTOM_QUESTION:
+      return 'Custom Question Verification';
+    case VerificationType.AGE_VERIFICATION:
+      return 'Age Verification';
+    default:
+      return 'Button Verification';
   }
 }
 
@@ -1101,6 +1243,143 @@ export async function setupRulesChannel(interaction: ChatInputCommandInteraction
     logInfo('Server Setup', `Set up rules channel in ${interaction.guild!.name}`);
   } catch (error) {
     logError('Server Setup', `Error setting up rules channel: ${error}`);
+    throw error;
+  }
+}
+
+// Add helper function for staff role creation
+async function createStaffRole(interaction: ChatInputCommandInteraction): Promise<Role> {
+  // Check if staff role already exists
+  let staffRole = interaction.guild!.roles.cache.find(role => role.name === 'Staff');
+  
+  if (!staffRole) {
+    // Create staff role
+    staffRole = await interaction.guild!.roles.create({
+      name: 'Staff',
+      color: '#5865F2',
+      reason: 'Server setup - create staff role',
+      permissions: [
+        PermissionsBitField.Flags.ManageMessages,
+        PermissionsBitField.Flags.KickMembers,
+        PermissionsBitField.Flags.ModerateMembers
+      ]
+    });
+    logInfo('Server Setup', `Created Staff role in ${interaction.guild!.name}`);
+  }
+  
+  return staffRole;
+}
+
+// Add helper function for logs category creation
+async function createLogsCategory(interaction: ChatInputCommandInteraction): Promise<CategoryChannel> {
+  // Check if logs category already exists
+  let logsCategory = interaction.guild!.channels.cache.find(
+    channel => channel.type === ChannelType.GuildCategory && channel.name.toLowerCase() === 'logs'
+  ) as CategoryChannel;
+  
+  if (!logsCategory) {
+    // Create logs category
+    logsCategory = await interaction.guild!.channels.create({
+      name: 'Logs',
+      type: ChannelType.GuildCategory,
+      permissionOverwrites: [
+        {
+          id: interaction.guild!.roles.everyone.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.client.user!.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ManageMessages
+          ]
+        }
+      ]
+    });
+    logInfo('Server Setup', `Created Logs category in ${interaction.guild!.name}`);
+  }
+  
+  return logsCategory;
+}
+
+/**
+ * Set up invite tracking system
+ */
+async function setupInviteTrackingSystem(interaction: ChatInputCommandInteraction): Promise<void> {
+  try {
+    // Get current server settings
+    const settings = await settingsManager.getSettings(interaction.guild!.id);
+    
+    // Check if member logs exist, which is required for invite tracking
+    if (!settings || !settings.member_log_channel_id) {
+      logWarning('Server Setup', `No member logs channel found. Setting up logging channels first.`);
+      
+      // Set up logging channels if they don't exist
+      if (!settings || !settings.member_log_channel_id) {
+        // Create or get the logs category
+        let logsCategory = interaction.guild!.channels.cache.find(channel => 
+          channel.type === ChannelType.GuildCategory && channel.name.toLowerCase() === 'logs'
+        ) as CategoryChannel;
+        
+        if (!logsCategory) {
+          logsCategory = await interaction.guild!.channels.create({
+            name: 'LOGS',
+            type: ChannelType.GuildCategory,
+          });
+          logInfo('Server Setup', `Created logs category in ${interaction.guild!.name}`);
+        }
+        
+        // Create the member logs channel
+        const memberLogsChannel = await interaction.guild!.channels.create({
+          name: 'member-logs',
+          type: ChannelType.GuildText,
+          parent: logsCategory.id,
+          permissionOverwrites: [
+            {
+              id: interaction.guild!.roles.everyone.id,
+              deny: [PermissionsBitField.Flags.ViewChannel]
+            },
+            {
+              id: interaction.client.user!.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ManageMessages
+              ]
+            }
+          ]
+        });
+        
+        // Update settings with member logs channel
+        await settingsManager.updateSettings(interaction.guild!.id, {
+          member_log_channel_id: memberLogsChannel.id
+        });
+        
+        logInfo('Server Setup', `Created member logs channel for invite tracking in ${interaction.guild!.name}`);
+      }
+    }
+    
+    // Ensure the database has the required table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS invite_tracking (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        invite_code TEXT,
+        inviter TEXT,
+        inviter_id TEXT,
+        joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+    
+    // Send example invite tracking logs to the member logs channel
+    const { sendInviteTrackingExamples } = await import('../../handlers/invites/invite-tracker');
+    await sendInviteTrackingExamples(interaction.guild!.id);
+    
+    logInfo('Server Setup', `Set up invite tracking system in ${interaction.guild!.name}`);
+  } catch (error) {
+    logError('Server Setup', `Error setting up invite tracking system: ${error}`);
     throw error;
   }
 }

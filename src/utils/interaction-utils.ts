@@ -57,7 +57,7 @@ export async function deferEphemeral(
   interaction: CommandInteraction | ButtonInteraction | StringSelectMenuInteraction | ModalSubmitInteraction
 ) {
   return interaction.deferReply({
-    ephemeral: true
+    flags: MessageFlags.Ephemeral
   });
 }
 
@@ -70,6 +70,6 @@ export async function followUpEphemeral(
 ) {
   return interaction.followUp({
     ...options,
-    ephemeral: true
+    flags: MessageFlags.Ephemeral
   });
 }
