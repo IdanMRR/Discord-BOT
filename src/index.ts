@@ -56,6 +56,9 @@ import { initializeMemberEvents } from './handlers/members/member-events';
 // Import the invite tracker
 import { initializeInviteTracker } from './handlers/invites/invite-tracker';
 
+// Import the red alert tracker
+import { startRedAlertTracker } from './handlers/alerts/red-alert-handler';
+
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user?.tag}!`);
@@ -76,6 +79,9 @@ client.once('ready', async () => {
     // Start the API server
     startApiServer();
     console.log('API server started successfully');
+
+    // Start the red alert tracker
+    startRedAlertTracker(client);
   } catch (error) {
     console.error('Error during startup:', error);
   }
@@ -270,6 +276,27 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
       }
     }
+  }
+
+  // Handle autocomplete interactions (separate from other interactions)
+  if (!interaction.isAutocomplete()) return;
+    
+  const commandName = interaction.commandName;
+  const command = client.commands.get(commandName);
+    
+  if (!command) {
+    console.error(`No command matching ${commandName} was found for autocomplete.`);
+    return;
+  }
+    
+  try {
+    // Type assertion to access the autocomplete function
+    const autocompleteCommand = command as unknown as { autocomplete?: Function };
+    if (autocompleteCommand.autocomplete) {
+      await autocompleteCommand.autocomplete(interaction);
+    }
+  } catch (error) {
+    console.error(`Error handling autocomplete for ${commandName}:`, error);
   }
 });
 
