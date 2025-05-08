@@ -137,6 +137,9 @@ export async function sendTestAlert(client: Client, channelId: string) {
             isTestAlert: true
         };
         
+        let success = false;
+        
+        // First, try to send to the specified channel
         const channel = await client.channels.fetch(channelId);
         if (channel && channel instanceof TextChannel) {
             const embed = new EmbedBuilder()
@@ -152,9 +155,38 @@ export async function sendTestAlert(client: Client, channelId: string) {
                 .setFooter({ text: 'System Test' });
             
             await channel.send({ embeds: [embed] });
-            return true;
+            success = true;
         }
-        return false;
+        
+        // Then, also send to any configured alert channels (if different from the current channel)
+        const alertChannelIds = (process.env.RED_ALERT_CHANNEL_IDS || '').split(',').filter(id => id && id !== channelId);
+        
+        for (const alertChannelId of alertChannelIds) {
+            try {
+                const alertChannel = await client.channels.fetch(alertChannelId);
+                if (alertChannel && alertChannel instanceof TextChannel) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0xFF0000)
+                        .setTitle('🚨 RED ALERT - TEST 🚨')
+                        .setDescription('**This is only a test alert**\n*Sent from another channel*')
+                        .addFields(
+                            { name: 'Time', value: new Date().toLocaleTimeString(), inline: true },
+                            { name: 'Location', value: 'Test', inline: true },
+                            { name: 'Status', value: 'This is only a system test. There is no real danger.', inline: false },
+                            { name: 'Source', value: `Test initiated from <#${channelId}>`, inline: false }
+                        )
+                        .setTimestamp()
+                        .setFooter({ text: 'System Test' });
+                    
+                    await alertChannel.send({ embeds: [embed] });
+                    success = true;
+                }
+            } catch (channelError) {
+                console.error(`Error sending test alert to channel ${alertChannelId}:`, channelError);
+            }
+        }
+        
+        return success;
     } catch (error) {
         console.error('Error sending test alert:', error);
         return false;

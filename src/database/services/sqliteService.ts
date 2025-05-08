@@ -65,6 +65,7 @@ export interface ServerSettings {
   staff_role_ids?: string[];
   language?: string;
   auto_mod_enabled?: boolean;
+  weather_channel_id?: string;
   auto_mod_settings?: {
     filter_profanity: boolean;
     filter_invites: boolean;

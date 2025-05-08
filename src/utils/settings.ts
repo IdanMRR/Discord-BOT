@@ -21,6 +21,7 @@ export interface ServerSettings {
   log_all_commands?: boolean;
   staff_role_ids?: string[];
   auto_mod_enabled?: boolean;
+  weather_channel_id?: string;
   auto_mod_settings?: {
     filter_profanity: boolean;
     filter_invites: boolean;
@@ -31,6 +32,17 @@ export interface ServerSettings {
   };
   templates?: Record<string, any[]>;
   active_templates?: Record<string, string>;
+  guild_id?: string;
+  prefix?: string;
+  leave_message?: string;
+  leave_channel_id?: string;
+  member_count_channel_id?: string;
+  logs_channel_id?: string;
+  starboard_channel_id?: string;
+  starboard_threshold?: number;
+  ticket_channel_id?: string;
+  red_alert_channel_id?: string;
+  custom_cities?: string;
 }
 
 // Settings manager that uses SQLite for persistent storage
@@ -79,10 +91,10 @@ class SettingsManager {
           }
         }
         
-        // Update cache
-        this.cache.set(guildId, settings as ServerSettings);
+        // Update cache - use a type assertion with unknown to safely convert between types
+        this.cache.set(guildId, settings as unknown as ServerSettings);
         
-        return settings as ServerSettings;
+        return settings as unknown as ServerSettings;
       }
       
       // If no settings found, return empty object
@@ -97,12 +109,14 @@ class SettingsManager {
   async getSetting(guildId: string, key: keyof ServerSettings): Promise<any> {
     try {
       // Try to get directly from the database first for most up-to-date value
-      const value = await ServerSettingsService.getSetting(guildId, key);
+      // Use type assertion to handle keyof type mismatch
+      const value = await ServerSettingsService.getSetting(guildId, key as any);
       
       // Update cache if we have this guild cached
       if (this.cache.has(guildId) && value !== null) {
         const cachedSettings = this.cache.get(guildId) as ServerSettings;
-        cachedSettings[key] = value;
+        // Use type assertion to safely assign to key
+        cachedSettings[key] = value as any;
         this.cache.set(guildId, cachedSettings);
       }
       
@@ -128,13 +142,14 @@ class SettingsManager {
       updateSettings[key] = value;
       
       // Update in SQLite
-      const success = await ServerSettingsService.updateSettings(guildId, updateSettings);
+      const success = await ServerSettingsService.updateSettings(guildId, updateSettings as any);
       
       if (success) {
         // Also update in cache if it exists
         if (this.cache.has(guildId)) {
           const cachedSettings = this.cache.get(guildId) as ServerSettings;
-          cachedSettings[key] = value;
+          // Use type assertion to safely assign to key
+          cachedSettings[key] = value as any;
           this.cache.set(guildId, cachedSettings);
         }
         
@@ -154,7 +169,7 @@ class SettingsManager {
   async updateSettings(guildId: string, newSettings: Partial<ServerSettings>): Promise<boolean> {
     try {
       // Update in SQLite
-      const success = await ServerSettingsService.updateSettings(guildId, newSettings);
+      const success = await ServerSettingsService.updateSettings(guildId, newSettings as any);
       
       if (success) {
         // Also update in cache if it exists

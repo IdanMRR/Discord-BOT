@@ -19,19 +19,43 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
 
-        // Send a test alert to the current channel
+        // Get the configured alert channels
+        const alertChannelIds = (process.env.RED_ALERT_CHANNEL_IDS || '').split(',').filter(id => id);
+        const otherChannels = alertChannelIds.filter(id => id !== channel.id);
+
+        // Send a test alert to the current channel and configured channels
         const success = await sendTestAlert(interaction.client, channel.id);
         
         if (success) {
             const embed = new EmbedBuilder()
                 .setColor(0x00FF00)
                 .setTitle('✅ Test Alert Sent!')
-                .setDescription('A test Red Alert notification has been sent to this channel.')
+                .setDescription('A test Red Alert notification has been sent.')
                 .addFields(
-                    { name: 'Channel', value: `<#${channel.id}>`, inline: true },
-                    { name: 'Note', value: 'This was just a test. The bot is functioning correctly.', inline: false }
-                )
-                .setTimestamp();
+                    { name: 'Current Channel', value: `<#${channel.id}>`, inline: true }
+                );
+
+            // Add information about other alert channels if they exist
+            if (otherChannels.length > 0) {
+                embed.addFields({
+                    name: 'Also Sent To',
+                    value: otherChannels.map(id => `<#${id}>`).join('\n'),
+                    inline: false
+                });
+            } else if (alertChannelIds.length === 0) {
+                embed.addFields({
+                    name: 'Note',
+                    value: 'No alert channels are configured. Use `/setup-redalert` to configure channels.',
+                    inline: false
+                });
+            }
+
+            embed.addFields({
+                name: 'Status',
+                value: 'This was just a test. The bot is functioning correctly.',
+                inline: false
+            })
+            .setTimestamp();
             
             try {
                 await interaction.editReply({ embeds: [embed] });

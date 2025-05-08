@@ -34,6 +34,11 @@ connectToDatabase()
     import('./database/migrations/add-ticket-categories')
       .then(() => console.log('Ticket categories migration loaded'))
       .catch(error => console.error('Error loading ticket categories migration:', error));
+      
+    // Import and run the custom cities migration
+    import('./database/migrations/add-custom-cities')
+      .then(() => console.log('Custom cities migration loaded'))
+      .catch(error => console.error('Error loading custom cities migration:', error));
   })
   .catch(error => {
     console.error('Failed to connect to database:', error);
@@ -45,9 +50,16 @@ client.commands = new Collection<string, Command>();
 
 // Load commands
 async function initializeCommands() {
-  const commands = await loadCommands();
-  client.commands = commands;
-  await registerCommands(commands);
+  try {
+    console.log('Loading commands into memory...');
+    const commands = await loadCommands();
+    client.commands = commands;
+    console.log(`Loaded ${commands.size} commands into memory.`);
+    // We're removing the registerCommands call here since that's handled by deploy-commands.ts
+    // This prevents duplicate command registration
+  } catch (error) {
+    console.error('Error loading commands:', error);
+  }
 }
 
 // Import the member events functions
@@ -59,14 +71,21 @@ import { initializeInviteTracker } from './handlers/invites/invite-tracker';
 // Import the red alert tracker
 import { startRedAlertTracker } from './handlers/alerts/red-alert-handler';
 
+// Import the weather scheduler
+import { initWeatherScheduler, checkWeatherDatabaseSetup } from './handlers/utility/weather-scheduler';
+
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user?.tag}!`);
   
+  // Diagnostic: Check weather database setup
+  console.log('Running weather database diagnostic check...');
+  await checkWeatherDatabaseSetup();
+  
   // Load all commands
   try {
     await initializeCommands();
-    console.log('Commands loaded and registered successfully');
+    console.log('Commands loaded into memory successfully');
     
     // Initialize member events (welcome, leave, member count)
     initializeMemberEvents();
@@ -82,6 +101,10 @@ client.once('ready', async () => {
 
     // Start the red alert tracker
     startRedAlertTracker(client);
+
+    // Initialize weather scheduler
+    await initWeatherScheduler(client);
+    console.log('Weather scheduler initialized successfully');
   } catch (error) {
     console.error('Error during startup:', error);
   }

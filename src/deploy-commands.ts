@@ -1,59 +1,38 @@
-import { REST, Routes, SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { REST, Routes } from 'discord.js';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Load environment variables
 dotenv.config();
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName('ping')
-    .setDescription('Replies with pong and latency information'),
-  new SlashCommandBuilder()
-    .setName('hello')
-    .setDescription('Replies with a friendly greeting'),
-  new SlashCommandBuilder()
-    .setName('test')
-    .setDescription('A test command to verify the bot is working'),
-  
-  // Kick command
-  new SlashCommandBuilder()
-    .setName('kick')
-    .setDescription('Kick a user from the server')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to kick')
-        .setRequired(true))
-    .addStringOption(option => 
-      option
-        .setName('reason')
-        .setDescription('The reason for kicking')
-        .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
-  
-  // Ban command
-  new SlashCommandBuilder()
-    .setName('ban')
-    .setDescription('Ban a user from the server')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to ban')
-        .setRequired(true))
-    .addStringOption(option => 
-      option
-        .setName('reason')
-        .setDescription('The reason for banning')
-        .setRequired(false))
-    .addIntegerOption(option => 
-      option
-        .setName('days')
-        .setDescription('Number of days of messages to delete (0-7)')
-        .setMinValue(0)
-        .setMaxValue(7)
-        .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
-].map(command => command.toJSON());
+// The test guild ID
+const TEST_GUILD_ID = '1365777891333374022';
+
+async function loadAllCommands() {
+  const commands = [];
+  const foldersPath = path.join(__dirname, 'commands');
+  const commandFolders = fs.readdirSync(foldersPath);
+
+  for (const folder of commandFolders) {
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') || file.endsWith('.ts'));
+    
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = require(filePath);
+      
+      // Set a new item in the Collection with the key as the command name and the value as the exported module
+      if ('data' in command) {
+        commands.push(command.data.toJSON());
+      } else {
+        console.log(`[WARNING] The command at ${filePath} is missing a required "data" property.`);
+      }
+    }
+  }
+
+  return commands;
+}
 
 // Prepare to deploy commands
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '');
@@ -61,7 +40,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '
 // Deploy commands function
 async function deployCommands() {
   try {
-    console.log('Started refreshing application (/) commands.');
+    console.log(`Started refreshing application commands for test server (${TEST_GUILD_ID})...`);
 
     // The CLIENT_ID is your bot's application ID, which you can find in the Discord Developer Portal
     // You need to add this to your .env file
@@ -69,14 +48,24 @@ async function deployCommands() {
       throw new Error('CLIENT_ID is not defined in .env file');
     }
 
-    // For global commands
+    // Load all commands dynamically
+    console.log('Loading commands...');
+    const commands = await loadAllCommands();
+    
+    console.log(`Found ${commands.length} commands to deploy.`);
+
+    // Register commands to the specific guild/server
+    console.log(`Registering commands to server ${TEST_GUILD_ID}...`);
+    
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, TEST_GUILD_ID),
       { body: commands },
     );
 
-    console.log('Successfully reloaded application (/) commands.');
-  } catch (error) {
+    console.log(`Successfully registered application commands to server ${TEST_GUILD_ID}!`);
+    console.log('Guild commands update immediately (no waiting period).');
+  } catch (error: any) {
+    console.error('Error deploying commands:');
     console.error(error);
   }
 }
