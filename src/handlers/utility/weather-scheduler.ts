@@ -36,7 +36,7 @@ interface ServerCitiesMapping {
 }
 
 // In-memory cache of configured weather channels
-const weatherChannels: WeatherChannelMapping = {};
+export const weatherChannels: WeatherChannelMapping = {};
 
 // In-memory cache of custom cities per server
 const serverCities: ServerCitiesMapping = {};
@@ -53,20 +53,20 @@ const MIN_UPDATE_INTERVAL = 60000; // At least 1 minute between updates
  */
 async function loadWeatherChannels(): Promise<void> {
   try {
-    console.log('[WEATHER DEBUG] Loading configured weather channels from database...');
-    // Use a direct query instead of relying on settings manager which might have type issues
+    console.log('Loading configured weather channels from database...');
+    
+    // Get weather channels with valid non-empty values
     const settings = db.prepare("SELECT guild_id, weather_channel_id, custom_cities FROM server_settings WHERE weather_channel_id IS NOT NULL AND weather_channel_id != ''").all() as any[];
     
     if (settings.length === 0) {
-      console.log('[WEATHER DEBUG] No weather channels configured in the database');
+      console.log('No weather channels configured in the database');
       return;
     }
     
-    console.log(`[WEATHER DEBUG] Found ${settings.length} configured weather channels in database`);
+    console.log(`Found ${settings.length} configured weather channels in database`);
     
     for (const setting of settings) {
       if (setting.weather_channel_id) {
-        console.log(`[WEATHER DEBUG] Loaded weather channel ${setting.weather_channel_id} for guild ${setting.guild_id}`);
         weatherChannels[setting.guild_id] = setting.weather_channel_id;
       }
       
@@ -76,17 +76,16 @@ async function loadWeatherChannels(): Promise<void> {
           const cities = JSON.parse(setting.custom_cities);
           if (Array.isArray(cities) && cities.length > 0) {
             serverCities[setting.guild_id] = cities;
-            console.log(`[WEATHER DEBUG] Loaded ${cities.length} custom cities for guild ${setting.guild_id}`);
           }
         } catch (parseError) {
-          console.error(`[WEATHER DEBUG] Error parsing custom cities for guild ${setting.guild_id}:`, parseError);
+          console.error(`Error parsing custom cities for guild ${setting.guild_id}:`, parseError);
         }
       }
     }
     
-    console.log(`[WEATHER DEBUG] Loaded ${Object.keys(weatherChannels).length} weather channels and ${Object.keys(serverCities).length} custom city configurations`);
+    console.log(`Loaded ${Object.keys(weatherChannels).length} weather channels and ${Object.keys(serverCities).length} custom city configurations`);
   } catch (error) {
-    console.error('[WEATHER DEBUG] Error loading weather channels from database:', error);
+    console.error('Error loading weather channels from database:', error);
   }
 }
 
@@ -108,15 +107,6 @@ export async function initWeatherScheduler(client: Client): Promise<void> {
     });
     
     console.log('Weather scheduler initialized: daily report at 8:00 AM Israel time (UTC+3)');
-    
-    // For testing: Send weather update every 5 minutes (reduced frequency to avoid rate limiting)
-    // COMMENT THIS OUT IN PRODUCTION
-    schedule.scheduleJob('*/5 * * * *', async () => {
-      console.log('Running test weather update (every 5 minutes)');
-      await sendDailyWeatherUpdates(client);
-    });
-    
-    console.log('Test scheduler initialized: update every 5 minutes (reduced frequency to avoid API rate limits)');
   } catch (error) {
     console.error('Error initializing weather scheduler:', error);
   }
@@ -129,24 +119,48 @@ export async function initWeatherScheduler(client: Client): Promise<void> {
  */
 export async function setWeatherChannel(guildId: string, channelId: string): Promise<boolean> {
   try {
-    console.log(`[WEATHER DEBUG] Setting weather channel: guildId=${guildId}, channelId=${channelId}`);
+    console.log(`Setting weather channel for guild ${guildId} to ${channelId}`);
     
-    // Update in database
-    console.log(`[WEATHER DEBUG] Updating weather_channel_id in database for guild ${guildId}`);
+    // Method 1: Use the settings manager (standard way)
     const success = await settingsManager.setSetting(guildId, 'weather_channel_id', channelId);
     
-    if (success) {
-      // Update in-memory cache
-      console.log(`[WEATHER DEBUG] Database update successful. Updating in-memory cache.`);
-      weatherChannels[guildId] = channelId;
-      console.log(`[WEATHER DEBUG] Weather channel for guild ${guildId} set to ${channelId} successfully`);
+    // Method 2: As a backup, also try direct database operations
+    try {
+      // Check if record exists
+      const checkRecord = db.prepare("SELECT guild_id FROM server_settings WHERE guild_id = ?").get(guildId);
+      
+      if (checkRecord) {
+        // UPDATE existing record
+        db.prepare("UPDATE server_settings SET weather_channel_id = ? WHERE guild_id = ?").run(channelId, guildId);
+      } else {
+        // INSERT new record
+        db.prepare("INSERT INTO server_settings (guild_id, weather_channel_id) VALUES (?, ?)").run(guildId, channelId);
+      }
+    } catch (dbError) {
+      console.error(`Direct database update failed for guild ${guildId}:`, dbError);
+    }
+    
+    // Update in-memory cache
+    weatherChannels[guildId] = channelId;
+    
+    // Verify the update
+    const verification = db.prepare("SELECT weather_channel_id FROM server_settings WHERE guild_id = ?").get(guildId) as any;
+    
+    if (verification && verification.weather_channel_id === channelId) {
+      console.log(`Successfully set weather channel for guild ${guildId}`);
       return true;
     }
     
-    console.error(`[WEATHER DEBUG] Failed to save weather channel settings to database for guild ${guildId}`);
+    // If verification failed but we still updated the cache, return success from settings manager
+    if (success) {
+      console.log(`Settings manager reports success for guild ${guildId}`);
+      return true;
+    }
+    
+    console.error(`Failed to save weather channel settings for guild ${guildId}`);
     return false;
   } catch (error) {
-    console.error(`[WEATHER DEBUG] Error setting weather channel for guild ${guildId}:`, error);
+    console.error(`Error setting weather channel for guild ${guildId}:`, error);
     return false;
   }
 }
@@ -158,25 +172,40 @@ export async function setWeatherChannel(guildId: string, channelId: string): Pro
  */
 export async function setCustomCities(guildId: string, cities: CityData[]): Promise<boolean> {
   try {
-    console.log(`[WEATHER DEBUG] Setting custom cities for guild ${guildId}: ${cities.length} cities`);
+    console.log(`Setting custom cities for guild ${guildId}: ${cities.length} cities`);
     
     // Convert cities array to JSON string
     const citiesJson = JSON.stringify(cities);
     
-    // Update in database
+    // Update in settings manager
     const success = await settingsManager.setSetting(guildId, 'custom_cities', citiesJson);
     
+    // Also try direct database update as backup
+    try {
+      const checkRecord = db.prepare("SELECT guild_id FROM server_settings WHERE guild_id = ?").get(guildId);
+      
+      if (checkRecord) {
+        db.prepare("UPDATE server_settings SET custom_cities = ? WHERE guild_id = ?").run(citiesJson, guildId);
+      } else {
+        db.prepare("INSERT INTO server_settings (guild_id, custom_cities) VALUES (?, ?)").run(guildId, citiesJson);
+      }
+    } catch (dbError) {
+      console.error(`Direct database update failed for custom cities in guild ${guildId}:`, dbError);
+    }
+    
+    // Update in-memory cache
+    serverCities[guildId] = cities;
+    
+    // Return success from settings manager
     if (success) {
-      // Update in-memory cache
-      serverCities[guildId] = cities;
-      console.log(`[WEATHER DEBUG] Custom cities for guild ${guildId} set successfully`);
+      console.log(`Successfully set custom cities for guild ${guildId}`);
       return true;
     }
     
-    console.error(`[WEATHER DEBUG] Failed to save custom cities to database for guild ${guildId}`);
+    console.error(`Failed to save custom cities to database for guild ${guildId}`);
     return false;
   } catch (error) {
-    console.error(`[WEATHER DEBUG] Error setting custom cities for guild ${guildId}:`, error);
+    console.error(`Error setting custom cities for guild ${guildId}:`, error);
     return false;
   }
 }
@@ -204,14 +233,14 @@ export async function getCustomCities(guildId: string): Promise<CityData[]> {
           return cities;
         }
       } catch (parseError) {
-        console.error(`[WEATHER DEBUG] Error parsing custom cities for guild ${guildId}:`, parseError);
+        console.error(`Error parsing custom cities for guild ${guildId}:`, parseError);
       }
     }
     
     // Return default cities if no custom cities are configured
     return defaultCities;
   } catch (error) {
-    console.error(`[WEATHER DEBUG] Error getting custom cities for guild ${guildId}:`, error);
+    console.error(`Error getting custom cities for guild ${guildId}:`, error);
     return defaultCities;
   }
 }
@@ -224,32 +253,24 @@ export async function getWeatherChannel(guildId: string): Promise<string | null>
   try {
     // First check the in-memory cache
     if (weatherChannels[guildId]) {
-      console.log(`[WEATHER DEBUG] Found weather channel in memory cache: ${weatherChannels[guildId]} for guild ${guildId}`);
       return weatherChannels[guildId];
     }
     
-    console.log(`[WEATHER DEBUG] Weather channel not in memory cache for guild ${guildId}, checking database...`);
-    
     // If not in cache, check the database
     const settings = await settingsManager.getSettings(guildId);
-    console.log(`[WEATHER DEBUG] Database settings for guild ${guildId}:`, JSON.stringify({
-      hasSettings: !!settings,
-      weather_channel_id: settings.weather_channel_id || 'not set'
-    }));
     
     const channelId = settings.weather_channel_id;
     
     if (channelId) {
-      console.log(`[WEATHER DEBUG] Found weather channel in database: ${channelId} for guild ${guildId}`);
       // Update the cache
       weatherChannels[guildId] = channelId;
       return channelId;
     }
     
-    console.log(`[WEATHER DEBUG] No weather channel configured for guild ${guildId}`);
+    console.log(`No weather channel configured for guild ${guildId}`);
     return null;
   } catch (error) {
-    console.error(`[WEATHER DEBUG] Error getting weather channel for guild ${guildId}:`, error);
+    console.error(`Error getting weather channel for guild ${guildId}:`, error);
     return null;
   }
 }
@@ -279,22 +300,18 @@ async function sendDailyWeatherUpdates(client: Client): Promise<void> {
     
     // Get all guilds the bot is in
     const guilds = client.guilds.cache.values();
-    console.log(`[WEATHER DEBUG] Found ${client.guilds.cache.size} guilds to check for weather channels`);
+    console.log(`Found ${client.guilds.cache.size} guilds to check for weather channels`);
     
     for (const guild of guilds) {
       try {
-        console.log(`[WEATHER DEBUG] Checking guild ${guild.id} (${guild.name}) for weather channel`);
         const channelId = await getWeatherChannel(guild.id);
         
         if (channelId) {
-          console.log(`[WEATHER DEBUG] Found weather channel ${channelId} for guild ${guild.id}. Sending update...`);
+          console.log(`Sending weather update to guild ${guild.id}`);
           await sendDailyWeatherUpdate(client, guild.id, channelId);
-          console.log(`[WEATHER DEBUG] Completed weather update for guild ${guild.id}`);
           
           // Add delay between server updates to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 5000));
-        } else {
-          console.log(`[WEATHER DEBUG] No weather channel configured for guild ${guild.id}`);
         }
       } catch (guildError) {
         console.error(`Error sending weather update to guild ${guild.id}:`, guildError);
@@ -319,20 +336,17 @@ async function sendDailyWeatherUpdates(client: Client): Promise<void> {
 async function sendDailyWeatherUpdate(client: Client, guildId: string, channelId: string): Promise<void> {
   try {
     // Try to get the channel
-    console.log(`[WEATHER DEBUG] Fetching channel ${channelId} for guild ${guildId}`);
     const channel = await client.channels.fetch(channelId);
     
     if (!channel) {
-      console.error(`[WEATHER DEBUG] Channel ${channelId} not found for guild ${guildId}`);
+      console.error(`Channel ${channelId} not found for guild ${guildId}`);
       return;
     }
     
     if (!(channel instanceof TextChannel)) {
-      console.error(`[WEATHER DEBUG] Channel ${channelId} is not a text channel for guild ${guildId}`);
+      console.error(`Channel ${channelId} is not a text channel for guild ${guildId}`);
       return;
     }
-    
-    console.log(`[WEATHER DEBUG] Successfully found text channel ${channelId} (${channel.name}) for guild ${guildId}`);
     
     // Current date in Israel time format
     const nowInIsrael = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
@@ -352,19 +366,16 @@ async function sendDailyWeatherUpdate(client: Client, guildId: string, channelId
       .setFooter({ text: 'Automated Weather Report • Made By Soggra' });
     
     // Send the header
-    console.log(`[WEATHER DEBUG] Sending header embed to channel ${channelId}`);
     await channel.send({ embeds: [headerEmbed] });
     
     // Get cities for this guild (custom or default)
     const citiesToReport = await getCustomCities(guildId);
-    console.log(`[WEATHER DEBUG] Found ${citiesToReport.length} cities to report for guild ${guildId}`);
     
     // Send individual city forecasts with delay between them to avoid API rate limiting
     for (const city of citiesToReport) {
       try {
-        console.log(`[WEATHER DEBUG] Getting weather for ${city.name}, ${city.country}`);
+        console.log(`Getting weather for ${city.name}, ${city.country}`);
         const weatherEmbed = await getWeatherEmbed(city.name, city.country, city.lat, city.lon);
-        console.log(`[WEATHER DEBUG] Sending weather embed for ${city.name} to channel ${channelId}`);
         await channel.send({ embeds: [weatherEmbed] });
         
         // Add longer delay between API calls to avoid rate limiting
@@ -385,7 +396,7 @@ async function sendDailyWeatherUpdate(client: Client, guildId: string, channelId
       }
     }
     
-    console.log(`Daily weather update sent to channel ${channelId} in guild ${guildId} at ${new Date().toISOString()}`);
+    console.log(`Daily weather update sent to channel ${channelId} in guild ${guildId}`);
   } catch (error) {
     console.error(`Error sending daily weather update to guild ${guildId}:`, error);
   }
@@ -539,42 +550,27 @@ async function getWeatherEmbed(location: string, country: string, lat: number, l
 }
 
 /**
- * Debug function to check if weather_channel_id column exists in database
- * This is for troubleshooting only
+ * Ensures the database column exists
  */
 export async function checkWeatherDatabaseSetup(): Promise<void> {
   try {
     // Check if the column exists in the table structure
-    console.log('[WEATHER DEBUG] Checking database schema for weather_channel_id column...');
     const tableInfo = db.prepare("PRAGMA table_info(server_settings)").all() as any[];
-    const column = tableInfo.find(col => col.name === 'weather_channel_id');
     
-    if (column) {
-      console.log(`[WEATHER DEBUG] weather_channel_id column exists in server_settings table: ${JSON.stringify(column)}`);
-    } else {
-      console.error('[WEATHER DEBUG] weather_channel_id column DOES NOT EXIST in server_settings table!');
-      // Try to add it if it doesn't exist
-      try {
-        db.prepare("ALTER TABLE server_settings ADD COLUMN weather_channel_id TEXT").run();
-        console.log('[WEATHER DEBUG] Added weather_channel_id column to server_settings table');
-      } catch (alterError) {
-        console.error('[WEATHER DEBUG] Failed to add weather_channel_id column:', alterError);
-      }
+    // Check for weather_channel_id column
+    const weatherColumn = tableInfo.find(col => col.name === 'weather_channel_id');
+    if (!weatherColumn) {
+      db.prepare("ALTER TABLE server_settings ADD COLUMN weather_channel_id TEXT").run();
+      console.log('Added weather_channel_id column to server_settings table');
     }
     
-    // Check all server settings to see if any have weather channels configured
-    console.log('[WEATHER DEBUG] Checking existing weather channel configurations...');
-    const allSettings = db.prepare("SELECT guild_id, weather_channel_id FROM server_settings").all() as any[];
-    
-    if (allSettings.length === 0) {
-      console.log('[WEATHER DEBUG] No server settings found in database');
-    } else {
-      console.log(`[WEATHER DEBUG] Found ${allSettings.length} server settings records`);
-      for (const setting of allSettings) {
-        console.log(`[WEATHER DEBUG] Guild ${setting.guild_id}: weather_channel_id = ${setting.weather_channel_id || 'not set'}`);
-      }
+    // Check for custom_cities column
+    const citiesColumn = tableInfo.find(col => col.name === 'custom_cities');
+    if (!citiesColumn) {
+      db.prepare("ALTER TABLE server_settings ADD COLUMN custom_cities TEXT").run();
+      console.log('Added custom_cities column to server_settings table');
     }
   } catch (error) {
-    console.error('[WEATHER DEBUG] Error checking database setup:', error);
+    console.error('Error ensuring weather columns exist:', error);
   }
 } 

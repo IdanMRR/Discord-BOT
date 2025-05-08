@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, PermissionFlagsBits, TextChannel, ChannelType, EmbedBuilder, MessageFlags } from 'discord.js';
 import { setWeatherChannel, setCustomCities } from '../../handlers/utility/weather-scheduler';
+import { getCoordinates, defaultCoordinates, commonCountries, CityData } from '../../handlers/utility/geocoding';
 
 export const data = new SlashCommandBuilder()
     .setName('set-weather-channel')
@@ -9,46 +10,69 @@ export const data = new SlashCommandBuilder()
         option.setName('channel')
             .setDescription('The channel to send weather reports to')
             .setRequired(true))
-    // City 1
+    // City 1 - Groups
     .addStringOption(option =>
-        option.setName('city-name-1')
-            .setDescription('Name of the first city (optional)'))
+        option.setName('city1')
+            .setDescription('First city to report weather for')
+            .setAutocomplete(true))
     .addStringOption(option =>
-        option.setName('country-1')
-            .setDescription('Country of the first city'))
-    .addNumberOption(option =>
-        option.setName('latitude-1')
-            .setDescription('Latitude of the first city'))
-    .addNumberOption(option =>
-        option.setName('longitude-1')
-            .setDescription('Longitude of the first city'))
-    // City 2
+        option.setName('country1')
+            .setDescription('Country of the first city')
+            .setAutocomplete(true))
+    // City 2 - Groups
     .addStringOption(option =>
-        option.setName('city-name-2')
-            .setDescription('Name of the second city (optional)'))
+        option.setName('city2')
+            .setDescription('Second city to report weather for (optional)')
+            .setAutocomplete(true))
     .addStringOption(option =>
-        option.setName('country-2')
-            .setDescription('Country of the second city'))
-    .addNumberOption(option =>
-        option.setName('latitude-2')
-            .setDescription('Latitude of the second city'))
-    .addNumberOption(option =>
-        option.setName('longitude-2')
-            .setDescription('Longitude of the second city'))
-    // City 3
+        option.setName('country2')
+            .setDescription('Country of the second city')
+            .setAutocomplete(true))
+    // City 3 - Groups
     .addStringOption(option =>
-        option.setName('city-name-3')
-            .setDescription('Name of the third city (optional)'))
+        option.setName('city3')
+            .setDescription('Third city to report weather for (optional)')
+            .setAutocomplete(true))
     .addStringOption(option =>
-        option.setName('country-3')
-            .setDescription('Country of the third city'))
-    .addNumberOption(option =>
-        option.setName('latitude-3')
-            .setDescription('Latitude of the third city'))
-    .addNumberOption(option =>
-        option.setName('longitude-3')
-            .setDescription('Longitude of the third city'))
+        option.setName('country3')
+            .setDescription('Country of the third city')
+            .setAutocomplete(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+
+// Autocomplete function to suggest common cities and countries
+export async function autocomplete(interaction: any) {
+    const focusedOption = interaction.options.getFocused(true);
+    const focusedValue = focusedOption.value.toLowerCase();
+    
+    // If the user is typing in a city field
+    if (focusedOption.name.startsWith('city')) {
+        const suggestions = Object.keys(defaultCoordinates)
+            .filter(city => city.toLowerCase().startsWith(focusedValue))
+            .slice(0, 25); // Discord limits to 25 choices
+        
+        // Return matching suggestions
+        await interaction.respond(
+            suggestions.map(city => ({
+                name: defaultCoordinates[city].name,
+                value: defaultCoordinates[city].name
+            }))
+        );
+    }
+    // If the user is typing in a country field
+    else if (focusedOption.name.startsWith('country')) {
+        const suggestions = commonCountries
+            .filter(country => country.toLowerCase().startsWith(focusedValue))
+            .slice(0, 25); // Discord limits to 25 choices
+        
+        // Return matching suggestions
+        await interaction.respond(
+            suggestions.map(country => ({
+                name: country,
+                value: country
+            }))
+        );
+    }
+}
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
@@ -72,7 +96,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
         
-        // Defer the reply since database operations might take time
+        // Defer the reply since database operations and geocoding might take time
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         
         // Set the weather channel with guild ID
@@ -91,80 +115,91 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         console.log(`[WEATHER DEBUG] Successfully set weather channel ${channel.id} (${channel.name}) for guild ${interaction.guildId}`);
         
         // Check if custom cities were provided
-        const cityName1 = interaction.options.getString('city-name-1');
+        const city1 = interaction.options.getString('city1');
         let customCitiesSet = false;
         let cityList = '';
         
-        if (cityName1) {
+        if (city1) {
             // Build the cities array
-            const cities = [];
+            const cities: CityData[] = [];
             
-            // Validate city 1 fields
-            const country1 = interaction.options.getString('country-1');
-            const lat1 = interaction.options.getNumber('latitude-1');
-            const lon1 = interaction.options.getNumber('longitude-1');
+            // Process city 1
+            const country1 = interaction.options.getString('country1') || 'Israel';
             
-            if (!country1 || lat1 === null || lon1 === null) {
-                await interaction.followUp({ 
-                    content: 'If you provide a city name, you must also provide its country, latitude, and longitude.', 
-                    flags: MessageFlags.Ephemeral 
-                });
-                return;
-            }
+            // Check for preset coordinates first
+            const city1Lower = city1.toLowerCase();
+            let cityData: CityData | null = null;
             
-            cities.push({
-                name: cityName1,
-                country: country1,
-                lat: lat1,
-                lon: lon1
-            });
-            
-            // Add second city if provided
-            const cityName2 = interaction.options.getString('city-name-2');
-            if (cityName2) {
-                const country2 = interaction.options.getString('country-2');
-                const lat2 = interaction.options.getNumber('latitude-2');
-                const lon2 = interaction.options.getNumber('longitude-2');
+            if (Object.keys(defaultCoordinates).includes(city1Lower)) {
+                cityData = defaultCoordinates[city1Lower];
+                console.log(`[WEATHER DEBUG] Using preset coordinates for ${city1}`);
+            } else {
+                // Fetch coordinates using geocoding
+                cityData = await getCoordinates(city1, country1);
                 
-                // Make sure all required fields for city 2 are provided
-                if (!country2 || lat2 === null || lon2 === null) {
+                if (!cityData) {
                     await interaction.followUp({
-                        content: 'If you provide a second city name, you must also provide its country, latitude, and longitude.',
+                        content: `Could not find coordinates for ${city1}, ${country1}. Please try a different city or provide the coordinates manually.`,
                         flags: MessageFlags.Ephemeral
                     });
                     return;
                 }
-                
-                cities.push({
-                    name: cityName2,
-                    country: country2,
-                    lat: lat2,
-                    lon: lon2
-                });
             }
             
-            // Add third city if provided
-            const cityName3 = interaction.options.getString('city-name-3');
-            if (cityName3) {
-                const country3 = interaction.options.getString('country-3');
-                const lat3 = interaction.options.getNumber('latitude-3');
-                const lon3 = interaction.options.getNumber('longitude-3');
+            cities.push(cityData);
+            
+            // Process city 2 if provided
+            const city2 = interaction.options.getString('city2');
+            if (city2) {
+                const country2 = interaction.options.getString('country2') || 'Israel';
                 
-                // Make sure all required fields for city 3 are provided
-                if (!country3 || lat3 === null || lon3 === null) {
-                    await interaction.followUp({
-                        content: 'If you provide a third city name, you must also provide its country, latitude, and longitude.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                    return;
+                // Check for preset coordinates
+                const city2Lower = city2.toLowerCase();
+                let city2Data: CityData | null = null;
+                
+                if (Object.keys(defaultCoordinates).includes(city2Lower)) {
+                    city2Data = defaultCoordinates[city2Lower];
+                } else {
+                    city2Data = await getCoordinates(city2, country2);
+                    
+                    if (!city2Data) {
+                        await interaction.followUp({
+                            content: `Could not find coordinates for ${city2}, ${country2}. City 1 was saved, but city 2 was skipped.`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
                 }
                 
-                cities.push({
-                    name: cityName3,
-                    country: country3,
-                    lat: lat3,
-                    lon: lon3
-                });
+                if (city2Data) {
+                    cities.push(city2Data);
+                }
+            }
+            
+            // Process city 3 if provided
+            const city3 = interaction.options.getString('city3');
+            if (city3) {
+                const country3 = interaction.options.getString('country3') || 'Israel';
+                
+                // Check for preset coordinates
+                const city3Lower = city3.toLowerCase();
+                let city3Data: CityData | null = null;
+                
+                if (Object.keys(defaultCoordinates).includes(city3Lower)) {
+                    city3Data = defaultCoordinates[city3Lower];
+                } else {
+                    city3Data = await getCoordinates(city3, country3);
+                    
+                    if (!city3Data) {
+                        await interaction.followUp({
+                            content: `Could not find coordinates for ${city3}, ${country3}. Previous cities were saved, but city 3 was skipped.`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                }
+                
+                if (city3Data) {
+                    cities.push(city3Data);
+                }
             }
             
             // Set the custom cities in the database
@@ -176,7 +211,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 
                 // Create a list of cities for the embed
                 cities.forEach((city, index) => {
-                    cityList += `${index + 1}. **${city.name}, ${city.country}** (${city.lat}, ${city.lon})\n`;
+                    cityList += `${index + 1}. **${city.name}, ${city.country}** (${city.lat.toFixed(4)}, ${city.lon.toFixed(4)})\n`;
                 });
                 
                 console.log(`[WEATHER DEBUG] Successfully set ${cities.length} custom cities for guild ${interaction.guildId}`);
@@ -191,7 +226,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setTitle('☀️ Weather Channel Set')
             .setDescription(`Daily weather reports will now be sent to <#${channel.id}>.`)
             .addFields([
-                { name: 'Report Schedule', value: 'Daily at 8:00 AM Israel time', inline: true }
+                { name: '⏰ Report Schedule', value: 'Daily at 8:00 AM Israel time (UTC+3)\nReports are sent once per day.', inline: true },
+                { name: '⚙️ Automated Updates', value: 'Weather updates are fully automated and require no further configuration.', inline: true }
             ]);
             
         // Add city information
@@ -225,15 +261,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Add fields based on whether custom cities were set
         if (customCitiesSet) {
             testEmbed.addFields([
-                { name: '⏰ Schedule', value: 'Daily at 8:00 AM Israel time' },
-                { name: '✅ First Report', value: 'You will receive a test report within 5 minutes, and then daily at the scheduled time.' },
-                { name: '🌍 Custom Cities', value: cityList }
+                { name: '⏰ Schedule', value: 'Daily at 8:00 AM Israel time (UTC+3)\nReports are sent once per day at this time.' },
+                { name: '✅ First Report', value: 'You will receive your first report tomorrow at the scheduled time.' },
+                { name: '🌍 Custom Cities', value: cityList },
+                { name: '⚙️ Configuration', value: 'No further setup is needed. Weather reports will be sent automatically based on this schedule.' }
             ]);
         } else {
             testEmbed.addFields([
-                { name: '⏰ Schedule', value: 'Daily at 8:00 AM Israel time' },
-                { name: '✅ First Report', value: 'You will receive a test report within 5 minutes, and then daily at the scheduled time.' },
-                { name: '🌍 Default Cities', value: 'By default, weather is reported for Tel Aviv, Jerusalem, and Haifa.' }
+                { name: '⏰ Schedule', value: 'Daily at 8:00 AM Israel time (UTC+3)\nReports are sent once per day at this time.' },
+                { name: '✅ First Report', value: 'You will receive your first report tomorrow at the scheduled time.' },
+                { name: '🌍 Default Cities', value: 'By default, weather is reported for Tel Aviv, Jerusalem, and Haifa.' },
+                { name: '⚙️ Configuration', value: 'No further setup is needed. Weather reports will be sent automatically based on this schedule.' }
             ]);
         }
             
