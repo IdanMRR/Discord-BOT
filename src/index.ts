@@ -203,6 +203,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // Import the verification handler
         const { handleVerificationButtonClick } = await import('./handlers/verification/verification-handler');
         await handleVerificationButtonClick(interaction);
+      } else if (interaction.customId.startsWith('view_staff_msg_')) {
+        // Handle staff-only message view button
+        const { handleViewStaffMessage } = await import('./utils/ticket-utils');
+        await handleViewStaffMessage(interaction);
       }
     } catch (error) {
       console.error('Error handling button interaction:', error);
@@ -242,6 +246,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // Import the ticket rating handler
         const { handleRatingSubmission } = await import('./handlers/tickets/ticket-rating');
         await handleRatingSubmission(interaction);
+      } else if (interaction.customId.startsWith('staff-message-modal-')) {
+        // Import the staff message modal handler
+        const staffMessageCommand = require('./commands/moderation/staff-message');
+        await staffMessageCommand.handleModalSubmit(interaction);
       }
     } catch (error) {
       console.error('Error handling modal submission:', error);
