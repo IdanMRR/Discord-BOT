@@ -76,6 +76,7 @@ export interface ServerSettings {
   };
   templates?: Record<string, any[]>;
   active_templates?: Record<string, string>;
+  red_alert_channels?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -772,6 +773,21 @@ export const ServerSettingsService = {
         params.push(settings.ticket_category_id);
       }
       
+      if (settings.ticket_panel_channel_id !== undefined) {
+        updates.push('ticket_panel_channel_id = ?');
+        params.push(settings.ticket_panel_channel_id);
+      }
+      
+      if (settings.ticket_panel_message_id !== undefined) {
+        updates.push('ticket_panel_message_id = ?');
+        params.push(settings.ticket_panel_message_id);
+      }
+      
+      if (settings.ticket_logs_channel_id !== undefined) {
+        updates.push('ticket_logs_channel_id = ?');
+        params.push(settings.ticket_logs_channel_id);
+      }
+      
       if (settings.faq_channel_id !== undefined) {
         updates.push('faq_channel_id = ?');
         params.push(settings.faq_channel_id);
@@ -780,6 +796,16 @@ export const ServerSettingsService = {
       if (settings.rules_channel_id !== undefined) {
         updates.push('rules_channel_id = ?');
         params.push(settings.rules_channel_id);
+      }
+      
+      if (settings.red_alert_channels !== undefined) {
+        updates.push('red_alert_channels = ?');
+        // If it's already a string, use it directly, otherwise convert to JSON
+        if (typeof settings.red_alert_channels === 'string') {
+          params.push(settings.red_alert_channels);
+        } else {
+          params.push(JSON.stringify(settings.red_alert_channels || []));
+        }
       }
       
       if (settings.staff_role_ids !== undefined) {
@@ -830,7 +856,8 @@ export const ServerSettingsService = {
         'log_channel_id', 'mod_log_channel_id', 'member_log_channel_id',
         'message_log_channel_id', 'server_log_channel_id', 'welcome_channel_id',
         'welcome_message', 'ticket_category_id', 'name', 'language',
-        'faq_channel_id', 'rules_channel_id'
+        'faq_channel_id', 'rules_channel_id', 'ticket_logs_channel_id',
+        'ticket_panel_channel_id', 'ticket_panel_message_id'
       ];
       
       if (directColumns.includes(key)) {
@@ -851,6 +878,18 @@ export const ServerSettingsService = {
       // Convert auto_mod_enabled to boolean
       if (key === 'auto_mod_enabled') {
         return !!settings.auto_mod_enabled;
+      }
+      
+      // Parse red_alert_channels if requested
+      if (key === 'red_alert_channels' && settings.red_alert_channels) {
+        if (typeof settings.red_alert_channels === 'string') {
+          try {
+            return JSON.parse(settings.red_alert_channels);
+          } catch (e) {
+            return [];
+          }
+        }
+        return settings.red_alert_channels;
       }
       
       // Parse auto_mod_settings

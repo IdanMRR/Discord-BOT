@@ -1,6 +1,9 @@
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import { ServerSettingsService } from '../../database/services/sqliteService';
+import { db } from '../../database/sqlite';
+import { logInfo, logError, logWarning } from '../../utils/logger';
 
 dotenv.config();
 
@@ -10,13 +13,42 @@ const CHECK_INTERVAL = 10000; // Check every 10 seconds
 
 // Set of already processed alerts to avoid duplicates
 const processedAlerts = new Set<string>();
+// Track last processed alert timestamp to prevent spamming multiple alerts in a short timeframe
+let lastAlertTimestamp = 0;
+// Minimum time between alerts in milliseconds (30 seconds)
+const MIN_ALERT_INTERVAL = 30000;
+
+/**
+ * Get a readable location name in Hebrew
+ */
+function getReadableLocationName(locationData: string): string {
+    if (!locationData || locationData.trim() === '') {
+        return 'אזורים מרובים - היכנסו למרחב המוגן מיד';
+    }
+    
+    if (locationData === 'Unknown location') {
+        return 'כל האזורים - התראה כלל ארצית';
+    }
+    
+    // Return the original Hebrew location name
+    return locationData;
+}
 
 export async function startRedAlertTracker(client: Client) {
     console.log('Starting Red Alert tracking system...');
     
+    // Validate channels on startup
+    await validateAlertChannels(client);
+    
     // Set an interval to check for alerts
     setInterval(async () => {
         try {
+            // Check if we're within the minimum interval since the last alert
+            const now = Date.now();
+            if (now - lastAlertTimestamp < MIN_ALERT_INTERVAL) {
+                return; // Skip this check to prevent spamming
+            }
+            
             // Fetch latest alerts
             const response = await axios.get(ALERT_API_URL, {
                 headers: {
@@ -144,45 +176,31 @@ export async function sendTestAlert(client: Client, channelId: string) {
         if (channel && channel instanceof TextChannel) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('🚨 RED ALERT - TEST 🚨')
-                .setDescription('**This is only a test alert**')
+                .setTitle('🚨 צבע אדום - בדיקה 🚨')
+                .setDescription('**זוהי התראת בדיקה בלבד**')
                 .addFields(
-                    { name: 'Time', value: new Date().toLocaleTimeString(), inline: true },
-                    { name: 'Location', value: 'Test', inline: true },
-                    { name: 'Status', value: 'This is only a system test. There is no real danger.', inline: false }
+                    { name: 'זמן', value: new Date().toLocaleTimeString(), inline: true },
+                    { name: 'מיקום', value: 'בדיקה', inline: true },
+                    { name: 'סטטוס', value: 'זוהי בדיקת מערכת בלבד. אין סכנה אמיתית.', inline: false }
                 )
                 .setTimestamp()
-                .setFooter({ text: 'System Test' });
+                .setFooter({ text: 'בדיקת מערכת' });
             
             await channel.send({ embeds: [embed] });
             success = true;
-        }
-        
-        // Then, also send to any configured alert channels (if different from the current channel)
-        const alertChannelIds = (process.env.RED_ALERT_CHANNEL_IDS || '').split(',').filter(id => id && id !== channelId);
-        
-        for (const alertChannelId of alertChannelIds) {
-            try {
-                const alertChannel = await client.channels.fetch(alertChannelId);
-                if (alertChannel && alertChannel instanceof TextChannel) {
-                    const embed = new EmbedBuilder()
-                        .setColor(0xFF0000)
-                        .setTitle('🚨 RED ALERT - TEST 🚨')
-                        .setDescription('**This is only a test alert**\n*Sent from another channel*')
-                        .addFields(
-                            { name: 'Time', value: new Date().toLocaleTimeString(), inline: true },
-                            { name: 'Location', value: 'Test', inline: true },
-                            { name: 'Status', value: 'This is only a system test. There is no real danger.', inline: false },
-                            { name: 'Source', value: `Test initiated from <#${channelId}>`, inline: false }
-                        )
-                        .setTimestamp()
-                        .setFooter({ text: 'System Test' });
+            
+            // Try to find which server this channel belongs to
+            const guild = channel.guild;
+            if (guild) {
+                // Check if this channel is already registered for this server
+                const alertChannels = await getAlertChannelsForGuild(guild.id);
+                
+                if (!alertChannels.includes(channelId)) {
+                    logInfo('Red Alert Test', `Adding test channel ${channelId} to server ${guild.id}'s red alert channels`);
                     
-                    await alertChannel.send({ embeds: [embed] });
-                    success = true;
+                    // Add this channel to the server's red alert channels
+                    await addChannelToRedAlerts(guild.id, channelId);
                 }
-            } catch (channelError) {
-                console.error(`Error sending test alert to channel ${alertChannelId}:`, channelError);
             }
         }
         
@@ -193,44 +211,222 @@ export async function sendTestAlert(client: Client, channelId: string) {
     }
 }
 
-async function sendAlertToChannels(client: Client, alert: any) {
+/**
+ * Get all alert channels for a guild from the database
+ */
+async function getAlertChannelsForGuild(guildId: string): Promise<string[]> {
     try {
-        // Get list of channel IDs from environment variable
-        const alertChannelIds = (process.env.RED_ALERT_CHANNEL_IDS || '').split(',').filter(id => id);
+        // Get the channels from the database
+        const channels = await ServerSettingsService.getSetting(guildId, 'red_alert_channels');
         
-        if (alertChannelIds.length === 0) {
-            console.warn('No channels configured for red alerts. Set RED_ALERT_CHANNEL_IDS in .env');
-            return;
+        // If we got a valid array, return it
+        if (Array.isArray(channels)) {
+            return channels;
         }
         
-        // Ensure all required properties exist with fallbacks
-        const alertData = alert.data || 'Unknown location';
+        // If the setting is null or undefined, return an empty array
+        return [];
+    } catch (error) {
+        logError('Red Alert', `Error getting alert channels for guild ${guildId}: ${error}`);
+        return [];
+    }
+}
+
+/**
+ * Add a channel to a guild's red alert channels
+ */
+export async function addChannelToRedAlerts(guildId: string, channelId: string): Promise<boolean> {
+    try {
+        // Get existing channels
+        const channels = await getAlertChannelsForGuild(guildId);
+        
+        // If the channel is already registered, no need to do anything
+        if (channels.includes(channelId)) {
+            return true;
+        }
+        
+        // Add the channel
+        channels.push(channelId);
+        
+        // Update the database
+        const success = await ServerSettingsService.updateSettings(guildId, {
+            guild_id: guildId,
+            red_alert_channels: channels
+        });
+        
+        if (success) {
+            logInfo('Red Alert', `Added channel ${channelId} to guild ${guildId}'s red alert channels`);
+        }
+        
+        return success;
+    } catch (error) {
+        logError('Red Alert', `Error adding channel ${channelId} to guild ${guildId}'s red alert channels: ${error}`);
+        return false;
+    }
+}
+
+/**
+ * Remove a channel from a guild's red alert channels
+ */
+export async function removeChannelFromRedAlerts(guildId: string, channelId: string): Promise<boolean> {
+    try {
+        // Get existing channels
+        const channels = await getAlertChannelsForGuild(guildId);
+        
+        // If the channel isn't registered, no need to do anything
+        if (!channels.includes(channelId)) {
+            return true;
+        }
+        
+        // Remove the channel
+        const updatedChannels = channels.filter(id => id !== channelId);
+        
+        // Update the database
+        const success = await ServerSettingsService.updateSettings(guildId, {
+            guild_id: guildId,
+            red_alert_channels: updatedChannels
+        });
+        
+        if (success) {
+            logInfo('Red Alert', `Removed channel ${channelId} from guild ${guildId}'s red alert channels`);
+        }
+        
+        return success;
+    } catch (error) {
+        logError('Red Alert', `Error removing channel ${channelId} from guild ${guildId}'s red alert channels: ${error}`);
+        return false;
+    }
+}
+
+// Add a function to validate channels and remove invalid ones
+export async function validateAlertChannels(client: Client): Promise<Map<string, string[]>> {
+    try {
+        // Get all servers from the database
+        const serverResult = await ServerSettingsService.listServers();
+        
+        // Map to store guild ID -> valid channel IDs
+        const validChannelsMap = new Map<string, string[]>();
+        
+        // Check each server
+        for (const server of serverResult.data) {
+            // Get the channel IDs for this server
+            let alertChannels = await getAlertChannelsForGuild(server.guild_id);
+            const validChannels: string[] = [];
+            const invalidChannels: string[] = [];
+            
+            // Skip if no channels
+            if (alertChannels.length === 0) {
+                validChannelsMap.set(server.guild_id, []);
+                continue;
+            }
+            
+            // Check each channel
+            for (const channelId of alertChannels) {
+                try {
+                    const channel = await client.channels.fetch(channelId);
+                    if (channel && channel instanceof TextChannel) {
+                        validChannels.push(channelId);
+                    } else {
+                        invalidChannels.push(channelId);
+                        logWarning('Red Alert', `Channel ${channelId} in guild ${server.guild_id} is not a valid text channel and will be removed`);
+                    }
+                } catch (error) {
+                    invalidChannels.push(channelId);
+                    logWarning('Red Alert', `Channel ${channelId} in guild ${server.guild_id} is not accessible and will be removed`);
+                }
+            }
+            
+            // If we found invalid channels, update the database
+            if (invalidChannels.length > 0) {
+                logInfo('Red Alert', `Removing ${invalidChannels.length} invalid channels from guild ${server.guild_id}`);
+                
+                // Update the database
+                await ServerSettingsService.updateSettings(server.guild_id, {
+                    guild_id: server.guild_id,
+                    red_alert_channels: validChannels
+                });
+            }
+            
+            // Store the valid channels for this guild
+            validChannelsMap.set(server.guild_id, validChannels);
+        }
+        
+        return validChannelsMap;
+    } catch (error) {
+        logError('Red Alert', `Error validating alert channels: ${error}`);
+        return new Map<string, string[]>();
+    }
+}
+
+/**
+ * Send an alert to all configured channels across all servers
+ */
+async function sendAlertToChannels(client: Client, alert: any) {
+    try {
+        // Update last alert timestamp to prevent spamming
+        lastAlertTimestamp = Date.now();
+        
+        // Extract location data
+        const rawAlertData = alert.data;
+        
+        // Get a user-friendly location name in Hebrew
+        const alertData = getReadableLocationName(rawAlertData);
+        
         const alertDate = alert.alertDate ? new Date(alert.alertDate) : new Date();
         
         // Create the embed
         const embed = new EmbedBuilder()
             .setColor(0xFF0000)
-            .setTitle('🚨 RED ALERT 🚨')
-            .setDescription(`**Active alert in: ${alertData}**`)
+            .setTitle('🚨 צבע אדום 🚨')
+            .setDescription(`**התראה פעילה ב: ${alertData}**`)
             .addFields(
-                { name: 'Alert Time', value: alertDate.toLocaleTimeString(), inline: true },
-                { name: 'Instructions', value: 'Enter shelter immediately and stay for 10 minutes', inline: false }
+                { name: 'זמן התראה', value: alertDate.toLocaleTimeString(), inline: true },
+                { name: 'הנחיות', value: 'להיכנס למרחב המוגן מיד ולהישאר למשך 10 דקות', inline: false }
             )
             .setTimestamp()
-            .setFooter({ text: 'Alert System Information' });
+            .setFooter({ text: 'מערכת התראות • היום בשעה ' + alertDate.toLocaleTimeString().substring(0, 5) });
         
-        // Send to all configured channels
-        for (const channelId of alertChannelIds) {
-            try {
-                const channel = await client.channels.fetch(channelId);
-                if (channel && channel instanceof TextChannel) {
-                    await channel.send({ embeds: [embed], content: '@everyone ALERT!' });
+        // Get channels from the database for all servers
+        const validChannelsMap = await validateAlertChannels(client);
+        
+        // If we didn't find any channels, log a warning
+        if (validChannelsMap.size === 0) {
+            logWarning('Red Alert', 'No valid channels configured for red alerts in any server');
+            return;
+        }
+        
+        // Track total channels for logging
+        let totalChannelCount = 0;
+        let successfulChannelCount = 0;
+        
+        // Send alerts to each server's channels
+        for (const [guildId, channelIds] of validChannelsMap.entries()) {
+            // Skip if no channels for this server
+            if (channelIds.length === 0) {
+                continue;
+            }
+            
+            totalChannelCount += channelIds.length;
+            
+            // Send to each channel
+            for (const channelId of channelIds) {
+                try {
+                    const channel = await client.channels.fetch(channelId);
+                    if (channel && channel instanceof TextChannel) {
+                        await channel.send({ embeds: [embed], content: '@everyone התראה!' });
+                        successfulChannelCount++;
+                    }
+                } catch (channelError) {
+                    logError('Red Alert', `Error sending to channel ${channelId} in guild ${guildId}: ${channelError}`);
                 }
-            } catch (channelError) {
-                console.error(`Error sending to channel ${channelId}:`, channelError);
             }
         }
+        
+        // Log summary
+        if (totalChannelCount > 0) {
+            logInfo('Red Alert', `Sent alerts to ${successfulChannelCount}/${totalChannelCount} channels across ${validChannelsMap.size} servers`);
+        }
     } catch (error) {
-        console.error('Error sending alert to channels:', error);
+        logError('Red Alert', `Error sending alert to channels: ${error}`);
     }
 } 

@@ -1,4 +1,4 @@
-import { ButtonInteraction, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageComponentInteraction, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder } from 'discord.js';
+import { ButtonInteraction, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageComponentInteraction, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, SelectMenuComponentOptionData, Collection, Message } from 'discord.js';
 import { replyEphemeral, convertEphemeralToFlags } from '../../utils/interaction-utils';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
@@ -6,6 +6,63 @@ import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { createRatingButton } from './ticket-rating';
 import { saveAndSendTranscript } from './ticket-transcript';
+
+// Create a map to track recent ticket actions to prevent duplicate logs
+const recentTicketActions = new Map<string, number>();
+
+// Function to check if an action was recently performed
+function wasActionRecentlyPerformed(ticketId: string, action: string, timeWindowMs: number = 30000): boolean {
+  const key = `${ticketId}_${action}`;
+  const lastActionTime = recentTicketActions.get(key);
+  
+  if (lastActionTime && (Date.now() - lastActionTime) < timeWindowMs) {
+    return true;
+  }
+  
+  // Mark this action as performed
+  recentTicketActions.set(key, Date.now());
+  return false;
+}
+
+// Replace the simple select menu options with more descriptive ones
+const closeReasons: SelectMenuComponentOptionData[] = [
+  {
+    label: 'Issue Resolved',
+    description: 'The issue or request has been successfully resolved',
+    value: 'resolved',
+    emoji: '✅'
+  },
+  {
+    label: 'No Response',
+    description: 'User did not respond to follow-up questions',
+    value: 'no_response',
+    emoji: '⏱️'
+  },
+  {
+    label: 'Duplicate Ticket',
+    description: 'This is a duplicate of another ticket',
+    value: 'duplicate',
+    emoji: '🔄'
+  },
+  {
+    label: 'User Request',
+    description: 'Closed at the request of the user',
+    value: 'user_request',
+    emoji: '👤'
+  },
+  {
+    label: 'Information Provided',
+    description: 'Required information was provided',
+    value: 'information_provided',
+    emoji: 'ℹ️'
+  },
+  {
+    label: 'Other',
+    description: 'Other reason (please specify)',
+    value: 'other',
+    emoji: '📝'
+  }
+];
 
 /**
  * Process the closing of a ticket
@@ -19,6 +76,21 @@ async function processTicketClose(
   try {
     const channel = interaction.channel as TextChannel;
     
+    // Check if the ticket is already closed to prevent duplicate processing
+    const statusCheck = db.prepare(`SELECT status FROM tickets WHERE channel_id = ?`);
+    const currentStatus = statusCheck.get(channel.id) as { status: string } | undefined;
+    
+    if (currentStatus && currentStatus.status === 'closed') {
+      logInfo('Ticket Close', `Ticket #${ticket.ticket_number} is already closed. Skipping duplicate close action.`);
+      return;
+    }
+    
+    // Check if this ticket was recently closed to prevent duplicate actions
+    if (wasActionRecentlyPerformed(`${ticket.ticket_number}`, 'close')) {
+      logInfo('Ticket Close', `Ticket #${ticket.ticket_number} was closed recently. Preventing duplicate close action.`);
+      return;
+    }
+    
     // Update the ticket status in the database
     const updateStmt = db.prepare(`
       UPDATE tickets SET status = 'closed', closed_at = CURRENT_TIMESTAMP, closed_by = ? WHERE channel_id = ?
@@ -30,16 +102,6 @@ async function processTicketClose(
     
     // Generate and send the transcript using our new function
     await saveAndSendTranscript(channel, interaction.user, reasonText);
-    
-    // Send a message to the ticket channel that it's being closed
-    await channel.send({
-      content: `📄 Ticket is being closed. A transcript has been generated.`
-    });
-    
-    // Format the current time
-    const now = new Date();
-    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-    const formattedTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     
     // Create buttons for reopening and deleting the ticket
     const reopenButton = new ButtonBuilder()
@@ -54,49 +116,60 @@ async function processTicketClose(
       .setStyle(ButtonStyle.Danger)
       .setEmoji('🗑️');
     
-    // Create rating button
-    const ratingButton = createRatingButton(ticket.ticket_number);
-    
-    const deleteRow = new ActionRowBuilder<ButtonBuilder>()
+    // Create button row
+    const actionRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(reopenButton, deleteButton);
     
-    const ratingRow = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(ratingButton);
+    // Create a styled embed for the closure message
+    const closedEmbed = new EmbedBuilder()
+      .setColor(Colors.ERROR)
+      .setTitle('🔒 Ticket Closed')
+      .setDescription(`This ticket has been closed by ${interaction.user.tag}.`)
+      .addFields([
+        { name: '📝 Reason', value: reasonText || 'No reason provided', inline: false },
+        { name: '⚙️ Actions', value: 'You can delete this ticket or reopen it using the buttons below.', inline: false }
+      ])
+      .setFooter({ text: `Support Ticket System • Ticket #${ticket.ticket_number.toString().padStart(4, '0')}` })
+      .setTimestamp();
     
+    // Send the closed message
     await channel.send({ 
-      content: 'The ticket has been closed. You can delete the ticket or reopen it using the buttons below.',
-      components: [deleteRow]
+      embeds: [closedEmbed],
+      components: [actionRow]
     });
     
-    // Send a message to the ticket creator asking for feedback
-    try {
-      const ticketCreator = await interaction.client.users.fetch(ticket.user_id);
-      
-      if (ticketCreator) {
-        const ratingEmbed = new EmbedBuilder()
-          .setColor(Colors.PRIMARY)
-          .setTitle('⭐ Rate Your Support Experience')
-          .setDescription('We value your feedback! Please rate your support experience to help us improve our service.')
-          .addFields([
-            { name: '📋 Ticket', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
-            { name: '🏷️ Category', value: ticket.category, inline: true }
-          ])
-          .setTimestamp();
+    // Only send rating DM if we haven't done it recently
+    if (!wasActionRecentlyPerformed(`${ticket.ticket_number}`, 'rating_request')) {
+      try {
+        const ticketCreator = await interaction.client.users.fetch(ticket.user_id);
         
-        await ticketCreator.send({ 
-          embeds: [ratingEmbed],
-          components: [ratingRow]
-        }).catch(() => {
-          // If we can't DM the user, send the rating message in the channel
-          channel.send({
-            content: `${ticketCreator}, please rate your support experience:`,
+        if (ticketCreator) {
+          const ratingEmbed = new EmbedBuilder()
+            .setColor(Colors.PRIMARY)
+            .setTitle('⭐ Rate Your Support Experience')
+            .setDescription('We value your feedback! Please rate your support experience to help us improve our service.')
+            .addFields([
+              { name: '📋 Ticket', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+              { name: '🏷️ Category', value: ticket.category, inline: true }
+            ])
+            .setTimestamp();
+          
+          // Create rating button
+          const ratingButton = createRatingButton(ticket.ticket_number);
+          const ratingRow = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(ratingButton);
+          
+          // Only send the rating request via DM
+          await ticketCreator.send({ 
             embeds: [ratingEmbed],
             components: [ratingRow]
-          }).catch(err => console.error('Could not send rating message:', err));
-        });
+          }).catch(() => {
+            logError('Ticket Close', `Could not send rating DM to ticket creator ${ticketCreator.tag}`);
+          });
+        }
+      } catch (error) {
+        logError('Ticket Close', `Could not send rating request to ticket creator: ${error}`);
       }
-    } catch (error) {
-      console.error('Could not send rating request to ticket creator:', error);
     }
     
     // Update permissions to prevent the user from sending messages
@@ -104,35 +177,16 @@ async function processTicketClose(
       SendMessages: false
     });
     
-    // Log the ticket closure
-    await logTicketEvent({
-      guildId: interaction.guildId!,
-      actionType: 'ticketClose',
-      userId: interaction.user.id,
-      channelId: channel.id,
-      ticketNumber: ticket.ticket_number,
-      closedBy: interaction.user.id
-    });
-    
-    // Try to send a DM to the ticket creator
-    try {
-      const ticketCreator = await interaction.client.users.fetch(ticket.user_id);
-      
-      if (ticketCreator) {
-        const dmEmbed = new EmbedBuilder()
-          .setColor(Colors.WARNING)
-          .setTitle(`🔒 Your Ticket Has Been Closed | #${ticket.ticket_number.toString().padStart(4, '0')}`)
-          .setDescription(`Your ticket in ${interaction.guild!.name} has been closed by ${interaction.user.username}.`)
-          .addFields([
-            { name: '📋 Ticket Number', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
-            { name: '🕒 Closed On', value: formattedDate, inline: true }
-          ])
-          .setFooter({ text: `Coded by IdanMR • Today at ${formattedTime}` });
-        
-        await ticketCreator.send({ embeds: [dmEmbed] });
-      }
-    } catch (error) {
-      console.error('Could not send DM to ticket creator:', error);
+    // Log the ticket closure but prevent duplicate logs
+    if (!wasActionRecentlyPerformed(`${ticket.ticket_number}`, 'log_close')) {
+      await logTicketEvent({
+        guildId: interaction.guildId!,
+        actionType: 'ticketClose',
+        userId: interaction.user.id,
+        channelId: channel.id,
+        ticketNumber: ticket.ticket_number,
+        closedBy: interaction.user.id
+      });
     }
   } catch (error) {
     logError('Ticket Close', `Error processing ticket close: ${error}`);
@@ -202,10 +256,24 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
     // Defer the reply to give us time to process
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
+    // Create a stylish embed for ticket closure confirmation
+    const confirmEmbed = new EmbedBuilder()
+      .setColor(Colors.ERROR)
+      .setTitle('🔒 Close Ticket Confirmation')
+      .setDescription('Are you sure you want to close this ticket?')
+      .addFields([
+        { 
+          name: 'Ticket Information', 
+          value: `**Number:** #${ticket.ticket_number.toString().padStart(4, '0')}\n**Category:** ${ticket.category}`, 
+          inline: false 
+        }
+      ])
+      .setFooter({ text: 'This will archive the ticket and create a transcript' });
+    
     // Create confirmation buttons
     const confirmButton = new ButtonBuilder()
       .setCustomId('confirm_close_ticket')
-      .setLabel('Confirm Close')
+      .setLabel('Close Ticket')
       .setStyle(ButtonStyle.Danger)
       .setEmoji('✅');
     
@@ -218,9 +286,9 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(confirmButton, cancelButton);
     
-    // Ask for confirmation
+    // Ask for confirmation with the stylish embed
     await interaction.editReply({
-      content: 'Are you sure you want to close this ticket?',
+      embeds: [confirmEmbed],
       components: [row]
     });
     
@@ -259,93 +327,140 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
         components: []
       });
       
-      // Create a reason modal
-      const reasonModal = new ModalBuilder()
-        .setCustomId('close_ticket_reason_modal')
-        .setTitle('Ticket Closure Reason');
+      // Only staff can specify closing reasons
+      let reasonText = 'User Request';
+      let reasonHandled = false;  // Flag to check if the reason selection already processed the ticket
       
-      const reasonInput = new TextInputBuilder()
-        .setCustomId('close_reason')
-        .setLabel('Why are you closing this ticket?')
-        .setPlaceholder('Enter a reason for closing this ticket...')
-        .setRequired(false)
-        .setStyle(TextInputStyle.Paragraph);
-      
-      const reasonRow = new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(reasonInput);
-      
-      reasonModal.addComponents(reasonRow);
-      
-      // We'll use this flag to track if we showed the modal successfully
-      let modalShown = false;
-      let reasonText = 'No reason provided';
-      
-      try {
-        // Try to show the modal - we need to use a new collector instead of reusing the confirmation
-        const message = await interaction.channel?.messages.fetch(confirmation.message.id);
-        if (message) {
-          // Create a new collector for button interactions on this message
-          const collector = message.createMessageComponentCollector({ 
-            filter: i => i.user.id === interaction.user.id,
-            time: 1000, // Very short timeout since we just want to hijack the next interaction
-            max: 1 // Only collect one interaction
+      if (isStaff) {
+        // Create a select menu for ticket closure reason instead of a modal
+        const reasonSelectMenu = new ActionRowBuilder<StringSelectMenuBuilder>()
+          .addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId('close_ticket_reason_select')
+              .setPlaceholder('Select a reason for closing this ticket')
+              .addOptions(closeReasons)
+          );
+          
+        // Show the reason select menu
+        let reasonSelected = false;
+        
+        try {
+          // Create a visually appealing embed for the reason selection
+          const reasonEmbed = new EmbedBuilder()
+            .setColor(Colors.WARNING)
+            .setTitle('📝 Select Closure Reason')
+            .setDescription(`Please select a reason for closing this ticket.`)
+            .setFooter({ text: 'This information will be included in the ticket transcript' });
+            
+          const reasonMessage = await channel.send({
+            embeds: [reasonEmbed],
+            components: [reasonSelectMenu]
           });
           
-          collector.on('collect', async (i) => {
+          // Create a collector for the response
+          const collector = channel.createMessageComponentCollector({
+            filter: i => i.customId === 'close_ticket_reason_select' && i.user.id === interaction.user.id && i.isStringSelectMenu(),
+            time: 60000,
+            max: 1
+          });
+          
+          // Handle collection
+          collector.on('collect', async (reasonResponse: StringSelectMenuInteraction) => {
             try {
-              // Show the modal on this fresh interaction
-              await i.showModal(reasonModal);
-              modalShown = true;
+              // Get the selected value
+              const reasonValue = reasonResponse.values[0];
               
-              // Wait for the modal submission
-              try {
-                const modalSubmission = await i.awaitModalSubmit({
-                  filter: sub => sub.customId === 'close_ticket_reason_modal' && sub.user.id === interaction.user.id,
-                  time: 60000
-                }).catch(() => null);
-                
-                if (modalSubmission) {
-                  reasonText = modalSubmission.fields.getTextInputValue('close_reason') || 'No reason provided';
-                  await modalSubmission.deferUpdate().catch(() => {});
-                }
-              } catch (modalTimeoutError) {
-                logError('Ticket Close', `Modal submission timed out: ${modalTimeoutError}`);
+              // Map the value to a readable text
+              let reasonText: string;
+              
+              switch (reasonValue) {
+                case 'resolved':
+                  reasonText = 'Issue Resolved';
+                  break;
+                case 'no_response':
+                  reasonText = 'No Response';
+                  break;
+                case 'duplicate':
+                  reasonText = 'Duplicate Ticket';
+                  break;
+                case 'user_request':
+                  reasonText = 'User Request';
+                  break;
+                case 'information_provided':
+                  reasonText = 'Information Provided';
+                  break;
+                case 'other':
+                  reasonText = 'Other';
+                  break;
+                default:
+                  reasonText = 'Unspecified Reason';
               }
               
-              // Process the ticket close with the provided reason
-              await processTicketClose(interaction, ticket, i, reasonText);
-            } catch (modalError) {
-              logError('Ticket Close', `Error showing modal: ${modalError}`);
-              await processTicketClose(interaction, ticket, i, 'No reason provided');
+              // Acknowledge the selection with a styled embed
+              const selectionEmbed = new EmbedBuilder()
+                .setColor(Colors.SUCCESS)
+                .setTitle('✅ Reason Selected')
+                .setDescription(`You selected: **${reasonText}**`)
+                .setFooter({ text: 'Proceeding with ticket closure...' });
+                
+              await reasonResponse.update({
+                embeds: [selectionEmbed],
+                components: []
+              });
+              
+              reasonHandled = true;  // Set flag to prevent duplicate processing
+              
+              // Process the ticket closure with the selected reason
+              await processTicketClose(interaction, ticket, reasonResponse, reasonText);
+              
+            } catch (error) {
+              logError('Close Ticket', `Error processing reason selection: ${error}`);
+              await reasonResponse.update({ content: 'An error occurred while processing your selection.', components: [] });
             }
           });
           
-          // Send a temporary message to trigger a new interaction
-          // Cast channel to TextChannel to ensure it has the send method
-          const tempMsg = await (interaction.channel as TextChannel)?.send({ 
-            content: 'Please provide a reason for closing this ticket...',
-            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
-              new ButtonBuilder()
-                .setCustomId('provide_reason')
-                .setLabel('Provide Reason')
-                .setStyle(ButtonStyle.Primary)
-            )]
+          // Handle timeout
+          collector.on('end', async collected => {
+            if (collected.size === 0) {
+              try {
+                // Timeout embed
+                const timeoutEmbed = new EmbedBuilder()
+                  .setColor(Colors.SECONDARY)
+                  .setTitle('⏱️ Selection Timeout')
+                  .setDescription('No reason selected, proceeding with ticket closure.')
+                  .setFooter({ text: 'Using default reason' });
+                  
+                await reasonMessage.edit({
+                  embeds: [timeoutEmbed],
+                  components: []
+                });
+                
+                reasonHandled = true;  // Set flag to prevent duplicate processing
+                
+                // Process with default reason
+                await processTicketClose(interaction, ticket, interaction, 'No reason provided');
+              } catch (error) {
+                logError('Close Ticket', `Error handling timeout: ${error}`);
+              }
+            }
           });
           
-          // Set a timeout to delete the temporary message and proceed without a reason if no interaction
-          setTimeout(async () => {
-            if (!modalShown) {
-              if (tempMsg) await tempMsg.delete().catch(() => {});
-              await processTicketClose(interaction, ticket, confirmation, reasonText);
-            }
-          }, 5000);
-        } else {
-          // If we can't find the message, proceed without a reason
-          await processTicketClose(interaction, ticket, confirmation, reasonText);
+          // Wait for the collector to finish
+          await new Promise(resolve => {
+            collector.on('end', () => resolve(null));
+          });
+          
+        } catch (error) {
+          logError('Ticket Close', `Error showing reason select menu: ${error}`);
         }
-      } catch (modalError) {
-        // If we can't show the modal, continue without a reason
-        logError('Ticket Close', `Could not set up reason collection: ${modalError}`);
+      } else {
+        // Regular users don't get to select a reason
+        reasonText = "User Request";
+      }
+      
+      // Only process the ticket close if it wasn't already handled by the reason selection
+      if (!reasonHandled) {
+        // Process the ticket close with the provided reason
         await processTicketClose(interaction, ticket, confirmation, reasonText);
       }
     } catch (error) {
@@ -354,7 +469,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
       
       try {
         await interaction.editReply({
-          content: 'פעולת סגירת הטיקט בוטלה או נכשלה.',
+          content: 'Ticket closure was canceled or failed.',
           components: []
         });
       } catch (replyError) {

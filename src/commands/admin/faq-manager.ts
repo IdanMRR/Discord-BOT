@@ -35,7 +35,7 @@ const typedDb = db as unknown as Database;
 
 // Helper function to cast language string to Language type
 function ensureLanguageType(lang: string): Language {
-  return (lang === 'he' ? 'he' : 'en') as Language;
+  return 'en';
 }
 
 // FAQ database setup

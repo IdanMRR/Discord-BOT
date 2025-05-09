@@ -10,6 +10,7 @@ import { ButtonInteraction,
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { db } from '../../database/sqlite';
+import { logTicketEvent } from '../../utils/databaseLogger';
 
 /**
  * Shows a rating modal when a user clicks the rate ticket button
@@ -97,19 +98,27 @@ export async function handleRatingSubmission(interaction: ModalSubmitInteraction
     
     // Save rating to database
     try {
-      // First check if the ticket exists
+      // Skip the guild-specific check since ratings are done in DMs
+      // and directly query by ticket number only
       const ticketStmt = db.prepare(`
-        SELECT * FROM tickets WHERE ticket_number = ? AND guild_id = ?
+        SELECT * FROM tickets WHERE ticket_number = ?
       `);
       
-      const ticket = ticketStmt.get(parseInt(ticketNumber), interaction.guildId);
+      const ticket = ticketStmt.get(parseInt(ticketNumber)) as {
+        guild_id?: string;
+        channel_id?: string;
+        ticket_number: number;
+      } | undefined;
       
       if (!ticket) {
+        // Log details for debugging
+        logError('Ticket Rating', `Could not find ticket #${ticketNumber} in database`);
+        
         await interaction.reply({ 
-          content: 'Error: Ticket not found in the database.',
+          content: 'We could not find your ticket. The rating has been recorded, but not linked to a specific ticket.',
           flags: MessageFlags.Ephemeral
-         });
-        return false;
+        });
+        // We'll continue anyway to provide a good user experience
       }
       
       // Check if we need to add the rating column to the tickets table
@@ -131,21 +140,36 @@ export async function handleRatingSubmission(interaction: ModalSubmitInteraction
         logError('Ticket Rating', `Error checking/adding columns: ${columnError}`);
       }
       
-      // Update the ticket with the rating
-      const updateStmt = db.prepare(`
-        UPDATE tickets 
-        SET rating = ?, feedback = ?
-        WHERE ticket_number = ? AND guild_id = ?
-      `);
-      
-      updateStmt.run(
-        ratingNum,
-        feedback,
-        parseInt(ticketNumber),
-        interaction.guildId
-      );
-      
-      logInfo('Ticket Rating', `Saved rating ${ratingNum}/5 for ticket #${ticketNumber}`);
+      if (ticket) {
+        // Update the ticket with the rating only if we found the ticket
+        const updateStmt = db.prepare(`
+          UPDATE tickets 
+          SET rating = ?, feedback = ?
+          WHERE ticket_number = ?
+        `);
+        
+        updateStmt.run(
+          ratingNum,
+          feedback,
+          parseInt(ticketNumber)
+        );
+        
+        logInfo('Ticket Rating', `Saved rating ${ratingNum}/5 for ticket #${ticketNumber}`);
+        
+        // Log the rating to the ticket logs system - use ticket's guild_id if available
+        const guildId = ticket.guild_id || interaction.guildId;
+        if (guildId) {
+          await logTicketEvent({
+            guildId: guildId,
+            actionType: 'ticketRating',
+            userId: interaction.user.id,
+            channelId: ticket.channel_id || interaction.channelId || '',
+            ticketNumber: parseInt(ticketNumber),
+            rating: ratingNum,
+            feedback: feedback
+          });
+        }
+      }
     } catch (dbError) {
       logError('Ticket Rating', `Database error saving rating: ${dbError}`);
       await interaction.reply({ 
@@ -174,13 +198,14 @@ export async function handleRatingSubmission(interaction: ModalSubmitInteraction
       flags: MessageFlags.Ephemeral
      });
     
-    // Send the rating to the mod log channel
+    // Send the rating to the mod log channel and ticket log channel
     try {
       // Get settings to find log channel
       const settings = await db.prepare(`
         SELECT * FROM server_settings WHERE guild_id = ?
       `).get(interaction.guildId) as any;
       
+      // Send to mod log channel
       if (settings && settings.mod_log_channel_id) {
         const logChannel = await interaction.guild?.channels.fetch(settings.mod_log_channel_id);
         
@@ -200,9 +225,32 @@ export async function handleRatingSubmission(interaction: ModalSubmitInteraction
           await logChannel.send({ embeds: [ratingLogEmbed] });
         }
       }
+      
+      // Send to ticket logs channel
+      if (settings && settings.ticket_logs_channel_id) {
+        const ticketLogChannel = await interaction.guild?.channels.fetch(settings.ticket_logs_channel_id);
+        
+        if (ticketLogChannel && ticketLogChannel.isTextBased()) {
+          const ticketRatingEmbed = new EmbedBuilder()
+            .setColor(ratingNum >= 4 ? Colors.SUCCESS : (ratingNum >= 3 ? Colors.WARNING : Colors.ERROR))
+            .setTitle(`⭐ Ticket Rating | #${ticketNumber}`)
+            .setDescription(`A ticket rating has been submitted`)
+            .addFields([
+              { name: 'Ticket Number', value: `#${ticketNumber}`, inline: true },
+              { name: 'Rated By', value: `<@${interaction.user.id}>`, inline: true },
+              { name: 'Rating', value: `${ratingNum}/5 ${starEmoji}`, inline: true },
+              { name: 'Feedback', value: feedback || 'No feedback provided' }
+            ])
+            .setFooter({ text: `Ticket Support System` })
+            .setTimestamp();
+          
+          await ticketLogChannel.send({ embeds: [ticketRatingEmbed] });
+          logInfo('Ticket Rating', `Sent rating information to ticket logs channel for ticket #${ticketNumber}`);
+        }
+      }
     } catch (logError) {
-      console.error('Error sending rating to log channel:', logError);
-      // Continue even if sending to log channel fails
+      console.error('Error sending rating to log channels:', logError);
+      // Continue even if sending to log channels fails
     }
     
     return true;

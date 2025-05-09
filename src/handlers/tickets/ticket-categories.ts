@@ -9,32 +9,90 @@ export const ticketCategories = [
   {
     id: 'donation',
     label: 'Donation',
-    description: 'Use this ticket to receive your donations on the server',
+    description: 'Request or claim server donation rewards',
     emoji: '💰',
     color: Colors.DONATION, // Green
+    priority: 'medium',
+    expectedResponseTime: '24 hours',
+    staffRoles: [] as string[], // Will be populated with role IDs that should be pinged for this category
+  },
+  {
+    id: 'technical',
+    label: 'Technical Support',
+    description: 'Get help with technical issues, bugs or errors',
+    emoji: '🔧',
+    color: Colors.ERROR, // Red
+    priority: 'high',
+    expectedResponseTime: '12 hours',
+    staffRoles: [] as string[],
+  },
+  {
+    id: 'account',
+    label: 'Account Support',
+    description: 'Access, permissions, or account-related issues',
+    emoji: '👤',
+    color: Colors.PRIMARY, // Blue
+    priority: 'medium',
+    expectedResponseTime: '24 hours',
+    staffRoles: [] as string[],
   },
   {
     id: 'question',
-    label: 'Question',
-    description: 'Ask a question or get an answer related to the server',
+    label: 'General Question',
+    description: 'Ask a question about the server or community',
     emoji: '❓',
     color: Colors.WARNING, // Yellow
+    priority: 'low',
+    expectedResponseTime: '48 hours',
+    staffRoles: [] as string[],
   },
   {
-    id: 'support',
-    label: 'Support',
-    description: 'Get help with any issues you might be experiencing',
-    emoji: '🛠️',
-    color: Colors.SUPPORT, // Blue
+    id: 'report',
+    label: 'Report User',
+    description: 'Report a user for breaking server rules',
+    emoji: '🚨',
+    color: Colors.ERROR, // Red
+    priority: 'high',
+    expectedResponseTime: '12 hours',
+    staffRoles: [] as string[],
+  },
+  {
+    id: 'feedback',
+    label: 'Feedback',
+    description: 'Provide feedback or suggestions for the server',
+    emoji: '📝',
+    color: Colors.SUCCESS, // Green
+    priority: 'low',
+    expectedResponseTime: '48 hours',
+    staffRoles: [] as string[],
   },
   {
     id: 'other',
     label: 'Other',
-    description: 'For any other inquiries not covered by the categories above',
-    emoji: '📝',
-    color: Colors.PRIMARY, // Blurple
+    description: 'For any other inquiries not covered above',
+    emoji: '🔍',
+    color: Colors.SECONDARY, // Grey
+    priority: 'medium',
+    expectedResponseTime: '24 hours',
+    staffRoles: [] as string[],
   }
 ];
+
+/**
+ * Get the priority level display information
+ */
+export function getPriorityInfo(priority: string) {
+  switch (priority.toLowerCase()) {
+    case 'high':
+      return { emoji: '🔴', label: 'High', color: Colors.ERROR };
+    case 'medium':
+      return { emoji: '🟡', label: 'Medium', color: Colors.WARNING };
+    case 'low':
+      return { emoji: '🟢', label: 'Low', color: Colors.SUCCESS };
+    default:
+      return { emoji: '⚪', label: 'Normal', color: Colors.PRIMARY };
+  }
+}
 
 /**
  * Displays a professional category selection menu when a user creates a ticket
@@ -70,11 +128,23 @@ export async function showCategorySelection(interaction: ButtonInteraction) {
     // Create a professional embed to explain the category selection
     const embed = new EmbedBuilder()
       .setColor(Colors.TICKETS)
-      .setTitle('📋 Select a Ticket Category')
+      .setTitle('📋 Create a Support Ticket')
       .setDescription(
-        'Please select the most appropriate category for your ticket from the dropdown menu below.\n\n' +
-        'This helps us route your request to the right team members and provide faster assistance.'
+        'Thank you for reaching out to our support team. To help us assist you better, please select the most appropriate category for your request from the dropdown menu below.\n\n' +
+        'This helps us direct your ticket to the right team members and provide faster assistance.'
       )
+      .addFields([
+        {
+          name: '⏱️ Response Times',
+          value: 'Our team typically responds within 24 hours, though response times may vary based on ticket priority and staff availability.',
+          inline: false
+        },
+        {
+          name: '💡 Helpful Tips',
+          value: '• Provide as much detail as possible about your issue\n• Include screenshots if relevant\n• Be specific about what you need help with',
+          inline: false
+        }
+      ])
       .setFooter({ text: `Coded by IdanMR • Today at ${timeString}` });
 
     // If the guild has an icon, add it as a thumbnail
@@ -101,4 +171,17 @@ export async function showCategorySelection(interaction: ButtonInteraction) {
  */
 export function getCategoryById(categoryId: string) {
   return ticketCategories.find(category => category.id === categoryId);
+}
+
+/**
+ * Assign staff roles to specific ticket categories
+ * This should be called during setup with the appropriate role IDs
+ */
+export function assignStaffRolesToCategories(roleAssignments: {categoryId: string, roleIds: string[]}[]) {
+  for (const assignment of roleAssignments) {
+    const category = getCategoryById(assignment.categoryId);
+    if (category) {
+      category.staffRoles = assignment.roleIds;
+    }
+  }
 }

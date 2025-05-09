@@ -39,6 +39,11 @@ connectToDatabase()
     import('./database/migrations/add-custom-cities')
       .then(() => console.log('Custom cities migration loaded'))
       .catch(error => console.error('Error loading custom cities migration:', error));
+      
+    // Import and run the weather schedule migration
+    import('./database/migrations/add-weather-schedule')
+      .then(() => console.log('Weather schedule migration loaded'))
+      .catch(error => console.error('Error loading weather schedule migration:', error));
   })
   .catch(error => {
     console.error('Failed to connect to database:', error);
@@ -102,9 +107,8 @@ client.once('ready', async () => {
     // Start the red alert tracker
     startRedAlertTracker(client);
 
-    // Initialize weather scheduler
-    await initWeatherScheduler(client);
-    console.log('Weather scheduler initialized successfully');
+    // Weather scheduler is now initialized in checkWeatherDatabaseSetup()
+    // This prevents duplicate initialization
   } catch (error) {
     console.error('Error during startup:', error);
   }

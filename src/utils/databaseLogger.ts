@@ -198,7 +198,7 @@ export async function logMessageDelete(options: {
  */
 export async function logTicketEvent(options: {
   guildId: string;
-  actionType: 'ticketCreate' | 'ticketClose' | 'ticketDelete' | 'ticketReopen' | 'ticketAddUser' | 'ticketRemoveUser' | 'ticketSetPriority' | 'ticketNote';
+  actionType: 'ticketCreate' | 'ticketClose' | 'ticketDelete' | 'ticketReopen' | 'ticketAddUser' | 'ticketRemoveUser' | 'ticketSetPriority' | 'ticketNote' | 'ticketRating';
   userId: string;
   channelId: string;
   ticketNumber: number;
@@ -207,10 +207,26 @@ export async function logTicketEvent(options: {
   priority?: string;
   targetUser?: string;
   note?: string;
+  rating?: number;
+  feedback?: string;
 }): Promise<boolean> {
-  const { guildId, actionType, userId, channelId, ticketNumber, subject, closedBy, priority, targetUser, note } = options;
+  const { 
+    guildId, 
+    actionType, 
+    userId, 
+    channelId, 
+    ticketNumber, 
+    subject, 
+    closedBy, 
+    priority, 
+    targetUser, 
+    note,
+    rating,
+    feedback
+  } = options;
   
-  return logToDatabase({
+  // First save to the server_logs table for general logging
+  const mainLogResult = await logToDatabase({
     guildId,
     actionType,
     userId,
@@ -222,7 +238,62 @@ export async function logTicketEvent(options: {
       priority,
       targetUser,
       note,
+      rating,
+      feedback,
       timestamp: new Date().toISOString() // Add timestamp for accurate time tracking
     }
   });
+  
+  // Additionally, save to the ticket_action_logs table for specialized ticket logs
+  try {
+    // Get the ticket ID from the database if not provided
+    let ticketId = null;
+    try {
+      const { db } = require('../database/sqlite');
+      const ticketStmt = db.prepare(`SELECT id FROM tickets WHERE guild_id = ? AND ticket_number = ?`);
+      const ticket = ticketStmt.get(guildId, ticketNumber);
+      ticketId = ticket ? ticket.id : null;
+    } catch (error) {
+      logError('Ticket Logger', `Failed to get ticket ID: ${error}`);
+    }
+    
+    // Convert action type to ticket action format
+    const action = actionType.replace('ticket', '').toLowerCase();
+    
+    // Create details JSON
+    const details = JSON.stringify({
+      subject,
+      closedBy,
+      priority,
+      targetUser,
+      note,
+      rating,
+      feedback,
+      channelId
+    });
+    
+    // Insert into ticket_action_logs
+    const { db } = require('../database/sqlite');
+    const stmt = db.prepare(`
+      INSERT INTO ticket_action_logs 
+      (guild_id, ticket_id, ticket_number, user_id, action, details, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `);
+    
+    stmt.run(
+      guildId,
+      ticketId,
+      ticketNumber,
+      userId,
+      action,
+      details
+    );
+    
+    logInfo('Ticket Logger', `Logged ${action} action for ticket #${ticketNumber} to ticket_action_logs`);
+    return true;
+  } catch (error) {
+    logError('Ticket Logger', `Failed to log to ticket_action_logs: ${error}`);
+    // Still return the result of the main log
+    return mainLogResult;
+  }
 }

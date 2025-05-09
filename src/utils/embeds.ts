@@ -14,6 +14,7 @@ export const Colors = {
   TICKETS: 0x2D3136,   // Dark Gray - Ticket system
   DONATION: 0x57F287,  // Green - Donation related
   SUPPORT: 0x5865F2,   // Blurple - Support related
+  SECONDARY: 0x4F545C, // Secondary Gray - Additional category color
 };
 
 /**

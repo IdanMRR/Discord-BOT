@@ -32,16 +32,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       if (success) {
         await interaction.reply({
-          content: language === 'he'
-            ? '✅ מערכת הברוכים הבאים עודכנה בהצלחה!'
-            : '✅ Welcome system has been updated successfully!',
+          content: 'Welcome channel set up successfully!',
           flags: MessageFlags.Ephemeral
         });
       } else {
         await interaction.reply({
-          content: language === 'he'
-            ? '❌ אירעה שגיאה בעדכון מערכת הברוכים הבאים!'
-            : '❌ An error occurred while updating the welcome system!',
+          content: 'An error occurred while updating the welcome system!',
           flags: MessageFlags.Ephemeral
         });
       }
@@ -52,9 +48,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     welcomeChannel = await guild.channels.create({
       name: 'welcome',
       type: ChannelType.GuildText,
-      topic: language === 'he'
-        ? 'ערוץ ברוכים הבאים אוטומטי'
-        : 'Automatic welcome channel'
+      topic: 'Welcome channel for new members'
     });
 
     // Default welcome message
@@ -72,16 +66,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (success) {
       await interaction.reply({
-        content: language === 'he'
-          ? '✅ מערכת הברוכים הבאים הוגדרה בהצלחה!'
-          : '✅ Welcome system has been set up successfully!',
+        content: 'Welcome channel set up successfully!',
         flags: MessageFlags.Ephemeral
       });
     } else {
       await interaction.reply({
-        content: language === 'he'
-          ? '❌ אירעה שגיאה בהגדרת מערכת הברוכים הבאים!'
-          : '❌ An error occurred while setting up the welcome system!',
+        content: 'An error occurred while setting up the welcome system!',
         flags: MessageFlags.Ephemeral
       });
     }
@@ -98,7 +88,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     console.error('Error in welcome-setup command:', error);
     await interaction.reply({
-      content: '❌ An error occurred while setting up the welcome system.',
+      content: 'An error occurred while setting up the welcome system.',
       flags: MessageFlags.Ephemeral
     });
     if (interaction.guild) {

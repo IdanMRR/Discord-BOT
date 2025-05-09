@@ -7,7 +7,7 @@ import { ServerSettingsService } from '../database/services/sqliteService';
 import { db } from '../database/sqlite';
 
 // Define available languages
-export const AVAILABLE_LANGUAGES = ['en', 'he'] as const;
+export const AVAILABLE_LANGUAGES = ['en'] as const;
 export type Language = typeof AVAILABLE_LANGUAGES[number];
 
 // Define translation cache

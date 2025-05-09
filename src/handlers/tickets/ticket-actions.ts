@@ -4,7 +4,6 @@ import { logTicketEvent } from '../../utils/databaseLogger';
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { saveAndSendTranscript } from './ticket-transcript';
-import { formatIsraeliDate, formatIsraeliTime } from '../../utils/time-formatter';
 
 /**
  * Handle the ticket deletion process
@@ -72,17 +71,11 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
     // Generate a transcript of the ticket before deletion
     logInfo('Ticket Delete', `Generating transcript for ticket #${ticket.ticket_number} before deletion`);
     
-    // Generate and send the transcript using our new function
-    await saveAndSendTranscript(channel, interaction.user, 'Ticket deleted by staff');
+    // Generate and send the transcript using our function - specify that we're deleting
+    await saveAndSendTranscript(channel, interaction.user, 'Ticket deleted by staff', true);
     
-    // Also send a message to the staff member who deleted the ticket
-    try {
-      await interaction.user.send({
-        content: `📄 Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been deleted and a transcript has been saved.`
-      });
-    } catch (error) {
-      logError('Ticket Delete', `Could not send notification to staff member: ${error}`);
-    }
+    // We no longer send a notification to the staff member who deleted the ticket
+    // as per user requirements
     
     // Log the ticket deletion
     await logTicketEvent({
@@ -94,13 +87,22 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
       closedBy: interaction.user.id
     });
     
-    // Reply to the user before deleting the channel
-    await interaction.editReply({
-      content: `Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully deleted. A transcript has been saved.`
-    });
+    // Create a styled confirmation embed
+    const deleteEmbed = new EmbedBuilder()
+      .setColor(Colors.ERROR)
+      .setTitle('🗑️ Ticket Deleted')
+      .setDescription(`Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully deleted.`)
+      .addFields([
+        { name: '📋 Information', value: 'A transcript has been saved to the logs channel.' },
+        { name: '⏱️ Status', value: 'This channel will be deleted in a few seconds.' }
+      ])
+      .setFooter({ text: `Support Ticket System • Deleted by ${interaction.user.username}` })
+      .setTimestamp();
     
-    // We no longer send a DM to the ticket creator when a ticket is deleted
-    // This is intentional as per user requirements
+    // Reply to the user with the styled embed before deleting the channel
+    await interaction.editReply({
+      embeds: [deleteEmbed]
+    });
     
     // Wait a moment before deleting the channel to ensure the reply is sent
     setTimeout(async () => {
@@ -117,11 +119,11 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
     
     if (interaction.deferred) {
       await interaction.editReply({
-        content: 'אירעה שגיאה במחיקת הטיקט. אנא נסה שוב מאוחר יותר.'
+        content: 'An error occurred while deleting the ticket. Please try again later.'
       });
     } else {
       await interaction.reply({
-        content: 'אירעה שגיאה במחיקת הטיקט. אנא נסה שוב מאוחר יותר.',
+        content: 'An error occurred while deleting the ticket. Please try again later.',
         flags: MessageFlags.Ephemeral
       });
     }
@@ -199,10 +201,10 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
       SendMessages: true
     });
     
-    // Format the current time in Israeli format using the utility
+    // Format the current date and time
     const now = new Date();
-    const formattedTime = formatIsraeliTime(now);
-    const formattedDate = formatIsraeliDate(now);
+    const formattedTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     
     // Create a reopened ticket embed
     const reopenedEmbed = new EmbedBuilder()
@@ -214,7 +216,7 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
         { name: '🕒 Reopened On', value: formattedDate, inline: true },
         { name: '👤 Reopened By', value: `${interaction.user.username} (${interaction.user.id})`, inline: true }
       ])
-      .setFooter({ text: `Coded by IdanMR • Today at ${formattedTime}` });
+      .setFooter({ text: `Support Ticket System • ${formattedTime}` });
     
     // Send the reopened embed to the channel
     await channel.send({ embeds: [reopenedEmbed] });
@@ -237,7 +239,7 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
             { name: '📋 Ticket Number', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
             { name: '🕒 Reopened On', value: formattedDate, inline: true }
           ])
-          .setFooter({ text: `Coded by IdanMR • Today at ${formattedTime}` });
+          .setFooter({ text: `Support Ticket System • ${formattedTime}` });
         
         await ticketCreator.send({ embeds: [dmEmbed] });
       }

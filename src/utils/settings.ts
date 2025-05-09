@@ -43,6 +43,7 @@ export interface ServerSettings {
   ticket_channel_id?: string;
   red_alert_channel_id?: string;
   custom_cities?: string;
+  weather_schedule?: string;
 }
 
 // Settings manager that uses SQLite for persistent storage

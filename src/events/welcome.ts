@@ -20,11 +20,9 @@ export default (client: Client): void => {
 
       const welcomeEmbed = new EmbedBuilder()
         .setColor(Colors.SUCCESS)
-        .setTitle(language === 'he' ? '👋 ברוך הבא!' : '👋 Welcome!')
+        .setTitle('👋 Welcome!')
         .setDescription(
-          language === 'he'
-            ? `ברוך הבא ${member} לשרת ${guild.name}!\nאנחנו שמחים שהצטרפת אלינו!`
-            : `Welcome ${member} to ${guild.name}!\nWe're glad to have you here!`
+          `Welcome to **${guild.name}**, ${member.user.username}!`
         )
         .setThumbnail(member.user.displayAvatarURL())
         .setTimestamp();
@@ -52,11 +50,9 @@ export default (client: Client): void => {
 
       const goodbyeEmbed = new EmbedBuilder()
         .setColor(Colors.ERROR)
-        .setTitle(language === 'he' ? '👋 להתראות!' : '👋 Goodbye!')
+        .setTitle('👋 Goodbye!')
         .setDescription(
-          language === 'he'
-            ? `${member.user.tag} עזב את השרת`
-            : `${member.user.tag} has left the server`
+          `${member.user.username} has left the server. We hope to see you again soon!`
         )
         .setTimestamp();
 

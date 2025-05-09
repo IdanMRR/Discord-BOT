@@ -280,6 +280,11 @@ async function handleMemberLeave(member: GuildMember | PartialGuildMember): Prom
  * @param message The message to react to
  */
 async function showMemberCount(message: Message): Promise<void> {
+  // Completely disable this function to prevent automatic responses
+  return;
+  
+  // Original code is commented out below
+  /*
   try {
     const { guild } = message;
     
@@ -317,6 +322,7 @@ async function showMemberCount(message: Message): Promise<void> {
   } catch (error) {
     logError('MemberEvents', `Error showing member count: ${error}`);
   }
+  */
 }
 
 /**

@@ -17,6 +17,18 @@ const defaultCities = [
   { name: 'Haifa', country: 'Israel', lat: 32.7940, lon: 34.9896 }
 ];
 
+// Define the weather schedule interface
+interface WeatherSchedule {
+  frequency: 'daily' | 'twice_daily' | 'hourly' | 'custom';
+  times: string[]; // Format: 'HH:MM' in UTC
+}
+
+// Default schedule - once daily at 5:00 UTC (8:00 Israel time)
+const DEFAULT_SCHEDULE: WeatherSchedule = {
+  frequency: 'daily',
+  times: ['05:00']
+};
+
 // Keeping track of the server-channel mappings
 interface WeatherChannelMapping {
   [guildId: string]: string; // guildId -> channelId
@@ -41,6 +53,12 @@ export const weatherChannels: WeatherChannelMapping = {};
 // In-memory cache of custom cities per server
 const serverCities: ServerCitiesMapping = {};
 
+// In-memory cache of server schedules
+const serverSchedules: { [guildId: string]: WeatherSchedule } = {};
+
+// Map to track job schedules by guild ID
+const scheduledJobs: { [guildId: string]: schedule.Job[] } = {};
+
 // Flag to track if weather update is currently running
 let isWeatherUpdateRunning = false;
 
@@ -56,7 +74,7 @@ async function loadWeatherChannels(): Promise<void> {
     console.log('Loading configured weather channels from database...');
     
     // Get weather channels with valid non-empty values
-    const settings = db.prepare("SELECT guild_id, weather_channel_id, custom_cities FROM server_settings WHERE weather_channel_id IS NOT NULL AND weather_channel_id != ''").all() as any[];
+    const settings = db.prepare("SELECT guild_id, weather_channel_id, custom_cities, weather_schedule FROM server_settings WHERE weather_channel_id IS NOT NULL AND weather_channel_id != ''").all() as any[];
     
     if (settings.length === 0) {
       console.log('No weather channels configured in the database');
@@ -81,9 +99,21 @@ async function loadWeatherChannels(): Promise<void> {
           console.error(`Error parsing custom cities for guild ${setting.guild_id}:`, parseError);
         }
       }
+      
+      // Load schedule settings if available
+      if (setting.weather_schedule) {
+        try {
+          const schedule = JSON.parse(setting.weather_schedule);
+          if (schedule && schedule.frequency && Array.isArray(schedule.times)) {
+            serverSchedules[setting.guild_id] = schedule;
+          }
+        } catch (parseError) {
+          console.error(`Error parsing weather schedule for guild ${setting.guild_id}:`, parseError);
+        }
+      }
     }
     
-    console.log(`Loaded ${Object.keys(weatherChannels).length} weather channels and ${Object.keys(serverCities).length} custom city configurations`);
+    console.log(`Loaded ${Object.keys(weatherChannels).length} weather channels, ${Object.keys(serverCities).length} custom city configurations, and ${Object.keys(serverSchedules).length} custom schedules`);
   } catch (error) {
     console.error('Error loading weather channels from database:', error);
   }
@@ -100,15 +130,166 @@ export async function initWeatherScheduler(client: Client): Promise<void> {
     // First load all configured weather channels from database
     await loadWeatherChannels();
     
-    // Schedule daily weather report at 8:00 AM Israel time (UTC+3)
-    // '0 5 * * *' is 5:00 AM UTC which is 8:00 AM Israel time (UTC+3)
-    schedule.scheduleJob('0 5 * * *', async () => {
-      await sendDailyWeatherUpdates(client);
-    });
+    // Set up schedules for each guild
+    for (const guildId of Object.keys(weatherChannels)) {
+      await setupGuildSchedule(client, guildId);
+    }
     
-    console.log('Weather scheduler initialized: daily report at 8:00 AM Israel time (UTC+3)');
+    console.log('Weather scheduler initialized successfully');
   } catch (error) {
     console.error('Error initializing weather scheduler:', error);
+  }
+}
+
+/**
+ * Set up weather schedule for a specific guild
+ * @param client Discord client
+ * @param guildId Guild ID
+ */
+export async function setupGuildSchedule(client: Client, guildId: string): Promise<void> {
+  // Clear any existing schedules for this guild
+  if (scheduledJobs[guildId]) {
+    scheduledJobs[guildId].forEach(job => job.cancel());
+    delete scheduledJobs[guildId];
+  }
+  
+  // Get the guild's schedule or use default
+  const guildSchedule = serverSchedules[guildId] || DEFAULT_SCHEDULE;
+  scheduledJobs[guildId] = [];
+  
+  // Set up jobs based on the schedule
+  if (guildSchedule.frequency === 'hourly') {
+    // Schedule hourly updates
+    const job = schedule.scheduleJob('0 * * * *', async () => {
+      await sendDailyWeatherUpdate(client, guildId, weatherChannels[guildId]);
+    });
+    scheduledJobs[guildId].push(job);
+    console.log(`Scheduled hourly weather updates for guild ${guildId}`);
+  } 
+  else if (guildSchedule.frequency === 'twice_daily') {
+    // Schedule twice daily updates (default: 5:00 and 17:00 UTC)
+    const morningTime = guildSchedule.times[0] || '05:00';
+    const eveningTime = guildSchedule.times[1] || '17:00';
+    
+    const [morningHour, morningMinute] = morningTime.split(':').map(Number);
+    const [eveningHour, eveningMinute] = eveningTime.split(':').map(Number);
+    
+    const morningJob = schedule.scheduleJob(`${morningMinute} ${morningHour} * * *`, async () => {
+      await sendDailyWeatherUpdate(client, guildId, weatherChannels[guildId]);
+    });
+    
+    const eveningJob = schedule.scheduleJob(`${eveningMinute} ${eveningHour} * * *`, async () => {
+      await sendDailyWeatherUpdate(client, guildId, weatherChannels[guildId]);
+    });
+    
+    scheduledJobs[guildId].push(morningJob, eveningJob);
+    console.log(`Scheduled twice daily weather updates for guild ${guildId} at ${morningTime} and ${eveningTime} UTC`);
+  }
+  else if (guildSchedule.frequency === 'custom') {
+    // Custom schedule with specific times
+    for (const timeString of guildSchedule.times) {
+      const [hour, minute] = timeString.split(':').map(Number);
+      
+      if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+        const job = schedule.scheduleJob(`${minute} ${hour} * * *`, async () => {
+          await sendDailyWeatherUpdate(client, guildId, weatherChannels[guildId]);
+        });
+        scheduledJobs[guildId].push(job);
+      }
+    }
+    console.log(`Scheduled custom weather updates for guild ${guildId} at ${guildSchedule.times.join(', ')} UTC`);
+  }
+  else {
+    // Default daily schedule
+    const timeString = guildSchedule.times[0] || '05:00';
+    const [hour, minute] = timeString.split(':').map(Number);
+    
+    const job = schedule.scheduleJob(`${minute} ${hour} * * *`, async () => {
+      await sendDailyWeatherUpdate(client, guildId, weatherChannels[guildId]);
+    });
+    
+    scheduledJobs[guildId].push(job);
+    console.log(`Scheduled daily weather update for guild ${guildId} at ${timeString} UTC`);
+  }
+}
+
+/**
+ * Set weather schedule for a server
+ * @param guildId The Discord server ID
+ * @param schedule The weather schedule configuration
+ */
+export async function setWeatherSchedule(guildId: string, schedule: WeatherSchedule): Promise<boolean> {
+  try {
+    console.log(`Setting weather schedule for guild ${guildId}: ${schedule.frequency} (${schedule.times.join(', ')})`);
+    
+    // Convert schedule to JSON string
+    const scheduleJson = JSON.stringify(schedule);
+    
+    // Update in settings manager
+    const success = await settingsManager.setSetting(guildId, 'weather_schedule', scheduleJson);
+    
+    // Also try direct database update as backup
+    try {
+      const checkRecord = db.prepare("SELECT guild_id FROM server_settings WHERE guild_id = ?").get(guildId);
+      
+      if (checkRecord) {
+        db.prepare("UPDATE server_settings SET weather_schedule = ? WHERE guild_id = ?").run(scheduleJson, guildId);
+      } else {
+        db.prepare("INSERT INTO server_settings (guild_id, weather_schedule) VALUES (?, ?)").run(guildId, scheduleJson);
+      }
+    } catch (dbError) {
+      console.error(`Direct database update failed for weather schedule in guild ${guildId}:`, dbError);
+    }
+    
+    // Update in-memory cache
+    serverSchedules[guildId] = schedule;
+    
+    // Return success from settings manager
+    if (success) {
+      console.log(`Successfully set weather schedule for guild ${guildId}`);
+      return true;
+    }
+    
+    console.error(`Failed to save weather schedule to database for guild ${guildId}`);
+    return false;
+  } catch (error) {
+    console.error(`Error setting weather schedule for guild ${guildId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Get weather schedule for a specific guild
+ * @param guildId The Discord server ID
+ */
+export async function getWeatherSchedule(guildId: string): Promise<WeatherSchedule> {
+  try {
+    // First check the in-memory cache
+    if (serverSchedules[guildId]) {
+      return serverSchedules[guildId];
+    }
+    
+    // If not in cache, check the database
+    const settings = await settingsManager.getSettings(guildId);
+    
+    if (settings && settings.weather_schedule) {
+      try {
+        const schedule = JSON.parse(settings.weather_schedule);
+        if (schedule && schedule.frequency && Array.isArray(schedule.times)) {
+          // Update the cache
+          serverSchedules[guildId] = schedule;
+          return schedule;
+        }
+      } catch (parseError) {
+        console.error(`Error parsing weather schedule for guild ${guildId}:`, parseError);
+      }
+    }
+    
+    // Return default schedule if no custom schedule is configured
+    return DEFAULT_SCHEDULE;
+  } catch (error) {
+    console.error(`Error getting weather schedule for guild ${guildId}:`, error);
+    return DEFAULT_SCHEDULE;
   }
 }
 
@@ -569,6 +750,24 @@ export async function checkWeatherDatabaseSetup(): Promise<void> {
     if (!citiesColumn) {
       db.prepare("ALTER TABLE server_settings ADD COLUMN custom_cities TEXT").run();
       console.log('Added custom_cities column to server_settings table');
+    }
+    
+    // Check for weather_schedule column
+    const scheduleColumn = tableInfo.find(col => col.name === 'weather_schedule');
+    if (!scheduleColumn) {
+      db.prepare("ALTER TABLE server_settings ADD COLUMN weather_schedule TEXT").run();
+      console.log('Added weather_schedule column to server_settings table');
+    }
+    
+    // Get the client from client-utils
+    const { getClient } = require('../../utils/client-utils');
+    const client = getClient();
+    
+    // Initialize the weather scheduler here after database setup is confirmed
+    if (client) {
+      await initWeatherScheduler(client);
+    } else {
+      console.error('Unable to initialize weather scheduler: Client not available');
     }
   } catch (error) {
     console.error('Error ensuring weather columns exist:', error);

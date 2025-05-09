@@ -1,5 +1,5 @@
 import { ButtonInteraction, StringSelectMenuInteraction, ChannelType, PermissionFlagsBits, ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder, MessageFlags, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ModalSubmitInteraction, TextChannel } from 'discord.js';
-import { ticketCategories, getCategoryById } from './ticket-categories';
+import { ticketCategories, getCategoryById, getPriorityInfo } from './ticket-categories';
 import { db } from '../../database/sqlite';
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
@@ -83,6 +83,9 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     // Create channel name with ticket number and category
     const channelName = `ticket-${formattedTicketNumber}-${categoryId}`;
     
+    // Get priority information from the category
+    const priorityInfo = getPriorityInfo(category.priority || 'medium');
+    
     // Find staff roles with manage channels permission to add to the ticket
     let staffRoles: { id: string, allow: bigint }[] = [];
     
@@ -99,6 +102,18 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
           });
         }
       });
+      
+      // Add category-specific staff roles if configured
+      if (category.staffRoles && category.staffRoles.length > 0) {
+        for (const roleId of category.staffRoles) {
+          if (!staffRoles.some(r => r.id === roleId)) {
+            staffRoles.push({
+              id: roleId,
+              allow: PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages | PermissionFlagsBits.ReadMessageHistory
+            });
+          }
+        }
+      }
     } catch (error) {
       logError('Ticket Creation', `Failed to fetch staff roles: ${error}`);
       // Continue without staff roles if there's an error
@@ -126,7 +141,7 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     const ticketChannel = await interaction.guild?.channels.create({
       name: channelName,
       type: ChannelType.GuildText,
-      topic: `${category.emoji} ${category.label} | Ticket #${formattedTicketNumber} | Created by ${interaction.user.tag}`,
+      topic: `${category.emoji} ${category.label} | Ticket #${formattedTicketNumber} | ${priorityInfo.emoji} ${priorityInfo.label} Priority | Created by ${interaction.user.tag}`,
       permissionOverwrites: permissionOverwrites
     });
     
@@ -151,28 +166,42 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       `${Math.floor(userCreatedDays / 365)} year${Math.floor(userCreatedDays / 365) !== 1 ? 's' : ''} ago` : 
       `${userCreatedDays} day${userCreatedDays !== 1 ? 's' : ''} ago`;
     
+    // Get user join date if available
+    let joinedDaysText = '';
+    if (interaction.member instanceof GuildMember && interaction.member.joinedAt) {
+      const joinedDays = Math.floor((Date.now() - interaction.member.joinedAt.getTime()) / (1000 * 60 * 60 * 24));
+      joinedDaysText = joinedDays > 365 ? 
+        `${Math.floor(joinedDays / 365)} year${Math.floor(joinedDays / 365) !== 1 ? 's' : ''} ago` : 
+        `${joinedDays} day${joinedDays !== 1 ? 's' : ''} ago`;
+    }
+    
     // Get the rules channel ID from settings if available
     const settings = await settingsManager.getSettings(interaction.guildId!);
     const rulesChannelId = settings?.rules_channel_id;
     
-    // Create the welcome embed for the ticket
+    // Send initial waiting message
+    const waitingMessage = await ticketChannel.send({
+      content: `${interaction.user}, your ticket is being set up. Please wait a moment...`
+    });
+    
+    // Create the welcome embed for the ticket with enhanced information
     const ticketEmbed = new EmbedBuilder()
       .setColor(category.color)
-      .setTitle(`${category.emoji} ${category.label} Ticket | #${formattedTicketNumber}`)
-      .setDescription(`Thank you for creating a ticket. Please describe your issue in detail, and a staff member will assist you as soon as possible.`)
+      .setTitle(`${category.emoji} ${category.label} Support | Ticket #${formattedTicketNumber}`)
+      .setDescription(`Thank you for creating a ticket. Please describe your issue in detail, and a staff member will assist you as soon as possible.\n\nExpected response time: **${category.expectedResponseTime || '24 hours'}**`)
       .setThumbnail(interaction.user.displayAvatarURL({ size: 256 }))
       .addFields([
         { 
           name: '📋 Ticket Information', 
-          value: `**Category:** ${category.label}\n**Status:** Open\n**Created:** ${formattedDate}` 
+          value: `**Category:** ${category.label}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}\n**Status:** Open\n**Created:** ${formattedDate}` 
         },
         { 
           name: '👤 User Information', 
-          value: `**Username:** ${interaction.user.username}\n**ID:** ${interaction.user.id}\n**Account Created:** ${userCreatedText}`, 
+          value: `**Username:** ${interaction.user.username}\n**ID:** ${interaction.user.id}\n**Account Created:** ${userCreatedText}${joinedDaysText ? `\n**Server Joined:** ${joinedDaysText}` : ''}`, 
           inline: false 
         }
       ])
-      .setFooter({ text: `Coded by IdanMR • Today at ${formattedTime}` });
+      .setFooter({ text: `Support Ticket System • ${formattedTime}` });
       
     // Add rules channel reference if available
     if (rulesChannelId) {
@@ -191,12 +220,22 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       .setStyle(ButtonStyle.Danger)
       .setEmoji('🔒');
     
+    // Add FAQ button
+    const faqButton = new ButtonBuilder()
+      .setCustomId('view_faq')
+      .setLabel('View FAQ')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('❓');
+    
     const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(closeButton);
+      .addComponents(closeButton, faqButton);
+    
+    // Delete the waiting message
+    await waitingMessage.delete().catch(() => {});
     
     // Send the welcome message in the new ticket channel
     const welcomeMessage = await ticketChannel.send({
-      content: `${interaction.user} Welcome to your ticket! A staff member will be with you shortly.`,
+      content: ``,
       embeds: [ticketEmbed],
       components: [row]
     });
@@ -204,6 +243,24 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     // Pin the welcome message for easy reference
     try {
       await welcomeMessage.pin();
+      
+      // Wait briefly for the system message to appear before trying to delete it
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Delete the system message about pinning to avoid cluttering the chat
+      const messages = await ticketChannel.messages.fetch({ limit: 10 });
+      const pinSystemMessage = messages.find(m => 
+        m.type === 6 && // MessageType.ChannelPinnedMessage
+        m.author.id === interaction.client.user?.id &&
+        m.content.includes('pinned a message')
+      );
+      
+      if (pinSystemMessage) {
+        await pinSystemMessage.delete().catch((error) => {
+          // Log the error but continue
+          logError('Ticket Creation', `Could not delete pin system message: ${error}`);
+        });
+      }
     } catch (pinError) {
       logError('Ticket Creation', `Failed to pin welcome message: ${pinError}`);
       // Continue even if pinning fails
@@ -241,43 +298,29 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       // Continue even if database saving fails
     }
     
-    // Create a receipt for the user
-    const receiptEmbed = new EmbedBuilder()
-      .setColor(category.color)
-      .setTitle(`${category.emoji} Ticket Created | #${formattedTicketNumber}`)
-      .setDescription(`Your ticket has been successfully created: ${ticketChannel}`)
-      .addFields([
-        { name: '📋 Ticket Number', value: `#${formattedTicketNumber}`, inline: true },
-        { name: '🏷️ Category', value: category.label, inline: true },
-        { name: '📝 Status', value: 'Open', inline: true },
-        { name: '🕒 Created On', value: formattedDate, inline: false }
-      ])
-      .setFooter({ text: `Coded by IdanMR • Today at ${formattedTime}` });
+    // Mention appropriate staff roles based on category
+    if (category.staffRoles && category.staffRoles.length > 0) {
+      const staffMentions = category.staffRoles.map(roleId => `<@&${roleId}>`).join(' ');
+      await ticketChannel.send({
+        content: `${staffMentions} - A new ${category.label} ticket has been created that requires your attention.`
+      });
+    }
     
-    // Reply to the user with the receipt
+    // Send a confirmation message to the user to complete the interaction
     await interaction.editReply({
-      embeds: [receiptEmbed]
+      content: `✅ Your ticket has been created successfully! Please go to <#${ticketChannel.id}> to continue.`,
     });
-    
-    logInfo('Tickets', `Ticket #${formattedTicketNumber} created by ${interaction.user.tag} in category ${category.label}`);
-    
-    return true;
   } catch (error) {
-    logError('Ticket Creation', `Error creating ticket: ${error}`);
+    logError('Ticket Creation', error);
     
-    // Handle errors gracefully
+    // Handle error gracefully
     try {
-      if (interaction.deferred) {
-        await interaction.editReply({
-          content: 'An error occurred while creating your ticket. Please try again later or contact a staff member.'
-        });
-      } else {
-        await interaction.reply({
-          content: 'An error occurred while creating your ticket. Please try again later or contact a staff member.',
-          flags: MessageFlags.Ephemeral
-        });
-      }
+      await interaction.reply({ 
+        content: 'An error occurred while processing your request. Please try again later or contact a staff member.',
+        flags: MessageFlags.Ephemeral
+       });
     } catch (replyError) {
+      // If we can't reply, just log it
       console.error('Failed to send error message:', replyError);
     }
     

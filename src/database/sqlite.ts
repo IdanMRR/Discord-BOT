@@ -219,6 +219,8 @@ export interface GuildSettings {
   ticket_category_id?: string;
   ticket_panel_channel_id?: string;
   ticket_panel_message_id?: string;
+  ticket_logs_channel_id?: string;
+  red_alert_channels?: string; // JSON string of channel IDs
   staff_role_ids?: string;
   auto_mod_enabled?: number;
   auto_mod_settings?: string;

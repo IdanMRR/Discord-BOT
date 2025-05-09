@@ -134,17 +134,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           .setDescription('Commands for the ticket support system')
           .setColor(Colors.INFO)
           .addFields(
-            { name: '/setup', value: 'Set up the ticket system in your server. Creates a ticket panel with buttons for users to create tickets.', inline: false },
-            { name: '/create', value: 'Create a new ticket manually. Opens a modal for entering ticket details.', inline: false },
+            { name: '/setup-ticket', value: 'Set up the ticket system in your server. Creates a ticket panel with selection menu for users to create tickets.', inline: false },
             { name: '/close', value: 'Close an open ticket. Can only be used in ticket channels.', inline: false },
-            { name: '/adduser', value: 'Add a user to the current ticket. Can only be used in ticket channels.', inline: false },
-            { name: '/note', value: 'Add a private note to a ticket that only staff can see.', inline: false },
-            { name: '/view-notes', value: 'View all notes for the current ticket. Staff only.', inline: false },
-            { name: '/priority', value: 'Set the priority level of a ticket (Low, Medium, High, Urgent).', inline: false },
-            { name: '/transfer', value: 'Transfer a ticket to a different category.', inline: false },
-            { name: '/list', value: 'List all open tickets in the server. Staff only.', inline: false },
-            { name: '/stats', value: 'View ticket statistics for the server. Shows total tickets, open tickets, and closed tickets.', inline: false },
-            { name: '/set-logs', value: 'Set the channel where ticket logs will be sent. Staff only.', inline: false }
+            { name: '/add-user', value: 'Add a user to the current ticket channel. Staff only.', inline: false },
+            { name: '/remove-user', value: 'Remove a user from the current ticket channel. Staff only.', inline: false },
+            { name: '/set-priority', value: 'Set the priority level of a ticket (High, Medium, Low). Staff only.', inline: false },
+            { name: '/setup-ticket-logs', value: 'Set the channel where ticket logs will be sent. Staff only.', inline: false },
+            { name: '/list-tickets', value: 'List all open tickets in the server. Staff only.', inline: false },
+            { name: '/ticket-logs', value: 'View logs of ticket actions. Filter by action type, ticket number, or user.', inline: false },
+            { name: '/test-logs', value: 'Test the ticket logging system by sending a sample log message.', inline: false },
+            { name: '/list-redalert', value: 'List Red Alert notification channels configured in the system.', inline: false },
+            { name: '/setup-redalert', value: 'Configure a channel to receive Red Alert notifications.', inline: false },
+            { name: '/remove-redalert', value: 'Remove a channel from Red Alert notifications.', inline: false }
           );
         break;
       case 'utility':

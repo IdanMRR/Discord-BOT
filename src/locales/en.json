@@ -50,7 +50,7 @@
     "logs_channel_description": "This channel has been set up to receive ticket transcripts and logs.",
     "logs_setup_success": "Ticket logs channel has been successfully set up!",
     "logs_setup_error": "There was an error setting up the ticket logs channel. Please try again later.",
-    "welcome_message": "Welcome to your ticket! A staff member will be with you shortly.",
+    "welcome_message": "",
     "provide_details": "Welcome to the ticket system! Click the button below to create a new ticket. Our staff team will assist you as soon as possible.",
     "select_category": "Need help or have a question? Select a category from the dropdown menu after clicking the button below.",
     "click_to_create": "Click the button below to create a new ticket.",

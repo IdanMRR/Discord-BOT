@@ -45,24 +45,6 @@ const commandDescriptions: Record<Language, Record<string, string>> = {
     'warn': 'Warn a user',
     'kick': 'Kick a user from the server',
     'ban': 'Ban a user from the server'
-  },
-  he: {
-    // Admin commands
-    'setup-ticket-logs': 'הגדר ערוץ ייעודי לתמלילי פניות ולוגים',
-    'server-setup': 'הגדר תכונות שרת חיוניות כמו לוגים ופניות',
-    
-    // Utility commands
-    'language': 'שנה את העדפת השפה שלך או את שפת השרת',
-    'help': 'קבל עזרה עם פקודות הבוט',
-    
-    // Ticket commands
-    'create-ticket': 'צור פנייה חדשה לתמיכה',
-    'close': 'סגור פנייה',
-    
-    // Moderation commands
-    'warn': 'תן אזהרה למשתמש',
-    'kick': 'הרחק משתמש מהשרת',
-    'ban': 'תן באן למשתמש מהשרת'
   }
 };
 

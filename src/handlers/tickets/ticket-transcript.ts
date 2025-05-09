@@ -14,7 +14,9 @@ import { db } from '../../database/sqlite';
 import { settingsManager } from '../../utils/settings';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { createRatingButton } from './ticket-rating';
-import { formatIsraeliDate, formatIsraeliTime } from '../../utils/time-formatter';
+
+// Create a map to track recently generated transcripts to prevent duplicates
+const recentTranscripts = new Map<string, number>();
 
 /**
  * Save and send a transcript of a ticket channel
@@ -22,12 +24,14 @@ import { formatIsraeliDate, formatIsraeliTime } from '../../utils/time-formatter
  * @param channel The ticket channel to create a transcript for
  * @param closedBy The user who closed the ticket
  * @param reason The reason for closing the ticket
+ * @param isDeleting Indicates if the ticket is being deleted
  * @returns Promise resolving to true if successful
  */
 export async function saveAndSendTranscript(
   channel: TextChannel,
   closedBy: GuildMember | User,
-  reason?: string
+  reason?: string,
+  isDeleting: boolean = false
 ): Promise<boolean> {
   try {
     // Get ticket info from database
@@ -38,6 +42,17 @@ export async function saveAndSendTranscript(
       return false;
     }
     
+    // Check if a transcript has already been generated recently for this ticket
+    // to prevent duplicate transcripts
+    const lastTranscriptTime = recentTranscripts.get(channel.id);
+    if (lastTranscriptTime && (Date.now() - lastTranscriptTime) < 30000) {
+      logInfo('Transcript', `Transcript for ticket #${ticketInfo.ticket_number} was already generated within the last 30 seconds. Skipping duplicate.`);
+      return true; // Return success without generating another transcript
+    }
+    
+    // Mark this ticket as having a transcript generated
+    recentTranscripts.set(channel.id, Date.now());
+    
     // Format ticket number with leading zeros
     const formattedTicketNumber = ticketInfo.ticket_number.toString().padStart(4, '0');
     
@@ -47,232 +62,159 @@ export async function saveAndSendTranscript(
     // Sort messages by timestamp (oldest first)
     const sortedMessages = Array.from(messages.values()).sort((a, b) => a.createdTimestamp - b.createdTimestamp);
     
-    // Build HTML transcript
-    let htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ticket #${formattedTicketNumber} Transcript</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-          }
-          .header {
-            background-color: #2c2f33;
-            color: white;
-            padding: 15px;
-            border-radius: 5px 5px 0 0;
-            margin-bottom: 20px;
-          }
-          .message {
-            background-color: white;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          .message-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-          }
-          .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-          }
-          .username {
-            font-weight: bold;
-            color: #7289da;
-          }
-          .timestamp {
-            color: #99aab5;
-            font-size: 0.8em;
-            margin-left: 10px;
-          }
-          .content {
-            word-break: break-word;
-          }
-          .embed {
-            border-left: 4px solid #7289da;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background-color: #f6f6f6;
-          }
-          .attachment {
-            display: block;
-            margin: 5px 0;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #99aab5;
-            font-size: 0.8em;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Ticket #${formattedTicketNumber} Transcript</h1>
-          <p>Category: ${ticketInfo.category}</p>
-          <p>Created by: ${ticketInfo.username} (${ticketInfo.user_id})</p>
-          <p>Created at: ${new Date(ticketInfo.created_at).toLocaleString()}</p>
-          <p>Closed by: ${closedBy instanceof GuildMember ? closedBy.user.tag : closedBy.tag} (${closedBy.id})</p>
-          <p>Closed at: ${new Date().toLocaleString()}</p>
-          ${reason ? `<p>Reason: ${reason}</p>` : ''}
-        </div>
-    `;
+    // Build plain text transcript instead of HTML
+    let textContent = `=============== TICKET TRANSCRIPT #${formattedTicketNumber} ===============\n`;
+    textContent += `Category: ${ticketInfo.category}\n`;
+    textContent += `Created by: ${ticketInfo.username} (${ticketInfo.user_id})\n`;
+    textContent += `Created at: ${ticketInfo.created_at}\n`;
+    textContent += `Closed by: ${closedBy instanceof GuildMember ? closedBy.user.tag : closedBy.tag} (${closedBy.id})\n`;
+    textContent += `Closed at: ${new Date().toLocaleString()}\n`;
+    if (reason) textContent += `Reason: ${reason}\n`;
+    textContent += `\n=== MESSAGES ===\n\n`;
     
     // Add each message to the transcript
     for (const message of sortedMessages) {
       const timestamp = new Date(message.createdTimestamp).toLocaleString();
-      const avatarUrl = message.author.displayAvatarURL({ extension: 'png', size: 128 });
       
-      htmlContent += `
-        <div class="message">
-          <div class="message-header">
-            <img class="avatar" src="${avatarUrl}" alt="${message.author.username}">
-            <span class="username">${message.author.username}</span>
-            <span class="timestamp">${timestamp}</span>
-          </div>
-          <div class="content">${message.content || ''}</div>
-      `;
+      textContent += `[${timestamp}] ${message.author.username}: ${message.content || '(No text content)'}\n`;
       
-      // Add embeds
+      // Add embeds as text summaries
       if (message.embeds.length > 0) {
         for (const embed of message.embeds) {
-          htmlContent += `
-            <div class="embed">
-              ${embed.title ? `<strong>${embed.title}</strong><br>` : ''}
-              ${embed.description ? `${embed.description}<br>` : ''}
-            </div>
-          `;
+          textContent += `  [Embed] `;
+          if (embed.title) textContent += `Title: ${embed.title} `;
+          if (embed.description) textContent += `Content: ${embed.description}`;
+          textContent += `\n`;
         }
       }
       
       // Add attachments
       if (message.attachments.size > 0) {
         for (const [, attachment] of message.attachments) {
-          htmlContent += `
-            <a class="attachment" href="${attachment.url}" target="_blank">
-              ${attachment.name || 'Attachment'}
-            </a>
-          `;
+          textContent += `  [Attachment] ${attachment.name || 'Unnamed file'}: ${attachment.url}\n`;
         }
       }
       
-      htmlContent += `</div>`;
+      textContent += `\n`;
     }
     
-    // Close HTML
-    htmlContent += `
-        <div class="footer">
-          <p>Transcript generated on ${new Date().toLocaleString()}</p>
-          <p>Coded by IdanMR</p>
-        </div>
-      </body>
-      </html>
-    `;
+    // Add footer
+    textContent += `\n=============== END OF TRANSCRIPT ===============\n`;
+    textContent += `Generated on ${new Date().toLocaleString()} • Support Ticket System`;
     
     // Create attachment
-    const buffer = Buffer.from(htmlContent, 'utf-8');
-    const attachment = new AttachmentBuilder(buffer, { name: `ticket-${formattedTicketNumber}-transcript.html` });
+    const buffer = Buffer.from(textContent, 'utf-8');
+    const attachment = new AttachmentBuilder(buffer, { name: `ticket-${formattedTicketNumber}-transcript.txt` });
     
-    // Get settings to find log channel
-    const settings = await settingsManager.getSettings(channel.guild.id);
+    // Initialize success flag
+    let transcriptSuccess = false;
     
-    if (!settings || !settings.ticket_logs_channel_id) {
-      logError('Transcript', 'No ticket log channel configured');
-      return false;
-    }
-    
-    // Get log channel
-    const logChannel = await channel.guild.channels.fetch(settings.ticket_logs_channel_id) as TextChannel;
-    
-    if (!logChannel || !logChannel.isTextBased()) {
-      logError('Transcript', `Invalid ticket log channel: ${settings.ticket_logs_channel_id}`);
-      return false;
-    }
-    
-    // Format the current time for the footer using the utility
-    const now = new Date();
-    const timeString = formatIsraeliTime(now);
-    
-    // Create embed
-    const embed = new EmbedBuilder()
-      .setColor(Colors.INFO)
-      .setTitle(`🗒️ Ticket Transcript | #${formattedTicketNumber}`)
-      .setDescription(`Transcript for ticket #${formattedTicketNumber} (${ticketInfo.category})`)
-      .addFields([
-        { name: '👤 Opened By', value: `<@${ticketInfo.user_id}>`, inline: true },
-        { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
-        { name: '📋 Reason', value: reason || 'No reason provided', inline: false }
-      ])
-      .setFooter({ text: `Coded by IdanMR • Today at ${timeString}` });
-    
-    // Send transcript to log channel
-    await logChannel.send({
-      embeds: [embed],
-      files: [attachment]
-    });
-    
-    // Try to send transcript to user as well
+    // Send to log channel
     try {
-      const user = await channel.client.users.fetch(ticketInfo.user_id);
+      // Get settings to find log channel
+      const settings = await settingsManager.getSettings(channel.guild.id);
       
-      if (user) {
-        const userEmbed = new EmbedBuilder()
-          .setColor(Colors.INFO)
-          .setTitle(`🗒️ Ticket Transcript | #${formattedTicketNumber}`)
-          .setDescription(`Your ticket #${formattedTicketNumber} has been closed.\nA transcript is attached for your records.`)
-          .addFields([
-            { name: '📋 Category', value: ticketInfo.category, inline: true },
-            { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
-            { name: '📝 Reason', value: reason || 'No reason provided', inline: false }
-          ])
-          .setFooter({ text: `Coded by IdanMR • Today at ${timeString}` });
+      if (settings && settings.ticket_logs_channel_id) {
+        // Get log channel
+        const logChannel = await channel.guild.channels.fetch(settings.ticket_logs_channel_id);
         
-        // Send transcript and rating button to user
-        const ratingButton = createRatingButton(ticketInfo.ticket_number);
-        const ratingRow = new ActionRowBuilder<ButtonBuilder>().addComponents(ratingButton);
-        
-        await user.send({
-          embeds: [userEmbed],
-          files: [attachment],
-          components: [ratingRow]
-        });
+        if (logChannel && logChannel.isTextBased()) {
+          // Format the current time for the footer
+          const now = new Date();
+          const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+          
+          // Create embed
+          const embed = new EmbedBuilder()
+            .setColor(Colors.INFO)
+            .setTitle(`🗒️ Ticket Transcript | #${formattedTicketNumber}`)
+            .setDescription(`Transcript for ticket #${formattedTicketNumber} (${ticketInfo.category})`)
+            .addFields([
+              { name: '👤 Opened By', value: `<@${ticketInfo.user_id}>`, inline: true },
+              { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
+              { name: '📋 Reason', value: reason || 'No reason provided', inline: false },
+              { name: '📊 Status', value: isDeleting ? 'Deleted' : 'Closed', inline: true }
+            ])
+            .setFooter({ text: `Support Ticket System • ${timeString}` });
+          
+          // Send transcript to log channel
+          await logChannel.send({
+            embeds: [embed],
+            files: [attachment]
+          });
+          
+          // Log the success
+          logInfo('Transcript', `Sent transcript to log channel for ticket #${formattedTicketNumber}`);
+          transcriptSuccess = true;
+        } else {
+          logError('Transcript', `Invalid ticket log channel: ${settings.ticket_logs_channel_id}`);
+        }
+      } else {
+        logError('Transcript', 'No ticket log channel configured');
       }
     } catch (error) {
-      logError('Transcript', `Failed to send transcript to user: ${error}`);
-      // Continue even if we can't send to the user
+      logError('Transcript', `Error sending transcript to log channel: ${error}`);
+    }
+    
+    // Only send transcript to user if the ticket is being closed (not deleted)
+    if (!isDeleting) {
+      try {
+        const user = await channel.client.users.fetch(ticketInfo.user_id);
+        
+        if (user) {
+          // Format time for user message
+          const now = new Date();
+          const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+          
+          // Create a more styled embed
+          const userEmbed = new EmbedBuilder()
+            .setColor(Colors.INFO)
+            .setTitle(`🗒️ Ticket Transcript | #${formattedTicketNumber}`)
+            .setDescription(`Your ticket #${formattedTicketNumber} has been closed.\nA transcript is attached for your records.`)
+            .addFields([
+              { name: '📋 Category', value: ticketInfo.category, inline: true },
+              { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
+              { name: '📝 Reason', value: reason || 'No reason provided', inline: false }
+            ])
+            .setFooter({ text: `Coded by IdanMR • Today at ${timeString}` })
+            .setTimestamp();
+          
+          // Create a new attachment for the user to ensure it's not consumed by the previous send
+          const userAttachment = new AttachmentBuilder(buffer, { name: `ticket-${formattedTicketNumber}-transcript.txt` });
+          
+          // Send transcript to user WITHOUT a rating button (the rating will be sent separately via DM)
+          await user.send({
+            embeds: [userEmbed],
+            files: [userAttachment]
+          });
+          
+          // Log the success
+          logInfo('Transcript', `Sent transcript to user ${user.tag} for ticket #${formattedTicketNumber}`);
+          transcriptSuccess = true;
+        }
+      } catch (userError) {
+        logError('Transcript', `Failed to send transcript to user: ${userError}`);
+        // We'll still consider it a success if we managed to send to the log channel
+      }
     }
     
     // Log the ticket close event with transcript information
     await logTicketEvent({
       guildId: channel.guild.id,
-      actionType: 'ticketClose',
+      actionType: isDeleting ? 'ticketDelete' : 'ticketClose',
       userId: closedBy.id,
       channelId: channel.id,
       ticketNumber: ticketInfo.ticket_number,
       subject: ticketInfo.category,
       closedBy: closedBy.id,
-      note: `Transcript saved: ticket-${formattedTicketNumber}-transcript.html` // Include transcript filename in the logs
+      note: `Transcript saved: ticket-${formattedTicketNumber}-transcript.txt` // Include transcript filename in the logs
     });
     
     // Also log the reason separately if provided
     if (reason) {
-      logInfo('Ticket Close', `Reason for closing ticket #${ticketInfo.ticket_number}: ${reason}`);
+      logInfo(isDeleting ? 'Ticket Delete' : 'Ticket Close', `Reason for ${isDeleting ? 'deleting' : 'closing'} ticket #${ticketInfo.ticket_number}: ${reason}`);
     }
     
-    logInfo('Transcript', `Created transcript for ticket #${formattedTicketNumber}`);
-    return true;
+    return transcriptSuccess;
   } catch (error) {
     logError('Transcript', `Error creating transcript: ${error}`);
     return false;
