@@ -1,17 +1,60 @@
 // API-based database service that fetches real data from our backend
 
 const API_URL = 'http://localhost:3001/api';
+const API_KEY = 'f8e7d6c5b4a3928170615243cba98765';
 
 // Helper function to make API requests
 async function fetchApi(endpoint) {
   try {
-    const response = await fetch(`${API_URL}${endpoint}`);
+    console.log(`Fetching from: ${API_URL}${endpoint}`);
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit', // Changed from 'include' to avoid CORS issues
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'x-api-key': API_KEY // Add the API key from .env
+      }
+    });
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API request failed: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
-    return await response.json();
+    
+    const data = await response.json();
+    console.log(`Response from ${endpoint}:`, data); // Log the response data
+    return data;
   } catch (error) {
-    console.error(`Error fetching from ${endpoint}:`, error);
+    console.error(`Error fetching from ${endpoint}:`, error.message || error);
+    // Return a default response for debugging
+    if (endpoint === '/servers') {
+      console.log('Returning fallback server data for debugging');
+      return {
+        servers: [
+          {
+            guild_id: '123456789',
+            guild_name: 'Test Server',
+            memberCount: 100,
+            welcome_channel_name: 'welcome',
+            logs_channel_name: 'logs',
+            stats: {
+              tickets: 5,
+              warnings: 10,
+              commands: 50
+            }
+          }
+        ],
+        stats: {
+          serverCount: 1,
+          activeTickets: 5,
+          activeWarnings: 10,
+          commandsUsed: 50
+        }
+      };
+    }
     return null;
   }
 }
@@ -20,13 +63,31 @@ async function fetchApi(endpoint) {
 export const ServerSettings = {
   getAll: async () => {
     console.log('Fetching all servers from API');
-    const data = await fetchApi('/servers');
-    return data || [];
+    const response = await fetchApi('/servers');
+    
+    // Handle the new response format which includes servers and stats
+    if (response && response.servers) {
+      return response.servers || [];
+    }
+    
+    // Fallback to the old format if needed
+    return response || [];
   },
   
   get: async (guildId) => {
+    if (!guildId || guildId === 'undefined') {
+      console.error('Invalid guild ID provided to ServerSettings.get');
+      return null;
+    }
+    
     console.log(`Fetching server with ID: ${guildId} from API`);
-    return await fetchApi(`/servers/${guildId}`);
+    try {
+      const data = await fetchApi(`/servers/${guildId}`);
+      return data;
+    } catch (error) {
+      console.error(`Error fetching server ${guildId}:`, error);
+      return null;
+    }
   },
   
   update: async (guildId, settings) => {

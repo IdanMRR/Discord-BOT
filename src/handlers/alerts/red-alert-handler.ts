@@ -5,6 +5,11 @@ import { ServerSettingsService } from '../../database/services/sqliteService';
 import { db } from '../../database/sqlite';
 import { logInfo, logError, logWarning } from '../../utils/logger';
 
+// Add type declaration for the global variable
+declare global {
+    var lastNonJsonLogTime: number | undefined;
+}
+
 dotenv.config();
 
 // API endpoint for alerts
@@ -101,7 +106,17 @@ export async function startRedAlertTracker(client: Client) {
                     try {
                         alertData = JSON.parse(responseData);
                     } catch (jsonError) {
-                        console.log('Received non-JSON data:', responseData);
+                        // Instead of logging the raw response every time, just log that we received non-JSON data
+                        // This is often normal when there are no alerts or when the API returns empty data
+                        // Only log this once every 10 minutes to reduce spam
+                        const now = Date.now();
+                        const TEN_MINUTES = 10 * 60 * 1000;
+                        
+                        if (!global.lastNonJsonLogTime || now - global.lastNonJsonLogTime > TEN_MINUTES) {
+                            console.log('Received non-JSON data from Red Alert API - this is usually normal when there are no active alerts');
+                            // Keep track of the last time we logged this
+                            global.lastNonJsonLogTime = now;
+                        }
                         return;
                     }
                 } else {

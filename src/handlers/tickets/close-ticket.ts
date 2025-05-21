@@ -123,14 +123,14 @@ async function processTicketClose(
     
     // Create a styled embed for the closure message
     const closedEmbed = new EmbedBuilder()
-      .setColor(Colors.ERROR)
+      .setColor('#f0ad4e') // Orange/yellow color like in the screenshot
       .setTitle('🔒 Ticket Closed')
       .setDescription(`This ticket has been closed by ${interaction.user.tag}.`)
       .addFields([
-        { name: '📝 Reason', value: reasonText || 'No reason provided', inline: false },
+        { name: '📝 Reason', value: reasonText || 'User Request', inline: false },
         { name: '⚙️ Actions', value: 'You can delete this ticket or reopen it using the buttons below.', inline: false }
       ])
-      .setFooter({ text: `Made by Soggra. • Ticket #${ticket.ticket_number.toString().padStart(4, '0')}` })
+      .setFooter({ text: `Made by Soggra • Ticket #${ticket.ticket_number.toString().padStart(4, '0')} • Today at ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` })
       .setTimestamp();
     
     // Send the closed message

@@ -3,6 +3,49 @@ import { logModerationToDatabase } from './databaseLogger';
 import { Colors } from './embeds';
 import { settingsManager } from './settings';
 import { db } from '../database/sqlite';
+import fetch from 'node-fetch';
+
+// Configuration for dashboard API
+const DASHBOARD_API_URL = 'http://localhost:3001/api';
+const DASHBOARD_SYNC_ENABLED = true; // Set to false to disable dashboard syncing
+
+/**
+ * Function to push logs to the dashboard API
+ * This ensures events from the bot are properly synced with the dashboard
+ */
+async function pushLogToDashboard(logData: {
+  guild_id: string;
+  user_id?: string | null;
+  action: string;
+  details?: string;
+  log_type: string;
+  metadata?: any;
+}): Promise<boolean> {
+  if (!DASHBOARD_SYNC_ENABLED) {
+    return false;
+  }
+  
+  try {
+    const response = await fetch(`${DASHBOARD_API_URL}/logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(logData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(`API Error: ${response.status} - ${errorData.message || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    logError('Dashboard Sync', `Failed to push log to dashboard: ${error}`);
+    return false;
+  }
+}
 
 export interface LogResult {
   success: boolean;
@@ -38,6 +81,22 @@ export async function logModeration(options: {
     
     // Log to database
     const dbResult = await logModerationToDatabase(options);
+    
+    // Push to dashboard
+    await pushLogToDashboard({
+      guild_id: options.guild.id,
+      user_id: options.moderator.id,
+      action: options.action,
+      details: `${options.action} applied to ${options.target.tag} for: ${options.reason}`,
+      log_type: 'mod',
+      metadata: {
+        target_id: options.target.id,
+        target_tag: options.target.tag,
+        reason: options.reason,
+        duration: options.duration,
+        additional_info: options.additionalInfo
+      }
+    });
     
     if (!dbResult) {
       return { 
@@ -321,6 +380,58 @@ export async function logCommandUsage(options: {
       options.success ? 1 : 0,
       options.error || null
     );
+    
+    // Also create a log entry in the main logs table
+    db.prepare(`
+      INSERT INTO logs (guild_id, user_id, action, details, log_type, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      options.guild.id,
+      options.user.id,
+      'Command Used',
+      `${options.command}${options.options ? ' ' + JSON.stringify(options.options) : ''} - ${options.success ? 'Success' : `Failed: ${options.error || 'Unknown error'}`}`,
+      'command',
+      Date.now()
+    );
+    
+    // Also log to the dashboard API
+    await pushLogToDashboard({
+      guild_id: options.guild.id,
+      user_id: options.user.id,
+      action: 'Command Used',
+      details: `${options.command}${options.success ? ' - Success' : ' - Failed'}`,
+      log_type: 'command',
+      metadata: {
+        command: options.command,
+        options: options.options,
+        channel_id: options.channel?.id,
+        success: options.success,
+        error: options.error
+      }
+    });
+    
+    // Also log to the dashboard API using the dedicated command endpoint
+    try {
+      fetch('http://localhost:3001/api/logs/command', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          guild_id: options.guild.id,
+          user_id: options.user.id,
+          command: options.command,
+          success: options.success,
+          error_message: options.error || null
+        })
+      }).catch(err => {
+        // Silently fail - we don't want to break command execution if dashboard logging fails
+        logError('Dashboard API', `Failed to log command to dashboard: ${err.message}`);
+      });
+    } catch (apiError) {
+      // Log the error but don't let it affect command execution
+      logError('Dashboard API', `Failed to log command to dashboard: ${apiError}`);
+    }
     
     // Get log channel ID from server settings
     const settings = await settingsManager.getSettings(options.guild.id);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import DatabaseService from './DatabaseService';
+import CorsTest from './CorsTest';
 
 // Note: DatabaseService is imported as a module and is stable across renders
 // It's not included in useEffect dependency arrays as it doesn't change
@@ -21,6 +22,23 @@ interface Server {
   mod_logs_channel_name?: string;
   ticket_category_name?: string;
   ticket_logs_channel_name?: string;
+  memberCount?: number;
+  onlineCount?: number;
+  icon?: string;
+  banner?: string;
+  description?: string;
+  createdAt?: string;
+  stats?: {
+    tickets: number;
+    warnings: number;
+    commands: number;
+    recentActivity?: any[];
+  };
+  recentData?: {
+    tickets: any[];
+    warnings: any[];
+    commands: any[];
+  };
 }
 
 interface Warning {
@@ -160,6 +178,33 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  width: 100%;
+  text-align: center;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  width: 100%;
+  text-align: center;
+  gap: 1rem;
+`;
+
+const ErrorMessage = styled.div`
+  color: #ED4245;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+`;
+
 // Helper function to format date safely
 const formatDate = (timestamp: any) => {
   if (!timestamp) return 'Unknown';
@@ -194,16 +239,39 @@ const HomePage = () => {
 
 // Servers page
 const ServersPage = () => {
+  const navigate = useNavigate();
   const [servers, setServers] = useState<Server[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchServers = async () => {
       try {
+        console.log('Fetching servers...');
         setLoading(true);
-        const serverList = await DatabaseService.ServerSettings.getAll() as Server[];
-        setServers(serverList);
+        const response = await DatabaseService.ServerSettings.getAll();
+        console.log('Server response:', response);
+        
+        if (Array.isArray(response)) {
+          // Handle the old format (just an array of servers)
+          console.log('Array response format detected');
+          setServers(response as Server[]);
+        } else if (response && response.servers) {
+          // Handle the new format (object with servers and stats)
+          console.log('Object response format detected with servers and stats');
+          setServers(response.servers as Server[]);
+          setStats(response.stats);
+        } else if (response) {
+          // Fallback to any non-null response
+          console.log('Unknown response format, using as is');
+          setServers([response] as Server[]);
+        } else {
+          // Fallback to empty array if response format is unexpected
+          console.log('Empty or null response');
+          setServers([]);
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error("Error fetching servers:", err);
@@ -213,7 +281,24 @@ const ServersPage = () => {
     };
     
     fetchServers();
-  }, []);
+    
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log("Loading timeout triggered");
+        setLoading(false);
+        setError("Loading timed out. Please try again.");
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeout);
+  }, [loading]);
+  
+  // Function to handle manage server button click
+  const handleManageServer = (guildId: string) => {
+    console.log(`Navigating to manage server with ID: ${guildId}`);
+    navigate(`/servers/${guildId}/manage`);
+  };
   
   if (loading) {
     return (
@@ -221,6 +306,7 @@ const ServersPage = () => {
         <Card>
           <h2>Server Management</h2>
           <LoadingSpinner />
+          <div>Loading server data...</div>
         </Card>
       </MainContent>
     );
@@ -231,7 +317,8 @@ const ServersPage = () => {
       <MainContent>
         <Card>
           <h2>Server Management</h2>
-          <p style={{ color: '#ED4245' }}>{error}</p>
+          <ErrorMessage>{error}</ErrorMessage>
+          <Button onClick={() => navigate('/servers')}>Back to Servers</Button>
         </Card>
       </MainContent>
     );
@@ -243,30 +330,76 @@ const ServersPage = () => {
         <h2>Server Management</h2>
         <p>View and manage your Discord servers below.</p>
         
+        {stats && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-around', 
+            margin: '1rem 0', 
+            padding: '1rem',
+            backgroundColor: '#36393f',
+            borderRadius: '8px'
+          }}>
+            <div key="stat-servers" style={{ textAlign: 'center' }}>
+              <h3>{stats.serverCount || servers.length}</h3>
+              <p>Servers</p>
+            </div>
+            <div key="stat-tickets" style={{ textAlign: 'center' }}>
+              <h3>{stats.activeTickets || 0}</h3>
+              <p>Active Tickets</p>
+            </div>
+            <div key="stat-warnings" style={{ textAlign: 'center' }}>
+              <h3>{stats.activeWarnings || 0}</h3>
+              <p>Warnings</p>
+            </div>
+            <div key="stat-commands" style={{ textAlign: 'center' }}>
+              <h3>{stats.commandsUsed || 0}</h3>
+              <p>Commands Used</p>
+            </div>
+          </div>
+        )}
+        
         {servers.length === 0 ? (
           <p>No servers found. Please add a server to get started.</p>
         ) : (
           <div>
             {servers.map(server => (
               <ServerCard key={server.guild_id}>
-                <h3>{server.guild_name}</h3>
-                <p>Server ID: {server.guild_id}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3>{server.guild_name}</h3>
+                    <p>Server ID: {server.guild_id}</p>
+                    
+                    {server.welcome_channel_name && (
+                      <p><strong>Welcome Channel:</strong> {server.welcome_channel_name}</p>
+                    )}
+                    
+                    {server.logs_channel_name && (
+                      <p><strong>Logs Channel:</strong> {server.logs_channel_name}</p>
+                    )}
+                    
+                    {server.mod_logs_channel_name && (
+                      <p><strong>Mod Logs Channel:</strong> {server.mod_logs_channel_name}</p>
+                    )}
+                  </div>
+                  
+                  {server.stats && (
+                    <div style={{ 
+                      backgroundColor: '#2f3136', 
+                      padding: '0.5rem', 
+                      borderRadius: '4px',
+                      minWidth: '150px'
+                    }}>
+                      <p><strong>Members:</strong> {server.memberCount || 0}</p>
+                      <p><strong>Tickets:</strong> {server.stats.tickets || 0}</p>
+                      <p><strong>Warnings:</strong> {server.stats.warnings || 0}</p>
+                      <p><strong>Commands:</strong> {server.stats.commands || 0}</p>
+                    </div>
+                  )}
+                </div>
                 
-                {server.welcome_channel_name && (
-                  <p><strong>Welcome Channel:</strong> {server.welcome_channel_name}</p>
-                )}
-                
-                {server.logs_channel_name && (
-                  <p><strong>Logs Channel:</strong> {server.logs_channel_name}</p>
-                )}
-                
-                {server.mod_logs_channel_name && (
-                  <p><strong>Mod Logs Channel:</strong> {server.mod_logs_channel_name}</p>
-                )}
-                
-                <Link to={`/servers/${server.guild_id}/manage`}>
-                  <Button>Manage Settings</Button>
-                </Link>
+                <div style={{ marginTop: '1rem' }}>
+                  <Button onClick={() => handleManageServer(server.guild_id)}>Manage Settings</Button>
+                </div>
               </ServerCard>
             ))}
           </div>
@@ -765,6 +898,7 @@ const ServerManagePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [textChannels, setTextChannels] = useState<{id: string, name: string, type?: string}[]>([]);
   const [categories, setCategories] = useState<{id: string, name: string, type?: string}[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [formData, setFormData] = useState({
     welcome_channel_id: '',
     logs_channel_id: '',
@@ -775,14 +909,31 @@ const ServerManagePage = () => {
   
   useEffect(() => {
     const fetchServer = async () => {
-      if (!guildId) return;
+      if (!guildId || guildId === 'undefined') {
+        setError("No server ID provided");
+        setLoading(false);
+        navigate('/servers'); // Redirect to servers list if guildId is undefined
+        return;
+      }
       
       try {
         setLoading(true);
         const serverData = await DatabaseService.ServerSettings.get(guildId) as Server;
+        
+        if (!serverData) {
+          setError("Server data not found");
+          setLoading(false);
+          return;
+        }
+        
         setServer(serverData);
         
-        // Initialize form data
+        // Save stats if available
+        if (serverData.stats) {
+          setStats(serverData.stats);
+        }
+        
+        // Initialize form data with safe defaults
         setFormData({
           welcome_channel_id: serverData.welcome_channel_id || '',
           logs_channel_id: serverData.logs_channel_id || '',
@@ -793,32 +944,48 @@ const ServerManagePage = () => {
         
         // Fetch text channels from the API
         try {
-          const response = await fetch(`http://localhost:3001/api/servers/${guildId}/channels?type=text`);
+          // Add a default 'None' option first
+          setTextChannels([{ id: '', name: 'None' }]);
+          
+          const response = await fetch(`http://localhost:3001/api/servers/${guildId}/channels?type=text`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': 'f8e7d6c5b4a3928170615243cba98765'
+            }
+          });
+          
           if (response.ok) {
             const textChannelData = await response.json();
-            setTextChannels(textChannelData);
+            // Add the fetched channels after the 'None' option
+            setTextChannels([{ id: '', name: 'None' }, ...textChannelData]);
           } else {
             console.error('Failed to fetch text channels');
-            setTextChannels([{ id: '', name: 'None' }]);
           }
         } catch (channelError) {
           console.error('Error fetching text channels:', channelError);
-          setTextChannels([{ id: '', name: 'None' }]);
         }
         
         // Fetch categories from the API
         try {
-          const categoryResponse = await fetch(`http://localhost:3001/api/servers/${guildId}/channels?type=category`);
+          // Add a default 'None' option first
+          setCategories([{ id: '', name: 'None' }]);
+          
+          const categoryResponse = await fetch(`http://localhost:3001/api/servers/${guildId}/channels?type=category`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': 'f8e7d6c5b4a3928170615243cba98765'
+            }
+          });
+          
           if (categoryResponse.ok) {
             const categoryData = await categoryResponse.json();
-            setCategories(categoryData);
+            // Add the fetched categories after the 'None' option
+            setCategories([{ id: '', name: 'None' }, ...categoryData]);
           } else {
             console.error('Failed to fetch categories');
-            setCategories([{ id: '', name: 'None' }]);
           }
         } catch (categoryError) {
           console.error('Error fetching categories:', categoryError);
-          setCategories([{ id: '', name: 'None' }]);
         }
         
         setLoading(false);
@@ -830,7 +997,7 @@ const ServerManagePage = () => {
     };
     
     fetchServer();
-  }, [guildId]);
+  }, [guildId, navigate]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -884,6 +1051,34 @@ const ServerManagePage = () => {
     <MainContent>
       <Card>
         <h2>Manage Server: {server.guild_name}</h2>
+        
+        {stats && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-around', 
+            margin: '1rem 0', 
+            padding: '1rem',
+            backgroundColor: '#36393f',
+            borderRadius: '8px'
+          }}>
+            <div key="stat-members" style={{ textAlign: 'center' }}>
+              <h3>{server.memberCount || 0}</h3>
+              <p>Members</p>
+            </div>
+            <div key="stat-tickets" style={{ textAlign: 'center' }}>
+              <h3>{stats.tickets || 0}</h3>
+              <p>Tickets</p>
+            </div>
+            <div key="stat-warnings" style={{ textAlign: 'center' }}>
+              <h3>{stats.warnings || 0}</h3>
+              <p>Warnings</p>
+            </div>
+            <div key="stat-commands" style={{ textAlign: 'center' }}>
+              <h3>{stats.commands || 0}</h3>
+              <p>Commands</p>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
           <div style={{ marginBottom: '1rem' }}>
@@ -1182,15 +1377,19 @@ function App() {
           <NavLink to="/warnings">Warnings</NavLink>
           <NavLink to="/tickets">Tickets</NavLink>
           <NavLink to="/logs">Logs</NavLink>
+          <NavLink to="/test">API Test</NavLink>
         </Navigation>
         
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/servers" element={<ServersPage />} />
           <Route path="/servers/:guildId/manage" element={<ServerManagePage />} />
+          {/* Add a redirect for the undefined route */}
+          <Route path="/servers/undefined/manage" element={<Navigate to="/servers" replace />} />
           <Route path="/warnings" element={<WarningsPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
           <Route path="/logs" element={<LogsPage />} />
+          <Route path="/test" element={<CorsTest />} />
         </Routes>
         
         <Footer>

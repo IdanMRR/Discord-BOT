@@ -8,7 +8,7 @@ import { ServerLogService, ServerSettingsService } from '../database/services/sq
 export async function logToDatabase(options: {
   guildId: string;
   actionType: string;
-  userId: string;
+  userId?: string; // Made optional to handle system-generated events
   targetId?: string;
   channelId?: string;
   messageId?: string;
@@ -16,7 +16,7 @@ export async function logToDatabase(options: {
   details?: any;
 }): Promise<boolean> {
   try {
-    const { guildId, actionType, userId, targetId, channelId, messageId, reason, details } = options;
+    const { guildId, actionType, userId = 'system', targetId, channelId, messageId, reason, details } = options;
     
     // Create a new log entry
     const result = await ServerLogService.create({
@@ -173,7 +173,7 @@ export async function logMessageDelete(options: {
   guildId: string;
   channelId: string;
   messageId: string;
-  userId: string;
+  userId?: string; // Made optional to handle system-generated deletions
   content?: string;
   attachments?: any[];
 }): Promise<boolean> {

@@ -64,63 +64,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const match = channel.name.match(/ticket-(\d+)/);
     const ticketNumber = match ? parseInt(match[1]) : null;
     
-    // Create an enhanced embed for the notification
-    const removeEmbed = new EmbedBuilder()
-      .setTitle('👤 User Removed from Ticket')
-      .setDescription(`${user.toString()} has been removed from this ticket.`)
+    // Send improved success message to the user (ephemeral)
+    const improvedEmbed = new EmbedBuilder()
+      .setTitle('➖ User Removed from Ticket')
       .setColor(Colors.Red)
+      .setDescription(`${user.toString()} was **removed** from ticket #${ticketNumber || 'Unknown'} by ${interaction.user.toString()}`)
       .addFields([
-        { name: 'Removed By', value: interaction.user.toString(), inline: true },
-        { name: 'Reason', value: reason, inline: true }
+        { name: '👤 User', value: `${user.tag} (${user.id})`, inline: true },
+        { name: '🎫 Ticket', value: `#${ticketNumber || 'Unknown'}`, inline: true },
+        { name: '📝 Reason', value: reason, inline: false }
       ])
-      .setTimestamp()
-      .setFooter({ 
-        text: `Ticket #${ticketNumber || 'Unknown'}`, 
-        iconURL: interaction.user.displayAvatarURL() 
-      });
-    
-    // Send the enhanced embed to the channel
-    await channel.send({ embeds: [removeEmbed] });
-    
-    // Also send to ticket logs channel if configured
-    try {
-      const settings = await settingsManager.getSettings(interaction.guildId!);
-      const ticketLogsChannelId = settings.ticket_logs_channel_id;
-      
-      if (ticketLogsChannelId) {
-        const logsChannel = await interaction.guild!.channels.fetch(ticketLogsChannelId) as TextChannel;
-        if (logsChannel && logsChannel.isTextBased()) {
-          // Create a log embed with additional information
-          const logEmbed = new EmbedBuilder()
-            .setTitle('👤 User Removed from Ticket')
-            .setDescription(`${user.toString()} has been removed from ticket #${ticketNumber}`)
-            .setColor(Colors.Red)
-            .addFields([
-              { name: 'Removed By', value: interaction.user.toString(), inline: true },
-              { name: 'Reason', value: reason, inline: true },
-              { name: 'Ticket', value: `#${ticketNumber}`, inline: true }
-            ])
-            .setTimestamp()
-            .setFooter({ 
-              text: `User ID: ${user.id}`, 
-              iconURL: user.displayAvatarURL() 
-            });
-          
-          await logsChannel.send({ embeds: [logEmbed] });
-          logInfo('Remove User', `Sent notification to ticket logs channel ${ticketLogsChannelId}`);
-        }
-      }
-    } catch (error) {
-      logError('Remove User', `Error sending to logs channel: ${error}`);
-      // Non-critical error, continue with the command
-    }
-    
-    // Send success message to the user (ephemeral)
-    const successEmbed = createSuccessEmbed(
-      'User Removed', 
-      `${user.toString()} has been removed from this ticket.`
-    );
-    await interaction.reply({ embeds: [successEmbed], flags: MessageFlags.Ephemeral });
+      .setFooter({ text: `Made by Soggra. • Today at ${new Date().toLocaleTimeString()}` })
+      .setTimestamp();
+    await interaction.reply({ embeds: [improvedEmbed], flags: MessageFlags.Ephemeral });
     
     // Log staff activity for performance tracking
     if (interaction.guildId && interaction.channelId) {

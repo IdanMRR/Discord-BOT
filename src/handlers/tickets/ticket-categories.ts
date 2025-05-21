@@ -98,10 +98,10 @@ export function getPriorityInfo(priority: string) {
  * Displays a professional category selection menu when a user creates a ticket
  * This presents users with a dropdown of available ticket categories
  * 
- * @param interaction The button interaction that triggered this function
+ * @param interaction The interaction that triggered this function
  * @returns Promise resolving to true if successful, false otherwise
  */
-export async function showCategorySelection(interaction: ButtonInteraction) {
+export async function showCategorySelection(interaction: ButtonInteraction | any) {
   try {
     // Get current time for footer timestamp
     const now = new Date();
@@ -153,11 +153,20 @@ export async function showCategorySelection(interaction: ButtonInteraction) {
     }
 
     // Send the selection menu as an ephemeral message (only visible to the user)
-    await interaction.reply({
-      embeds: [embed],
-      components: [actionRow],
-      flags: MessageFlags.Ephemeral
-    });
+    // Check if the interaction has already been replied to
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        embeds: [embed],
+        components: [actionRow],
+        ephemeral: true
+      });
+    } else {
+      await interaction.reply({
+        embeds: [embed],
+        components: [actionRow],
+        flags: MessageFlags.Ephemeral
+      });
+    }
     
     return true;
   } catch (error) {
@@ -173,10 +182,17 @@ export async function showCategorySelection(interaction: ButtonInteraction) {
         .setTimestamp();
         
       // Send the error as an ephemeral message
-      await interaction.reply({
-        embeds: [errorEmbed],
-        flags: MessageFlags.Ephemeral
-      });
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          embeds: [errorEmbed],
+          ephemeral: true
+        });
+      } else {
+        await interaction.reply({
+          embeds: [errorEmbed],
+          flags: MessageFlags.Ephemeral
+        });
+      }
     } catch (replyError) {
       console.error('Failed to send error message:', replyError);
     }

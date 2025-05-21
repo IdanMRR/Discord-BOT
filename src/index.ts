@@ -1,12 +1,19 @@
-import { Client, GatewayIntentBits, Partials, Events, ButtonInteraction, Collection, MessageFlags, ChannelType } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, Events, ButtonInteraction, Collection, MessageFlags, ChannelType, type Message } from 'discord.js';
 import { replyEphemeral, convertEphemeralToFlags } from './utils/interaction-utils';
 import { startApiServer } from './api/server';
 import { connectToDatabase } from './database/connection';
 import { createSuccessEmbed, createErrorEmbed } from './utils/embeds';
 import * as dotenv from 'dotenv';
-import { Command, loadCommands, registerCommands } from './command-handler';
+import { loadCommands, registerCommands } from './command-handler';
+import { commands as appCommands } from './commands';
 import { setClient } from './utils/client-utils';
 import { updateTicketActivity } from './utils/ticket-activity';
+import { Command } from './types/command'; // Use the correct casing for the import
+// Define chatbot handler function
+let handleDirectMessage: ((message: Message) => Promise<void>) | undefined = undefined;
+
+// Import functions needed for ticket processing
+// These will be imported later to avoid duplicate declarations
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +28,15 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ],
   partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User]
+});
+
+// Add commands collection to the client
+const commandsCollection = new Collection<string, Command>();
+Object.defineProperty(client, 'commands', {
+  value: commandsCollection,
+  writable: true,
+  enumerable: true,
+  configurable: true
 });
 
 // Set the client instance for use across the application
@@ -50,31 +66,77 @@ connectToDatabase()
     import('./database/migrations/add-ticket-last-activity')
       .then(() => console.log('Ticket last activity migration loaded'))
       .catch(error => console.error('Error loading ticket last activity migration:', error));
+      
+    // Import and run the log channels migration
+    import('./database/migrations/add-log-channels')
+      .then(() => console.log('Log channels migration loaded'))
+      .catch(error => console.error('Error loading log channels migration:', error));
+      
+    // Import and run the ensure log channels migration
+    import('./database/migrations/ensure-log-channels')
+      .then(() => console.log('Ensure log channels migration loaded'))
+      .catch(error => console.error('Error loading ensure log channels migration:', error));
   })
   .catch(error => {
     console.error('Failed to connect to database:', error);
     process.exit(1);
   });
 
-// Create a collection for commands
-client.commands = new Collection<string, Command>();
-
 // Load commands
-async function initializeCommands() {
+const initializeCommands = async () => {
   try {
-    console.log('Loading commands into memory...');
+    console.log('Loading commands...');
+    
+    // Clear existing commands
+    client.commands.clear();
+    
+    // Load commands from the commands directory
     const commands = await loadCommands();
-    client.commands = commands;
-    console.log(`Loaded ${commands.size} commands into memory.`);
-    // We're removing the registerCommands call here since that's handled by deploy-commands.ts
-    // This prevents duplicate command registration
+    
+    // Also add commands from the appCommands import
+    for (const command of appCommands) {
+      try {
+        if (!command) {
+          console.warn('Skipping null or undefined command');
+          continue;
+        }
+        
+        const commandData = command.data as any;
+        if (!commandData || typeof commandData.name !== 'string') {
+          console.warn('Skipping command with invalid data:', command);
+          continue;
+        }
+        
+        commands.set(commandData.name, command);
+      } catch (error) {
+        console.error('Error processing command:', error);
+      }
+    }
+    
+    console.log(`Loaded ${commands.size} commands`);
+    
+    // Add all commands to the client
+    for (const [name, command] of commands) {
+      client.commands.set(name, command);
+    }
+    
+    // Register commands with Discord
+    await registerCommands(commands);
+    
+    console.log('Commands loaded and registered with Discord');
+    console.log('Commands loaded into memory successfully');
   } catch (error) {
-    console.error('Error loading commands:', error);
+    console.error('Error initializing commands:', error);
   }
 }
 
 // Import the member events functions
 import { initializeMemberEvents } from './handlers/members/member-events';
+
+// Import the chatbot handler
+declare module './handlers/utility/chatbot-handler' {
+  export function handleDM(message: Message): Promise<void>;
+}
 
 // Import the invite tracker
 import { initializeInviteTracker } from './handlers/invites/invite-tracker';
@@ -87,6 +149,34 @@ import { initWeatherScheduler, checkWeatherDatabaseSetup } from './handlers/util
 
 // Import the ticket chatbot
 import { initializeTicketChatbot, processTicketMessage, trackStaffActivity } from './handlers/tickets/ticket-chatbot';
+
+// Import message and channel event tracking
+import { initializeMessageAndChannelTracking } from './events/messageAndChannelEvents';
+
+// Define chatbot handler function
+// This will be initialized in importChatbotHandler
+
+// Import the chatbot handler dynamically to avoid issues with circular dependencies
+const importChatbotHandler = async (): Promise<void> => {
+  try {
+    // Using dynamic import with a type assertion to handle the module
+    const chatbotModule = await import('./handlers/utility/chatbot-handler');
+    if (typeof chatbotModule.handleDM === 'function') {
+      handleDirectMessage = chatbotModule.handleDM;
+    } else {
+      // If handleDM is not a function, create a fallback handler
+      handleDirectMessage = async (message: Message) => {
+        await message.reply('The chatbot is currently unavailable. Please try again later.');
+      };
+    }
+  } catch (error) {
+    console.error('Failed to import chatbot handler:', error);
+    // If the import fails, create a fallback handler
+    handleDirectMessage = async (message: Message) => {
+      await message.reply('The chatbot is currently unavailable. Please try again later.');
+    };
+  }
+};
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
@@ -129,6 +219,14 @@ client.once('ready', async () => {
     
     // Weather scheduler is now initialized in checkWeatherDatabaseSetup()
     // This prevents duplicate initialization
+    
+    // Initialize message and channel tracking (client is ready at this point)
+    try {
+      initializeMessageAndChannelTracking(client);
+      console.log('Message and channel tracking initialized');
+    } catch (error) {
+      console.error('Failed to initialize message and channel tracking:', error);
+    }
   } catch (error) {
     console.error('Error during startup:', error);
   }
@@ -355,27 +453,55 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await autocompleteCommand.autocomplete(interaction);
     }
   } catch (error) {
-    console.error(`Error handling autocomplete for ${commandName}:`, error);
+    console.error('Failed to process autocomplete:', error);
   }
 });
 
-// Track message activity in ticket channels
+
+// Track message activity in ticket channels and handle DMs
 client.on(Events.MessageCreate, async (message) => {
   // Skip bot messages
   if (message.author.bot) return;
   
   try {
+    // Handle direct messages to the bot with the chatbot
+    if (message.channel.type === ChannelType.DM) {
+      // Ensure the handler is available
+      if (!handleDirectMessage) {
+        // Try to load the handler if it's not available
+        await importChatbotHandler();
+      }
+      
+      // Check again after attempting to load
+      if (typeof handleDirectMessage === 'function') {
+        // Now it's safe to call the function
+        await handleDirectMessage(message);
+      } else {
+        // Fallback if it's still not available
+        await message.reply('Sorry, the chatbot is currently unavailable. Please try again later.');
+      }
+      return;
+    }
+    
     // Update ticket activity if this is in a ticket channel
     await updateTicketActivity(message);
     
     // Process ticket chatbot messages
     if (message.channel.type === ChannelType.GuildText && 
         message.channel.name.toLowerCase().includes('ticket-')) {
-      await processTicketMessage(message);
+      try {
+        // Import the ticket chatbot functions dynamically
+        const { processTicketMessage, trackStaffActivity } = await import('./handlers/tickets/ticket-chatbot');
+        
+        // Process the ticket message
+        await processTicketMessage(message);
       
-      // If the message is from a staff member, track their activity
-      if (message.member?.permissions.has('ManageMessages')) {
-        await trackStaffActivity(message);
+        // If the message is from a staff member, track their activity
+        if (message.member?.permissions.has('ManageMessages')) {
+          await trackStaffActivity(message);
+        }
+      } catch (error) {
+        console.error('Error processing ticket message:', error);
       }
     }
   } catch (error) {

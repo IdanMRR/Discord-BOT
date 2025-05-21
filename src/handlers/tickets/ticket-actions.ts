@@ -241,15 +241,15 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     
     // Create a reopened ticket embed
     const reopenedEmbed = new EmbedBuilder()
-      .setColor(Colors.SUCCESS)
+      .setColor('#57F287') // Green color like in the screenshot
       .setTitle('🔓 Ticket Reopened')
-      .setDescription(`This ticket has been reopened by ${interaction.user}`)
+      .setDescription(`This ticket has been reopened by ${interaction.user.tag}.`)
       .addFields([
-        { name: '📋 Ticket Number', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
-        { name: '🕒 Reopened On', value: formattedDate, inline: true },
-        { name: '👤 Reopened By', value: `${interaction.user.username} (${interaction.user.id})`, inline: true }
+        { name: '📝 Reason', value: 'User Request', inline: false },
+        { name: '⚙️ Actions', value: 'You can now continue the conversation in this ticket.', inline: false }
       ])
-      .setFooter({ text: `Made by Soggra. • ${formattedTime}` });
+      .setFooter({ text: `Made by Soggra • Ticket #${ticket.ticket_number.toString().padStart(4, '0')} • Today at ${formattedTime}` })
+      .setTimestamp();
     
     // Send the reopened embed to the channel
     await channel.send({ embeds: [reopenedEmbed] });

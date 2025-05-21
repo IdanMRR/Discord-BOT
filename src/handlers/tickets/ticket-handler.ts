@@ -175,9 +175,9 @@ export async function handleTicketButtonClick(interaction: ButtonInteraction) {
             components: [] 
           });
           
-          // Continue with normal ticket creation flow
+          // Continue with normal ticket creation flow using the collector's interaction (i) instead of the original interaction
           const { showCategorySelection } = await import('./ticket-categories');
-          await showCategorySelection(interaction);
+          await showCategorySelection(i);
         } catch (error: any) {
           // Handle interaction expired error
           if (error.code === 10062) {
@@ -189,9 +189,10 @@ export async function handleTicketButtonClick(interaction: ButtonInteraction) {
                 ephemeral: true 
               });
               
-              // Continue with normal ticket creation flow
+              // Continue with normal ticket creation flow using the collector's interaction
               const { showCategorySelection } = await import('./ticket-categories');
-              await showCategorySelection(interaction);
+              // We need to use i here, not the original interaction which may have expired
+              await showCategorySelection(i);
             } catch (followUpError) {
               logError('Ticket Button', `Follow-up error: ${followUpError}`);
             }
