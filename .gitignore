@@ -23,7 +23,8 @@ dist/
 .DS_Store
 
 # Logs
-
+logs/
+*.log
 
 # Database files
 *.sqlite
