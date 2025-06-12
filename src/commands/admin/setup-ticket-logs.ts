@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
-import { ServerSettingsService } from '../../database/services/sqliteService';
+import { ServerSettingsService } from '../../database/services/serverSettingsService';
 import { getTranslation as t, getContextLanguage } from '../../utils/language';
 
 export const data = new SlashCommandBuilder()

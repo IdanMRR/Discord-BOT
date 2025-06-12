@@ -12,7 +12,7 @@ import {
 } from 'discord.js';
 import { Colors } from './embeds';
 import { logInfo, logError } from './logger';
-import { ServerSettingsService } from '../database/services/sqliteService';
+import { ServerSettingsService } from '../database/services/serverSettingsService';
 
 // Add new colors for staff messages
 const STAFF_COLOR = 0x5865F2;  // Discord Blurple for staff messages

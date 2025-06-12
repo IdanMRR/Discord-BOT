@@ -1,0 +1,655 @@
+[2025-06-11T06:29:37.408Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-11-09-29-37.txt
+[2025-06-11T06:29:38.310Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-11T06:29:38.311Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-11T06:29:38.311Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-11T06:29:38.311Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-11T06:29:38.312Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-11T06:29:38.360Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-11T06:29:38.361Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-11T06:29:38.361Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-11T06:29:38.361Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-11T06:29:38.362Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-11T06:29:38.362Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-11T06:29:41.438Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-11T06:29:41.438Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-11T06:29:41.445Z] [LOG] Registering auth router at /auth
+[2025-06-11T06:29:41.446Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-11T06:29:41.446Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-11T06:29:41.446Z] [LOG] Registering servers router at /api/servers
+[2025-06-11T06:29:41.588Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-11T06:29:41.637Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-11T06:29:41.639Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-11T06:29:41.640Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-11T06:29:41.640Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-11T06:29:41.640Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-11T06:29:41.640Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-11T06:29:41.641Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-11T06:29:41.641Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-11T06:29:41.641Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-11T06:29:41.642Z] [LOG] Connected to database
+[2025-06-11T06:29:41.642Z] [LOG] [API] Attempting to start API server on port 3001...
+[2025-06-11T06:29:41.666Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-11T06:29:41.666Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-11T06:29:42.898Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-11T06:29:42.898Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-11T06:29:44.240Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-11T06:29:45.573Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-11T06:29:48.209Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-11T06:29:48.210Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-11T06:29:48.210Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-11T06:29:48.210Z] [LOG] Ticket categories migration completed successfully
+[2025-06-11T06:29:48.210Z] [LOG] add-ticket-categories migration loaded
+[2025-06-11T06:29:48.210Z] [LOG] add-custom-cities migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] add-weather-schedule migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] add-log-channels migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-11T06:29:48.211Z] [LOG] ensure-log-channels migration loaded
+[2025-06-11T06:29:48.211Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-11T06:29:48.212Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-11T06:29:48.212Z] [LOG] Creating log_channels table...
+[2025-06-11T06:29:48.212Z] [LOG] Created log_channels table
+[2025-06-11T06:29:48.212Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-11T06:29:48.212Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-11T06:29:48.213Z] [LOG] Creating log_channels table...
+[2025-06-11T06:29:48.213Z] [LOG] Created log_channels table
+[2025-06-11T06:29:48.213Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-11T06:29:48.213Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-11T06:29:48.213Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-11T06:29:48.213Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-11T06:29:48.214Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-11T06:29:48.215Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-11T06:29:48.216Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-11T06:29:48.217Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-11T06:29:48.218Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-11T06:29:48.219Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-11T06:29:48.220Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-11T06:29:48.220Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-11T06:29:48.220Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-11T06:29:48.220Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-11T06:29:48.220Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-11T06:29:48.221Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-11T06:29:48.222Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-11T06:29:48.222Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-11T06:29:48.222Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-11T06:29:48.222Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-11T06:29:48.222Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-11T06:29:48.223Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-11T06:29:48.223Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-11T06:29:48.223Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-11T06:29:48.224Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T06:29:48.224Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T06:29:48.224Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T06:29:48.225Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T06:29:48.225Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T06:29:48.225Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T06:29:48.225Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-11T06:29:48.225Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-11T06:29:48.226Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-11T06:29:48.226Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-11T06:29:48.226Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-11T06:29:48.226Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-11T06:29:48.226Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-11T06:29:48.227Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-11T06:29:48.228Z] [LOG] [INFO][API] API server running successfully on port 3001
+[2025-06-11T06:29:48.228Z] [LOG] [API] API URL: http://localhost:3001
+[2025-06-11T06:29:48.228Z] [LOG] [WebSocket] WebSocket server running on ws://localhost:3001
+[2025-06-11T06:29:48.229Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T06:29:48.229Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T06:29:48.229Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T06:29:48.229Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T06:29:48.230Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T06:29:48.230Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T06:29:48.532Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:29:48.536Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:29:48.573Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-11T06:29:48.576Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:29:48.577Z] [LOG] [DASHBOARD] No Discord client available, using fallback for 1198643713577066506
+[2025-06-11T06:29:48.590Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:29:48.591Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:29:48.594Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:29:48.595Z] [LOG] [DASHBOARD] No Discord client available, using fallback for 1198643713577066506
+[2025-06-11T06:29:48.607Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:29:48.608Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:29:48.609Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:29:48.609Z] [LOG] [DASHBOARD] No Discord client available, using fallback for 1198643713577066506
+[2025-06-11T06:29:48.614Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:29:48.615Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:29:48.616Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:29:48.616Z] [LOG] [DASHBOARD] No Discord client available, using fallback for 1198643713577066506
+[2025-06-11T06:29:48.622Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:29:48.622Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:29:48.623Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-11T06:29:49.109Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot]    └─ Member Count: 863
+[2025-06-11T06:29:49.110Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-11T06:29:49.111Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-11T06:29:49.243Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-11T06:29:49.244Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-11T06:29:49.244Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-11T06:29:49.245Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-11T06:29:49.245Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-11T06:29:49.245Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-11T06:29:49.245Z] [LOG] Processing command folder: admin
+[2025-06-11T06:29:49.246Z] [LOG] Found 40 command files in admin
+[2025-06-11T06:29:49.246Z] [LOG] Processing command folder: general
+[2025-06-11T06:29:49.246Z] [LOG] Found 1 command files in general
+[2025-06-11T06:29:49.246Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-11T06:29:49.246Z] [LOG] Processing command folder: moderation
+[2025-06-11T06:29:49.246Z] [LOG] Found 12 command files in moderation
+[2025-06-11T06:29:49.247Z] [LOG] Processing command folder: utility
+[2025-06-11T06:29:49.247Z] [LOG] Found 11 command files in utility
+[2025-06-11T06:29:49.282Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-11-09-29-49.txt
+[2025-06-11T06:29:49.291Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-11T06:29:49.303Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-11T06:29:49.303Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-11T06:29:49.304Z] [LOG] Registering auth router at /auth
+[2025-06-11T06:29:49.304Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-11T06:29:49.304Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-11T06:29:49.304Z] [LOG] Registering servers router at /api/servers
+[2025-06-11T06:29:49.308Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-11T06:29:49.311Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-11T06:29:49.321Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-11T06:29:49.469Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-11T06:29:49.469Z] [LOG] Successfully loaded command: command-logs
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-11T06:29:49.470Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: force-log
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-11T06:29:49.470Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: logs
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: member-list
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: nuke
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: server-setup
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-11T06:29:49.471Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: test-events
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: test-logs
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: test-verification
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-11T06:29:49.472Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: verify
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: ban
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: dm
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: kick
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: removewarn
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: timeout
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: warn
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: warnings
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: avatar
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: chatbot
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: dm-user
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: help
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: invite
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: invites
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: language
+[2025-06-11T06:29:49.473Z] [LOG] Successfully loaded command: quote
+[2025-06-11T06:29:49.474Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-11T06:29:49.474Z] [LOG] Successfully loaded command: userinfo
+[2025-06-11T06:29:49.474Z] [LOG] Successfully loaded command: weather
+[2025-06-11T06:29:49.474Z] [LOG] Connected to database
+[2025-06-11T06:29:49.474Z] [LOG] Loaded 64 commands in total
+[2025-06-11T06:29:49.475Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-11T06:29:49.475Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-11T06:29:49.476Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-11T06:29:49.477Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-11T06:29:49.479Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-11T06:29:49.479Z] [LOG] [Command Initializer] Successfully loaded 64 commands from files
+[2025-06-11T06:29:49.479Z] [LOG] [Command Initializer] Registered 64 commands to client
+[2025-06-11T06:29:49.479Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-11T06:29:49.479Z] [LOG] [Command Register] Starting registration of 64 commands...
+[2025-06-11T06:29:49.479Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-11T06:29:49.480Z] [LOG] Ticket categories migration completed successfully
+[2025-06-11T06:29:49.480Z] [LOG] add-ticket-categories migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-custom-cities migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-weather-schedule migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] add-log-channels migration loaded
+[2025-06-11T06:29:49.480Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-11T06:29:49.481Z] [LOG] ensure-log-channels migration loaded
+[2025-06-11T06:29:50.452Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-11T06:29:50.452Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ Member Count: 863
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T06:29:50.453Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T06:29:50.454Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T06:29:50.454Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-11T06:29:50.454Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-11T06:29:50.456Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-11T06:29:50.457Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-11T06:29:50.457Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-11T06:29:50.457Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-11T06:29:50.457Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-11T06:29:50.457Z] [LOG] Processing command folder: admin
+[2025-06-11T06:29:50.457Z] [LOG] Found 40 command files in admin
+[2025-06-11T06:29:50.458Z] [LOG] Processing command folder: general
+[2025-06-11T06:29:50.458Z] [LOG] Found 1 command files in general
+[2025-06-11T06:29:50.458Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-11T06:29:50.458Z] [LOG] Processing command folder: moderation
+[2025-06-11T06:29:50.458Z] [LOG] Found 12 command files in moderation
+[2025-06-11T06:29:50.458Z] [LOG] Processing command folder: utility
+[2025-06-11T06:29:50.458Z] [LOG] Found 11 command files in utility
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: command-logs
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: force-log
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: logs
+[2025-06-11T06:29:50.460Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: member-list
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: nuke
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: server-setup
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-11T06:29:50.461Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: test-events
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: test-logs
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: test-verification
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-11T06:29:50.462Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: verify
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: ban
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: dm
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: kick
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: removewarn
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: timeout
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: warn
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: warnings
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: avatar
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: chatbot
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: dm-user
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: help
+[2025-06-11T06:29:50.463Z] [LOG] Successfully loaded command: invite
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: invites
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: language
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: quote
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: userinfo
+[2025-06-11T06:29:50.464Z] [LOG] Successfully loaded command: weather
+[2025-06-11T06:29:50.464Z] [LOG] Loaded 64 commands in total
+[2025-06-11T06:29:50.464Z] [LOG] [Command Initializer] Successfully loaded 64 commands from files
+[2025-06-11T06:29:50.464Z] [LOG] [Command Initializer] Registered 64 commands to client
+[2025-06-11T06:29:50.464Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-11T06:29:50.465Z] [LOG] [Command Register] Starting registration of 64 commands...
+[2025-06-11T06:29:50.465Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-11T06:30:29.535Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-11T06:30:29.535Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-11T06:30:29.536Z] [LOG] Deduplication: 64 commands reduced to 64 unique commands
+[2025-06-11T06:30:29.537Z] [LOG] Registering 64 commands globally for all servers...
+[2025-06-11T06:30:29.623Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-11T06:30:29.623Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-11T06:30:29.623Z] [LOG] Deduplication: 64 commands reduced to 64 unique commands
+[2025-06-11T06:30:29.623Z] [LOG] Registering 64 commands globally for all servers...
+[2025-06-11T06:30:30.750Z] [LOG] [WebSocket] 1 total connections (latest: hAF-zAAqJvDm6RMoAAAE)
+[2025-06-11T06:30:47.764Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:30:47.767Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:30:47.811Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:48.181Z] [LOG] [DASHBOARD] Fetched user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:48.187Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:48.188Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:30:48.189Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:48.189Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:48.195Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:48.195Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:30:48.195Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:48.196Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:48.201Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:48.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:30:48.202Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:48.203Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:48.208Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:48.208Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:30:59.549Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-11T06:30:59.549Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-11T06:30:59.549Z] [LOG] Command registration complete.
+[2025-06-11T06:30:59.549Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-11T06:30:59.549Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-11T06:30:59.549Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-11T06:30:59.627Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-11T06:30:59.627Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-11T06:30:59.627Z] [LOG] Command registration complete.
+[2025-06-11T06:30:59.627Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-11T06:30:59.627Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-11T06:30:59.627Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-11T06:30:59.772Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:59.773Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:59.780Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:59.780Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:30:59.781Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:30:59.781Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:30:59.787Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:30:59.787Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:18.761Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:18.762Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:18.768Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:18.768Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:18.769Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:18.769Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:18.775Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:18.775Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:25.771Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:25.772Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:25.778Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:25.778Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:25.778Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:25.779Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:25.785Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:25.785Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:32.758Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:32.759Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:32.764Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:32.765Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:32.765Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:32.766Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:32.771Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:32.772Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:38.769Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:38.769Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:38.775Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:38.775Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:31:38.776Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:31:38.777Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:31:38.782Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:31:38.782Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:52.747Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:40:52.750Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:40:52.786Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:52.787Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:52.792Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:52.793Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:52.793Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:52.794Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:52.800Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:52.800Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:52.801Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:52.802Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:52.809Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:52.809Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:52.810Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:52.810Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:52.816Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:52.816Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:52.820Z] [LOG] [WebSocket] 1 total connections (latest: E2YhsbQS1_vkSX18AAAL)
+[2025-06-11T06:40:54.996Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:54.996Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:55.002Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:55.002Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:40:55.411Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:40:55.411Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:40:55.417Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:40:55.418Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:02.370Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:41:02.373Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:41:02.405Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:02.406Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:02.412Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:02.412Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:02.412Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:02.413Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:02.418Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:02.418Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:02.419Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:02.419Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:02.425Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:02.425Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:02.425Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:02.426Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:02.432Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:02.432Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:03.018Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:41:03.022Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:41:03.061Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:03.062Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:03.068Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:03.068Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:03.069Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:03.070Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:03.075Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:03.076Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:03.076Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:03.077Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:03.083Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:03.083Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:41:03.084Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:41:03.084Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:41:03.092Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:41:03.092Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:56:43.724Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:56:43.726Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T06:56:43.755Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:56:43.755Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:56:43.760Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:56:43.760Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:56:43.761Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:56:43.762Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:56:43.766Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:56:43.766Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:56:43.767Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:56:43.767Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:56:43.772Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:56:43.772Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:56:43.773Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T06:56:43.773Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T06:56:43.778Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T06:56:43.779Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T06:56:43.779Z] [LOG] [WebSocket] 1 total connections (latest: GKi9HPHneBexqK9mAAAU)
+[2025-06-11T08:54:20.818Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T08:54:20.820Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T08:54:20.859Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:20.859Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:20.866Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:20.866Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:20.869Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:20.869Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:20.876Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:20.876Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:20.877Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:20.877Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:20.883Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:20.884Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:20.884Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:20.885Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:20.892Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:20.892Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:20.911Z] [LOG] [WebSocket] 1 total connections (latest: 5qag_iVHxPucFDTxAAAX)
+[2025-06-11T08:54:21.227Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T08:54:21.230Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T08:54:21.261Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:21.261Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:21.266Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:21.267Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:21.267Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:21.268Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:21.273Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:21.273Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:21.274Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:21.275Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:21.280Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:21.280Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:54:21.281Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:54:21.281Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:54:21.287Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:54:21.287Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:55:32.817Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:55:32.818Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:55:32.823Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:55:32.823Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T08:55:32.824Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T08:55:32.824Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T08:55:32.830Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T08:55:32.830Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:03:49.128Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T09:03:49.131Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T09:03:49.168Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:03:49.168Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:03:49.175Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:03:49.175Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:03:49.176Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:03:49.176Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:03:49.181Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:03:49.181Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:03:49.182Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:03:49.183Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:03:49.188Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:03:49.188Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:03:49.189Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:03:49.189Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:03:49.195Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:03:49.196Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:03:49.198Z] [LOG] [WebSocket] 1 total connections (latest: jpejfzVKJLWHxRFdAAAd)
+[2025-06-11T09:04:27.761Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:04:27.762Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:04:27.767Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:04:27.767Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:04:27.768Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:04:27.768Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:04:27.773Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:04:27.773Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:20:06.974Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T09:20:06.977Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T09:20:07.014Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:20:07.014Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:20:07.020Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:20:07.021Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:20:07.021Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:20:07.021Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:20:07.027Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:20:07.027Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:20:07.027Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:20:07.028Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:20:07.033Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:20:07.033Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:20:07.034Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1180940682626600960&page=1&limit=1000 Method: GET
+[2025-06-11T09:20:07.034Z] [LOG] [DASHBOARD] Found cached user for 1198643713577066506: mianissim_88453
+[2025-06-11T09:20:07.040Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T09:20:07.040Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T09:20:07.041Z] [LOG] [WebSocket] 1 total connections (latest: hnWWYmrtWNWd05YRAAAg)
+[2025-06-11T09:20:39.608Z] [LOG] Received SIGINT. Graceful shutdown ...

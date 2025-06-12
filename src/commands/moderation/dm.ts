@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { createSuccessEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logInfo, logError, logDirectMessage } from '../../utils/logger';
+import { ModerationCaseService } from '../../database/services/sqliteService';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -74,28 +75,71 @@ module.exports = {
         i.customId.startsWith(`dm-modal-${targetUser.id}`) && i.user.id === interaction.user.id;
       
       try {
-        // Wait for the modal submission (5 minute timeout)
-        const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 300000 });
+        // Wait for the modal submission (3 minute timeout to avoid Discord limits)
+        const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 180000 });
+        
+        // Check if the modal submission is still valid
+        if (!modalSubmission || modalSubmission.replied || modalSubmission.deferred) {
+          logError('Staff DM Modal', 'Modal submission already handled or invalid');
+          return;
+        }
         
         // Get the values from the modal
         const title = modalSubmission.fields.getTextInputValue('dm-title');
         const messageContent = modalSubmission.fields.getTextInputValue('dm-message');
         
-        // Defer the reply to the modal submission
+        // Defer the reply to the modal submission with error handling
+        try {
         await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+        } catch (deferError: any) {
+          if (deferError.code === 10062) {
+            logError('Staff DM Modal', 'Modal interaction expired - user took too long to submit');
+            return;
+          }
+          throw deferError;
+        }
       
+        // Create moderation case for tracking staff DM
+        const moderationCase = await ModerationCaseService.create({
+          guild_id: guild.id,
+          action_type: 'Staff DM',
+          user_id: targetUser.id,
+          moderator_id: interaction.user.id,
+          reason: title,
+          additional_info: `Staff message sent to user: ${messageContent.substring(0, 500)}${messageContent.length > 500 ? '...' : ''}`
+        });
+
         // Create a stylish embed for the DM
         const dmEmbed = createInfoEmbed(
           title,
-          `**The Message is:**\n\n${messageContent}`
+          messageContent
         );
         
-        // Add additional fields to the embed
-        dmEmbed.addFields([
-          { name: '🛡️ Sent by', value: `${interaction.user.tag}`, inline: true },
+        // Add additional fields to the embed with enhanced styling
+        const embedFields = [
+          { name: '🛡️ Staff Member', value: `${interaction.user.tag}`, inline: true },
           { name: '🏠 Server', value: guild.name, inline: true },
-          { name: '🕒 Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
-        ]);
+          { name: '🔒 Official', value: 'Staff Message', inline: true },
+          { name: '🕒 Sent At', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+        ];
+
+        // Add case number if moderation case was created successfully
+        if (moderationCase) {
+          embedFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
+        }
+
+        dmEmbed.addFields(embedFields);
+        
+        // Add server icon and make it more official looking
+        dmEmbed.setThumbnail(guild.iconURL({ size: 256 }) || null);
+        dmEmbed.setAuthor({
+          name: `Official Message from ${guild.name}`,
+          iconURL: guild.iconURL({ size: 64 }) || undefined
+        });
+        dmEmbed.setFooter({
+          text: `This is an official message from the ${guild.name} staff team`,
+          iconURL: interaction.user.displayAvatarURL({ size: 32 })
+        });
         
         // Try to send the DM to the user
         try {
@@ -103,20 +147,38 @@ module.exports = {
           
           // Create a success embed for the staff member
           const successEmbed = createSuccessEmbed(
-            'Direct Message Sent',
-            `Your message has been sent to ${targetUser.tag}.`
+            '✅ Staff Message Delivered',
+            `Your official message has been successfully delivered to ${targetUser.tag}.`
           );
           
           // Preview of the message (truncated if too long)
-          const messagePreview = messageContent.length > 100 
-            ? messageContent.substring(0, 97) + '...'
+          const messagePreview = messageContent.length > 150 
+            ? messageContent.substring(0, 147) + '...'
             : messageContent;
           
-          successEmbed.addFields([
-            { name: '📝 Message Preview', value: `**The Message is:**\n\n${messagePreview}` },
-            { name: '👤 Recipient', value: `${targetUser.tag} (${targetUser.id})`, inline: true },
-            { name: '🕒 Sent at', value: `<t:${Math.floor(Date.now() / 1000)}:T>`, inline: true }
-          ]);
+          const successFields = [
+            { name: '📋 Title', value: title, inline: true },
+            { name: '👤 Recipient', value: `${targetUser.tag}`, inline: true },
+            { name: '📊 Length', value: `${messageContent.length} characters`, inline: true },
+            { name: '📝 Message Preview', value: messagePreview, inline: false },
+            { name: '🔗 Message Details', value: `**ID:** ${targetUser.id}\n**Type:** Staff DM\n**Status:** Delivered`, inline: true },
+            { name: '🕒 Delivery Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+          ];
+
+          // Add case number if available
+          if (moderationCase) {
+            successFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
+          }
+
+          successEmbed.addFields(successFields);
+          
+          // Add staff member info
+          successEmbed.setAuthor({
+            name: `Message sent by ${interaction.user.username}`,
+            iconURL: interaction.user.displayAvatarURL({ size: 64 })
+          });
+          
+          successEmbed.setThumbnail(targetUser.displayAvatarURL({ size: 128 }));
           
           await modalSubmission.editReply({ embeds: [successEmbed] });
           
@@ -130,7 +192,8 @@ module.exports = {
             recipient: targetUser,
             content: messageContent,
             command: 'dm',
-            success: true
+            success: true,
+            caseNumber: moderationCase?.case_number
           });
         } catch (error) {
           // Couldn't DM the user
@@ -156,9 +219,11 @@ module.exports = {
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {
-          logInfo('Staff DM', `${interaction.user.tag} started but didn't complete a DM to ${targetUser.tag}`);
+          logInfo('Staff DM', `${interaction.user.tag} started but didn't complete a DM to ${targetUser.tag} (modal timed out after 3 minutes)`);
+        } else if (error?.code === 10062) {
+          logError('Staff DM Modal', `Modal interaction expired for ${interaction.user.tag} -> ${targetUser.tag}`);
         } else {
-          logError('Staff DM Modal', error);
+          logError('Staff DM Modal', `Unexpected error: ${error?.message || error}`);
         }
       }
     } catch (error) {

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #36393f;
+            color: #dcddde;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+        button {
+            background-color: #5865f2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #4752c4;
+        }
+        pre {
+            background-color: #2f3136;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            border: 1px solid #4f545c;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            color: #43b581;
+        }
+        .error {
+            color: #f04747;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discord Bot API Test</h1>
+    <p>Use this page to test API endpoints and diagnose connectivity issues.</p>
+    
+    <div class="endpoint">
+        <h2>Test Servers Endpoint</h2>
+        <button onclick="testEndpoint('/servers')">Test Servers</button>
+        <pre id="servers-result">Results will appear here...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Test Warnings Endpoint</h2>
+        <button onclick="testEndpoint('/warnings?guildId=1365777891333374022')">Test Warnings</button>
+        <pre id="warnings-result">Results will appear here...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Test Tickets Endpoint</h2>
+        <button onclick="testEndpoint('/tickets?guildId=1365777891333374022')">Test Tickets</button>
+        <pre id="tickets-result">Results will appear here...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Test Logs Endpoint</h2>
+        <button onclick="testEndpoint('/logs?guildId=1365777891333374022')">Test Logs</button>
+        <pre id="logs-result">Results will appear here...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Test Stats Endpoint</h2>
+        <button onclick="testEndpoint('/stats')">Test Stats</button>
+        <pre id="stats-result">Results will appear here...</pre>
+    </div>
+
+    <script>
+        // API URLs to try
+        const API_URLS = [
+            'http://localhost:3001/api',
+            'http://127.0.0.1:3001/api',
+            'http://localhost:3000/api',
+            'http://127.0.0.1:3000/api'
+        ];
+        
+        // API key
+        const API_KEY = 'f8e7d6c5b4a3928170615243cba98765';
+        
+        // Test an endpoint
+        async function testEndpoint(endpoint) {
+            const resultId = endpoint.split('/')[1].split('?')[0] + '-result';
+            const resultElement = document.getElementById(resultId);
+            
+            resultElement.innerHTML = 'Testing...';
+            resultElement.className = '';
+            
+            // Try each API URL
+            for (const baseUrl of API_URLS) {
+                try {
+                    resultElement.innerHTML = `Trying ${baseUrl}${endpoint}...`;
+                    
+                    const response = await fetch(`${baseUrl}${endpoint}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': API_KEY,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        resultElement.innerHTML += `\nFailed with status ${response.status}: ${errorText}`;
+                        continue; // Try next URL
+                    }
+                    
+                    const data = await response.json();
+                    resultElement.innerHTML = `<span class="success">SUCCESS: ${baseUrl}${endpoint}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                    resultElement.className = 'success';
+                    return; // Success, no need to try other URLs
+                } catch (error) {
+                    resultElement.innerHTML += `\nError: ${error.message}`;
+                }
+            }
+            
+            // If we get here, all URLs failed
+            resultElement.innerHTML = `<span class="error">ERROR: All API endpoints failed for ${endpoint}</span>\n\n${resultElement.innerHTML}`;
+            resultElement.className = 'error';
+        }
+    </script>
+</body>
+</html>

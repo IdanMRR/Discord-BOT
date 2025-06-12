@@ -2,7 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Permiss
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { removeChannelFromRedAlerts, validateAlertChannels } from '../../handlers/alerts/red-alert-handler';
-import { ServerSettingsService } from '../../database/services/sqliteService';
+import { ServerSettingsService } from '../../database/services/serverSettingsService';
 
 export const data = new SlashCommandBuilder()
     .setName('remove-redalert')
@@ -16,8 +16,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
-        // Acknowledge the interaction immediately to prevent timeout
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Get the target channel (use provided channel or current channel)
         const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
@@ -34,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
 
         // Get current alert channels for this server from the database
-        const currentChannels = await ServerSettingsService.getSetting(interaction.guildId, 'red_alert_channels') || [];
+        const currentChannels = (await ServerSettingsService.getSetting<string[]>(interaction.guildId, 'red_alert_channels')) || [];
         
         // Check if this channel is not registered
         if (!Array.isArray(currentChannels) || !currentChannels.includes(targetChannel.id)) {
@@ -56,7 +55,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         
         // Get updated channel list for the message
-        const updatedChannels = await ServerSettingsService.getSetting(interaction.guildId, 'red_alert_channels') || [];
+        const updatedChannels = (await ServerSettingsService.getSetting<string[]>(interaction.guildId, 'red_alert_channels')) || [];
         const channelCount = Array.isArray(updatedChannels) ? updatedChannels.length : 0;
             
         // Send confirmation
@@ -67,8 +66,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .addFields(
                 { name: 'Channel', value: `<#${targetChannel.id}>`, inline: true },
                 { name: 'Status', value: 'Successfully removed', inline: true },
-                { name: 'Remaining Channels', value: updatedChannels.length > 0 ? 
-                    updatedChannels.map((id: string) => `<#${id}>`).join('\n') : 
+                { name: 'Remaining Channels', value: channelCount > 0 ? 
+                    (updatedChannels as string[]).map(id => `<#${id}>`).join('\n') : 
                     'No channels remaining', inline: false }
             )
             .setTimestamp();

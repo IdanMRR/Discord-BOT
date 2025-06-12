@@ -4,8 +4,14 @@ import { logInfo, logError } from '../../utils/logger';
 /**
  * Migration to add last_activity_at column to tickets table
  */
-(async () => {
+export async function addTicketLastActivityColumn() {
   try {
+    // Check if db is available
+    if (!db) {
+      logError('Migration', 'Database connection not available');
+      return false;
+    }
+
     // Check if the tickets table exists
     const tableExists = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name='tickets'
@@ -13,7 +19,7 @@ import { logInfo, logError } from '../../utils/logger';
     
     if (!tableExists) {
       logInfo('Migration', 'Tickets table does not exist yet, will be created with last_activity_at column');
-      return;
+      return true;
     }
     
     // Check if last_activity_at column exists
@@ -36,7 +42,9 @@ import { logInfo, logError } from '../../utils/logger';
     }
     
     logInfo('Migration', 'Successfully completed ticket last_activity migration');
+    return true;
   } catch (error) {
     logError('Migration', `Error during last_activity_at migration: ${error}`);
+    return false;
   }
-})(); 
+} 

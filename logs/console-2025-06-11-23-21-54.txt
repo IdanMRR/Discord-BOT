@@ -1,0 +1,1104 @@
+[2025-06-11T20:21:54.648Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-11-23-21-54.txt
+[2025-06-11T20:21:55.067Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-11T20:21:55.067Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-11T20:21:55.068Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-11T20:21:55.068Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-11T20:21:55.068Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-11T20:21:55.073Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-11T20:21:55.118Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-11T20:21:55.119Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-11T20:21:55.121Z] [LOG] Registering auth router at /auth
+[2025-06-11T20:21:55.121Z] [LOG] Registering admin panel router at /api/admin
+[2025-06-11T20:21:55.122Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-11T20:21:55.122Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-11T20:21:55.122Z] [LOG] Registering servers router at /api/servers
+[2025-06-11T20:21:55.123Z] [LOG] Registering moderation cases router at /api/moderation-cases
+[2025-06-11T20:21:55.127Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-11T20:21:55.163Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-11T20:21:55.165Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-11T20:21:55.166Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-11T20:21:55.166Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-11T20:21:55.167Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-11T20:21:55.167Z] [LOG] Connected to database
+[2025-06-11T20:21:55.167Z] [LOG] [API] Attempting to start API server on port 3001...
+[2025-06-11T20:21:55.190Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-11T20:21:55.191Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-11T20:21:55.191Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-11T20:21:55.192Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-11T20:21:55.193Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-11T20:21:55.196Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-11T20:21:55.196Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-11T20:21:55.196Z] [LOG] Ticket categories migration completed successfully
+[2025-06-11T20:21:55.196Z] [LOG] add-ticket-categories migration loaded
+[2025-06-11T20:21:55.196Z] [LOG] add-custom-cities migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] add-weather-schedule migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] add-log-channels migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-11T20:21:55.197Z] [LOG] ensure-log-channels migration loaded
+[2025-06-11T20:21:55.197Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-11T20:21:55.197Z] [LOG] Creating log_channels table...
+[2025-06-11T20:21:55.198Z] [LOG] Created log_channels table
+[2025-06-11T20:21:55.198Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-11T20:21:55.198Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-11T20:21:55.198Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-11T20:21:55.198Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-11T20:21:55.199Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-11T20:21:55.199Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-11T20:21:55.199Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-11T20:21:55.199Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-11T20:21:55.199Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-11T20:21:55.200Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-11T20:21:55.200Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-11T20:21:55.200Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-11T20:21:55.200Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-11T20:21:55.201Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-11T20:21:55.201Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-11T20:21:55.201Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-11T20:21:55.201Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-11T20:21:55.202Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-11T20:21:55.203Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-11T20:21:55.203Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-11T20:21:55.203Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-11T20:21:55.203Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-11T20:21:55.203Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-11T20:21:55.204Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-11T20:21:55.204Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-11T20:21:55.204Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-11T20:21:55.204Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-11T20:21:55.205Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T20:21:55.205Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T20:21:55.205Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T20:21:55.205Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-11T20:21:55.205Z] [LOG] [INFO][Migration] Creating dashboard_permissions table...
+[2025-06-11T20:21:55.206Z] [LOG] [INFO][Migration] Dashboard permissions table created successfully
+[2025-06-11T20:21:55.206Z] [LOG] [INFO][Database Migration] Dashboard permissions table migration completed successfully
+[2025-06-11T20:21:55.206Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-11T20:21:55.206Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-11T20:21:55.206Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-11T20:21:55.207Z] [LOG] [INFO][API] API server running successfully on port 3001
+[2025-06-11T20:21:55.207Z] [LOG] [API] API URL: http://localhost:3001
+[2025-06-11T20:21:55.207Z] [LOG] [WebSocket] WebSocket server running on ws://localhost:3001
+[2025-06-11T20:21:55.207Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T20:21:55.208Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T20:21:55.208Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T20:21:56.036Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Member Count: 862
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-11T20:21:56.037Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-11T20:21:56.039Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-11T20:21:56.040Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-11T20:21:56.040Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-11T20:21:56.040Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-11T20:21:56.040Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-11T20:21:56.040Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-11T20:21:56.040Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-11T20:21:56.040Z] [LOG] Processing command folder: admin
+[2025-06-11T20:21:56.040Z] [LOG] Found 42 command files in admin
+[2025-06-11T20:21:56.041Z] [LOG] Processing command folder: general
+[2025-06-11T20:21:56.041Z] [LOG] Found 1 command files in general
+[2025-06-11T20:21:56.041Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-11T20:21:56.041Z] [LOG] Processing command folder: moderation
+[2025-06-11T20:21:56.041Z] [LOG] Found 13 command files in moderation
+[2025-06-11T20:21:56.041Z] [LOG] Processing command folder: utility
+[2025-06-11T20:21:56.041Z] [LOG] Found 11 command files in utility
+[2025-06-11T20:21:56.075Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-11T20:21:56.192Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-11T20:21:56.192Z] [LOG] Successfully loaded command: command-logs
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: dashboard-perms
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-11T20:21:56.193Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: force-log
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: logs
+[2025-06-11T20:21:56.193Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: member-list
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: migrate-warnings
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: nuke
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: server-setup
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-11T20:21:56.194Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: test-events
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: test-logs
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: test-verification
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: verify
+[2025-06-11T20:21:56.195Z] [LOG] Successfully loaded command: ban
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: cases
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: dm
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: kick
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: removewarn
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: timeout
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: warn
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: warnings
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: avatar
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: chatbot
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: dm-user
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: help
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: invite
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: invites
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: language
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: quote
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: userinfo
+[2025-06-11T20:21:56.196Z] [LOG] Successfully loaded command: weather
+[2025-06-11T20:21:56.197Z] [LOG] Loaded 67 commands in total
+[2025-06-11T20:21:56.197Z] [LOG] [Command Initializer] Successfully loaded 67 commands from files
+[2025-06-11T20:21:56.197Z] [LOG] [Command Initializer] Registered 67 commands to client
+[2025-06-11T20:21:56.197Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-11T20:21:56.197Z] [LOG] [Command Register] Starting registration of 67 commands...
+[2025-06-11T20:21:56.197Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-11T20:21:59.117Z] [LOG] [INFO][Auth] Getting permissions for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.118Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.118Z] [LOG] [INFO][DashboardPermissions] No permissions found for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.118Z] [LOG] [INFO][Auth] Retrieved permissions for user 525342157834289163: []
+[2025-06-11T20:21:59.118Z] [LOG] [INFO][Auth] Database permissions for user 525342157834289163: 
+[2025-06-11T20:21:59.118Z] [LOG] [INFO][Auth] Admin check for user 525342157834289163: hardcoded=false, permissions=false, final=false
+[2025-06-11T20:21:59.393Z] [LOG] [INFO][Auth] Final permissions for user 525342157834289163: 
+[2025-06-11T20:21:59.393Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:21:59.393Z] [LOG] [INFO][Auth] Fetched real Discord data for _soill_
+[2025-06-11T20:21:59.396Z] [LOG] [INFO][Auth] Getting permissions for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.396Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.396Z] [LOG] [INFO][DashboardPermissions] No permissions found for user 525342157834289163 in guild 1180940682626600960
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Retrieved permissions for user 525342157834289163: []
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Database permissions for user 525342157834289163: 
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Admin check for user 525342157834289163: hardcoded=false, permissions=false, final=false
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Final permissions for user 525342157834289163: 
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:21:59.397Z] [LOG] [INFO][Auth] Fetched real Discord data for _soill_
+[2025-06-11T20:22:03.818Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:03.819Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:03.819Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:03.819Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:22:03.819Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:03.819Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:22:04.150Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:04.150Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:22:04.150Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:22:04.152Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:04.152Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:22:04.153Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:22:04.175Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:22:04.175Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:22:04.175Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:22:04.176Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:22:04.490Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:22:04.787Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:22:04.787Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:22:04.787Z] [LOG] [INFO][API] === getAllServers completed in 612ms with 2 servers ===
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:22:04.789Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-11T20:22:05.558Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:22:05.929Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:22:22.398Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:22:22.399Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.400Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:22:22.400Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:22:22.401Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:22.401Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:22:22.402Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:22:22.418Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:22:22.419Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:22:22.419Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:22:22.420Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:22:22.420Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:22:22.420Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:22:22.420Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:22:22.421Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:22:22.421Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:22:22.421Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:22:22.421Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:22:22.745Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:22:23.237Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:22:29.132Z] [LOG] [INFO][Members API] Retrieved 3 members for server 1365777891333374022
+[2025-06-11T20:22:29.653Z] [LOG] [INFO][Members API] Retrieved 3 members for server 1365777891333374022
+[2025-06-11T20:22:30.888Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-11T20:22:30.888Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-11T20:22:30.888Z] [LOG] Deduplication: 67 commands reduced to 67 unique commands
+[2025-06-11T20:22:30.889Z] [LOG] Registering 67 commands globally for all servers...
+[2025-06-11T20:22:35.613Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:22:36.107Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:23:00.891Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-11T20:23:00.891Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-11T20:23:00.891Z] [LOG] Command registration complete.
+[2025-06-11T20:23:00.892Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-11T20:23:00.892Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-11T20:23:00.892Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:25:36.755Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:25:36.756Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:25:36.756Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:25:37.051Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:25:37.554Z] [LOG] [INFO][Members API] Retrieved 50 members for server 1180940682626600960
+[2025-06-11T20:25:51.155Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:25:51.685Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:26:12.272Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:26:12.768Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:28:23.988Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:28:23.988Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:28:23.989Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:28:23.992Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:28:23.993Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:28:23.993Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:28:24.016Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:28:24.016Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:28:24.016Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:28:24.016Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:28:24.016Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:28:24.017Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:28:24.017Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:28:24.017Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:28:24.018Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:28:24.018Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:28:24.019Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:28:24.041Z] [LOG] [WebSocket] 2 total connections (latest: _2RY7pCPGyl3sOOEAAAd)
+[2025-06-11T20:28:24.332Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:28:24.837Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:32.065Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:32.563Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:39.749Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:32:39.750Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:32:39.751Z] [LOG] [INFO][API] === getAllServers completed in 2ms with 2 servers ===
+[2025-06-11T20:32:40.083Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:40.554Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:48.481Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:48.967Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:54.953Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:32:55.458Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:33:04.113Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:33:04.114Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:33:04.445Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:33:04.922Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:33:05.416Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:33:56.356Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:33:56.861Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:33:57.355Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:00.542Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:01.044Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:01.549Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:02.220Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:02.712Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:03.216Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:34:03.797Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:04.291Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:04.800Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:20.596Z] [LOG] [INFO][Members API] Retrieved 15 members for server 1180940682626600960
+[2025-06-11T20:34:21.102Z] [LOG] [INFO][Members API] Retrieved 15 members for server 1180940682626600960
+[2025-06-11T20:34:21.599Z] [LOG] [INFO][Members API] Retrieved 15 members for server 1180940682626600960
+[2025-06-11T20:34:24.027Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:24.533Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:25.027Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:27.886Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:28.385Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:28.889Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:29.696Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:34:30.206Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:34:30.698Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:34:31.610Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:34:32.105Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:34:32.603Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:34:53.596Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:34:53.596Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:34:53.596Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.597Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:34:53.597Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.597Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:34:53.597Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.597Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:34:53.598Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:34:53.600Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:34:53.600Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:34:53.601Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:34:53.629Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:34:53.630Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:34:53.631Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:34:53.631Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:34:53.632Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:34:53.651Z] [LOG] [WebSocket] 2 total connections (latest: QrZVHhXSChIQ9GcCAAAg)
+[2025-06-11T20:34:53.942Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:54.433Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:34:54.936Z] [LOG] [INFO][Members API] Retrieved 100 members for server 1180940682626600960
+[2025-06-11T20:37:39.614Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:37:39.614Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:37:39.614Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:37:39.615Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:37:39.615Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:37:39.615Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:37:39.615Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:37:39.615Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:37:39.921Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:37:40.417Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:37:40.934Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:01.318Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:38:01.318Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:38:01.318Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:38:01.319Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:38:01.319Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:38:01.319Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:38:01.319Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:38:01.319Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:38:01.630Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:02.115Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:02.618Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:42.420Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:42.920Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:43.421Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:44.387Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:44.888Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:45.393Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:45.898Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:46.389Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:46.896Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:47.394Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:47.892Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:48.395Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:48.898Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:49.406Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:49.910Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:50.410Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:50.914Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:51.398Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:51.902Z] [LOG] [INFO][Members API] Retrieved 4 members for server 1180940682626600960
+[2025-06-11T20:38:52.409Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:52.904Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:53.406Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-11T20:38:53.981Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:54.499Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:55.004Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:38:58.483Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:38:58.484Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:38:58.484Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:38:58.485Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:38:58.486Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:38:58.512Z] [LOG] [WebSocket] 2 total connections (latest: Z38F2Mu1rbZnRJsBAAAj)
+[2025-06-11T20:38:58.822Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:59.313Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:38:59.809Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:10.426Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:10.917Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:11.415Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:27.719Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:28.212Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:28.704Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:35.475Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:35.937Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:36.435Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:39:45.613Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-11T20:39:45.914Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:46.411Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:39:46.900Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:42:03.332Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:42:03.836Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:42:04.338Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:43:41.207Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:43:41.714Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:44:05.835Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:44:05.836Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:44:06.134Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:44:06.630Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:44:07.141Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:44:34.753Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:44:35.263Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:45:08.907Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:45:09.398Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:07.182Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:07.671Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:08.172Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:10.274Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:46:10.781Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:46:11.275Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-11T20:46:13.342Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:46:13.842Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:46:14.341Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:46:15.840Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:46:15.840Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:46:15.840Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.840Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:46:15.841Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.841Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:46:15.841Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.841Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:46:15.841Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:46:15.844Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:46:15.873Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:46:15.873Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:46:15.873Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:46:15.873Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:46:15.874Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:46:15.874Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:46:15.874Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:46:15.874Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:46:15.875Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:46:15.875Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:46:15.875Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:46:15.875Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:46:15.876Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:46:15.876Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:46:15.876Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:46:15.876Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:46:15.892Z] [LOG] [WebSocket] 3 total connections (latest: SMpk9HR1KdmauuVFAAAt)
+[2025-06-11T20:46:16.176Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:16.676Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:17.202Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:24.540Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:25.042Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:25.544Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:46:29.822Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:46:30.318Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:46:30.821Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:47:56.329Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:47:56.833Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:05.975Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:06.473Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:13.386Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:13.891Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:22.335Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:48:22.826Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-11T20:49:04.994Z] [LOG] [WebSocket] 3 total connections (latest: NEdSvfvW6b_GazmmAAAv)
+[2025-06-11T20:49:09.789Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:49:09.789Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:49:09.790Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.790Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:49:09.790Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.790Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:49:09.790Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.791Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:49:09.791Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:49:09.804Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:49:09.804Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:49:09.804Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.804Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:49:09.805Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.805Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:49:09.805Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:49:09.805Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:49:09.805Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:49:09.844Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:49:09.845Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:49:09.846Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T20:49:09.846Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T20:49:09.847Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T20:49:10.179Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:49:10.652Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:49:11.155Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-11T20:52:04.223Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:52:04.223Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:52:04.224Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:52:04.227Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:52:04.227Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-11T20:52:04.227Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-11T20:52:04.228Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T20:52:04.273Z] [LOG] [WebSocket] 3 total connections (latest: tIwfoI7Fy-GLpGO9AAA2)
+[2025-06-12T04:46:29.424Z] [LOG] [WebSocket] 1 total connections (latest: etzz6rhVXsafVIvQAAA4)
+[2025-06-12T04:47:05.902Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T04:47:05.902Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T04:47:05.902Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T04:47:05.903Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T04:47:06.213Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T04:47:06.523Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T04:47:06.524Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T04:47:06.524Z] [LOG] [INFO][API] === getAllServers completed in 622ms with 2 servers ===
+[2025-06-12T04:47:07.249Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:05.634Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:14:05.634Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.635Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:14:05.636Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:14:05.640Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:14:05.640Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:14:05.641Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.641Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:14:05.641Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.641Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:14:05.642Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:14:05.642Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:14:05.642Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:14:05.672Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:14:05.672Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:14:05.672Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:14:05.672Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:14:05.707Z] [LOG] [WebSocket] 1 total connections (latest: gkdMtqYhDD6duQ7CAABF)
+[2025-06-12T08:14:06.020Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:14:06.324Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:14:06.325Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:14:06.325Z] [LOG] [INFO][API] === getAllServers completed in 653ms with 2 servers ===
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:14:06.326Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:14:06.327Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:14:07.116Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:13.827Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-12T08:14:16.427Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-12T08:14:19.214Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-12T08:14:23.168Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-12T08:14:26.604Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-12T08:14:28.991Z] [LOG] [INFO][Members API] Retrieved 1 members for server 1180940682626600960
+[2025-06-12T08:14:31.149Z] [LOG] [INFO][Members API] Retrieved 12 members for server 1180940682626600960
+[2025-06-12T08:14:33.576Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:36.416Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:39.189Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:42.845Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-12T08:14:45.377Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:14:47.876Z] [LOG] [INFO][Members API] Retrieved 0 members for server 1180940682626600960
+[2025-06-12T08:14:49.870Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:15:39.488Z] [LOG] [WebSocket] 1 total connections (latest: _3Ou0MLA7ZyGEuzNAABH)
+[2025-06-12T08:15:53.507Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:15:53.507Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:15:53.507Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.507Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:15:53.508Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.508Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:15:53.508Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.508Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:15:53.508Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:15:53.510Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:15:53.510Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:15:53.510Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.510Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:15:53.510Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.511Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:15:53.511Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:15:53.511Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:15:53.511Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:16:03.504Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:16:03.504Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:16:03.504Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:16:03.505Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.507Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:16:03.508Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:16:03.508Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:16:03.508Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:16.502Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.503Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:16.503Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:16.505Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:16.506Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:16.537Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:16.538Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:18:16.539Z] [LOG] [WebSocket] 1 total connections (latest: 2usmHln1xwMJucCEAABN)
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:16.540Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-12T08:18:25.508Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:25.508Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:25.508Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.508Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:25.509Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.509Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:25.509Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.509Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:25.509Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:25.510Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:25.511Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:25.557Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:25.557Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:25.558Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:18:25.559Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:25.559Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:25.559Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:25.559Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:25.559Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:25.560Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:25.560Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:25.560Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:18:35.502Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:35.502Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:35.503Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:35.505Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:18:35.506Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:18:35.507Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:35.550Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:35.551Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-12T08:18:35.552Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:18:35.552Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:18:35.552Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:18:35.552Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:18:35.553Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:18:35.553Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:18:35.553Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:18:35.553Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:18:35.905Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:19:07.492Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:19:07.493Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:19:07.817Z] [LOG] [INFO][Members API] Retrieved 20 members for server 1180940682626600960
+[2025-06-12T08:30:01.243Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:30:01.243Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:30:01.243Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.243Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:30:01.244Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.244Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:30:01.244Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.244Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:30:01.244Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:30:01.246Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:30:01.246Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:30:01.246Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.246Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:30:01.247Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.247Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:30:01.247Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:30:01.247Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:30:01.247Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:30:01.280Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:30:01.280Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:30:01.280Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:30:01.281Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:30:01.281Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:30:01.281Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:30:01.281Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:30:01.281Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:30:01.282Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:30:01.282Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:30:01.282Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:30:01.282Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:30:01.282Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:30:01.283Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:30:01.283Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:30:01.283Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:30:01.303Z] [LOG] [WebSocket] 1 total connections (latest: GuvTEdT_KvqzOecEAABe)
+[2025-06-12T08:30:01.621Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:30:34.888Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by soggra on admin
+[2025-06-12T08:30:34.889Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by 471204846855258123 on admin
+[2025-06-12T08:30:36.194Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:31:25.384Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:31:25.386Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-12T08:31:25.400Z] [LOG] [WebSocket] 1 total connections (latest: 6GXm2XtgqdTA-PQfAABh)
+[2025-06-12T08:31:25.769Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:33:01.244Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.245Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:33:01.245Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:33:01.246Z] [LOG] [INFO][Auth] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:33:01.246Z] [LOG] [INFO][DashboardPermissions] Getting permissions for user 471204846855258123 in guild 1180940682626600960
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][DashboardPermissions] Found permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Retrieved permissions for user 471204846855258123: [
+  "admin",
+  "manage_tickets",
+  "view_logs"
+]
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Database permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Admin check for user 471204846855258123: hardcoded=false, permissions=true, final=true
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Final permissions for user 471204846855258123: admin, manage_tickets, view_logs
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Using guild 1180940682626600960 for permission context
+[2025-06-12T08:33:01.247Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:33:01.279Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-12T08:33:01.280Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-12T08:33:01.281Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-12T08:33:01.318Z] [LOG] [WebSocket] 1 total connections (latest: yfL6_Marqz0gSK0oAABp)
+[2025-06-12T08:33:01.618Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:33:13.533Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by soggra on admin
+[2025-06-12T08:33:13.533Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by 471204846855258123 on admin
+[2025-06-12T08:33:14.848Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:35:56.331Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by soggra on admin
+[2025-06-12T08:35:56.332Z] [LOG] [INFO][DashboardLogs] Logged activity: update_resource by 471204846855258123 on admin
+[2025-06-12T08:35:57.633Z] [LOG] [INFO][Members API] Retrieved 862 members for server 1180940682626600960
+[2025-06-12T08:36:06.689Z] [LOG] Received SIGINT. Graceful shutdown ...

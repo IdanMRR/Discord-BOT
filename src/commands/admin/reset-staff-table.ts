@@ -16,7 +16,10 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    // Defer the reply to prevent timeout
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    
+    const guildId = interaction.guildId;
     
     // Log command usage
     await logCommandUsage({

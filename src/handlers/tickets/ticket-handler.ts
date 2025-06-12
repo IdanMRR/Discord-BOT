@@ -11,6 +11,10 @@ import { getClient } from '../../utils/client-utils';
 // Add a map to track recent button clicks to prevent duplicates
 const recentButtonClicks = new Map<string, number>();
 
+// Add a cache for usernames to prevent duplicate API calls
+const usernameCache = new Map<string, string>();
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Function to check and record a button click to prevent duplicates
 function preventDuplicateButtonClick(userId: string, guildId: string, buttonType: string, timeWindowMs: number = 3000): boolean {
   const key = `${userId}_${guildId}_${buttonType}`;
@@ -111,27 +115,33 @@ export async function checkExistingTicket(guildId: string, userId: string): Prom
  */
 export async function handleTicketButtonClick(interaction: ButtonInteraction) {
   try {
-    // Check if this is a duplicate click
-    if (preventDuplicateButtonClick(interaction.user.id, interaction.guildId!, 'ticket_create')) {
-      logInfo('Tickets', `Prevented duplicate ticket button click from ${interaction.user.tag} (${interaction.user.id})`);
-      // Silently ignore the duplicate click
-      await interaction.deferUpdate().catch(() => {});
+    // IMMEDIATELY defer to prevent timeout - use flags syntax to avoid deprecation warning
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId!;
+    
+    // Check for duplicate clicks after deferring
+    if (preventDuplicateButtonClick(userId, guildId, 'ticket_create')) {
+      logInfo('Tickets', `Prevented duplicate ticket button click from ${interaction.user.tag} (${userId})`);
+      await interaction.editReply({
+        content: '⏳ You already have a ticket creation in progress. Please wait...'
+      });
       return false;
     }
     
-    logInfo('Tickets', `User ${interaction.user.tag} (${interaction.user.id}) clicked the ticket creation button in ${interaction.guild?.name || 'Unknown Guild'}`);
+    logInfo('Tickets', `User ${interaction.user.tag} (${userId}) clicked the ticket creation button in ${interaction.guild?.name || 'Unknown Guild'}`);
     
     // Check if the user already has an open ticket
-    const existingTicket = await checkExistingTicket(interaction.guildId!, interaction.user.id);
+    const existingTicket = await checkExistingTicket(guildId, userId);
     
     if (existingTicket) {
-      // Create a button to redirect to the existing ticket
+      // Create buttons for existing ticket
       const redirectButton = new ButtonBuilder()
         .setLabel('Go to Existing Ticket')
         .setStyle(ButtonStyle.Link)
-        .setURL(`https://discord.com/channels/${interaction.guildId}/${existingTicket.channelId}`);
+        .setURL(`https://discord.com/channels/${guildId}/${existingTicket.channelId}`);
       
-      // Create a button to force create a new ticket anyway
       const forceCreateButton = new ButtonBuilder()
         .setCustomId('force_create_ticket')
         .setLabel('Create New Ticket Anyway')
@@ -140,7 +150,6 @@ export async function handleTicketButtonClick(interaction: ButtonInteraction) {
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(redirectButton, forceCreateButton);
       
-      // Let the user know they already have a ticket
       const duplicateEmbed = new EmbedBuilder()
         .setTitle('❗ You Already Have a Ticket')
         .setDescription(`You already have an open ticket (#${existingTicket.ticketNumber}). Please use your existing ticket instead of creating a new one.`)
@@ -149,102 +158,36 @@ export async function handleTicketButtonClick(interaction: ButtonInteraction) {
           { name: 'Options', value: 'You can either go to your existing ticket or create a new one anyway if needed.' }
         ]);
       
-      await interaction.reply({ 
+      await interaction.editReply({ 
         embeds: [duplicateEmbed], 
-        components: [row], 
-        ephemeral: true 
-      });
-      
-      // Set up a collector to listen for the "Create anyway" button
-      const filter = (i: any) => 
-        i.customId === 'force_create_ticket' && 
-        i.user.id === interaction.user.id;
-      
-      const collector = interaction.channel!.createMessageComponentCollector({ 
-        filter, 
-        time: 60000, // 1 minute timeout
-        max: 1 
-      });
-      
-      collector.on('collect', async (i) => {
-        // If they click "create anyway", proceed with ticket creation
-        try {
-          await i.update({ 
-            content: 'Creating a new ticket for you...', 
-            embeds: [], 
-            components: [] 
-          });
-          
-          // Continue with normal ticket creation flow using the collector's interaction (i) instead of the original interaction
-          const { showCategorySelection } = await import('./ticket-categories');
-          await showCategorySelection(i);
-        } catch (error: any) {
-          // Handle interaction expired error
-          if (error.code === 10062) {
-            logError('Ticket Button', 'Interaction expired before response could be updated');
-            // Try to send a follow-up message instead
-            try {
-              await i.followUp({ 
-                content: 'Creating a new ticket for you...', 
-                ephemeral: true 
-              });
-              
-              // Continue with normal ticket creation flow using the collector's interaction
-              const { showCategorySelection } = await import('./ticket-categories');
-              // We need to use i here, not the original interaction which may have expired
-              await showCategorySelection(i);
-            } catch (followUpError) {
-              logError('Ticket Button', `Follow-up error: ${followUpError}`);
-            }
-          } else {
-            logError('Ticket Button', `Error updating interaction: ${error}`);
-          }
-        }
-      });
-      
-      collector.on('end', async (collected) => {
-        // If they don't click anything, do nothing (ephemeral message will expire naturally)
-        if (collected.size === 0) {
-          try {
-            await interaction.editReply({
-              content: 'Ticket creation cancelled. Please use your existing ticket.',
-              embeds: [],
-              components: []
-            });
-          } catch (error) {
-            // Ignore any errors here - the ephemeral message might have expired
-          }
-        }
+        components: [row]
       });
       
       return false;
     }
     
-    // Import the category selection function dynamically to avoid circular dependencies
+    // Show category selection
     const { showCategorySelection } = await import('./ticket-categories');
-    
-    // Show the category selection menu
     return await showCategorySelection(interaction);
-  } catch (error) {
+    
+  } catch (error: any) {
     logError('Ticket Button', error);
     
-    // Handle error gracefully
     try {
-      // Create an error embed
-      const errorEmbed = new EmbedBuilder()
-        .setColor(Colors.ERROR)
-        .setTitle('❌ Error Creating Ticket')
-        .setDescription('An error occurred while processing your request. Please try again later or contact a staff member.')
-        .setFooter({ text: 'Made by Soggra.' })
-        .setTimestamp();
-        
-      await interaction.reply({ 
-        embeds: [errorEmbed],
-        flags: MessageFlags.Ephemeral
-      });
+      if (interaction.deferred) {
+        await interaction.editReply({ 
+          content: '❌ An error occurred while creating the ticket. Please try again later.' 
+        });
+      } else {
+        // Fallback - try to reply if not deferred yet
+        await interaction.reply({
+          content: '❌ An error occurred while creating the ticket. Please try again later.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
     } catch (replyError) {
-      // If we can't reply, just log it
-      console.error('Failed to send error message:', replyError);
+      // Silently fail if we can't send error message
+      logError('Ticket Button', `Failed to send error message: ${replyError}`);
     }
     
     return false;
@@ -260,15 +203,17 @@ export async function handleTicketButtonClick(interaction: ButtonInteraction) {
  */
 export async function handleCategorySelection(interaction: StringSelectMenuInteraction) {
   try {
+    // Immediately defer the reply to prevent timeout - use flags syntax to avoid deprecation warning
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    
     // Get the selected category
     const categoryId = interaction.values[0];
     const category = getCategoryById(categoryId);
     
     // Validate the category
     if (!category) {
-      await interaction.reply({
-        content: 'Invalid category selection. Please try again with a valid category.',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'Invalid category selection. Please try again with a valid category.'
       });
       logError('Ticket Creation', `User ${interaction.user.tag} selected invalid category ID: ${categoryId}`);
       return false;
@@ -276,9 +221,6 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     
     // Log the category selection
     logInfo('Tickets', `User ${interaction.user.tag} (${interaction.user.id}) selected category: ${category.label}`);
-    
-    // Defer the reply to give us time to create the ticket (shows "Bot is thinking...")
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
     // Get the next ticket number for this guild
     const ticketNumberStmt = db.prepare(`
@@ -554,11 +496,10 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       await interaction.editReply({ embeds: [successEmbed] });
     } catch (replyError) {
       logError('Ticket Creation', `Failed to send success message: ${replyError}`);
-      // Try a followUp if the editReply fails
+
       try {
-        await interaction.followUp({ 
+        await interaction.editReply({ 
           embeds: [successEmbed], 
-          flags: MessageFlags.Ephemeral 
         });
       } catch (followUpError) {
         logError('Ticket Creation', `Failed to send followUp success message: ${followUpError}`);
@@ -702,5 +643,169 @@ function getStatusName(status: string): string {
     case 'closed': return 'Closed';
     case 'deleted': return 'Deleted';
     default: return 'Unknown';
+  }
+}
+
+/**
+ * Create ticket panel message in channel
+ */
+export async function createTicketPanelMessage(channelId: string, guildId: string, settings: any): Promise<string | null> {
+  try {
+    const client = getClient();
+    
+    if (!client) {
+      logError('Ticket Panel', 'Discord client not available');
+      return null;
+    }
+    
+    const guild = await client.guilds.fetch(guildId);
+    const channel = await guild.channels.fetch(channelId) as TextChannel;
+    
+    if (!channel?.isTextBased()) {
+      logError('Ticket Panel', 'Invalid ticket panel channel');
+      return null;
+    }
+    
+    const embed = new EmbedBuilder()
+      .setColor(Colors.PRIMARY)
+      .setTitle('🎫 Support Tickets')
+      .setDescription('Need help? Have a question? Want to report something? Create a ticket and our staff team will assist you as soon as possible.')
+      .addFields([
+        { name: '🔹 How to Create a Ticket', value: 'Click the button below to create a new support ticket.' },
+        { name: '🔹 Response Time', value: 'Our staff team typically responds within a few hours.' },
+        { name: '🔹 Categories Available', value: 'Select the category that best matches your request when creating a ticket.' }
+      ])
+      .setFooter({ text: 'Made by Soggra • Support Ticket System' })
+      .setTimestamp();
+    
+    const createButton = new ButtonBuilder()
+      .setCustomId('create_ticket')
+      .setLabel('Create Ticket')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🎫');
+    
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(createButton);
+    
+    const message = await channel.send({
+      embeds: [embed],
+      components: [row]
+    });
+    
+    logInfo('Ticket Panel', `Ticket panel message created in ${channel.name}`);
+    return message.id;
+  } catch (error) {
+    logError('Ticket Panel', `Error creating ticket panel message: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * Create custom ticket panel message in channel
+ */
+export async function createCustomTicketPanelMessage(
+  channelId: string, 
+  guildId: string, 
+  settings: any, 
+  customMessage: {
+    title: string;
+    description: string;
+    color: string;
+    footer: string;
+    buttonText?: string;
+    fields?: Array<{
+      name: string;
+      value: string;
+      inline?: boolean;
+    }>;
+  }
+): Promise<string | null> {
+  try {
+    logInfo('Ticket Panel', `Creating custom ticket panel message with footer: "${customMessage.footer}"`);
+    
+    // Log the custom fields for debugging
+    if (customMessage.fields && customMessage.fields.length > 0) {
+      logInfo('Ticket Panel', `Custom fields received (${customMessage.fields.length} fields):`);
+      customMessage.fields.forEach((field, index) => {
+        logInfo('Ticket Panel', `Field ${index + 1}: "${field.name}" = "${field.value}"`);
+      });
+    } else {
+      logInfo('Ticket Panel', 'No custom fields provided, using defaults');
+    }
+    
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('Ticket Panel', 'Discord client not available');
+      return null;
+    }
+    
+    const channel = client.channels.cache.get(channelId) as TextChannel;
+    if (!channel) {
+      logError('Ticket Panel', `Channel ${channelId} not found`);
+      return null;
+    }
+    
+    const color = customMessage.color.startsWith('#') 
+      ? parseInt(customMessage.color.slice(1), 16) 
+      : parseInt(customMessage.color, 16);
+    
+    // Use custom fields if provided, otherwise use defaults
+    const fields = customMessage.fields && customMessage.fields.length > 0 
+      ? customMessage.fields 
+      : [
+          { name: '🔹 How to Create a Ticket', value: 'Click the button below to create a new support ticket.' },
+          { name: '🔹 Response Time', value: 'Our staff team typically responds within a few hours.' },
+          { name: '🔹 Categories Available', value: 'Select the category that best matches your request when creating a ticket.' }
+        ];
+    
+    // Log which fields will be used
+    logInfo('Ticket Panel', `Using ${fields.length} fields in ticket panel:`);
+    fields.forEach((field, index) => {
+      logInfo('Ticket Panel', `  ${index + 1}. "${field.name}": "${field.value}"`);
+    });
+    
+    // Add spacing between fields for better readability
+    const formattedFields = fields.map((field, index) => ({
+      name: field.name,
+      value: field.value,
+      inline: field.inline || false
+    }));
+    
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(customMessage.title)
+      .setDescription(customMessage.description)
+      .addFields(formattedFields)
+      .setFooter({ text: customMessage.footer })
+      .setTimestamp();
+    
+    logInfo('Ticket Panel', `Creating embed with ${formattedFields.length} fields and footer: "${customMessage.footer}"`);
+    
+    // Use custom button text if provided, otherwise use default
+    const buttonText = customMessage.buttonText || 'Create Ticket';
+    logInfo('Ticket Panel', `Using button text: "${buttonText}"`);
+    
+    // Create ticket button
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('create_ticket')
+          .setLabel(`🎫 ${buttonText}`)
+          .setStyle(ButtonStyle.Primary)
+      );
+    
+    // Send the message
+    const message = await channel.send({
+      embeds: [embed],
+      components: [row]
+    });
+    
+    logInfo('Ticket Panel', `Custom ticket panel message created with ID ${message.id} in ${channel.name}`);
+    return message.id;
+    
+  } catch (error) {
+    logError('Ticket Panel', `Error creating custom ticket panel message: ${error}`);
+    return null;
   }
 }

@@ -1,0 +1,148 @@
+[2025-06-11T14:34:26.911Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-11-17-34-26.txt
+[2025-06-11T14:34:27.713Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-11T14:34:27.713Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-11T14:34:27.713Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-11T14:34:27.714Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-11T14:34:27.714Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-11T14:34:27.758Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-11T14:34:27.759Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-11T14:34:27.759Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-11T14:34:27.759Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-11T14:34:27.759Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-11T14:34:28.934Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-11T14:34:30.455Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-11T14:34:30.455Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-11T14:34:30.463Z] [LOG] Registering auth router at /auth
+[2025-06-11T14:34:30.463Z] [LOG] Registering admin panel router at /api/admin
+[2025-06-11T14:34:30.463Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-11T14:34:30.463Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-11T14:34:30.463Z] [LOG] Registering servers router at /api/servers
+[2025-06-11T14:34:30.501Z] [LOG] Registering moderation cases router at /api/moderation-cases
+[2025-06-11T14:34:30.619Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-11T14:34:30.662Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-11T14:34:30.664Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-11T14:34:30.664Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-11T14:34:30.665Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-11T14:34:30.665Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-11T14:34:30.665Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-11T14:34:30.665Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-11T14:34:30.666Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-11T14:34:30.666Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-11T14:34:30.667Z] [LOG] Connected to database
+[2025-06-11T14:34:30.667Z] [LOG] [API] Attempting to start API server on port 3001...
+[2025-06-11T14:34:30.688Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-11T14:34:30.688Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-11T14:34:31.926Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-11T14:34:31.927Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-11T14:34:33.236Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-11T14:34:34.580Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-11T14:34:37.266Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-11T14:34:37.266Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-11T14:34:37.266Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-11T14:34:37.267Z] [LOG] Ticket categories migration completed successfully
+[2025-06-11T14:34:37.267Z] [LOG] add-ticket-categories migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-custom-cities migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-weather-schedule migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] add-log-channels migration loaded
+[2025-06-11T14:34:37.267Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-11T14:34:37.267Z] [LOG] ensure-log-channels migration loaded
+[2025-06-11T14:34:37.268Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-11T14:34:37.268Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-11T14:34:37.268Z] [LOG] Creating log_channels table...
+[2025-06-11T14:34:37.268Z] [LOG] Created log_channels table
+[2025-06-11T14:34:37.268Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-11T14:34:37.269Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-11T14:34:37.269Z] [LOG] Creating log_channels table...
+[2025-06-11T14:34:37.269Z] [LOG] Created log_channels table
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-11T14:34:37.270Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-11T14:34:37.271Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-11T14:34:37.272Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-11T14:34:37.273Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-11T14:34:37.274Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-11T14:34:37.275Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-11T14:34:37.276Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-11T14:34:37.277Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-11T14:34:37.277Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-11T14:34:37.277Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-11T14:34:37.277Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-11T14:34:37.278Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-11T14:34:37.278Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-11T14:34:37.278Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-11T14:34:37.278Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-11T14:34:37.278Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-11T14:34:37.279Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-11T14:34:37.279Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-11T14:34:37.279Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-11T14:34:37.279Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-11T14:34:37.280Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-11T14:34:37.280Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-11T14:34:37.280Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-11T14:34:37.280Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-11T14:34:37.281Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T14:34:37.281Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-11T14:34:37.282Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-11T14:34:37.283Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-11T14:34:37.283Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-11T14:34:37.283Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-11T14:34:37.283Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-11T14:34:37.284Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-11T14:34:37.284Z] [LOG] [INFO][API] Port 3001 is already in use, trying next port...
+[2025-06-11T14:34:37.284Z] [LOG] [API] Port 3001 is already in use, trying next port...
+[2025-06-11T14:34:37.284Z] [LOG] [API] Attempting to start API server on port 3002...
+[2025-06-11T14:34:37.285Z] [LOG] [INFO][API] API server running successfully on port 3002
+[2025-06-11T14:34:37.286Z] [LOG] [API] API URL: http://localhost:3002
+[2025-06-11T14:34:37.286Z] [LOG] [WebSocket] WebSocket server running on ws://localhost:3002
+[2025-06-11T14:34:37.286Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T14:34:37.286Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T14:34:37.287Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-11T14:34:37.287Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-11T14:34:37.287Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-11T14:34:37.287Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration

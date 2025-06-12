@@ -11,6 +11,7 @@ import {
 } from 'discord.js';
 import { logInfo, logError } from '../../utils/logger';
 import { db } from '../../database/sqlite';
+import { ServerSettings } from '../../utils/settings';
 
 // Store guild invites and member join timestamps
 const guildInvites = new Map<string, Collection<string, Invite>>();
@@ -70,10 +71,15 @@ async function ensureInviteTrackingSchema(): Promise<void> {
  */
 export async function initializeInviteTracker(client: Client): Promise<void> {
   try {
+    logInfo('InviteTracker', '🔧 Starting invite tracker initialization...');
+    
     // Ensure database schema is correct
+    logInfo('InviteTracker', '📊 Ensuring database schema...');
     await ensureInviteTrackingSchema();
+    logInfo('InviteTracker', '✅ Database schema verified');
     
     // When the bot is ready, cache all guild invites
+    logInfo('InviteTracker', '🔗 Registering ClientReady event handler...');
     client.on(Events.ClientReady, async () => {
       await cacheAllGuildInvites(client);
       logInfo('InviteTracker', 'Invite tracking system initialized');
@@ -86,6 +92,7 @@ export async function initializeInviteTracker(client: Client): Promise<void> {
     });
 
     // When the bot joins a new guild, cache its invites
+    logInfo('InviteTracker', '🏠 Registering GuildCreate event handler...');
     client.on(Events.GuildCreate, async (guild) => {
       if (guild.available) {
         await cacheGuildInvites(guild);
@@ -94,6 +101,7 @@ export async function initializeInviteTracker(client: Client): Promise<void> {
     });
 
     // When a new invite is created, update the cache
+    logInfo('InviteTracker', '📩 Registering InviteCreate event handler...');
     client.on(Events.InviteCreate, async (invite) => {
       if (!invite.guild) return;
       
@@ -111,6 +119,7 @@ export async function initializeInviteTracker(client: Client): Promise<void> {
     });
 
     // When an invite is deleted, update the cache
+    logInfo('InviteTracker', '🗑️ Registering InviteDelete event handler...');
     client.on(Events.InviteDelete, async (invite) => {
       if (!invite.guild) return;
       
@@ -128,21 +137,36 @@ export async function initializeInviteTracker(client: Client): Promise<void> {
     });
 
     // When a new member joins, track which invite they used
+    logInfo('InviteTracker', '👥 Registering GuildMemberAdd event handler...');
     client.on(Events.GuildMemberAdd, async (member) => {
-      await trackMemberJoin(member);
-    });
-
-    // When a member leaves, log it
-    client.on(Events.GuildMemberRemove, async (member) => {
-      if (!member.partial) {
-        await trackMemberLeave(member);
-      } else {
-        logInfo('InviteTracker', `Member leave event received but member is partial: ${member.id}`);
+      logInfo('InviteTracker', `🎯 GuildMemberAdd event received for ${member.user.tag} in ${member.guild.name}`);
+      try {
+        await trackMemberJoin(member);
+      } catch (error) {
+        logError('InviteTracker', `Error in trackMemberJoin: ${error}`);
       }
     });
 
+    // When a member leaves, log it
+    logInfo('InviteTracker', '👋 Registering GuildMemberRemove event handler...');
+    client.on(Events.GuildMemberRemove, async (member) => {
+      logInfo('InviteTracker', `🎯 GuildMemberRemove event received for ${member.user?.tag || member.id} in ${member.guild?.name || 'Unknown'}`);
+      try {
+        if (!member.partial) {
+          await trackMemberLeave(member);
+        } else {
+          logInfo('InviteTracker', `Member leave event received but member is partial: ${member.id}`);
+        }
+      } catch (error) {
+        logError('InviteTracker', `Error in trackMemberLeave: ${error}`);
+      }
+    });
+    
+    logInfo('InviteTracker', '✅ All event handlers registered successfully');
+
   } catch (error) {
-    logError('InviteTracker', `Error initializing invite tracker: ${error}`);
+    logError('InviteTracker', `❌ Error initializing invite tracker: ${error}`);
+    throw error; // Re-throw to make the error visible in the main initialization
   }
 }
 
@@ -389,6 +413,35 @@ async function trackMemberJoin(member: GuildMember): Promise<void> {
       logError('InviteTracker', `Error sending join message to member logs: ${error}`);
     }
     
+    // Also send to welcome channel if configured
+    try {
+      const welcomeChannel = await getWelcomeChannel(guild.id);
+      logInfo('InviteTracker', `Welcome channel found: ${welcomeChannel ? 'YES' : 'NO'} for guild ${guild.id}`);
+      
+      if (welcomeChannel) {
+        // Create a more user-friendly welcome embed for the welcome channel
+        const welcomeEmbed = new EmbedBuilder()
+          .setColor('#43b581' as ColorResolvable) // Green color for joins
+          .setTitle('👋 Welcome!')
+          .setThumbnail(member.user.displayAvatarURL())
+          .setDescription(`Welcome to **${guild.name}**, <@${member.id}>! We hope you enjoy your stay.`)
+          .addFields([
+            { name: 'Member Count', value: `You are member #${guild.memberCount}`, inline: true },
+            { name: 'Account Created', value: `<t:${Math.floor(member.user.createdAt.getTime() / 1000)}:R>`, inline: true }
+          ])
+          .setFooter({ text: `ID: ${member.id}` })
+          .setTimestamp();
+          
+        logInfo('InviteTracker', `Attempting to send welcome message to channel ${welcomeChannel.id}`);
+        await welcomeChannel.send({ embeds: [welcomeEmbed] });
+        logInfo('InviteTracker', `Successfully sent welcome message to welcome channel for ${member.user.tag}`);
+      } else {
+        logInfo('InviteTracker', `No welcome channel found for guild ${guild.id}, skipping welcome message`);
+      }
+    } catch (error) {
+      logError('InviteTracker', `Error sending message to welcome channel: ${error}`);
+    }
+    
     // Log the join and store the invite data
     logInfo('InviteTracker', `Member ${member.user.tag} joined using invite from ${inviter}`);
     storeInviteData(guild.id, member.id, inviteCode, inviter, inviterId);
@@ -611,6 +664,41 @@ async function trackMemberLeave(member: GuildMember): Promise<void> {
       logError('InviteTracker', `Error sending leave message to member logs: ${error}`);
     }
     
+    // Also send to goodbye channel if configured
+    try {
+      // Try to get the goodbye channel first, fall back to welcome channel
+      logInfo('InviteTracker', `Attempting to get goodbye channel for guild ${guild.id}`);
+      const goodbyeChannel = await getGoodbyeChannel(guild.id);
+      logInfo('InviteTracker', `Goodbye channel found: ${goodbyeChannel ? 'YES' : 'NO'} for guild ${guild.id}`);
+      
+      // If no goodbye channel, try welcome channel
+      const welcomeChannel = goodbyeChannel || await getWelcomeChannel(guild.id);
+      logInfo('InviteTracker', `Channel to use for goodbye message: ${welcomeChannel ? welcomeChannel.id : 'NONE'} for guild ${guild.id}`);
+      
+      if (welcomeChannel) {
+        // Create a more user-friendly goodbye embed for the goodbye channel
+        const goodbyeEmbed = new EmbedBuilder()
+          .setColor('#f04747' as ColorResolvable) // Red color for leaves
+          .setTitle('👋 Goodbye!')
+          .setThumbnail(member.user?.displayAvatarURL() || guild.iconURL())
+          .setDescription(`${member.user?.username || 'A user'} has left the server. We hope to see you again soon!`)
+          .addFields([
+            { name: 'Server', value: guild.name, inline: true },
+            { name: 'Member Count', value: `${guild.memberCount} members`, inline: true }
+          ])
+          .setFooter({ text: `ID: ${member.id}` })
+          .setTimestamp();
+        
+        logInfo('InviteTracker', `Attempting to send goodbye message to channel ${welcomeChannel.id}`);
+        await welcomeChannel.send({ embeds: [goodbyeEmbed] });
+        logInfo('InviteTracker', `Successfully sent goodbye message to channel for ${member.user?.tag || 'Unknown User'}`);
+      } else {
+        logInfo('InviteTracker', `No goodbye or welcome channel found for guild ${guild.id}, skipping goodbye message`);
+      }
+    } catch (error) {
+      logError('InviteTracker', `Error sending message to goodbye channel: ${error}`);
+    }
+    
     // Remove member from the join timestamps map
     memberJoinTimestamps.get(guild.id)?.delete(member.id);
     
@@ -647,7 +735,118 @@ function formatTimeSpent(ms: number): string {
  * @returns The welcome channel, or undefined if not found
  */
 async function getWelcomeChannel(guildId: string): Promise<TextChannel | undefined> {
+try {
+// Import settings manager dynamically
+const { settingsManager } = await import('../../utils/settings');
+const serverSettings = await settingsManager.getSettings(guildId);
+  
+// First check if there's a direct welcome_channel_id in server settings
+if (serverSettings && serverSettings.welcome_channel_id) {
+// Import client utils dynamically
+const { getClient } = await import('../../utils/client-utils');
+const client = getClient();
+  
+if (!client) {
+logError('InviteTracker', 'Discord client is not initialized');
+return undefined;
+}
+  
+try {
+const guild = await client.guilds.fetch(guildId);
+const channel = await guild.channels.fetch(serverSettings.welcome_channel_id);
+  
+if (channel && channel.isTextBased()) {
+logInfo('InviteTracker', `Using welcome channel ${channel.name} for member joins`);
+return channel as TextChannel;
+}
+} catch (error) {
+logError('InviteTracker', `Error fetching welcome channel: ${error}`);
+}
+}
+  
+// Fallback to member_events_config if direct channel ID not found or invalid
+// Check if server_settings has member_events_config column
+const hasColumn = db.prepare("PRAGMA table_info(server_settings)").all()
+.some((col: any) => col.name === 'member_events_config');
+  
+if (!hasColumn) {
+return undefined;
+}
+  
+// Get from database
+const stmt = db.prepare(`SELECT member_events_config FROM server_settings WHERE guild_id = ?`);
+const result = stmt.get(guildId) as { member_events_config: string } | undefined;
+  
+// Get welcome channel from member_events_config
+if (result && result.member_events_config) {
+try {
+const config = JSON.parse(result.member_events_config);
+if (config.welcome_channel_id) {
+// Import client utils dynamically
+const { getClient } = await import('../../utils/client-utils');
+const client = getClient();
+  
+if (!client) {
+logError('InviteTracker', 'Discord client is not initialized');
+return undefined;
+}
+  
+const guild = await client.guilds.fetch(guildId);
+const channel = await guild.channels.fetch(config.welcome_channel_id);
+  
+if (channel && channel.isTextBased()) {
+logInfo('InviteTracker', `Using welcome channel from member_events_config: ${channel.name}`);
+return channel as TextChannel;
+}
+}
+} catch (parseError) {
+logError('InviteTracker', `Error parsing member event configuration: ${parseError}`);
+}
+}
+  
+return undefined;
+} catch (error) {
+logError('InviteTracker', `Error getting welcome channel: ${error}`);
+return undefined;
+}
+}
+
+/**
+ * Get the goodbye channel for a guild
+ * @param guildId The guild ID
+ * @returns The goodbye channel, or undefined if not found
+ */
+async function getGoodbyeChannel(guildId: string): Promise<TextChannel | undefined> {
   try {
+    // Import settings manager dynamically
+    const { settingsManager } = await import('../../utils/settings');
+    const serverSettings = await settingsManager.getSettings(guildId);
+    
+    // First check if there's a direct goodbye_channel_id in server settings
+    if (serverSettings && serverSettings.goodbye_channel_id) {
+      // Import client utils dynamically
+      const { getClient } = await import('../../utils/client-utils');
+      const client = getClient();
+      
+      if (!client) {
+        logError('InviteTracker', 'Discord client is not initialized');
+        return undefined;
+      }
+      
+      try {
+        const guild = await client.guilds.fetch(guildId);
+        const channel = await guild.channels.fetch(serverSettings.goodbye_channel_id);
+        
+        if (channel && channel.isTextBased()) {
+          logInfo('InviteTracker', `Using goodbye channel ${channel.name} for member leaves`);
+          return channel as TextChannel;
+        }
+      } catch (error) {
+        logError('InviteTracker', `Error fetching goodbye channel: ${error}`);
+      }
+    }
+    
+    // Fallback to member_events_config if direct channel ID not found or invalid
     // Check if server_settings has member_events_config column
     const hasColumn = db.prepare("PRAGMA table_info(server_settings)").all()
       .some((col: any) => col.name === 'member_events_config');
@@ -660,11 +859,11 @@ async function getWelcomeChannel(guildId: string): Promise<TextChannel | undefin
     const stmt = db.prepare(`SELECT member_events_config FROM server_settings WHERE guild_id = ?`);
     const result = stmt.get(guildId) as { member_events_config: string } | undefined;
     
-    // Get welcome channel from member_events_config
+    // Get goodbye channel from member_events_config
     if (result && result.member_events_config) {
       try {
         const config = JSON.parse(result.member_events_config);
-        if (config.welcome_channel_id) {
+        if (config.goodbye_channel_id) {
           // Import client utils dynamically
           const { getClient } = await import('../../utils/client-utils');
           const client = getClient();
@@ -675,10 +874,10 @@ async function getWelcomeChannel(guildId: string): Promise<TextChannel | undefin
           }
           
           const guild = await client.guilds.fetch(guildId);
-          const channel = await guild.channels.fetch(config.welcome_channel_id);
+          const channel = await guild.channels.fetch(config.goodbye_channel_id);
           
           if (channel && channel.isTextBased()) {
-            logInfo('InviteTracker', `Using welcome channel ${channel.name} for member joins`);
+            logInfo('InviteTracker', `Using goodbye channel from member_events_config: ${channel.name}`);
             return channel as TextChannel;
           }
         }
@@ -689,10 +888,12 @@ async function getWelcomeChannel(guildId: string): Promise<TextChannel | undefin
     
     return undefined;
   } catch (error) {
-    logError('InviteTracker', `Error getting welcome channel: ${error}`);
+    logError('InviteTracker', `Error getting goodbye channel: ${error}`);
     return undefined;
   }
 }
+
+// We're using the ServerSettings interface imported from settings.ts
 
 /**
  * Get the member logs channel for a guild
@@ -1013,5 +1214,173 @@ export async function sendInviteTrackingExamples(guildId: string): Promise<void>
     logInfo('InviteTracker', `Sent invite tracking examples to member logs channel in ${memberLogsChannel.guild.name}`);
   } catch (error) {
     logError('InviteTracker', `Error sending invite tracking examples: ${error}`);
+  }
+}
+
+/**
+ * Create custom invite join message in channel
+ */
+export async function createCustomInviteJoinMessage(
+  channelId: string, 
+  guildId: string, 
+  settings: any, 
+  customMessage: {
+    title: string;
+    description: string;
+    color: string;
+    fields?: Array<{
+      name: string;
+      value: string;
+      inline?: boolean;
+    }>;
+  }
+): Promise<string | null> {
+  try {
+    logInfo('InviteTracker', `Creating custom invite join message with ${customMessage.fields?.length || 0} custom fields`);
+    
+    // Log the custom fields for debugging
+    if (customMessage.fields && customMessage.fields.length > 0) {
+      logInfo('InviteTracker', 'Custom invite join fields received:');
+      customMessage.fields.forEach((field, index) => {
+        logInfo('InviteTracker', `Field ${index + 1}: "${field.name}" = "${field.value}"`);
+      });
+    }
+    
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('InviteTracker', 'Discord client not available');
+      return null;
+    }
+    
+    const channel = await client.channels.fetch(channelId);
+    if (!channel?.isTextBased() || !('send' in channel)) {
+      logError('InviteTracker', 'Invalid channel or channel is not text-based');
+      return null;
+    }
+    
+    // Parse color if it's a hex string
+    let color: number;
+    if (customMessage.color.startsWith('#')) {
+      color = parseInt(customMessage.color.substring(1), 16);
+    } else {
+      color = parseInt(customMessage.color, 16);
+    }
+    
+    // Use custom fields if provided, otherwise use defaults
+    const fields = customMessage.fields || [
+      { name: '🔹 Invitation Info', value: 'Invited by: {inviter}' },
+      { name: '🔹 Server Stats', value: 'Total Members: {totalMembers}' },
+      { name: '🔹 Account Info', value: 'Account Age: {accountAge}' }
+    ];
+    
+    // Add spacing between fields for better readability
+    const formattedFields = fields.map((field, index) => ({
+      name: field.name,
+      value: field.value,
+      inline: field.inline || false
+    }));
+    
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(customMessage.title)
+      .setDescription(customMessage.description)
+      .addFields(formattedFields)
+      .setFooter({ text: 'Made by Soggra • Invite Tracking System' })
+      .setTimestamp();
+    
+    const message = await channel.send({ embeds: [embed] });
+    
+    logInfo('InviteTracker', `Custom invite join message created successfully: ${message.id}`);
+    return message.id;
+    
+  } catch (error) {
+    logError('InviteTracker', `Error creating custom invite join message: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * Create custom invite leave message in channel
+ */
+export async function createCustomInviteLeaveMessage(
+  channelId: string, 
+  guildId: string, 
+  settings: any, 
+  customMessage: {
+    title: string;
+    description: string;
+    color: string;
+    fields?: Array<{
+      name: string;
+      value: string;
+      inline?: boolean;
+    }>;
+  }
+): Promise<string | null> {
+  try {
+    logInfo('InviteTracker', `Creating custom invite leave message with ${customMessage.fields?.length || 0} custom fields`);
+    
+    // Log the custom fields for debugging
+    if (customMessage.fields && customMessage.fields.length > 0) {
+      logInfo('InviteTracker', 'Custom invite leave fields received:');
+      customMessage.fields.forEach((field, index) => {
+        logInfo('InviteTracker', `Field ${index + 1}: "${field.name}" = "${field.value}"`);
+      });
+    }
+    
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('InviteTracker', 'Discord client not available');
+      return null;
+    }
+    
+    const channel = await client.channels.fetch(channelId);
+    if (!channel?.isTextBased() || !('send' in channel)) {
+      logError('InviteTracker', 'Invalid channel or channel is not text-based');
+      return null;
+    }
+    
+    // Parse color if it's a hex string
+    let color: number;
+    if (customMessage.color.startsWith('#')) {
+      color = parseInt(customMessage.color.substring(1), 16);
+    } else {
+      color = parseInt(customMessage.color, 16);
+    }
+    
+    // Use custom fields if provided, otherwise use defaults
+    const fields = customMessage.fields || [
+      { name: '🔹 Time in Server', value: 'Was here for: {timeInServer}' },
+      { name: '🔹 Originally Invited By', value: 'Invited by: {inviter}' },
+      { name: '🔹 Invite Stats', value: 'Fake Invites: {isFakeInvite}' }
+    ];
+    
+    // Add spacing between fields for better readability
+    const formattedFields = fields.map((field, index) => ({
+      name: field.name,
+      value: field.value,
+      inline: field.inline || false
+    }));
+    
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(customMessage.title)
+      .setDescription(customMessage.description)
+      .addFields(formattedFields)
+      .setFooter({ text: 'Made by Soggra • Invite Tracking System' })
+      .setTimestamp();
+    
+    const message = await channel.send({ embeds: [embed] });
+    
+    logInfo('InviteTracker', `Custom invite leave message created successfully: ${message.id}`);
+    return message.id;
+    
+  } catch (error) {
+    logError('InviteTracker', `Error creating custom invite leave message: ${error}`);
+    return null;
   }
 }

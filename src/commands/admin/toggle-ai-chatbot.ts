@@ -1,7 +1,8 @@
 import { 
   SlashCommandBuilder, 
   ChatInputCommandInteraction, 
-  PermissionFlagsBits 
+  PermissionFlagsBits,
+  MessageFlags
 } from 'discord.js';
 import { createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
@@ -20,7 +21,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
     // Log command usage
     await logCommandUsage({

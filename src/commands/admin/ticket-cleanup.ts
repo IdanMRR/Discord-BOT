@@ -3,7 +3,8 @@ import {
   ChatInputCommandInteraction, 
   PermissionFlagsBits,
   EmbedBuilder,
-  Colors
+  Colors,
+  MessageFlags
 } from 'discord.js';
 import { db } from '../../database/sqlite';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
@@ -25,14 +26,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let isReplySent = false;
   
   try {
-    // Try to defer the reply
-    try {
-      await interaction.deferReply({ ephemeral: true });
-      isReplySent = true;
-    } catch (deferError) {
-      logError('Ticket Cleanup', `Failed to defer reply: ${deferError}`);
-      // Don't return, try to continue with the operation even if we can't respond
-    }
+    // Defer the reply as ephemeral since this might take a while
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    isReplySent = true;
     
     // Log command usage
     try {

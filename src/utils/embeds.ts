@@ -1,4 +1,5 @@
 import { EmbedBuilder, User, ColorResolvable } from 'discord.js';
+import { formatIsraeliTime, formatIsraeliDateForTranscript } from './time-formatter';
 
 /**
  * Professional color palette for different types of embeds
@@ -53,9 +54,8 @@ export function createEmbed(options: {
   if (options.footer) {
     embed.setFooter({ text: options.footer + ' • Made by Soggra.' });
   } else {
-    // Default footer with branding
-    const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // Default footer with branding using Israeli timezone
+    const timeString = formatIsraeliTime();
     embed.setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
   }
   
@@ -95,15 +95,17 @@ export function createModerationEmbed(options: {
   const actionEmoji = getActionEmoji(options.action);
   const caseNum = options.caseNumber ? options.caseNumber.toString().padStart(4, '0') : null;
   
-  // Get current time using the user's timezone - Israel
-  const now = new Date();
-  // Format date like "5/5/2025, 9:20:03 AM" using local time
-  const formattedDate = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}, ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+  // Get current time using Israeli timezone
+  const timeString = formatIsraeliTime();
+  
+  // Format date like "5/5/2025, 9:20:03 AM" using Israeli time
+  const formattedDate = formatIsraeliDateForTranscript();
   
   // For other date formatting (e.g., in warning removal history)
+  const israeliTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const longFormattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} at ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const longFormattedDate = `${days[israeliTime.getDay()]}, ${israeliTime.getDate()} ${months[israeliTime.getMonth()]} ${israeliTime.getFullYear()} at ${timeString}`;
   
   const embed = new EmbedBuilder()
     .setColor(options.color || Colors.MODERATION)
@@ -113,8 +115,7 @@ export function createModerationEmbed(options: {
     .addFields([{ name: 'Reason:', value: options.reason }])
     .addFields([{ name: 'This action was taken on', value: formattedDate }]);
   
-  // Format the footer with the current time
-  const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+  // Format the footer with the current time - using the already declared timeString variable
   embed.setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
   
   // Add user and moderator information sections exactly as requested
@@ -157,9 +158,10 @@ export function createModerationEmbed(options: {
     const caseNumFormatted = options.caseNumber.toString().padStart(4, '0');
     
     // Add server, warning count, and case number in a row as shown in the screenshot
+    const warningCount = options.additionalFields?.find(field => field.name === '⚠️ Active Warnings')?.value || '0';
     embed.addFields([
-      { name: '🏠 Server', value: 'Coding API', inline: true },
-      { name: '⚠️ Warning Count', value: '1', inline: true },
+      { name: '🏠 Server', value: options.additionalFields?.find(field => field.name === '🏠 Server')?.value || 'Coding API', inline: true },
+      { name: '⚠️ Warning Count', value: warningCount, inline: true },
       { name: '📋 Case Number', value: `#${caseNumFormatted}`, inline: true }
     ]);
   }

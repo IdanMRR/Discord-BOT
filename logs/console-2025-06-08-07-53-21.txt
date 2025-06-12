@@ -1,0 +1,314 @@
+[2025-06-08T04:53:21.155Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-08-07-53-21.txt
+[2025-06-08T04:53:21.170Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-08T04:53:21.170Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-08T04:53:21.172Z] [LOG] Registering auth router at /auth
+[2025-06-08T04:53:21.172Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-08T04:53:21.172Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-08T04:53:21.172Z] [LOG] Registering servers router at /api/servers
+[2025-06-08T04:53:21.176Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-08T04:53:21.176Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-08T04:53:21.180Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-08T04:53:21.186Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-08T04:53:21.338Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: command-logs
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-08T04:53:21.339Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: force-log
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-08T04:53:21.339Z] [LOG] Successfully loaded command: logs
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: nuke
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: server-setup
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: test-events
+[2025-06-08T04:53:21.340Z] [LOG] Successfully loaded command: test-logs
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: test-verification
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: verify
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: ban
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: dm
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: kick
+[2025-06-08T04:53:21.341Z] [LOG] Successfully loaded command: removewarn
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: timeout
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: warn
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: warnings
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: chatbot
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: help
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: invite
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: invites
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: language
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-08T04:53:21.342Z] [LOG] Successfully loaded command: weather
+[2025-06-08T04:53:21.343Z] [LOG] Connected to database
+[2025-06-08T04:53:21.343Z] [LOG] Loaded 59 commands in total
+[2025-06-08T04:53:21.344Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-08T04:53:21.344Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-08T04:53:21.345Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-08T04:53:21.346Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-08T04:53:21.347Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-08T04:53:21.348Z] [LOG] [Command Initializer] Successfully loaded 59 commands from files
+[2025-06-08T04:53:21.348Z] [LOG] [Command Initializer] Registered 59 commands to client
+[2025-06-08T04:53:21.348Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-08T04:53:21.348Z] [LOG] [Command Register] Starting registration of 59 commands...
+[2025-06-08T04:53:21.348Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-08T04:53:21.349Z] [LOG] Ticket categories migration completed successfully
+[2025-06-08T04:53:21.349Z] [LOG] add-ticket-categories migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-custom-cities migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-weather-schedule migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] add-log-channels migration loaded
+[2025-06-08T04:53:21.349Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-08T04:53:21.350Z] [LOG] ensure-log-channels migration loaded
+[2025-06-08T04:53:21.362Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by Anonymous User on dashboard
+[2025-06-08T04:53:21.363Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by anonymous on dashboard
+[2025-06-08T04:53:21.620Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-08T04:53:21.621Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-08T04:53:21.621Z] [LOG] Deduplication: 59 commands reduced to 59 unique commands
+[2025-06-08T04:53:21.622Z] [LOG] Registering 59 commands globally for all servers...
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-08T04:53:22.129Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-08T04:53:22.131Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-08T04:53:22.132Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-08T04:53:22.132Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-08T04:53:22.132Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-08T04:53:22.132Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-08T04:53:22.132Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-08T04:53:22.132Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-08T04:53:22.132Z] [LOG] Processing command folder: admin
+[2025-06-08T04:53:22.132Z] [LOG] Found 39 command files in admin
+[2025-06-08T04:53:22.133Z] [LOG] Processing command folder: general
+[2025-06-08T04:53:22.133Z] [LOG] Found 1 command files in general
+[2025-06-08T04:53:22.133Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-08T04:53:22.133Z] [LOG] Processing command folder: moderation
+[2025-06-08T04:53:22.133Z] [LOG] Found 12 command files in moderation
+[2025-06-08T04:53:22.133Z] [LOG] Processing command folder: utility
+[2025-06-08T04:53:22.134Z] [LOG] Found 7 command files in utility
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: command-logs
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: force-log
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-08T04:53:22.135Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: logs
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: nuke
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: server-setup
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-08T04:53:22.136Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: test-events
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: test-logs
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: test-verification
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-08T04:53:22.137Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: verify
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: ban
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: dm
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: kick
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: removewarn
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: timeout
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: warn
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: warnings
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: chatbot
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: help
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: invite
+[2025-06-08T04:53:22.138Z] [LOG] Successfully loaded command: invites
+[2025-06-08T04:53:22.139Z] [LOG] Successfully loaded command: language
+[2025-06-08T04:53:22.139Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-08T04:53:22.139Z] [LOG] Successfully loaded command: weather
+[2025-06-08T04:53:22.139Z] [LOG] Loaded 59 commands in total
+[2025-06-08T04:53:22.139Z] [LOG] [Command Initializer] Successfully loaded 59 commands from files
+[2025-06-08T04:53:22.139Z] [LOG] [Command Initializer] Registered 59 commands to client
+[2025-06-08T04:53:22.139Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-08T04:53:22.140Z] [LOG] [Command Register] Starting registration of 59 commands...
+[2025-06-08T04:53:22.140Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-08T04:53:38.173Z] [LOG] [INFO][API] Returning 20 activity items after filtering
+[2025-06-08T04:53:43.757Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by Anonymous User on dashboard
+[2025-06-08T04:53:43.758Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by anonymous on dashboard
+[2025-06-08T04:53:51.637Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-08T04:53:51.638Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-08T04:53:51.638Z] [LOG] Command registration complete.
+[2025-06-08T04:53:51.638Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-08T04:53:51.638Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-08T04:53:51.638Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-08T04:54:21.978Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-08T04:54:21.978Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-08T04:54:21.979Z] [LOG] Deduplication: 59 commands reduced to 59 unique commands
+[2025-06-08T04:54:21.980Z] [LOG] Registering 59 commands globally for all servers...
+[2025-06-08T04:54:51.996Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-08T04:54:51.996Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-08T04:54:51.996Z] [LOG] Command registration complete.
+[2025-06-08T04:54:51.997Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-08T04:54:51.997Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-08T04:54:51.997Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-08T04:54:58.088Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:54:58.090Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:54:58.110Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-08T04:54:58.111Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-08T04:54:58.111Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-08T04:54:58.112Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-08T04:54:58.113Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-08T04:54:58.113Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-08T04:54:58.145Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-08T04:54:58.145Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-08T04:54:58.146Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-08T04:54:58.147Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-08T04:54:58.147Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-08T04:54:58.147Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-08T04:54:58.148Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-08T04:54:58.149Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-08T04:54:58.154Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.154Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.154Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-08T04:54:58.155Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.156Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-08T04:54:58.156Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:54:58.161Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.161Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.162Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-08T04:54:58.163Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.163Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-08T04:54:58.169Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.169Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.169Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-08T04:54:58.170Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.174Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.175Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.175Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-08T04:54:58.176Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-08T04:54:58.176Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-08T04:54:58.176Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-08T04:54:58.177Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-08T04:54:58.177Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-08T04:54:58.183Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.183Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.183Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-08T04:54:58.184Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.184Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-08T04:54:58.184Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:54:58.189Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.189Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.190Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-08T04:54:58.190Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.190Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-08T04:54:58.195Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.196Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.196Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-08T04:54:58.197Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.203Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-08T04:54:58.203Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-08T04:54:58.205Z] [LOG] [WebSocket] 1 total connections (latest: gTzO19P5LaseasZlAAAC)
+[2025-06-08T04:54:58.206Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-08T04:54:58.206Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.211Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.211Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:54:58.211Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-08T04:54:58.212Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-08T04:54:58.217Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:54:58.217Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:55:00.659Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:55:00.659Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:55:00.666Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:55:00.667Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:55:04.963Z] [LOG] [INFO][API] Using first available guild for warnings: 1365777891333374022
+[2025-06-08T04:55:04.966Z] [LOG] [INFO][API] Using first available guild for warnings: 1365777891333374022
+[2025-06-08T04:55:05.334Z] [LOG] [INFO][API] Using default guild for tickets: 1365777891333374022
+[2025-06-08T04:55:05.336Z] [LOG] [INFO][API] Using default guild for tickets: 1365777891333374022
+[2025-06-08T04:55:06.276Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:55:06.276Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":1}
+[2025-06-08T04:55:06.276Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:55:06.276Z] [LOG] [INFO][API] Found 1 guilds in Discord client cache
+[2025-06-08T04:55:06.569Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:55:06.569Z] [LOG] [INFO][API] Successfully fetched 1 servers from Discord
+[2025-06-08T04:55:06.569Z] [LOG] [INFO][API] === getAllServers completed in 293ms with 1 servers ===
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":1}
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] Found 1 guilds in Discord client cache
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] Successfully fetched 1 servers from Discord
+[2025-06-08T04:55:06.571Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 1 servers ===
+[2025-06-08T04:55:08.120Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:55:08.120Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:55:08.127Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:55:08.127Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard

@@ -24,7 +24,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!guildId) {
       await interaction.reply({ 
         content: 'This command can only be used in a server.', 
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral 
       });
       return;
     }
@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!interaction.guild) {
       await interaction.reply({ 
         content: 'This command can only be used in a server.', 
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral 
       });
       return;
     }
@@ -44,13 +44,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!settings || !settings.enabled) {
       await interaction.reply({ 
         content: 'Verification is not enabled on this server.', 
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral 
       });
       return;
     }
     
     // Defer the reply as ephemeral
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
     // Fetch the member
     const member = interaction.member as GuildMember;
@@ -116,7 +116,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       } else {
         await interaction.reply({ 
           content: 'An error occurred during verification. Please try again later or contact a server administrator.', 
-          ephemeral: true 
+          flags: MessageFlags.Ephemeral 
         });
       }
     } catch (replyError) {

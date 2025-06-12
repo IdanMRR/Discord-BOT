@@ -1,6 +1,7 @@
 import { Collection } from 'discord.js';
-import { ServerSettingsService } from '../database/services/sqliteService';
+import { ServerSettingsService } from '../database/services/serverSettingsService';
 import { logInfo, logError } from './logger';
+import { db } from '../database/sqlite';
 
 // Interface for our settings format
 export interface ServerSettings {
@@ -36,6 +37,7 @@ export interface ServerSettings {
   prefix?: string;
   leave_message?: string;
   leave_channel_id?: string;
+  goodbye_channel_id?: string;
   member_count_channel_id?: string;
   logs_channel_id?: string;
   starboard_channel_id?: string;
@@ -69,9 +71,11 @@ const DEFAULT_SETTINGS: Partial<ServerSettings> = {
 // Settings manager that uses SQLite for persistent storage
 class SettingsManager {
   private cache: Collection<string, ServerSettings>;
+  private db: typeof db;
 
   constructor() {
     this.cache = new Collection<string, ServerSettings>();
+    this.db = db;
   }
 
   /**
@@ -153,21 +157,30 @@ class SettingsManager {
    */
   public async updateSettings(guildId: string, settings: ServerSettings): Promise<boolean> {
     try {
-      // Prepare settings for database (stringify objects)
+      // Use getOrCreate to ensure a record exists with proper defaults
+      const existingSettings = await ServerSettingsService.getOrCreate(guildId, settings.guild_id || 'Unknown Server');
+      
+      if (!existingSettings) {
+        logError('Settings', `Failed to create or get server settings record for guild ${guildId}`);
+        return false;
+      }
+      
+      // Prepare settings for database (stringify objects and handle field mapping)
       const dbSettings = this.prepareSettingsForDb(settings);
       
-      // Update the database
+      // Update the database with the prepared settings
       const success = await ServerSettingsService.updateSettings(guildId, dbSettings);
       
       if (success) {
         // Update the cache
         this.cache.set(guildId, settings);
         
-        logInfo('Settings', `Updated settings for guild ${guildId}`);
+        logInfo('Settings', `Updated settings for guild ${guildId}. Fields updated: ${Object.keys(dbSettings).join(', ')}`);
         return true;
+      } else {
+        logError('Settings', `Failed to update settings in database for guild ${guildId}`);
+        return false;
       }
-      
-      return false;
     } catch (error) {
       logError('Settings', `Error updating settings for guild ${guildId}: ${error}`);
       return false;
@@ -196,9 +209,12 @@ class SettingsManager {
       // Create a partial settings object for the update
       const update: Partial<ServerSettings> = {};
       
-      // Set the value with the correct type handling
-      if (typeof value === 'object' && value !== null) {
-        // For complex objects, we need to JSON stringify
+      // Handle different value types properly for database storage
+      if (typeof value === 'boolean') {
+        // Convert boolean to integer for SQLite storage
+        (update as any)[key] = value ? 1 : 0;
+      } else if (typeof value === 'object' && value !== null) {
+        // For complex objects, JSON stringify
         (update as any)[key] = JSON.stringify(value);
       } else {
         // For simple types, use directly

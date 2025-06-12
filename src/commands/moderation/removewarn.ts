@@ -1,7 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
-import { createSuccessEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
-import { WarningService } from '../../database/services/sqliteService';
+import { logModerationToDatabase } from '../../utils/databaseLogger';
+import { createModerationEmbed, createErrorEmbed, createInfoEmbed, createSuccessEmbed } from '../../utils/embeds';
+import { WarningService, ModerationCaseService } from '../../database/services/sqliteService';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -71,14 +72,32 @@ module.exports = {
         // Get the reason from the modal
         const reason = modalSubmission.fields.getTextInputValue('removewarn-reason');
         
-        // Defer the reply to the modal submission
-        await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+        // Defer the reply to the modal submission with proper error handling
+        try {
+          if (!modalSubmission.replied && !modalSubmission.deferred) {
+            await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+          }
+        } catch (deferError: any) {
+          // Handle interaction expiry or other errors
+          if (deferError.code === 10062 || deferError.code === 10008) {
+            console.log('[Remove Warning] Modal interaction expired before we could defer');
+            return; // Exit early if interaction expired
+          }
+          console.error('[Remove Warning] Error deferring modal reply:', deferError);
+          return;
+        }
         
         // Find active warnings for this user
         const activeWarnings = await WarningService.getActiveWarnings(guild.id, targetUser.id);
         
         if (activeWarnings.length === 0) {
-          await modalSubmission.editReply({ content: `${targetUser.tag} has no active warnings to remove.` });
+          try {
+            await modalSubmission.editReply({ content: `${targetUser.tag} has no active warnings to remove.` });
+          } catch (editError: any) {
+            if (editError.code === 10062 || editError.code === 10008) {
+              console.log('[Remove Warning] Modal interaction expired during no warnings message');
+            }
+          }
           return;
         }
         
@@ -87,9 +106,25 @@ module.exports = {
         
         // Update the warning in the database
         if (!warningToRemove.id) {
-          await modalSubmission.editReply({ content: `Error: Could not find warning ID.` });
+          try {
+            await modalSubmission.editReply({ content: `Error: Could not find warning ID.` });
+          } catch (editError: any) {
+            if (editError.code === 10062 || editError.code === 10008) {
+              console.log('[Remove Warning] Modal interaction expired during error message');
+            }
+          }
           return;
         }
+
+        // Create moderation case for warning removal
+        const moderationCase = await ModerationCaseService.create({
+          guild_id: guild.id,
+          action_type: 'Warning Removal',
+          user_id: targetUser.id,
+          moderator_id: interaction.user.id,
+          reason: reason,
+          additional_info: `Warning removed from user in ${guild.name}. Original warning case: #${warningToRemove.case_number || 'Unknown'}`
+        });
         
         await WarningService.removeWarning(
           warningToRemove.id, 
@@ -113,14 +148,30 @@ module.exports = {
         );
         
         // Add additional fields to the embed
-        successEmbed.addFields([
+        const embedFields = [
           { name: '👤 User', value: `${targetUser.tag} (${targetUser.id})`, inline: true },
           { name: '🛡️ Moderator', value: `${interaction.user.tag}`, inline: true },
           { name: '⚠️ Remaining Warnings', value: `${remainingActiveWarnings}`, inline: true },
           { name: '🕒 Time', value: formattedTime, inline: false }
-        ]);
+        ];
+
+        // Add case number if moderation case was created
+        if (moderationCase) {
+          embedFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
+        }
+
+        successEmbed.addFields(embedFields);
         
-        await modalSubmission.editReply({ embeds: [successEmbed] });
+        try {
+          await modalSubmission.editReply({ embeds: [successEmbed] });
+        } catch (editError: any) {
+          if (editError.code === 10062 || editError.code === 10008) {
+            console.log('[Remove Warning] Modal interaction expired during success message');
+            return; // Exit if interaction expired
+          }
+          console.error('[Remove Warning] Error editing reply:', editError);
+          return;
+        }
         
         // Try to DM the user about the removed warning
         try {
@@ -129,11 +180,18 @@ module.exports = {
             `A warning has been removed from your account in **${guild.name}**.\n\n**Reason:** ${reason}`
           );
           
-          userEmbed.addFields([
+          const userEmbedFields = [
             { name: '🛡️ Moderator', value: `${interaction.user.tag}`, inline: true },
             { name: '⚠️ Remaining Warnings', value: `${remainingActiveWarnings}`, inline: true },
             { name: '🕒 Time', value: formattedTime, inline: true }
-          ]);
+          ];
+
+          // Add case number if available
+          if (moderationCase) {
+            userEmbedFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
+          }
+
+          userEmbed.addFields(userEmbedFields);
           
           await targetUser.send({ embeds: [userEmbed] });
           console.log(`Successfully sent warning removal DM to ${targetUser.tag}`);
@@ -149,6 +207,7 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
+          caseNumber: moderationCase?.case_number,
           additionalInfo: `Warning removed from user in ${guild.name}`
         });
         
@@ -157,6 +216,16 @@ module.exports = {
           const logInfoEmbed = createInfoEmbed('Logging Information', logResult.message);
           await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
         }
+        
+        // Log the moderation action to the database
+        await logModerationToDatabase({
+          guild: guild,
+          action: 'Warning Removed',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          additionalInfo: `Warning Removal Case #${moderationCase?.case_number || 'Unknown'} - Warning removed from user in ${guild.name}`
+        });
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {

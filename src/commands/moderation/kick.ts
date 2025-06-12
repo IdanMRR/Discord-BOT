@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
+import { logModerationToDatabase } from '../../utils/databaseLogger';
+import { ModerationCaseService } from '../../database/services/sqliteService';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -87,6 +89,23 @@ module.exports = {
         // Defer the reply to the modal submission
         await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
       
+        // Create moderation case first
+        const moderationCase = await ModerationCaseService.create({
+          guild_id: guild.id,
+          action_type: 'Kick',
+          user_id: targetUser.id,
+          moderator_id: interaction.user.id,
+          reason: reason,
+          additional_info: `User was kicked from ${guild.name}`
+        });
+        
+        if (!moderationCase) {
+          await modalSubmission.editReply({ 
+            content: 'Failed to create moderation case. Please try again.'
+          });
+          return;
+        }
+
         // First try to DM the user before kicking them with a detailed message
         try {
           const kickDMEmbed = createModerationEmbed({
@@ -94,6 +113,7 @@ module.exports = {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
+            caseNumber: moderationCase.case_number,
             additionalFields: [
               { name: '🏠 Server', value: guild.name, inline: true },
               { name: '🔗 Rejoin Information', value: 'You may be able to rejoin the server with a new invite link.' }
@@ -120,6 +140,7 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
+          caseNumber: moderationCase.case_number,
           additionalFields: [
             { name: '🕒 Action Time', value: new Date().toLocaleString(), inline: true },
             { name: '🏠 Server', value: guild.name, inline: true }
@@ -135,6 +156,7 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
+          caseNumber: moderationCase.case_number,
           additionalInfo: `User was kicked from ${guild.name}`
         });
         
@@ -144,16 +166,26 @@ module.exports = {
           await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
         }
         
-        // We already tried to DM the user before kicking them
+        // Log to database
+        await logModerationToDatabase({
+          guild: guild,
+          action: 'Kick',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          additionalInfo: `Kick Case #${moderationCase.case_number} - User was kicked from ${guild.name}`
+        });
+        
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {
           logInfo('Kick Command', `${interaction.user.tag} started but didn't complete kicking ${targetUser.tag}`);
-        } else { logError('Kick Modal', error);
+        } else { 
+          logError('Kick Modal', error);
           await interaction.followUp({ 
             content: 'There was an error processing your kick request. Please try again.', 
             flags: MessageFlags.Ephemeral 
-           }).catch(() => {});
+          }).catch(() => {});
         }
       }
     } catch (error) {
@@ -161,5 +193,5 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to kick this user. Check my permissions and try again.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  },
+  }
 };

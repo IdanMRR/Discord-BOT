@@ -4,8 +4,14 @@ import { logInfo, logError } from '../../utils/logger';
 /**
  * Migration to create ticket_staff_activity table
  */
-(async () => {
+export async function createTicketStaffActivityTable() {
   try {
+    // Check if db is available
+    if (!db) {
+      logError('Staff Activity Migration', 'Database connection not available');
+      return false;
+    }
+
     // Check if the table exists
     const tableCheck = db.prepare(`
       SELECT name FROM sqlite_master 
@@ -31,7 +37,9 @@ import { logInfo, logError } from '../../utils/logger';
     }
     
     logInfo('Staff Activity Migration', 'Migration completed successfully');
+    return true;
   } catch (error) {
     logError('Staff Activity Migration', `Error during migration: ${error}`);
+    return false;
   }
-})(); 
+} 

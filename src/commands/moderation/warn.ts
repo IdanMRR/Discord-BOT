@@ -1,7 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed, createSuccessEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
-import { WarningService } from '../../database/services/sqliteService';
+import { WarningService, ModerationCaseService } from '../../database/services/sqliteService';
+import { logModerationToDatabase } from '../../utils/databaseLogger';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,6 +28,35 @@ module.exports = {
       }
       
       const targetUser = interaction.options.getUser('user', true);
+      
+      // Validate the target user
+      if (targetUser.id === interaction.user.id) {
+        const errorEmbed = createErrorEmbed(
+          'Invalid Target', 
+          'You cannot warn yourself.'
+        );
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
+      if (targetUser.bot) {
+        const errorEmbed = createErrorEmbed(
+          'Invalid Target', 
+          'You cannot warn bots.'
+        );
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
+      // Check if the user ID is a valid Discord snowflake (numeric string)
+      if (!/^\d+$/.test(targetUser.id) || targetUser.id === '_soill_' || targetUser.id.includes('_soill_')) {
+        const errorEmbed = createErrorEmbed(
+          'Invalid User ID', 
+          'The selected user has an invalid ID. Please select a valid user.'
+        );
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
       
       // Get the guild object
       const guild = interaction.guild;
@@ -71,22 +101,83 @@ module.exports = {
         // Get the reason from the modal
         const reason = modalSubmission.fields.getTextInputValue('warn-reason');
         
-        // Defer the reply to the modal submission
-        await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+        // Defer the reply to the modal submission with proper error handling
+        try {
+          if (!modalSubmission.replied && !modalSubmission.deferred) {
+            await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+          }
+        } catch (deferError: any) {
+          // Handle interaction expiry or other errors
+          if (deferError.code === 10062 || deferError.code === 10008) {
+            console.log('[Warn] Modal interaction expired before we could defer');
+            return; // Exit early if interaction expired
+          }
+          console.error('[Warn] Error deferring modal reply:', deferError);
+          return;
+        }
       
-        // Store the warning in the database first
+        // Create moderation case first
+        const moderationCase = await ModerationCaseService.create({
+          guild_id: guild.id,
+          action_type: 'Warning',
+          user_id: targetUser.id,
+          moderator_id: interaction.user.id,
+          reason: reason,
+          additional_info: `Warning issued to user in ${guild.name}`
+        });
+        
+        if (!moderationCase) {
+          try {
+            await modalSubmission.editReply({ 
+              content: 'Failed to create moderation case. Please try again.'
+            });
+          } catch (editError: any) {
+            if (editError.code === 10062 || editError.code === 10008) {
+              console.log('[Warn] Modal interaction expired during database error message');
+            }
+          }
+          return;
+        }
+
+        // Store the warning in the database with the case number
         const newWarning = {
           guild_id: guild.id,
           user_id: targetUser.id,
           moderator_id: interaction.user.id,
           reason: reason,
-          active: true
+          active: true,
+          case_number: moderationCase.case_number
         };
         
         const savedWarning = await WarningService.create(newWarning);
         
+        if (!savedWarning) {
+          // Warning creation failed, but we still have the moderation case
+          console.log('[Warn] Warning creation failed, but moderation case was created');
+          try {
+            await modalSubmission.editReply({ 
+              content: 'Warning moderation case created successfully, but failed to save to warnings table. The action has been logged.'
+            });
+          } catch (editError: any) {
+            if (editError.code === 10062 || editError.code === 10008) {
+              console.log('[Warn] Modal interaction expired during database error message');
+            }
+          }
+          // Continue with the rest of the process since we have the moderation case
+        }
+        
         // Count active warnings for this user
         const activeWarnings = await WarningService.countActiveWarnings(guild.id, targetUser.id);
+        
+        // Log to moderation channel with the case number
+        const logResult = await logModeration({
+          guild: guild,
+          action: 'Warning',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          caseNumber: moderationCase.case_number
+        });
         
         // Create a stylish moderation embed for the server
         const warnEmbed = createModerationEmbed({
@@ -94,13 +185,24 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-          caseNumber: savedWarning?.case_number || 0,
-          // We don't need to manually add these fields as they're now handled by the embed creator
-          additionalFields: []
+          caseNumber: moderationCase.case_number,
+          additionalFields: [
+            { name: '🏠 Server', value: guild.name, inline: true },
+            { name: '⚠️ Active Warnings', value: activeWarnings.toString(), inline: true }
+          ]
         });
         
         // Update the reply with the warning information
-        await modalSubmission.editReply({ embeds: [warnEmbed] });
+        try {
+          await modalSubmission.editReply({ embeds: [warnEmbed] });
+        } catch (editError: any) {
+          if (editError.code === 10062 || editError.code === 10008) {
+            console.log('[Warn] Modal interaction expired during success message');
+            return; // Exit if interaction expired
+          }
+          console.error('[Warn] Error editing reply:', editError);
+          return;
+        }
         
         // Try to DM the user with a detailed warning message
         try {
@@ -109,6 +211,7 @@ module.exports = {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
+            caseNumber: moderationCase.case_number,
             additionalFields: [
               { name: '🏠 Server', value: guild.name, inline: true },
               { name: '⚠️ Warning Information', value: 'This is a formal warning. Continued rule violations may result in kicks, timeouts, or bans.' }
@@ -126,30 +229,31 @@ module.exports = {
           console.log(`Could not send DM to ${targetUser.tag}: ${error}`);
         }
         
-        // Log the moderation action
-        const logResult: LogResult = await logModeration({
-          guild: guild,
-          action: 'Warning',
-          target: targetUser,
-          moderator: interaction.user,
-          reason: reason,
-          additionalInfo: `User was warned in ${guild.name}`
-        });
-        
         // If logging failed, add a note to the response
         if (!logResult.success && logResult.message) {
           const logInfoEmbed = createInfoEmbed('Logging Information', logResult.message);
           await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
         }
+        
+        // Log to database
+        await logModerationToDatabase({
+          guild: guild,
+          action: 'Warning',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+                      additionalInfo: `Warning Case #${moderationCase.case_number} - Warning issued to user in ${guild.name}`
+        });
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {
           logInfo('Warn Command', `${interaction.user.tag} started but didn't complete warning ${targetUser.tag}`);
-        } else { logError('Warn Modal', error);
+        } else {
+          logError('Warn Modal', error);
           await interaction.followUp({ 
             content: 'There was an error processing your warning. Please try again.', 
             flags: MessageFlags.Ephemeral 
-           }).catch(() => {});
+          }).catch(() => {});
         }
       }
     } catch (error) {

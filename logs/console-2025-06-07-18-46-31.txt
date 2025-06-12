@@ -1,0 +1,1509 @@
+[2025-06-07T15:46:31.765Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-07-18-46-31.txt
+[2025-06-07T15:46:32.263Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-07T15:46:32.263Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-07T15:46:32.264Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-07T15:46:32.264Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-07T15:46:32.264Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-07T15:46:32.308Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-07T15:46:32.309Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-07T15:46:32.310Z] [LOG] Registering auth router at /auth
+[2025-06-07T15:46:32.310Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-07T15:46:32.311Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-07T15:46:32.311Z] [LOG] Registering servers router at /api/servers
+[2025-06-07T15:46:32.314Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-07T15:46:32.315Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-07T15:46:32.347Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-07T15:46:32.349Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-07T15:46:32.350Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-07T15:46:32.350Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-07T15:46:32.350Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-07T15:46:32.351Z] [LOG] Connected to database
+[2025-06-07T15:46:32.351Z] [LOG] [API] Attempting to start API server on port 3001...
+[2025-06-07T15:46:32.374Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-07T15:46:32.375Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-07T15:46:32.376Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-07T15:46:32.377Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-07T15:46:32.377Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-07T15:46:32.379Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-07T15:46:32.379Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-07T15:46:32.379Z] [LOG] Ticket categories migration completed successfully
+[2025-06-07T15:46:32.379Z] [LOG] add-ticket-categories migration loaded
+[2025-06-07T15:46:32.379Z] [LOG] add-custom-cities migration loaded
+[2025-06-07T15:46:32.379Z] [LOG] add-weather-schedule migration loaded
+[2025-06-07T15:46:32.379Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-07T15:46:32.379Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-07T15:46:32.380Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-07T15:46:32.380Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-07T15:46:32.380Z] [LOG] add-log-channels migration loaded
+[2025-06-07T15:46:32.380Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-07T15:46:32.380Z] [LOG] ensure-log-channels migration loaded
+[2025-06-07T15:46:32.380Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-07T15:46:32.381Z] [LOG] Creating log_channels table...
+[2025-06-07T15:46:32.381Z] [LOG] Created log_channels table
+[2025-06-07T15:46:32.381Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-07T15:46:32.381Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-07T15:46:32.381Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-07T15:46:32.381Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-07T15:46:32.382Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-07T15:46:32.383Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-07T15:46:32.384Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-07T15:46:32.385Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-07T15:46:32.385Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-07T15:46:32.385Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-07T15:46:32.385Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-07T15:46:32.386Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-07T15:46:32.387Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-07T15:46:32.387Z] [LOG] [INFO][API] API server running successfully on port 3001
+[2025-06-07T15:46:32.387Z] [LOG] [API] API URL: http://localhost:3001
+[2025-06-07T15:46:32.387Z] [LOG] [WebSocket] WebSocket server running on ws://localhost:3001
+[2025-06-07T15:46:32.388Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-07T15:46:32.388Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-07T15:46:32.388Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-07T15:46:33.250Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-07T15:46:33.251Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-07T15:46:33.251Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-07T15:46:33.251Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-07T15:46:33.251Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-07T15:46:33.251Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-07T15:46:33.252Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-07T15:46:33.252Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-07T15:46:33.253Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-07T15:46:33.254Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-07T15:46:33.254Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-07T15:46:33.254Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-07T15:46:33.255Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-07T15:46:33.255Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-07T15:46:33.255Z] [LOG] Processing command folder: admin
+[2025-06-07T15:46:33.255Z] [LOG] Found 39 command files in admin
+[2025-06-07T15:46:33.255Z] [LOG] Processing command folder: general
+[2025-06-07T15:46:33.256Z] [LOG] Found 1 command files in general
+[2025-06-07T15:46:33.256Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-07T15:46:33.256Z] [LOG] Processing command folder: moderation
+[2025-06-07T15:46:33.256Z] [LOG] Found 12 command files in moderation
+[2025-06-07T15:46:33.256Z] [LOG] Processing command folder: utility
+[2025-06-07T15:46:33.256Z] [LOG] Found 7 command files in utility
+[2025-06-07T15:46:33.293Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-07T15:46:33.421Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: command-logs
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-07T15:46:33.422Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: force-log
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-07T15:46:33.422Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: logs
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: nuke
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: server-setup
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-07T15:46:33.423Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: test-events
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: test-logs
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: test-verification
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-07T15:46:33.424Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: verify
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: ban
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: dm
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: kick
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: removewarn
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: timeout
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: warn
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: warnings
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: chatbot
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: help
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: invite
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: invites
+[2025-06-07T15:46:33.425Z] [LOG] Successfully loaded command: language
+[2025-06-07T15:46:33.426Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-07T15:46:33.426Z] [LOG] Successfully loaded command: weather
+[2025-06-07T15:46:33.426Z] [LOG] Loaded 59 commands in total
+[2025-06-07T15:46:33.426Z] [LOG] [Command Initializer] Successfully loaded 59 commands from files
+[2025-06-07T15:46:33.426Z] [LOG] [Command Initializer] Registered 59 commands to client
+[2025-06-07T15:46:33.426Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-07T15:46:33.426Z] [LOG] [Command Register] Starting registration of 59 commands...
+[2025-06-07T15:46:33.427Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-07T15:46:33.471Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-07T15:46:33.473Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-07T15:46:33.502Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T15:46:33.502Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T15:46:33.502Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T15:46:33.504Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T15:46:33.504Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T15:46:33.504Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T15:46:33.526Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T15:46:33.527Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T15:46:33.528Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T15:46:33.528Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T15:46:33.529Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T15:46:33.529Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T15:46:33.530Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T15:46:33.530Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T15:46:33.536Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.536Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.536Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:46:33.537Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.537Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:46:33.538Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:46:33.538Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:46:33.544Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.544Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.544Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:46:33.545Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.545Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:46:33.545Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:46:33.550Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.550Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.550Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T15:46:33.551Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.556Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.556Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.557Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T15:46:33.557Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T15:46:33.558Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T15:46:33.558Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T15:46:33.558Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T15:46:33.559Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T15:46:33.564Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.564Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.565Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:46:33.565Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.565Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:46:33.566Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:46:33.566Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:46:33.571Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.571Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.571Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:46:33.572Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.572Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:46:33.572Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:46:33.578Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.578Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.579Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T15:46:33.579Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.585Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.585Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.585Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T15:46:33.586Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T15:46:33.586Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T15:46:33.586Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.591Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.591Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.592Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T15:46:33.592Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T15:46:33.597Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:33.598Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:33.695Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-07T15:46:33.696Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-07T15:46:33.696Z] [LOG] Deduplication: 59 commands reduced to 59 unique commands
+[2025-06-07T15:46:33.697Z] [LOG] Registering 59 commands globally for all servers...
+[2025-06-07T15:46:38.569Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:46:38.569Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:46:38.569Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:46:38.570Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:46:38.570Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:46:38.575Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:38.575Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:40.884Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-welcome-config Method: POST
+[2025-06-07T15:46:40.884Z] [LOG] [DASHBOARD] Resetting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:46:40.889Z] [LOG] [DASHBOARD] Reset welcome message config - affected rows: 1
+[2025-06-07T15:46:40.894Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T15:46:40.894Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T15:46:41.925Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/save-welcome-config Method: POST
+[2025-06-07T15:46:41.925Z] [LOG] [DASHBOARD] Saving custom welcome message config for guild: 1365777891333374022
+[2025-06-07T15:46:41.925Z] [LOG] [DASHBOARD] Welcome config fields received: 3 fields
+[2025-06-07T15:46:41.925Z] [LOG] [DASHBOARD] Existing server settings for guild: 1365777891333374022 : EXISTS
+[2025-06-07T15:46:41.925Z] [LOG] [DASHBOARD] Updating existing welcome config for guild: 1365777891333374022
+[2025-06-07T15:46:41.926Z] [LOG] [DASHBOARD] Welcome config data: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:46:41.929Z] [LOG] [DASHBOARD] Welcome config update result: {
+  "changes": 1,
+  "lastInsertRowid": 2253
+}
+[2025-06-07T15:46:41.930Z] [LOG] [DASHBOARD] Verification - saved welcome config: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:46:41.934Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T15:46:41.934Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T15:46:44.995Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:46:44.995Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:46:44.996Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:46:44.996Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:46:45.001Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:46:45.002Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:46:46.381Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-goodbye-config Method: POST
+[2025-06-07T15:46:46.381Z] [LOG] [DASHBOARD] Resetting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:46:46.385Z] [LOG] [DASHBOARD] Reset goodbye message config - affected rows: 1
+[2025-06-07T15:46:46.390Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T15:46:46.390Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T15:47:03.706Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-07T15:47:03.706Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-07T15:47:03.706Z] [LOG] Command registration complete.
+[2025-06-07T15:47:03.706Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-07T15:47:03.707Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-07T15:47:03.707Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-07T15:48:22.156Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-goodbye-config Method: POST
+[2025-06-07T15:48:22.156Z] [LOG] [DASHBOARD] Resetting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:48:22.161Z] [LOG] [DASHBOARD] Reset goodbye message config - affected rows: 1
+[2025-06-07T15:48:22.168Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T15:48:22.169Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T15:50:49.654Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-07T15:50:49.656Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-07T15:50:49.694Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T15:50:49.695Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T15:50:49.695Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T15:50:49.697Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T15:50:49.697Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T15:50:49.697Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T15:50:49.728Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T15:50:49.728Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T15:50:49.729Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T15:50:49.730Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T15:50:49.730Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T15:50:49.730Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T15:50:49.731Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T15:50:49.731Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T15:50:49.738Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.738Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.739Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:50:49.739Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.739Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:50:49.740Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:50:49.740Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:50:49.747Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.747Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.748Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T15:50:49.748Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T15:50:49.749Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T15:50:49.749Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T15:50:49.750Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T15:50:49.750Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T15:50:49.756Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.756Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.757Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T15:50:49.757Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.763Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.763Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.763Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T15:50:49.763Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T15:50:49.765Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:50:49.765Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.765Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:50:49.765Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:50:49.765Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:50:49.771Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.771Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.772Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:50:49.772Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.772Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:50:49.772Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:50:49.778Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.779Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.779Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T15:50:49.779Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.786Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.786Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.786Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T15:50:49.787Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.793Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.794Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.794Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:50:49.794Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.794Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:50:49.794Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:50:49.800Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.801Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.801Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T15:50:49.801Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T15:50:49.810Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:50:49.810Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:50:49.830Z] [LOG] [WebSocket] 1 total connections (latest: AxYDzivCAI6zf2FCAAAN)
+[2025-06-07T15:55:33.171Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T15:55:33.172Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T15:55:33.173Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T15:55:33.182Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T15:55:33.182Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T15:55:33.184Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T15:55:33.184Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T15:55:33.185Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T15:55:33.185Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T15:55:33.186Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T15:55:33.186Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T15:55:33.193Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:33.193Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:33.194Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:55:33.194Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:55:33.194Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:55:33.194Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:55:33.194Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:55:33.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:33.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:33.203Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T15:55:33.203Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T15:55:33.203Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T15:55:33.203Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T15:55:33.210Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:33.210Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:33.210Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T15:55:33.210Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T15:55:33.216Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:33.216Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:33.217Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T15:55:33.217Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T15:55:33.223Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:33.224Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:36.593Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T15:55:36.593Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:55:36.593Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": "{\"title\":\"👋 Welcome to {server}!\",\"description\":\"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Server Rules\",\"value\":\"Please read our rules to get started.\"},{\"name\":\"🔹 Get Roles\",\"value\":\"Visit our roles channel to get your roles.\"},{\"name\":\"🔹 Member Count\",\"value\":\"You are member #{memberCount}!\"}]}"
+}
+[2025-06-07T15:55:36.594Z] [LOG] [DASHBOARD] Parsing welcome config JSON: {"title":"👋 Welcome to {server}!","description":"Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!","color":"#43b581","fields":[{"name":"🔹 Server Rules","value":"Please read our rules to get started."},{"name":"🔹 Get Roles","value":"Visit our roles channel to get your roles."},{"name":"🔹 Member Count","value":"You are member #{memberCount}!"}]}
+[2025-06-07T15:55:36.594Z] [LOG] [DASHBOARD] Successfully parsed welcome config: {
+  "title": "👋 Welcome to {server}!",
+  "description": "Welcome {user}! We're excited to have you in our community. We hope you enjoy your stay!",
+  "color": "#43b581",
+  "fields": [
+    {
+      "name": "🔹 Server Rules",
+      "value": "Please read our rules to get started."
+    },
+    {
+      "name": "🔹 Get Roles",
+      "value": "Visit our roles channel to get your roles."
+    },
+    {
+      "name": "🔹 Member Count",
+      "value": "You are member #{memberCount}!"
+    }
+  ]
+}
+[2025-06-07T15:55:36.599Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T15:55:36.600Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T15:55:39.169Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-welcome-config Method: POST
+[2025-06-07T15:55:39.170Z] [LOG] [DASHBOARD] Resetting welcome message config for guild: 1365777891333374022
+[2025-06-07T15:55:39.174Z] [LOG] [DASHBOARD] Reset welcome message config - affected rows: 1
+[2025-06-07T15:55:39.179Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T15:55:39.180Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:05:20.084Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:05:20.084Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:05:20.084Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": null
+}
+[2025-06-07T16:05:20.084Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-07T16:05:20.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:05:20.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:05:22.147Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-goodbye-config Method: POST
+[2025-06-07T16:05:22.148Z] [LOG] [DASHBOARD] Resetting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:05:22.152Z] [LOG] [DASHBOARD] Reset goodbye message config - affected rows: 1
+[2025-06-07T16:05:22.157Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:05:22.157Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:05:22.758Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/save-goodbye-config Method: POST
+[2025-06-07T16:05:22.758Z] [LOG] [DASHBOARD] Saving goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:05:22.759Z] [LOG] [DASHBOARD] Saving goodbye config to database: {
+  "title": "👋 Goodbye {username}!",
+  "description": "{user} has left {server}. We'll miss you!",
+  "color": "#f04747",
+  "fields": [
+    {
+      "name": "📊 Member Count",
+      "value": "We now have {memberCount} members."
+    },
+    {
+      "name": "🕐 Joined On",
+      "value": "They were with us since {joinedDate}."
+    }
+  ]
+}
+[2025-06-07T16:05:22.763Z] [LOG] [DASHBOARD] Goodbye config save result: {
+  "changes": 1,
+  "lastInsertRowid": 2276
+}
+[2025-06-07T16:05:22.763Z] [LOG] [DASHBOARD] Verification - saved goodbye config: {"title":"👋 Goodbye {username}!","description":"{user} has left {server}. We'll miss you!","color":"#f04747","fields":[{"name":"📊 Member Count","value":"We now have {memberCount} members."},{"name":"🕐 Joined On","value":"They were with us since {joinedDate}."}]}
+[2025-06-07T16:05:22.763Z] [LOG] [DASHBOARD] Successfully updated goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:05:22.768Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:05:22.768Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:05:26.393Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/reset-join-config Method: POST
+[2025-06-07T16:05:26.393Z] [LOG] [DASHBOARD] Resetting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:05:26.397Z] [LOG] [DASHBOARD] Reset invite join message config - affected rows: 1
+[2025-06-07T16:05:26.402Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:05:26.402Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:05:26.795Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"📈 Member Joined via Invite\",\"description\":\"{user} joined using {inviter}'s invite!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Inviter\",\"value\":\"{inviter}\"},{\"name\":\"🔹 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"🔹 Member Count\",\"value\":\"Total members: {memberCount}\"}]}}"}
+[2025-06-07T16:05:26.796Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:05:28.719Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/reset-leave-config Method: POST
+[2025-06-07T16:05:28.720Z] [LOG] [DASHBOARD] Resetting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:05:28.724Z] [LOG] [DASHBOARD] Reset invite leave message config - affected rows: 1
+[2025-06-07T16:05:28.729Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:05:28.729Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:05:29.188Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"📈 Member Joined via Invite\",\"description\":\"{user} joined using {inviter}'s invite!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Inviter\",\"value\":\"{inviter}\"},{\"name\":\"🔹 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"🔹 Member Count\",\"value\":\"Total members: {memberCount}\"}]},\"custom_invite_leave_embed\":{\"title\":\"📉 Member Left\",\"description\":\"{user} left the server.\",\"color\":\"#e74c3c\",\"fields\":[{\"name\":\"🔹 Total Members\",\"value\":\"{memberCount}\"},{\"name\":\"🔹 Account Age\",\"value\":\"{accountAge}\"},{\"name\":\"🔹 Time in Server\",\"value\":\"{timeInServer}\"}]}}"}
+[2025-06-07T16:05:29.192Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:06:21.019Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"📈 Member Joined via Invite\",\"description\":\"{user} joined using {inviter}'s invite!\",\"color\":\"#43b581\",\"fields\":[{\"name\":\"🔹 Inviter\",\"value\":\"{inviter}\"},{\"name\":\"🔹 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"🔹 Member Count\",\"value\":\"Total members: {memberCount}\"}]},\"custom_invite_leave_embed\":{\"title\":\"📉 Member Left\",\"description\":\"{user} left the server.\",\"color\":\"#e74c3c\",\"fields\":[{\"name\":\"🔹 Total Members\",\"value\":\"{memberCount}\"},{\"name\":\"🔹 Account Age\",\"value\":\"{accountAge}\"},{\"name\":\"🔹 Time in Server\",\"value\":\"{joinDate}\"}]}}"}
+[2025-06-07T16:06:21.023Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:06:37.098Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:06:37.099Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:06:37.099Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:06:37.103Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:06:37.104Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:06:37.105Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:06:37.105Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:06:37.105Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:06:37.106Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:06:37.106Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:06:37.106Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:06:37.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:06:37.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:06:37.113Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:06:37.113Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:06:37.113Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:06:37.113Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:06:37.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:06:37.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:06:37.119Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:06:37.119Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:06:37.119Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:06:37.124Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:06:37.124Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:06:37.125Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:06:37.125Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:06:37.130Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:06:37.130Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:06:37.131Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:06:37.131Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:06:37.136Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:06:37.136Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:06:50.305Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on dashboard
+[2025-06-07T16:06:50.305Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on dashboard
+[2025-06-07T16:07:01.070Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"🎯 {username} joined via invite!\",\"description\":\"Welcome {user}! You were invited by {inviter}.\",\"color\":\"#5865f2\",\"fields\":[{\"name\":\"📨 Invited By\",\"value\":\"{inviter}\"},{\"name\":\"🔗 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"📊 Invite Uses\",\"value\":\"{inviteUses} total uses\"}]},\"custom_invite_leave_embed\":{\"title\":\"📉 Member Left\",\"description\":\"{user} left the server.\",\"color\":\"#e74c3c\",\"fields\":[{\"name\":\"🔹 Total Members\",\"value\":\"{memberCount}\"},{\"name\":\"🔹 Account Age\",\"value\":\"{accountAge}\"},{\"name\":\"🔹 Time in Server\",\"value\":\"{joinDate}\"}]}}"}
+[2025-06-07T16:07:01.074Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:07:04.800Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:07:04.800Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:07:04.801Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:07:04.801Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:07:04.806Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:04.806Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:22.019Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/test-welcome-message Method: POST
+[2025-06-07T16:07:22.020Z] [LOG] [DASHBOARD] Testing custom welcome message for guild: 1365777891333374022
+[2025-06-07T16:07:22.020Z] [LOG] [DASHBOARD] Test welcome fields received: 3 fields
+[2025-06-07T16:07:22.021Z] [LOG] [INFO][Member Events] Creating custom welcome message with 3 custom fields
+[2025-06-07T16:07:22.021Z] [LOG] [INFO][Member Events] Custom welcome fields received:
+[2025-06-07T16:07:22.021Z] [LOG] [INFO][Member Events] Field 1: "🔹 Server Rules" = "Please read our rules to get started."
+[2025-06-07T16:07:22.021Z] [LOG] [INFO][Member Events] Field 2: "🔹 Get Roles" = "Visit our roles channel to get your roles."
+[2025-06-07T16:07:22.021Z] [LOG] [INFO][Member Events] Field 3: "🔹 Member Count" = "You are member #{memberCount}!"
+[2025-06-07T16:07:22.301Z] [LOG] [INFO][Member Events] Custom welcome message created successfully: 1380941212671803432
+[2025-06-07T16:07:22.306Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:07:22.306Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:07:23.944Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:07:23.944Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:07:23.944Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:07:23.945Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:07:23.950Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:23.950Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:26.189Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/reset-welcome-config Method: POST
+[2025-06-07T16:07:26.189Z] [LOG] [DASHBOARD] Resetting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:07:26.193Z] [LOG] [DASHBOARD] Reset welcome message config - affected rows: 1
+[2025-06-07T16:07:26.198Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by soggra on server
+[2025-06-07T16:07:26.198Z] [LOG] [INFO][DashboardLogs] Logged activity: create_resource by 471204846855258123 on server
+[2025-06-07T16:07:28.792Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:07:28.792Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:07:28.793Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:07:28.793Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:07:28.798Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:28.798Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:41.076Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:07:41.077Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:07:41.077Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:07:41.081Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:07:41.081Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:07:41.082Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:07:41.083Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:07:41.083Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:07:41.083Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:07:41.083Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:07:41.083Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:07:41.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:41.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:41.090Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:07:41.090Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:07:41.097Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:41.097Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:41.098Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:07:41.098Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:07:41.099Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:07:41.099Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:07:41.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:41.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:41.106Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:07:41.106Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:07:41.107Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:07:41.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:41.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:07:41.113Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:07:41.114Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:07:41.121Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:07:41.121Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:09:24.085Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"🎯 {username} joined via invite!\",\"description\":\"Welcome {user}! You were invited by {inviter}.\",\"color\":\"#5865f2\",\"fields\":[{\"name\":\"📨 Invited By\",\"value\":\"{inviter}\"},{\"name\":\"🔗 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"📊 Invite Uses\",\"value\":\"{inviteUses} total uses\"}]},\"custom_invite_leave_embed\":{\"title\":\"📉 Member Left\",\"description\":\"{user} left the server.\",\"color\":\"#e74c3c\",\"fields\":[{\"name\":\"🔹 Total Members\",\"value\":\"{memberCount}\"},{\"name\":\"🔹 Account Age\",\"value\":\"{accountAge}\"},{\"name\":\"🔹 Time in Server\",\"value\":\"{joinDate}\"}]}}"}
+[2025-06-07T16:09:24.089Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:09:38.622Z] [LOG] [INFO][API] Updating settings for server 1365777891333374022: {"member_events_config":"{\"custom_invite_join_embed\":{\"title\":\"🎯 {username} joined via invite!\",\"description\":\"Welcome {user}! You were invited by {inviter}.\",\"color\":\"#5865f2\",\"fields\":[{\"name\":\"📨 Invited By\",\"value\":\"{inviter}\"},{\"name\":\"🔗 Invite Code\",\"value\":\"{inviteCode}\"},{\"name\":\"📊 Invite Uses\",\"value\":\"{inviteUses} total uses\"}]},\"custom_invite_leave_embed\":{\"title\":\"👋 {username} left the server\",\"description\":\"{user} has left {server}. They originally joined via {inviter}'s invite.\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📨 Originally Invited By\",\"value\":\"{inviter}\"},{\"name\":\"🔗 Invite Code Used\",\"value\":\"{inviteCode}\"},{\"name\":\"📊 Member Count\",\"value\":\"{memberCount}\"}]}}"}
+[2025-06-07T16:09:38.626Z] [LOG] [INFO][API] Successfully updated settings for server 1365777891333374022
+[2025-06-07T16:10:01.545Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:10:01.545Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:10:01.545Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:10:01.545Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:10:01.550Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:01.551Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:04.720Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:10:04.720Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:10:04.721Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:10:04.726Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:04.726Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:19.075Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:10:19.076Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:10:19.076Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:10:19.080Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:10:19.080Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:10:19.081Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:10:19.082Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:10:19.082Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:10:19.082Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:10:19.083Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:10:19.083Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:10:19.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:19.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:19.089Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:10:19.089Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:10:19.089Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:10:19.089Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:10:19.094Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:19.095Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:19.095Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:10:19.095Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:10:19.095Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:10:19.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:19.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:19.101Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:10:19.101Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:10:19.107Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:19.108Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:19.108Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:10:19.108Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:10:19.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:19.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:56.073Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:10:56.073Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:10:56.073Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:10:56.077Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:10:56.077Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:10:56.078Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:10:56.079Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:10:56.079Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:10:56.079Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:10:56.079Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:10:56.080Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:10:56.084Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:56.084Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:56.085Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:10:56.085Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:10:56.085Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:10:56.085Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:10:56.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:56.090Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:56.090Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:10:56.090Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:10:56.090Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:10:56.095Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:56.095Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:56.096Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:10:56.096Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:10:56.100Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:56.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:10:56.101Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:10:56.101Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:10:56.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:10:56.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:15.064Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:59:15.065Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:59:15.065Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:59:15.068Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:59:15.069Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:59:15.069Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:59:15.070Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:59:15.070Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:59:15.070Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:59:15.071Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:59:15.071Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:59:15.076Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:15.076Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:15.076Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:59:15.076Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:59:15.077Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:59:15.077Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:59:15.081Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:15.081Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:15.082Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:59:15.083Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:59:15.083Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:59:15.087Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:15.087Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:15.088Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:59:15.088Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:59:15.093Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:15.093Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:15.094Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:59:15.094Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:59:15.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:15.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:42.093Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T16:59:42.094Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T16:59:42.094Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T16:59:42.099Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T16:59:42.099Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T16:59:42.099Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T16:59:42.100Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T16:59:42.100Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T16:59:42.100Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T16:59:42.101Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T16:59:42.101Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T16:59:42.107Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:42.107Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:42.108Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T16:59:42.108Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T16:59:42.108Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T16:59:42.108Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T16:59:42.115Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:42.115Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:42.115Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T16:59:42.115Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T16:59:42.116Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T16:59:42.123Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:42.124Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:42.125Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T16:59:42.125Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T16:59:42.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:42.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T16:59:42.133Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T16:59:42.133Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T16:59:42.139Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T16:59:42.139Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:00.076Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:00:00.076Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:00:00.076Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:00:00.081Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:00:00.081Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:00:00.081Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:00:00.082Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:00:00.082Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:00:00.082Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:00:00.083Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:00:00.083Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:00:00.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:00.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:00.088Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:00:00.088Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:00:00.089Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:00:00.089Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:00:00.093Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:00.093Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:00.094Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:00:00.094Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:00:00.094Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:00:00.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:00.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:00.099Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:00:00.099Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:00:00.104Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:00.104Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:00.104Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:00:00.105Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:00:00.109Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:00.109Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:15.086Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:00:15.086Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:00:15.086Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:00:15.091Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:00:15.091Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:00:15.092Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:00:15.092Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:00:15.093Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:00:15.093Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:00:15.093Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:00:15.093Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:00:15.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:15.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:15.099Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:00:15.099Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:00:15.100Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:00:15.100Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:00:15.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:15.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:15.106Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:00:15.107Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:00:15.107Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:00:15.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:15.114Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:15.114Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:00:15.114Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:00:15.120Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:15.121Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:15.121Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:00:15.121Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:00:15.128Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:15.128Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:30.095Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:00:30.096Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:00:30.096Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:00:30.102Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:00:30.102Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:00:30.104Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:00:30.104Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:00:30.104Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:00:30.105Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:00:30.105Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:00:30.105Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:00:30.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:30.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:30.112Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:00:30.112Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:00:30.112Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:00:30.112Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:00:30.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:30.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:30.118Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:00:30.119Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:00:30.119Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:00:30.125Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:30.126Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:30.126Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:00:30.126Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:00:30.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:30.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:00:30.133Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:00:30.133Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:00:30.138Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:00:30.138Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:11.082Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:01:11.083Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:01:11.083Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:01:11.088Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:01:11.088Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:01:11.089Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:01:11.089Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:01:11.089Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:01:11.089Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:01:11.094Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:11.094Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:11.094Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:01:11.095Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:01:11.095Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:01:11.095Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:01:11.095Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:01:11.096Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:01:11.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:11.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:11.101Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:01:11.101Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:01:11.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:11.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:11.106Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:01:11.106Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:01:11.106Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:01:11.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:11.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:11.111Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:01:11.111Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:01:11.116Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:11.116Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:48.087Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:01:48.088Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:01:48.088Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:01:48.092Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:01:48.093Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:01:48.094Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:01:48.094Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:01:48.094Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:01:48.094Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:01:48.095Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:01:48.095Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:01:48.100Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:48.101Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:48.101Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:01:48.101Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:01:48.101Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:01:48.101Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:01:48.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:48.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:48.107Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:01:48.107Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:01:48.107Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:01:48.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:48.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:48.112Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:01:48.112Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:01:48.117Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:48.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:01:48.118Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:01:48.118Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:01:48.123Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:01:48.123Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:03:20.544Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:03:20.544Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:03:20.545Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:03:20.545Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:03:20.550Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:03:20.551Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:02.722Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:04:02.722Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:04:02.722Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:04:02.727Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:04:02.727Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:04:02.728Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:04:02.729Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:04:02.729Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:04:02.729Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:04:02.729Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:04:02.729Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:04:02.735Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:02.735Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:02.736Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:04:02.736Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:04:02.736Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:04:02.736Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:04:02.741Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:02.741Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:02.742Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:04:02.742Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:04:02.742Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:04:02.747Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:02.747Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:02.747Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:04:02.748Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:04:02.752Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:02.753Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:02.753Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:04:02.753Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:04:02.760Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:02.760Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:35.084Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:04:35.085Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:04:35.085Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:04:35.088Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:04:35.089Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:04:35.089Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:04:35.090Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:04:35.090Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:04:35.090Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:04:35.090Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:04:35.091Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:04:35.096Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:35.096Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:35.096Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:04:35.096Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:04:35.096Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:04:35.096Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:04:35.100Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:35.100Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:35.101Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:04:35.101Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:04:35.101Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:04:35.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:35.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:35.105Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:04:35.106Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:04:35.110Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:35.110Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:35.111Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:04:35.111Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:04:35.115Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:35.115Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:49.072Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:04:49.072Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:04:49.072Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:04:49.076Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:04:49.077Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:04:49.077Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:04:49.078Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:04:49.078Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:04:49.078Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:04:49.078Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:04:49.078Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:04:49.083Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:49.084Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:49.084Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:04:49.084Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:04:49.084Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:04:49.084Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:04:49.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:49.089Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:49.089Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:04:49.089Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:04:49.089Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:04:49.094Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:49.094Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:49.095Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:04:49.095Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:04:49.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:49.100Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:04:49.100Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:04:49.100Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:04:49.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:04:49.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:00.496Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:05:00.497Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:05:00.497Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:05:00.503Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:05:00.503Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:05:00.504Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:05:00.504Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:05:00.504Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:05:00.504Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:05:00.505Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:05:00.505Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:05:00.510Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:00.510Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:00.510Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:05:00.511Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:05:00.511Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:05:00.511Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:05:00.516Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:00.516Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:00.517Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:05:00.517Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:05:00.517Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:05:00.522Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:00.522Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:00.522Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:05:00.522Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:05:00.527Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:00.527Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:00.528Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:05:00.528Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:05:00.532Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:00.533Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:36.086Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:05:36.086Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:05:36.086Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:05:36.091Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:05:36.091Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:05:36.092Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:05:36.092Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:05:36.092Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:05:36.092Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:05:36.093Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:05:36.093Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:05:36.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:36.099Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:36.100Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:05:36.100Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:05:36.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:36.106Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:36.106Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:05:36.106Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:05:36.106Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:05:36.107Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:05:36.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:36.111Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:36.112Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:05:36.112Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:05:36.112Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:05:36.117Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:36.118Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:36.118Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:05:36.118Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:05:36.123Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:36.123Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:46.092Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:05:46.092Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:05:46.092Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:05:46.096Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:05:46.096Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:05:46.097Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:05:46.097Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:05:46.098Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:05:46.098Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:05:46.098Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:05:46.098Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:05:46.103Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:46.104Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:46.104Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:05:46.104Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:05:46.105Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:05:46.105Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:05:46.110Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:46.110Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:46.110Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:05:46.110Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:05:46.110Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:05:46.115Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:46.116Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:46.116Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:05:46.116Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:05:46.121Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:46.121Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:05:46.122Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:05:46.122Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:05:46.127Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:05:46.127Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:06:27.084Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:06:27.084Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:06:27.084Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:06:27.088Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:06:27.088Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:06:27.089Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:06:27.090Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:06:27.090Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:06:27.090Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:06:27.091Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:06:27.091Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:06:27.096Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:06:27.096Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:06:27.096Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:06:27.097Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:06:27.097Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:06:27.097Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:06:27.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:06:27.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:06:27.102Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:06:27.103Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:06:27.103Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:06:27.108Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:06:27.108Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:06:27.108Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:06:27.108Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:06:27.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:06:27.113Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:06:27.114Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:06:27.114Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:06:27.129Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:06:27.129Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:07:46.090Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:07:46.091Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:07:46.091Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:07:46.096Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:07:46.096Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:07:46.097Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:07:46.098Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:07:46.098Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:07:46.098Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:07:46.099Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:07:46.099Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:07:46.099Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:07:46.099Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:07:46.104Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:07:46.105Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:07:46.106Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:07:46.106Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:07:46.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:07:46.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:07:46.113Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:07:46.113Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:07:46.119Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:07:46.119Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:07:46.120Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:07:46.120Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:07:46.120Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:07:46.125Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:07:46.125Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:07:46.126Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:07:46.126Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:07:46.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:07:46.132Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:05.080Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:08:05.080Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:08:05.080Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:08:05.084Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:08:05.084Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:08:05.085Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:08:05.085Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:08:05.085Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:08:05.085Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:08:05.086Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:08:05.086Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:08:05.091Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:05.091Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:05.091Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:08:05.091Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:08:05.092Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:08:05.092Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:08:05.097Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:05.097Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:05.097Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:08:05.097Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:08:05.098Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:08:05.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:05.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:05.103Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:08:05.103Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:08:05.107Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:05.107Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:05.107Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:08:05.108Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:08:05.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:05.112Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:18.142Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:08:18.143Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:08:18.143Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:08:18.149Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:08:18.149Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:08:18.150Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:08:18.150Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:08:18.150Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:08:18.150Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:08:18.151Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:08:18.151Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:08:18.157Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:18.158Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:18.158Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:08:18.158Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:08:18.158Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:08:18.158Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:08:18.165Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:18.165Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:18.166Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:08:18.166Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:08:18.166Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:08:18.175Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:18.176Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:18.176Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:08:18.177Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:08:18.186Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:18.186Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:08:18.187Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:08:18.187Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:08:18.197Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:08:18.197Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:09:00.072Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-07T17:09:00.072Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-07T17:09:00.072Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-07T17:09:00.076Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-07T17:09:00.077Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-07T17:09:00.077Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-07T17:09:00.078Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-07T17:09:00.078Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-07T17:09:00.078Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-07T17:09:00.078Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-07T17:09:00.078Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-07T17:09:00.083Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:09:00.083Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:09:00.083Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-07T17:09:00.083Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-07T17:09:00.083Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-07T17:09:00.083Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-07T17:09:00.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:09:00.088Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:09:00.088Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-07T17:09:00.088Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-07T17:09:00.088Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-07T17:09:00.092Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:09:00.093Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:09:00.093Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-07T17:09:00.093Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-07T17:09:00.098Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:09:00.098Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-07T17:09:00.098Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-07T17:09:00.098Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-07T17:09:00.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-07T17:09:00.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:34:52.233Z] [LOG] [WebSocket] 1 total connections (latest: pmnZJ2xGiCGYSRNhAAAQ)

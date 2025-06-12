@@ -1,6 +1,8 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, PermissionFlagsBits, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
+import { logModerationToDatabase } from '../../utils/databaseLogger';
+import { ModerationCaseService } from '../../database/services/sqliteService';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -102,6 +104,23 @@ module.exports = {
         // Defer the reply to the modal submission
         await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
       
+        // Create moderation case first
+        const moderationCase = await ModerationCaseService.create({
+          guild_id: guild.id,
+          action_type: 'Ban',
+          user_id: targetUser.id,
+          moderator_id: interaction.user.id,
+          reason: reason,
+          additional_info: `User was banned from ${guild.name}. Message history deleted: ${days} day(s).`
+        });
+        
+        if (!moderationCase) {
+          await modalSubmission.editReply({ 
+            content: 'Failed to create moderation case. Please try again.'
+          });
+          return;
+        }
+
         // First try to DM the user before banning them with a detailed message
         try {
           const banDMEmbed = createModerationEmbed({
@@ -109,6 +128,7 @@ module.exports = {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
+            caseNumber: moderationCase.case_number,
             additionalFields: [
               { name: '⏱️ Message History Deleted', value: `${days} day(s)`, inline: true },
               { name: '🏠 Server', value: guild.name, inline: true },
@@ -139,6 +159,7 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
+          caseNumber: moderationCase.case_number,
           additionalFields: [
             { name: '⏱️ Message History Deleted', value: `${days} day(s)`, inline: true },
             { name: '🕒 Action Time', value: new Date().toLocaleString(), inline: true },
@@ -155,6 +176,7 @@ module.exports = {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
+          caseNumber: moderationCase.case_number,
           additionalInfo: `User was banned from ${guild.name}. Message history deleted: ${days} day(s).`
         });
         
@@ -164,7 +186,16 @@ module.exports = {
           await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
         }
         
-        // We already tried to DM the user before banning them
+        // Log to database
+        await logModerationToDatabase({
+          guild: guild,
+          action: 'Ban',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          additionalInfo: `Ban Case #${moderationCase.case_number} - User was banned from ${guild.name}. Message history deleted: ${days} day(s).`
+        });
+        
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {

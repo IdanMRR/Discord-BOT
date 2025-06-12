@@ -202,16 +202,84 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
           
           const memberCount = guild.memberCount;
           
-          logInfo('MemberEvents', `Creating welcome embed for ${member.user.tag} in guild ${guild.name}`);
+          logInfo('MemberEvents', `Creating welcome message for ${member.user.tag} in guild ${guild.name}`);
           
-          // Create welcome embed
-          const welcomeEmbed = new EmbedBuilder()
-            .setColor(Colors.SUCCESS)
-            .setTitle('Joined Member')
-            .setDescription(`Welcome <@${member.id}> to ${guild.name}`)
-            .setThumbnail(member.user.displayAvatarURL())
-            .setFooter({ text: `Made By Soggra • Coding API - Welcome System • Today at ${new Date().toLocaleTimeString()}` })
-            .setTimestamp();
+          // Check if there's a custom welcome message configuration saved
+          const { getGuildSettings } = await import('../../database/sqlite');
+          const guildSettings = getGuildSettings(guild.id);
+          
+          let welcomeEmbed: EmbedBuilder;
+          
+          if (guildSettings?.welcome_message_config) {
+            try {
+                              // Use custom welcome message configuration
+                const customConfig = JSON.parse(guildSettings.welcome_message_config);
+              logInfo('MemberEvents', `Using custom welcome message configuration for ${guild.name}`);
+              logInfo('MemberEvents', `Custom config title: "${customConfig.title}"`);
+              logInfo('MemberEvents', `Custom config description: "${customConfig.description}"`);
+              
+              // Parse color if it's a hex string
+              let color: number;
+              if (customConfig.color.startsWith('#')) {
+                color = parseInt(customConfig.color.substring(1), 16);
+              } else {
+                color = parseInt(customConfig.color, 16);
+              }
+              
+              // Helper function to replace all placeholders
+              const replacePlaceholders = (text: string): string => {
+                return text
+                  .replace(/{user}/g, `<@${member.id}>`)
+                  .replace(/{server}/g, guild.name)
+                  .replace(/{guild}/g, guild.name)
+                  .replace(/{memberCount}/g, guild.memberCount.toString())
+                  .replace(/{username}/g, member.user.username)
+                  .replace(/{tag}/g, member.user.tag)
+                  .replace(/{displayName}/g, member.displayName);
+              };
+              
+              // Create custom welcome embed
+              welcomeEmbed = new EmbedBuilder()
+                .setColor(color)
+                .setTitle(replacePlaceholders(customConfig.title))
+                .setDescription(replacePlaceholders(customConfig.description))
+                .setThumbnail(member.user.displayAvatarURL())
+                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+                .setTimestamp();
+              
+              // Add custom fields if they exist
+              if (customConfig.fields && customConfig.fields.length > 0) {
+                customConfig.fields.forEach((field: any) => {
+                  welcomeEmbed.addFields([{
+                    name: replacePlaceholders(field.name),
+                    value: replacePlaceholders(field.value),
+                    inline: field.inline || false
+                  }]);
+                });
+              }
+              
+            } catch (parseError) {
+              logError('MemberEvents', `Error parsing custom welcome message config: ${parseError}`);
+              // Fall back to default message
+              welcomeEmbed = new EmbedBuilder()
+                .setColor(Colors.SUCCESS)
+                .setTitle('👋 Welcome!')
+                .setDescription(`Welcome <@${member.id}> to ${guild.name}! We're glad to have you here.`)
+                .setThumbnail(member.user.displayAvatarURL())
+                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+                .setTimestamp();
+            }
+          } else {
+            // Use default welcome embed
+            logInfo('MemberEvents', `Using default welcome message for ${guild.name}`);
+            welcomeEmbed = new EmbedBuilder()
+              .setColor(Colors.SUCCESS)
+              .setTitle('👋 Welcome!')
+              .setDescription(`Welcome <@${member.id}> to ${guild.name}! We're glad to have you here.`)
+              .setThumbnail(member.user.displayAvatarURL())
+              .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+              .setTimestamp();
+          }
           
           // Send welcome message with embed
           await welcomeChannel.send({
@@ -373,18 +441,61 @@ export function initializeMemberEvents(): void {
     // Load all configurations from the database
     loadAllConfigurations();
     
-    // Listen for new members - but ONLY if invite tracking isn't active
-    // since invite tracker will handle the detailed logs
-    client.on(Events.GuildMemberAdd, handleMemberJoin);
+    // Check if invite tracking is active by looking for any servers with member_log_channel_id
+    const { settingsManager } = require('../../utils/settings');
     
-    // Listen for members leaving - but ONLY if invite tracking isn't active 
-    // since invite tracker will handle the detailed logs
-    client.on(Events.GuildMemberRemove, handleMemberLeave);
+    // Since invite tracker should handle member events when configured,
+    // we'll still register these handlers but with lower priority
+    logInfo('MemberEvents', 'Registering member event handlers with invite tracker compatibility');
+    
+    // Listen for new members - with invite tracker compatibility
+    client.on(Events.GuildMemberAdd, async (member) => {
+      logInfo('MemberEvents', `🔥 MemberEvents GuildMemberAdd event received for ${member.user.tag} in ${member.guild.name}`);
+      try {
+        // Check if invite tracking is enabled for this guild
+        const { settingsManager } = await import('../../utils/settings');
+        const serverSettings = await settingsManager.getSettings(member.guild.id);
+        
+        // If invite tracking is enabled (has member_log_channel_id), let it handle the detailed logging
+        // We'll only handle the basic welcome message
+        if (serverSettings?.member_log_channel_id) {
+          logInfo('MemberEvents', `Invite tracking enabled for ${member.guild.name} - skipping detailed member processing`);
+        } else {
+          logInfo('MemberEvents', `No invite tracking for ${member.guild.name} - processing member join normally`);
+        }
+        
+        await handleMemberJoin(member);
+      } catch (error) {
+        logError('MemberEvents', `Error in GuildMemberAdd handler: ${error}`);
+      }
+    });
+    
+    // Listen for members leaving - with invite tracker compatibility
+    client.on(Events.GuildMemberRemove, async (member) => {
+      logInfo('MemberEvents', `🔥 MemberEvents GuildMemberRemove event received for ${member.user?.tag || member.id} in ${member.guild?.name || 'Unknown'}`);
+      try {
+        // Check if invite tracking is enabled for this guild
+        const { settingsManager } = await import('../../utils/settings');
+        const serverSettings = await settingsManager.getSettings(member.guild.id);
+        
+        // If invite tracking is enabled (has member_log_channel_id), let it handle the detailed logging
+        // We'll only handle the basic leave message
+        if (serverSettings?.member_log_channel_id) {
+          logInfo('MemberEvents', `Invite tracking enabled for ${member.guild.name} - skipping detailed member processing`);
+        } else {
+          logInfo('MemberEvents', `No invite tracking for ${member.guild.name} - processing member leave normally`);
+        }
+        
+        await handleMemberLeave(member);
+      } catch (error) {
+        logError('MemberEvents', `Error in GuildMemberRemove handler: ${error}`);
+      }
+    });
     
     // Listen for messages to show member count
     client.on(Events.MessageCreate, showMemberCount);
     
-    logInfo('MemberEvents', 'Member event handlers initialized');
+    logInfo('MemberEvents', 'Member event handlers initialized with error handling');
   } catch (error) {
     logError('MemberEvents', `Error initializing member events: ${error}`);
   }
@@ -458,5 +569,187 @@ export async function setupMemberEvents(
   } catch (error) {
     logError('MemberEvents', `Error setting up member events: ${error}`);
     return false;
+  }
+}
+
+/**
+ * Create custom welcome message in channel
+ */
+export async function createCustomWelcomeMessage(
+  channelId: string, 
+  guildId: string, 
+  settings: any, 
+  customMessage: {
+    title: string;
+    description: string;
+    color: string;
+    fields?: Array<{
+      name: string;
+      value: string;
+      inline?: boolean;
+    }>;
+  }
+): Promise<string | null> {
+  try {
+    logInfo('Member Events', `Creating custom welcome message with ${customMessage.fields?.length || 0} custom fields`);
+    
+    // Log the custom fields for debugging
+    if (customMessage.fields && customMessage.fields.length > 0) {
+      logInfo('Member Events', 'Custom welcome fields received:');
+      customMessage.fields.forEach((field, index) => {
+        logInfo('Member Events', `Field ${index + 1}: "${field.name}" = "${field.value}"`);
+      });
+    }
+    
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('Member Events', 'Discord client not available');
+      return null;
+    }
+    
+    const channel = await client.channels.fetch(channelId);
+    if (!channel?.isTextBased() || !('send' in channel)) {
+      logError('Member Events', 'Invalid channel or channel is not text-based');
+      return null;
+    }
+    
+    // Parse color if it's a hex string
+    let color: number;
+    if (customMessage.color.startsWith('#')) {
+      color = parseInt(customMessage.color.substring(1), 16);
+    } else {
+      color = parseInt(customMessage.color, 16);
+    }
+    
+    // Get guild information for placeholder replacement
+    const guild = client.guilds.cache.get(guildId);
+    const botUser = client.user;
+    
+    // Helper function to replace placeholders in test messages
+    const replacePlaceholders = (text: string): string => {
+      return text
+        .replace(/{user}/g, botUser ? `<@${botUser.id}>` : '@TestUser')
+        .replace(/{server}/g, guild?.name || 'Test Server')
+        .replace(/{guild}/g, guild?.name || 'Test Server')
+        .replace(/{memberCount}/g, guild?.memberCount?.toString() || '100')
+        .replace(/{username}/g, botUser?.username || 'TestUser')
+        .replace(/{tag}/g, botUser?.tag || 'TestUser#0000')
+        .replace(/{displayName}/g, botUser?.username || 'TestUser');
+    };
+    
+    // Use custom fields if provided, otherwise use defaults
+    const fields = customMessage.fields || [
+      { name: '🔹 Server Rules', value: 'Please read our rules to get started.' },
+      { name: '🔹 Get Roles', value: 'Visit our roles channel to get your roles.' }
+    ];
+    
+    // Add spacing between fields for better readability and apply placeholder replacement
+    const formattedFields = fields.map((field, index) => ({
+      name: replacePlaceholders(field.name),
+      value: replacePlaceholders(field.value),
+      inline: field.inline || false
+    }));
+    
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(replacePlaceholders(customMessage.title))
+      .setDescription(replacePlaceholders(customMessage.description))
+      .addFields(formattedFields)
+      .setFooter({ text: 'Made by Soggra • Welcome System • Preview Message' })
+      .setTimestamp();
+    
+    const message = await channel.send({ embeds: [embed] });
+    
+    logInfo('Member Events', `Custom welcome message created successfully: ${message.id}`);
+    return message.id;
+    
+  } catch (error) {
+    logError('Member Events', `Error creating custom welcome message: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * Create custom leave message in channel
+ */
+export async function createCustomLeaveMessage(
+  channelId: string, 
+  guildId: string, 
+  settings: any, 
+  customMessage: {
+    title: string;
+    description: string;
+    color: string;
+    fields?: Array<{
+      name: string;
+      value: string;
+      inline?: boolean;
+    }>;
+  }
+): Promise<string | null> {
+  try {
+    logInfo('Member Events', `Creating custom leave message with ${customMessage.fields?.length || 0} custom fields`);
+    
+    // Log the custom fields for debugging
+    if (customMessage.fields && customMessage.fields.length > 0) {
+      logInfo('Member Events', 'Custom leave fields received:');
+      customMessage.fields.forEach((field, index) => {
+        logInfo('Member Events', `Field ${index + 1}: "${field.name}" = "${field.value}"`);
+      });
+    }
+    
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('Member Events', 'Discord client not available');
+      return null;
+    }
+    
+    const channel = await client.channels.fetch(channelId);
+    if (!channel?.isTextBased() || !('send' in channel)) {
+      logError('Member Events', 'Invalid channel or channel is not text-based');
+      return null;
+    }
+    
+    // Parse color if it's a hex string
+    let color: number;
+    if (customMessage.color.startsWith('#')) {
+      color = parseInt(customMessage.color.substring(1), 16);
+    } else {
+      color = parseInt(customMessage.color, 16);
+    }
+    
+    // Use custom fields if provided, otherwise use defaults
+    const fields = customMessage.fields || [
+      { name: '🔹 Come Back Soon', value: 'We hope to see you again in the future!' },
+      { name: '🔹 Thank You', value: 'Thanks for being part of our community.' }
+    ];
+    
+    // Add spacing between fields for better readability
+    const formattedFields = fields.map((field, index) => ({
+      name: field.name,
+      value: field.value,
+      inline: field.inline || false
+    }));
+    
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(customMessage.title)
+      .setDescription(customMessage.description)
+      .addFields(formattedFields)
+      .setFooter({ text: 'Made by Soggra • Leave System' })
+      .setTimestamp();
+    
+    const message = await channel.send({ embeds: [embed] });
+    
+    logInfo('Member Events', `Custom leave message created successfully: ${message.id}`);
+    return message.id;
+    
+  } catch (error) {
+    logError('Member Events', `Error creating custom leave message: ${error}`);
+    return null;
   }
 }

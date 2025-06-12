@@ -4,10 +4,13 @@ import { Colors } from './embeds';
 import { settingsManager } from './settings';
 import { db } from '../database/sqlite';
 import fetch from 'node-fetch';
+import { ServerSettingsService } from '../database/services/serverSettingsService';
 
-// Configuration for dashboard API
-const DASHBOARD_API_URL = 'http://localhost:3001/api';
+// Dashboard API configuration - use environment variable or detect the actual port
+const DASHBOARD_API_BASE_URL = process.env.API_URL || `http://localhost:${process.env.API_PORT || 3001}`;
+const DASHBOARD_API_URL = `${DASHBOARD_API_BASE_URL}/api`;
 const DASHBOARD_SYNC_ENABLED = true; // Set to false to disable dashboard syncing
+const DASHBOARD_API_KEY = process.env.API_KEY || 'f8e7d6c5b4a3928170615243cba98765'; // Use the same API key as defined in .env
 
 /**
  * Function to push logs to the dashboard API
@@ -26,13 +29,40 @@ async function pushLogToDashboard(logData: {
   }
   
   try {
-    const response = await fetch(`${DASHBOARD_API_URL}/logs`, {
+    // Add safety checks for required data
+    if (!logData.guild_id) {
+      logError('Dashboard Sync', 'Guild ID is missing in pushLogToDashboard');
+      return false;
+    }
+    
+    if (!logData.action) {
+      logError('Dashboard Sync', 'Action is missing in pushLogToDashboard');
+      return false;
+    }
+
+    // Add timeout to the fetch request to prevent long hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    
+    // Use the correct API endpoint for dashboard logs
+    const response = await fetch(`${DASHBOARD_API_BASE_URL}/api/dashboard-logs`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-API-Key': DASHBOARD_API_KEY
       },
-      body: JSON.stringify(logData)
+      body: JSON.stringify(logData),
+      signal: controller.signal as any // Type cast to avoid AbortSignal compatibility issue
+    }).catch((err: Error & { name?: string }) => {
+      // Handle network errors
+      if (err.name === 'AbortError') {
+        throw new Error('API request timed out after 3 seconds');
+      }
+      throw err;
     });
+    
+    // Clear the timeout
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -41,8 +71,13 @@ async function pushLogToDashboard(logData: {
     
     const data = await response.json();
     return data.success;
-  } catch (error) {
-    logError('Dashboard Sync', `Failed to push log to dashboard: ${error}`);
+  } catch (error: any) {
+    // Don't log connection errors repeatedly to avoid console spam
+    if (error.message && error.message.includes('failed, reason:')) {
+      console.log('[Dashboard Sync] API server not available - skipping log sync');
+    } else {
+      logError('Dashboard Sync', `Failed to push log to dashboard: ${error}`);
+    }
     return false;
   }
 }
@@ -74,41 +109,15 @@ export async function logModeration(options: {
   reason: string;
   duration?: string;
   additionalInfo?: string;
+  caseNumber?: number; // Accept case number from the warning creation
 }): Promise<LogResult> {
   try {
-    // Log to console
-    logInfo('Moderation', `${options.action} | Target: ${options.target.tag} | Moderator: ${options.moderator.tag} | Reason: ${options.reason}`);
+    // Get the current time
+    const now = new Date();
     
-    // Log to database
-    const dbResult = await logModerationToDatabase(options);
-    
-    // Push to dashboard
-    await pushLogToDashboard({
-      guild_id: options.guild.id,
-      user_id: options.moderator.id,
-      action: options.action,
-      details: `${options.action} applied to ${options.target.tag} for: ${options.reason}`,
-      log_type: 'mod',
-      metadata: {
-        target_id: options.target.id,
-        target_tag: options.target.tag,
-        reason: options.reason,
-        duration: options.duration,
-        additional_info: options.additionalInfo
-      }
-    });
-    
-    if (!dbResult) {
-      return { 
-        success: true, 
-        message: 'Action performed, but database logging failed. The action was still recorded in console logs.'
-      };
-    }
-    
-    // Get log channel ID from server settings
-    // First try mod_log_channel_id, then fall back to log_channel_id
-    const settings = await settingsManager.getSettings(options.guild.id);
-    const logChannelId = settings?.mod_log_channel_id || settings?.log_channel_id;
+    // Check if the guild has a log channel set
+    const serverSettings = await ServerSettingsService.getOrCreate(options.guild.id, options.guild.name);
+    const logChannelId = serverSettings?.log_channel_id || serverSettings?.member_log_channel_id;
     
     if (!logChannelId) {
       logWarning('Moderation', `No log channel set for guild ${options.guild.name} (${options.guild.id}). Skipping channel logging.`);
@@ -129,47 +138,49 @@ export async function logModeration(options: {
       };
     }
     
-    // Get the case number from the database
-    const caseNumberStmt = db.prepare(`
-      SELECT COUNT(*) as count FROM server_logs WHERE guild_id = ? AND action_type = 'memberWarning'
-    `);
-    const { count } = caseNumberStmt.get(options.guild.id) as { count: number };
-    const caseNumber = count + 1;
+    // Use the provided case number or get the next one if not provided
+    let caseNumber = options.caseNumber;
+    if (!caseNumber) {
+      // Only generate a new case number if one isn't provided
+      const caseNumberStmt = db.prepare(`
+        SELECT MAX(case_number) as max_case FROM warnings WHERE guild_id = ?
+      `);
+      const { max_case } = caseNumberStmt.get(options.guild.id) as { max_case: number | null };
+      caseNumber = (max_case !== null ? max_case + 1 : 1);
+    }
     
     // Format the case number with leading zeros (e.g., 0001, 0002)
     const formattedCaseNumber = caseNumber.toString().padStart(4, '0');
     
     // Get emoji based on action type
     let actionEmoji = '⚠️';
-    if (options.action.toLowerCase() === 'ban') {
-      actionEmoji = '🔨';
-    } else if (options.action.toLowerCase() === 'kick') {
-      actionEmoji = '👢';
-    } else if (options.action.toLowerCase() === 'timeout' || options.action.toLowerCase() === 'mute') {
-      actionEmoji = '🔇';
-    } else if (options.action.toLowerCase() === 'warning removed') {
-      actionEmoji = '✅';
-    } else if (options.action.toLowerCase() === 'unban') {
-      actionEmoji = '🔓';
+    switch (options.action.toLowerCase()) {
+      case 'ban':
+        actionEmoji = '🔨';
+        break;
+      case 'kick':
+        actionEmoji = '👢';
+        break;
+      case 'mute':
+      case 'timeout':
+        actionEmoji = '🔇';
+        break;
+      case 'warn':
+      case 'warning':
+        actionEmoji = '⚠️';
+        break;
+      default:
+        actionEmoji = '🛡️';
+        break;
     }
     
-    // Format the current time
-    const now = new Date();
-    const formattedTime = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}, ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
-    
-    // Create a log embed matching the screenshot format
+    // Create a rich moderation embed
     const logEmbed = new EmbedBuilder()
-      .setTitle(`${actionEmoji} ${options.action.toUpperCase()} | Case #${formattedCaseNumber}`)
-      .setColor(getColorForAction(options.action))
-      .setDescription(`${options.target} (${options.target.id}) has been ${options.action.toLowerCase() === 'warning' ? 'warned' : options.action.toLowerCase() + 'ed'} by ${options.moderator}.`)
-      .setThumbnail(options.target.displayAvatarURL({ size: 256 }))
-      .addFields([{ name: 'Reason:', value: options.reason }])
-      .addFields([{ name: 'This action was taken on', value: formattedTime }])
-      .addFields([
-        { name: '👤 User Information', value: `Tag: ${options.target.username}\nID: ${options.target.id}\nCreated: 6 years ago`, inline: false },
-        { name: `${actionEmoji} Moderator Information`, value: `Tag: ${options.moderator.username}\nID: ${options.moderator.id}`, inline: false }
-      ])
-      .addFields([{ name: '📝 Detailed Reason', value: options.reason || 'No reason provided' }]);
+      .setTitle(`${actionEmoji} ${options.action}`)
+      .setDescription(`**User:** ${options.target.tag} (<@${options.target.id}>)\n**Moderator:** ${options.moderator.tag}\n**Reason:** ${options.reason}`)
+      .setColor(0xFF6B6B) // Red color for moderation actions
+      .setThumbnail(options.target.displayAvatarURL({ size: 128 }))
+      .setTimestamp(now);
     
     // Add the case number, server and warning count fields in a clean row
     const activeWarningsStmt = db.prepare(`
@@ -253,47 +264,104 @@ export async function logDirectMessage(options: {
   command?: string;
   success: boolean;
   error?: string;
+  caseNumber?: number;
 }): Promise<LogResult> {
   try {
     // Log to console
     logInfo('DirectMessage', `DM sent by ${options.sender.tag} to ${options.recipient.tag} | Success: ${options.success}`);
     
-    // Create the dm_logs table if it doesn't exist
-    db.prepare(`
-      CREATE TABLE IF NOT EXISTS dm_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guild_id TEXT NOT NULL,
-        sender_id TEXT NOT NULL,
-        recipient_id TEXT NOT NULL,
-        content TEXT NOT NULL,
-        command TEXT,
-        success INTEGER NOT NULL,
-        error TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `).run();
+    // Check if dm_logs table exists and get its structure
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='dm_logs'").get();
     
-    // Log to database
-    const stmt = db.prepare(`
-      INSERT INTO dm_logs (guild_id, sender_id, recipient_id, content, command, success, error, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `);
-    
-    stmt.run(
-      options.guild.id,
-      options.sender.id,
-      options.recipient.id,
-      options.content,
-      options.command || null,
-      options.success ? 1 : 0,
-      options.error || null
-    );
+    if (!tableExists) {
+      // Create the table with the new schema if it doesn't exist
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS dm_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          guild_id TEXT NOT NULL,
+          sender_id TEXT NOT NULL,
+          recipient_id TEXT NOT NULL,
+          content TEXT NOT NULL,
+          command TEXT,
+          success INTEGER NOT NULL,
+          error TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `).run();
+    } else {
+      // Get current table structure
+      const columns = db.pragma('table_info(dm_logs)') as { name: string }[];
+      const columnNames = columns.map(col => col.name);
+      
+      // Check if this is a mixed schema (has both old and new columns)
+      if (columnNames.includes('user_id') && columnNames.includes('sender_id')) {
+        // Mixed schema - fill both old and new columns to avoid NOT NULL constraints
+        const stmt = db.prepare(`
+          INSERT INTO dm_logs (
+            user_id, bot_id, content, embed_json, components_json, 
+            source_command, source_guild_id, guild_id, sender_id, 
+            recipient_id, command, success, error, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
+        
+        stmt.run(
+          options.sender.id,        // user_id (old column)
+          options.recipient.id,     // bot_id (old column)
+          options.content,          // content
+          null,                     // embed_json
+          null,                     // components_json
+          options.command || null,  // source_command
+          options.guild.id,         // source_guild_id
+          options.guild.id,         // guild_id (new column)
+          options.sender.id,        // sender_id (new column)
+          options.recipient.id,     // recipient_id (new column)
+          options.command || null,  // command (new column)
+          options.success ? 1 : 0,  // success (new column)
+          options.error || null,    // error (new column)
+        );
+      } else if (columnNames.includes('user_id') && !columnNames.includes('sender_id')) {
+        // Pure old schema
+        const stmt = db.prepare(`
+          INSERT INTO dm_logs (
+            user_id, bot_id, content, embed_json, components_json, 
+            source_command, source_guild_id, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
+        
+        stmt.run(
+          options.sender.id,        // user_id (old column)
+          options.recipient.id,     // bot_id (old column)
+          options.content,          // content
+          null,                     // embed_json
+          null,                     // components_json
+          options.command || null,  // source_command
+          options.guild.id,         // source_guild_id
+        );
+      } else {
+        // Pure new schema
+        const stmt = db.prepare(`
+          INSERT INTO dm_logs (guild_id, sender_id, recipient_id, content, command, success, error, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
+        
+        stmt.run(
+          options.guild.id,
+          options.sender.id,
+          options.recipient.id,
+          options.content,
+          options.command || null,
+          options.success ? 1 : 0,
+          options.error || null
+        );
+      }
+    }
     
     // Get log channel ID from server settings
     const settings = await settingsManager.getSettings(options.guild.id);
-    const logChannelId = settings?.log_channel_id || null;
+    const logChannelId = settings?.mod_log_channel_id || settings?.log_channel_id || settings?.member_log_channel_id || null;
     
     if (!logChannelId) {
+      logWarning('DirectMessage', `No log channel set for guild ${options.guild.name} (${options.guild.id}). DM logged to database only.`);
       return { success: true };
     }
     
@@ -316,6 +384,7 @@ export async function logDirectMessage(options: {
         { name: '👤 Recipient', value: `${options.recipient.username} (${options.recipient.id})`, inline: true },
         { name: '👮 Sender', value: `${options.sender.username} (${options.sender.id})`, inline: true },
         { name: '🤖 Command', value: options.command || 'Not specified', inline: true },
+        ...(options.caseNumber ? [{ name: '📋 Case Number', value: `#${options.caseNumber}`, inline: true }] : []),
         { name: '📝 Content', value: options.content.length > 1024 ? options.content.substring(0, 1021) + '...' : options.content }
       ])
       .setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
@@ -347,6 +416,17 @@ export async function logCommandUsage(options: {
   error?: string;
 }): Promise<void> {
   try {
+    // Add safety checks for required objects
+    if (!options.guild) {
+      logError('Command Logger', 'Guild is undefined in logCommandUsage');
+      return;
+    }
+    
+    if (!options.user) {
+      logError('Command Logger', 'User is undefined in logCommandUsage');
+      return;
+    }
+
     // Log to console
     logInfo('Command', `${options.command} used by ${options.user.tag} in ${options.guild.name} | Success: ${options.success}`);
     
@@ -381,59 +461,27 @@ export async function logCommandUsage(options: {
       options.error || null
     );
     
-    // Also create a log entry in the main logs table
-    db.prepare(`
-      INSERT INTO logs (guild_id, user_id, action, details, log_type, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      options.guild.id,
-      options.user.id,
-      'Command Used',
-      `${options.command}${options.options ? ' ' + JSON.stringify(options.options) : ''} - ${options.success ? 'Success' : `Failed: ${options.error || 'Unknown error'}`}`,
-      'command',
-      Date.now()
-    );
-    
-    // Also log to the dashboard API
-    await pushLogToDashboard({
-      guild_id: options.guild.id,
-      user_id: options.user.id,
-      action: 'Command Used',
-      details: `${options.command}${options.success ? ' - Success' : ' - Failed'}`,
-      log_type: 'command',
-      metadata: {
-        command: options.command,
-        options: options.options,
-        channel_id: options.channel?.id,
-        success: options.success,
-        error: options.error
-      }
-    });
-    
-    // Also log to the dashboard API using the dedicated command endpoint
+    // Also create a log entry in the main server_logs table
     try {
-      fetch('http://localhost:3001/api/logs/command', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          guild_id: options.guild.id,
-          user_id: options.user.id,
-          command: options.command,
-          success: options.success,
-          error_message: options.error || null
-        })
-      }).catch(err => {
-        // Silently fail - we don't want to break command execution if dashboard logging fails
-        logError('Dashboard API', `Failed to log command to dashboard: ${err.message}`);
-      });
-    } catch (apiError) {
-      // Log the error but don't let it affect command execution
-      logError('Dashboard API', `Failed to log command to dashboard: ${apiError}`);
+      // Now insert the log entry using server_logs table
+      db.prepare(`
+        INSERT INTO server_logs (guild_id, user_id, action_type, details, created_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `).run(
+        options.guild.id,
+        options.user.id,
+        'command_used',
+        `${options.command}${options.options ? ' ' + JSON.stringify(options.options) : ''} - ${options.success ? 'Success' : `Failed: ${options.error || 'Unknown error'}`}`
+      );
+    } catch (error) {
+      console.error('[Logger] Error logging command usage to database:', error);
+      // Continue execution - don't let logging errors break command functionality
     }
-    
-    // Get log channel ID from server settings
+
+    // Note: Dashboard API logging removed to prevent duplicates
+    // The dashboard reads directly from the command_logs table above
+
+    // Get log channel ID from server settings for Discord channel logging
     const settings = await settingsManager.getSettings(options.guild.id);
     const logChannelId = settings?.log_channel_id || null;
     
@@ -452,7 +500,7 @@ export async function logCommandUsage(options: {
     const now = new Date();
     const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     
-    // Create a log embed
+    // Create a log embed for Discord channel
     const logEmbed = new EmbedBuilder()
       .setTitle(`🔧 Command ${options.success ? 'Used' : 'Failed'}`)
       .setColor(options.success ? Colors.INFO : Colors.ERROR)
@@ -476,7 +524,7 @@ export async function logCommandUsage(options: {
       logEmbed.addFields({ name: '❌ Error', value: options.error });
     }
     
-    // Send the log embed to the log channel
+    // Send the log embed to the Discord log channel
     await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
     logError('Command', error);
@@ -497,6 +545,17 @@ export async function logTicketAction(options: {
   additionalInfo?: string;
 }): Promise<void> {
   try {
+    // Add safety checks for required objects
+    if (!options.guild) {
+      logError('Ticket Logger', 'Guild is undefined in logTicketAction');
+      return;
+    }
+    
+    if (!options.user) {
+      logError('Ticket Logger', 'User is undefined in logTicketAction');
+      return;
+    }
+
     // Log to console
     logInfo('Ticket', `${options.action} | Ticket #${options.ticketNumber} | User: ${options.user.tag}`);
     
@@ -621,5 +680,36 @@ export async function logTicketAction(options: {
     await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
     logError('Ticket', error);
+  }
+}
+
+// Dashboard logging function
+export async function logCommandToDashboard(logData: any): Promise<void> {
+  try {
+    // Use the dynamic API URL instead of hardcoded localhost:3001
+    const apiUrl = process.env.API_URL || `http://localhost:${process.env.API_PORT || 3001}`;
+    
+    const response = await fetch(`${apiUrl}/api/dashboard/command-logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.API_KEY || 'f8e7d6c5b4a3928170615243cba98765'
+      },
+      body: JSON.stringify(logData),
+      timeout: 5000 // 5 second timeout
+    });
+
+    if (!response.ok) {
+      console.log(`[Dashboard Sync] API server responded with status ${response.status} - skipping log sync`);
+      return;
+    }
+
+    console.log('[Dashboard Sync] Successfully logged command to dashboard');
+  } catch (error: any) {
+    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      console.log('[Dashboard Sync] API server not available - skipping log sync');
+    } else {
+      console.error('[ERROR][Dashboard API] Failed to log command to dashboard:', error.message);
+    }
   }
 }

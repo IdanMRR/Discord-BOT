@@ -1,0 +1,30 @@
+<svg viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Robot icon with atomic structure -->
+  <g transform="translate(20, 20)">
+    <!-- Atomic structure outer rings -->
+    <ellipse cx="40" cy="40" rx="35" ry="18" stroke="#3B82F6" stroke-width="2.5" fill="none" transform="rotate(45 40 40)"/>
+    <ellipse cx="40" cy="40" rx="35" ry="18" stroke="#3B82F6" stroke-width="2.5" fill="none" transform="rotate(-45 40 40)"/>
+    <ellipse cx="40" cy="40" rx="35" ry="18" stroke="#3B82F6" stroke-width="2.5" fill="none" transform="rotate(0 40 40)"/>
+    
+    <!-- Central atom/nucleus -->
+    <circle cx="40" cy="40" r="2.5" fill="#3B82F6"/>
+    
+    <!-- Robot head/body -->
+    <rect x="28" y="28" width="24" height="24" rx="6" ry="6" stroke="#3B82F6" stroke-width="2.5" fill="none"/>
+    
+    <!-- Robot eyes -->
+    <circle cx="34" cy="36" r="2" fill="#3B82F6"/>
+    <circle cx="46" cy="36" r="2" fill="#3B82F6"/>
+    
+    <!-- Robot smile -->
+    <path d="M 32 44 Q 40 48 48 44" stroke="#3B82F6" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    
+    <!-- Robot antenna -->
+    <line x1="40" y1="28" x2="40" y2="22" stroke="#3B82F6" stroke-width="2"/>
+    <circle cx="40" cy="20" r="1.5" fill="#3B82F6"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="120" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#3B82F6">SOGGRA'S</text>
+  <text x="120" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#6B7280">DASHBOARD</text>
+</svg> 

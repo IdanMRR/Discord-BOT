@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, Message, MessageFlags } from 'discord.js';
 import { Command, ExecuteProps } from '../../types/command';
 
 // This is a simple AI-powered chatbot command that uses an external API to generate responses
@@ -40,8 +40,8 @@ const command: Command = {
       const question = chatInteraction.options.getString('question');
       const isPrivate = chatInteraction.options.getBoolean('private') || false;
 
-      if (!question) {
-        await chatInteraction.reply({ content: 'Please provide a question!', ephemeral: true });
+      if (!question || question.trim() === '') {
+        await chatInteraction.reply({ content: 'Please provide a question!', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -118,13 +118,13 @@ const command: Command = {
         await chatInteraction.editReply({ embeds: [responseEmbed] });
       } catch (error) {
         console.error('Error in chatbot command:', error);
-        await chatInteraction.editReply('There was an error processing your command.');
+        await chatInteraction.reply({ content: 'There was an error processing your command.', flags: MessageFlags.Ephemeral });
       }
     } catch (error) {
       console.error('Error in chatbot command:', error);
       
       if (!chatInteraction.replied && !chatInteraction.deferred) {
-        await chatInteraction.reply({ content: 'There was an error processing your command.', ephemeral: true });
+        await chatInteraction.reply({ content: 'There was an error processing your command.', flags: MessageFlags.Ephemeral });
       } else {
         await chatInteraction.editReply('There was an error processing your command.');
       }

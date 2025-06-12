@@ -1,0 +1,792 @@
+[2025-06-08T04:57:04.642Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-08-07-57-04.txt
+[2025-06-08T04:57:05.061Z] [LOG] [INFO][SQLite] Current server_settings columns: guild_id, name, log_channel_id, mod_log_channel_id, member_log_channel_id, message_log_channel_id, server_log_channel_id, welcome_channel_id, language, welcome_message, ticket_category_id, ticket_panel_channel_id, ticket_panel_message_id, staff_role_ids, auto_mod_enabled, auto_mod_settings, created_at, updated_at, rules_channel_id, templates, active_templates, weather_channel_id, custom_cities, weather_schedule, ticket_logs_channel_id, red_alert_channels, member_events_config, log_all_commands, ticket_chatbot_enabled, ticket_chatbot_ai_enabled, goodbye_channel_id, verification_channel_id, verification_message_id, verified_role_id, verification_type, welcome_message_config, goodbye_message_config, invite_join_message_config, invite_leave_message_config, verification_message_config, ticket_panel_config
+[2025-06-08T04:57:05.062Z] [LOG] [INFO][SQLite] Database initialized successfully
+[2025-06-08T04:57:05.062Z] [LOG] [INFO][Database] Database initialized successfully
+[2025-06-08T04:57:05.062Z] [LOG] [INFO][Database] Running database migrations...
+[2025-06-08T04:57:05.063Z] [LOG] [INFO][Database Migration] Language column already exists in server_settings table
+[2025-06-08T04:57:05.106Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-08T04:57:05.106Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-08T04:57:05.108Z] [LOG] Registering auth router at /auth
+[2025-06-08T04:57:05.108Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-08T04:57:05.108Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-08T04:57:05.108Z] [LOG] Registering servers router at /api/servers
+[2025-06-08T04:57:05.112Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-08T04:57:05.112Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-08T04:57:05.143Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-08T04:57:05.145Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-08T04:57:05.145Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-08T04:57:05.145Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-08T04:57:05.146Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-08T04:57:05.146Z] [LOG] Connected to database
+[2025-06-08T04:57:05.146Z] [LOG] [API] Attempting to start API server on port 3001...
+[2025-06-08T04:57:05.169Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-08T04:57:05.170Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-08T04:57:05.170Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-08T04:57:05.171Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-08T04:57:05.171Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-08T04:57:05.173Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-08T04:57:05.173Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-08T04:57:05.173Z] [LOG] Ticket categories migration completed successfully
+[2025-06-08T04:57:05.174Z] [LOG] add-ticket-categories migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-custom-cities migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-weather-schedule migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] add-log-channels migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-08T04:57:05.174Z] [LOG] ensure-log-channels migration loaded
+[2025-06-08T04:57:05.174Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-08T04:57:05.175Z] [LOG] Creating log_channels table...
+[2025-06-08T04:57:05.175Z] [LOG] Created log_channels table
+[2025-06-08T04:57:05.175Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-08T04:57:05.175Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-08T04:57:05.175Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-08T04:57:05.175Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-08T04:57:05.175Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-08T04:57:05.176Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-08T04:57:05.177Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-08T04:57:05.177Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-08T04:57:05.177Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-08T04:57:05.177Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-08T04:57:05.178Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-08T04:57:05.179Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-08T04:57:05.179Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-08T04:57:05.179Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-08T04:57:05.179Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-08T04:57:05.179Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-08T04:57:05.180Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-08T04:57:05.180Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-08T04:57:05.180Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-08T04:57:05.180Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-08T04:57:05.181Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-08T04:57:05.182Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-08T04:57:05.182Z] [LOG] [INFO][API] API server running successfully on port 3001
+[2025-06-08T04:57:05.182Z] [LOG] [API] API URL: http://localhost:3001
+[2025-06-08T04:57:05.182Z] [LOG] [WebSocket] WebSocket server running on ws://localhost:3001
+[2025-06-08T04:57:05.183Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-08T04:57:05.183Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-08T04:57:05.184Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-08T04:57:06.024Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ Member Count: 864
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:06.025Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-08T04:57:06.026Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-08T04:57:06.026Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-08T04:57:06.026Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-08T04:57:06.026Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-08T04:57:06.026Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-08T04:57:06.027Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-08T04:57:06.028Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-08T04:57:06.029Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-08T04:57:06.029Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-08T04:57:06.029Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-08T04:57:06.029Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-08T04:57:06.029Z] [LOG] Processing command folder: admin
+[2025-06-08T04:57:06.029Z] [LOG] Found 39 command files in admin
+[2025-06-08T04:57:06.030Z] [LOG] Processing command folder: general
+[2025-06-08T04:57:06.030Z] [LOG] Found 1 command files in general
+[2025-06-08T04:57:06.030Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-08T04:57:06.030Z] [LOG] Processing command folder: moderation
+[2025-06-08T04:57:06.030Z] [LOG] Found 12 command files in moderation
+[2025-06-08T04:57:06.030Z] [LOG] Processing command folder: utility
+[2025-06-08T04:57:06.030Z] [LOG] Found 7 command files in utility
+[2025-06-08T04:57:06.061Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: command-logs
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-08T04:57:06.186Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: force-log
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-08T04:57:06.186Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: logs
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: nuke
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: server-setup
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: test-events
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: test-logs
+[2025-06-08T04:57:06.187Z] [LOG] Successfully loaded command: test-verification
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: verify
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ban
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: dm
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: kick
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: removewarn
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: timeout
+[2025-06-08T04:57:06.188Z] [LOG] Successfully loaded command: warn
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: warnings
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: chatbot
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: help
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: invite
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: invites
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: language
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-08T04:57:06.189Z] [LOG] Successfully loaded command: weather
+[2025-06-08T04:57:06.189Z] [LOG] Loaded 59 commands in total
+[2025-06-08T04:57:06.189Z] [LOG] [Command Initializer] Successfully loaded 59 commands from files
+[2025-06-08T04:57:06.189Z] [LOG] [Command Initializer] Registered 59 commands to client
+[2025-06-08T04:57:06.189Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-08T04:57:06.189Z] [LOG] [Command Register] Starting registration of 59 commands...
+[2025-06-08T04:57:06.189Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-08T04:57:06.458Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-08T04:57:06.458Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-08T04:57:06.458Z] [LOG] Deduplication: 59 commands reduced to 59 unique commands
+[2025-06-08T04:57:06.460Z] [LOG] Registering 59 commands globally for all servers...
+[2025-06-08T04:57:06.729Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:06.732Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:06.798Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:06.798Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:06.805Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:06.805Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:10.596Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:57:10.598Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:57:11.108Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:57:11.110Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:57:11.601Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:57:11.603Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:57:11.952Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:57:11.953Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:57:12.263Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:12.264Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:12.264Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:12.264Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:14.011Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:14.278Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:14.279Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:14.279Z] [LOG] [INFO][API] === getAllServers completed in 2016ms with 2 servers ===
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:14.281Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T04:57:15.769Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-08T04:57:15.769Z] [LOG] [INFO][API] Using default settings for server 1180940682626600960
+[2025-06-08T04:57:15.770Z] [LOG] [INFO][API] Successfully retrieved server 1180940682626600960
+[2025-06-08T04:57:15.771Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-08T04:57:15.771Z] [LOG] [INFO][API] Using default settings for server 1180940682626600960
+[2025-06-08T04:57:15.771Z] [LOG] [INFO][API] Successfully retrieved server 1180940682626600960
+[2025-06-08T04:57:15.778Z] [LOG] [INFO][API] Getting channels for server 1180940682626600960, type: text
+[2025-06-08T04:57:15.779Z] [LOG] [INFO][API] Successfully fetched 26 channels for server 1180940682626600960
+[2025-06-08T04:57:15.780Z] [LOG] [INFO][API] Fetching ticket categories for server 1180940682626600960
+[2025-06-08T04:57:15.780Z] [LOG] [INFO][TicketCategoriesService] Retrieved 0 categories for guild 1180940682626600960
+[2025-06-08T04:57:15.781Z] [LOG] [INFO][API] Found 4 Discord category channels in server 1180940682626600960
+[2025-06-08T04:57:15.781Z] [LOG] [INFO][API] Creating Discord categories in database for server 1180940682626600960
+[2025-06-08T04:57:15.795Z] [LOG] [INFO][TicketCategoriesService] Created 4 Discord categories for guild 1180940682626600960
+[2025-06-08T04:57:15.795Z] [LOG] [INFO][TicketCategoriesService] Retrieved 4 categories for guild 1180940682626600960
+[2025-06-08T04:57:15.796Z] [LOG] [INFO][API] Returning 4 categories for server 1180940682626600960
+[2025-06-08T04:57:15.797Z] [LOG] [INFO][API] Getting channels and roles for server: 1180940682626600960
+[2025-06-08T04:57:15.797Z] [LOG] [INFO][API] Successfully retrieved 30 channels and 21 roles for server 1180940682626600960
+[2025-06-08T04:57:15.802Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.802Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.803Z] [LOG] [INFO][API] Fetching ticket categories for server 1180940682626600960
+[2025-06-08T04:57:15.803Z] [LOG] [INFO][TicketCategoriesService] Retrieved 4 categories for guild 1180940682626600960
+[2025-06-08T04:57:15.803Z] [LOG] [INFO][API] Found 4 Discord category channels in server 1180940682626600960
+[2025-06-08T04:57:15.804Z] [LOG] [INFO][API] Returning 4 categories for server 1180940682626600960
+[2025-06-08T04:57:15.804Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/welcome-config Method: GET
+[2025-06-08T04:57:15.805Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.805Z] [LOG] [DASHBOARD] Welcome config query result: undefined
+[2025-06-08T04:57:15.805Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:15.810Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.810Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.810Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:15.811Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.811Z] [LOG] [DASHBOARD] Goodbye config query result: undefined
+[2025-06-08T04:57:15.811Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-08T04:57:15.817Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.818Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.818Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:15.819Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.823Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.824Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.824Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:15.825Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.830Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.830Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.830Z] [LOG] [INFO][API] Getting channels for server 1180940682626600960, type: text
+[2025-06-08T04:57:15.831Z] [LOG] [INFO][API] Successfully fetched 26 channels for server 1180940682626600960
+[2025-06-08T04:57:15.831Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/welcome-config Method: GET
+[2025-06-08T04:57:15.832Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.832Z] [LOG] [DASHBOARD] Welcome config query result: undefined
+[2025-06-08T04:57:15.832Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:15.838Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.838Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.838Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:15.838Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.839Z] [LOG] [DASHBOARD] Goodbye config query result: undefined
+[2025-06-08T04:57:15.839Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-08T04:57:15.844Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.844Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.844Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:15.845Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.850Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.850Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.850Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:15.850Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1180940682626600960
+[2025-06-08T04:57:15.855Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.855Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:15.856Z] [LOG] [INFO][API] Getting channels and roles for server: 1180940682626600960
+[2025-06-08T04:57:15.857Z] [LOG] [INFO][API] Successfully retrieved 30 channels and 21 roles for server 1180940682626600960
+[2025-06-08T04:57:15.862Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:15.862Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:17.682Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:17.683Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:57:17.684Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:17.685Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:57:19.170Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:19.171Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:19.176Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:19.176Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:20.714Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:20.715Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:20.732Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:20.733Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:20.738Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:20.739Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:21.134Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:21.136Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:57:21.149Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:21.150Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:21.155Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:21.155Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:22.587Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:22.589Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T04:57:23.339Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-08T04:57:23.340Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-08T04:57:23.340Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-08T04:57:23.342Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-08T04:57:23.342Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-08T04:57:23.342Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-08T04:57:23.345Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-08T04:57:23.345Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-08T04:57:23.346Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-08T04:57:23.346Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-08T04:57:23.346Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-08T04:57:23.346Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-08T04:57:23.347Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-08T04:57:23.347Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-08T04:57:23.352Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.353Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.353Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-08T04:57:23.353Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.354Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-08T04:57:23.354Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:23.360Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.360Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.360Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:23.361Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.361Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-08T04:57:23.366Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.366Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.367Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:23.367Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.372Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.372Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.373Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-08T04:57:23.373Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-08T04:57:23.374Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-08T04:57:23.374Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.374Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-08T04:57:23.375Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:23.380Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.380Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.380Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:23.381Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.381Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-08T04:57:23.386Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.386Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.387Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:23.387Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.392Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.392Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.392Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-08T04:57:23.393Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-08T04:57:23.393Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-08T04:57:23.393Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-08T04:57:23.393Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-08T04:57:23.393Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-08T04:57:23.398Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.398Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.399Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:23.399Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.403Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.403Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:23.404Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:23.404Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-08T04:57:23.408Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:23.409Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:24.729Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T04:57:24.730Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:24.731Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:57:25.790Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-08T04:57:25.791Z] [LOG] [INFO][API] Using default settings for server 1180940682626600960
+[2025-06-08T04:57:25.791Z] [LOG] [INFO][API] Successfully retrieved server 1180940682626600960
+[2025-06-08T04:57:25.792Z] [LOG] [INFO][API] Getting server by ID: 1180940682626600960
+[2025-06-08T04:57:25.792Z] [LOG] [INFO][API] Using default settings for server 1180940682626600960
+[2025-06-08T04:57:25.793Z] [LOG] [INFO][API] Successfully retrieved server 1180940682626600960
+[2025-06-08T04:57:25.793Z] [LOG] [INFO][API] Getting channels for server 1180940682626600960, type: text
+[2025-06-08T04:57:25.794Z] [LOG] [INFO][API] Successfully fetched 26 channels for server 1180940682626600960
+[2025-06-08T04:57:25.794Z] [LOG] [INFO][API] Fetching ticket categories for server 1180940682626600960
+[2025-06-08T04:57:25.795Z] [LOG] [INFO][TicketCategoriesService] Retrieved 4 categories for guild 1180940682626600960
+[2025-06-08T04:57:25.795Z] [LOG] [INFO][API] Found 4 Discord category channels in server 1180940682626600960
+[2025-06-08T04:57:25.795Z] [LOG] [INFO][API] Returning 4 categories for server 1180940682626600960
+[2025-06-08T04:57:25.795Z] [LOG] [INFO][API] Getting channels and roles for server: 1180940682626600960
+[2025-06-08T04:57:25.796Z] [LOG] [INFO][API] Successfully retrieved 30 channels and 21 roles for server 1180940682626600960
+[2025-06-08T04:57:25.801Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.801Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.801Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/welcome-config Method: GET
+[2025-06-08T04:57:25.801Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.802Z] [LOG] [DASHBOARD] Welcome config query result: undefined
+[2025-06-08T04:57:25.802Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:25.807Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.807Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.808Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:25.808Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.808Z] [LOG] [DASHBOARD] Goodbye config query result: undefined
+[2025-06-08T04:57:25.808Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-08T04:57:25.813Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.813Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.813Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:25.813Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.818Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.818Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.819Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:25.819Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.824Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.824Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.862Z] [LOG] [INFO][API] Getting channels for server 1180940682626600960, type: text
+[2025-06-08T04:57:25.862Z] [LOG] [INFO][API] Successfully fetched 26 channels for server 1180940682626600960
+[2025-06-08T04:57:25.863Z] [LOG] [INFO][API] Fetching ticket categories for server 1180940682626600960
+[2025-06-08T04:57:25.863Z] [LOG] [INFO][TicketCategoriesService] Retrieved 4 categories for guild 1180940682626600960
+[2025-06-08T04:57:25.864Z] [LOG] [INFO][API] Found 4 Discord category channels in server 1180940682626600960
+[2025-06-08T04:57:25.864Z] [LOG] [INFO][API] Returning 4 categories for server 1180940682626600960
+[2025-06-08T04:57:25.864Z] [LOG] [INFO][API] Getting channels and roles for server: 1180940682626600960
+[2025-06-08T04:57:25.864Z] [LOG] [INFO][API] Successfully retrieved 30 channels and 21 roles for server 1180940682626600960
+[2025-06-08T04:57:25.869Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.869Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.869Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/welcome-config Method: GET
+[2025-06-08T04:57:25.870Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.870Z] [LOG] [DASHBOARD] Welcome config query result: undefined
+[2025-06-08T04:57:25.870Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-08T04:57:25.875Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.875Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.876Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/member-events/goodbye-config Method: GET
+[2025-06-08T04:57:25.876Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.876Z] [LOG] [DASHBOARD] Goodbye config query result: undefined
+[2025-06-08T04:57:25.876Z] [LOG] [DASHBOARD] No goodbye config found, returning defaults
+[2025-06-08T04:57:25.881Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.881Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.881Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/join-config Method: GET
+[2025-06-08T04:57:25.881Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.886Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.886Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:25.887Z] [LOG] [DASHBOARD] Request to: /server/1180940682626600960/invite-tracker/leave-config Method: GET
+[2025-06-08T04:57:25.887Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1180940682626600960
+[2025-06-08T04:57:25.891Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-08T04:57:25.891Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-08T04:57:27.949Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:27.949Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:27.954Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:57:27.954Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:57:29.021Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:29.021Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:29.022Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:57:29.023Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:57:29.023Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:57:29.023Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:57:29.023Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:57:29.024Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:57:29.024Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:57:29.024Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:57:29.024Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:57:36.460Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-08T04:57:36.460Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-08T04:57:36.460Z] [LOG] Command registration complete.
+[2025-06-08T04:57:36.460Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-08T04:57:36.460Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-08T04:57:36.461Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-08T04:58:26.656Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:58:26.656Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:58:26.662Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:58:26.662Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:58:29.232Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:58:29.233Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:58:29.234Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:58:29.234Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:58:29.234Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:58:29.234Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:58:29.235Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:58:29.235Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:58:29.235Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:58:29.235Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:58:30.504Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:58:30.504Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:58:30.509Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-08T04:58:30.509Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-08T04:58:42.373Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:42.374Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:44.027Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:58:44.029Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:58:44.054Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:44.056Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:44.067Z] [LOG] [WebSocket] 1 total connections (latest: SOG14NWb3gGHYAB_AAAL)
+[2025-06-08T04:58:44.737Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:58:44.740Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T04:58:44.765Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:44.766Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:45.421Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:46.411Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:46.413Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:47.203Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:48.408Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:48.409Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:48.813Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:48.815Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T04:58:51.828Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:58:51.830Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:59:22.561Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:59:22.562Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:59:22.562Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T04:59:22.563Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:02:10.882Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:02:10.884Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:02:12.618Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:02:12.619Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:02:12.620Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:02:12.621Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:02:12.622Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:02:47.949Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:18.943Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:18.944Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:18.944Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:18.946Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:03:18.947Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:22.145Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:28.919Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T05:03:28.920Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T05:03:28.944Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:28.945Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:28.946Z] [LOG] [INFO][API] === getAllServers completed in 2ms with 2 servers ===
+[2025-06-08T05:03:28.946Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:28.947Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:28.947Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:28.948Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:28.964Z] [LOG] [WebSocket] 1 total connections (latest: _DbpbawsT5J-wRZXAAAR)
+[2025-06-08T05:03:30.002Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.002Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.002Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.002Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.003Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.003Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.003Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.003Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:30.003Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:30.004Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.004Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.005Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:30.006Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.440Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:03:30.441Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:30.442Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.442Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.442Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.442Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.443Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.443Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.443Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.443Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:30.443Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:30.729Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.730Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.730Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.730Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.730Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.730Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.731Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.731Z] [LOG] [INFO][API] === getAllServers completed in 2ms with 2 servers ===
+[2025-06-08T05:03:30.732Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:30.733Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:03:30.734Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:31.058Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.058Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.058Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.058Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.058Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.059Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.059Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.059Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:31.059Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:31.060Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.060Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.061Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:31.062Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:31.390Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.390Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.390Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.391Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.391Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.391Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.391Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.391Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:31.392Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.393Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:03:31.394Z] [LOG] [INFO][API] Using first available guild for warnings: 1180940682626600960
+[2025-06-08T05:03:31.870Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.870Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.870Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.871Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.871Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.871Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.871Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.871Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:03:31.872Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:03:31.873Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:03:31.874Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:07:11.947Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:07:11.948Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:07:11.949Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:07:11.950Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-08T05:07:24.943Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:07:47.948Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:08:01.950Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:11:15.961Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T05:11:15.963Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:11:15.989Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:11:15.990Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:11:15.990Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T05:11:15.991Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-08T05:11:15.992Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-08T05:11:15.992Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-08T05:11:15.992Z] [LOG] [INFO][API] Using default guild for tickets: 1180940682626600960
+[2025-06-08T05:11:16.008Z] [LOG] [WebSocket] 1 total connections (latest: Moj5ZvNluJAiJbx4AAAU)
+[2025-06-08T05:11:23.248Z] [LOG] Received SIGINT. Graceful shutdown ...

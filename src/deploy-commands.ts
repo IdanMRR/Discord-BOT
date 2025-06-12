@@ -7,7 +7,7 @@ import * as path from 'path';
 dotenv.config();
 
 // The test guild ID
-const TEST_GUILD_ID = '1365777891333374022';
+const TEST_GUILD_ID = process.env.TEST_GUILD_ID || '';
 
 async function loadAllCommands() {
   const commands = [];
@@ -34,10 +34,12 @@ async function loadAllCommands() {
             name: commandName,
             file: filePath
           });
-          console.log(`[WARNING] Duplicate command name "${commandName}" found in ${filePath}. This will cause deployment to fail.`);
+          console.log(`[WARNING] Duplicate command name "${commandName}" found in ${filePath}. Skipping duplicate.`);
+          // We're not adding this command since it's a duplicate
         } else {
           commandNames.add(commandName);
           commands.push(command.data.toJSON());
+          console.log(`Added command: ${commandName}`);
         }
       } else {
         console.log(`[WARNING] The command at ${filePath} is missing a required "data" property.`);
@@ -57,6 +59,33 @@ async function loadAllCommands() {
   return commands;
 }
 
+// Function to clear all existing commands before registering new ones
+async function clearAllExistingCommands() {
+  try {
+    if (!process.env.CLIENT_ID) {
+      throw new Error('CLIENT_ID is not defined in .env file');
+    }
+
+    // First clear global commands
+    console.log('Clearing all global application commands...');
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: [] }
+    );
+
+    // Then clear guild-specific commands
+    console.log(`Clearing commands from test guild: ${TEST_GUILD_ID}...`);
+    await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, TEST_GUILD_ID),
+      { body: [] }
+    );
+
+    console.log('Successfully cleared all existing commands.');
+  } catch (error) {
+    console.error('Error clearing existing commands:', error);
+  }
+}
+
 // Prepare to deploy commands
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '');
 
@@ -70,6 +99,9 @@ async function deployCommands() {
     if (!process.env.CLIENT_ID) {
       throw new Error('CLIENT_ID is not defined in .env file');
     }
+
+    // Clear all existing commands
+    await clearAllExistingCommands();
 
     // Load all commands dynamically
     console.log('Loading commands...');

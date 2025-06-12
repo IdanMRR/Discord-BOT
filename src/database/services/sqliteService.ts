@@ -22,13 +22,17 @@ export interface Ticket {
   channel_id: string;
   user_id: string;
   ticket_number: number;
+  case_number?: number;
   subject: string;
   category: string;
   status: 'open' | 'closed' | 'deleted';
+  deleted?: number; // 0 = not deleted, 1 = soft deleted
   created_at?: string;
   closed_at?: string;
   closed_by?: string;
   last_message_at?: string;
+  rating?: number;
+  feedback?: string;
 }
 
 export interface ServerLog {
@@ -54,6 +58,7 @@ export interface ServerSettings {
   message_log_channel_id?: string;
   server_log_channel_id?: string;
   welcome_channel_id?: string;
+  goodbye_channel_id?: string;
   welcome_message?: string;
   ticket_category_id?: string;
   ticket_panel_channel_id?: string;
@@ -65,7 +70,14 @@ export interface ServerSettings {
   staff_role_ids?: string[];
   language?: string;
   auto_mod_enabled?: boolean;
+  ticket_chatbot_enabled?: boolean;
+  ticket_chatbot_ai_enabled?: boolean;
   weather_channel_id?: string;
+  verification_channel_id?: string;
+  verification_message_id?: string;
+  verified_role_id?: string;
+  verification_type?: string;
+  member_events_config?: string;
   auto_mod_settings?: {
     filter_profanity: boolean;
     filter_invites: boolean;
@@ -83,19 +95,46 @@ export interface ServerSettings {
 
 // Warning Service
 export const WarningService = {
-  async getWarnings(guildId: string, userId?: string, active?: boolean): Promise<{data: Warning[], error: any}> {
+  async getWarnings(guildId: string | null, userId?: string, active?: boolean): Promise<{data: Warning[], error: any}> {
     try {
-      let query = 'SELECT * FROM warnings WHERE guild_id = ?';
-      const params: any[] = [guildId];
+      // Check if users table exists
+      const usersTableExists = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='users'
+      `).get();
+      
+      if (!usersTableExists) {
+        // If users table doesn't exist, run the migration
+        const { migrateAddUsersTable } = require('../migrations/add_users_table');
+        await migrateAddUsersTable();
+        logInfo('WarningService', 'Created missing users table');
+      }
+      
+      let query = 'SELECT * FROM warnings';
+      const params: any[] = [];
+      
+      // Add WHERE clause conditions
+      const conditions: string[] = [];
+      
+      // Add guild filter if guildId is provided
+      if (guildId) {
+        conditions.push('guild_id = ?');
+        params.push(guildId);
+      }
       
       if (userId) {
-        query += ' AND user_id = ?';
+        conditions.push('user_id = ?');
         params.push(userId);
       }
       
       if (active !== undefined) {
-        query += ' AND active = ?';
+        conditions.push('active = ?');
         params.push(active ? 1 : 0);
+      }
+      
+      // Add WHERE clause if we have conditions
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
       }
       
       query += ' ORDER BY created_at DESC';
@@ -139,13 +178,6 @@ export const WarningService = {
   
   async create(warning: Warning): Promise<Warning | null> {
     try {
-      // Get the next case number for this guild
-      const caseNumberStmt = db.prepare(`
-        SELECT MAX(case_number) as max_case FROM warnings WHERE guild_id = ?
-      `);
-      const { max_case } = caseNumberStmt.get(warning.guild_id) as { max_case: number | null };
-      const caseNumber = (max_case !== null ? max_case + 1 : 1);
-      
       const stmt = db.prepare(`
         INSERT INTO warnings 
         (guild_id, user_id, moderator_id, reason, active, case_number) 
@@ -158,11 +190,11 @@ export const WarningService = {
         warning.moderator_id,
         warning.reason,
         warning.active ? 1 : 0,
-        caseNumber
+        warning.case_number || null
       );
       
       if (result.changes > 0) {
-        const newWarning = {...warning, id: result.lastInsertRowid as number, case_number: caseNumber};
+        const newWarning = {...warning, id: result.lastInsertRowid as number};
         logInfo('WarningService', `Created new warning with ID ${newWarning.id}`);
         return newWarning;
       } else {
@@ -237,22 +269,65 @@ export const WarningService = {
 
 // Ticket Service
 export const TicketService = {
-  async getTickets(guildId: string, status?: string, userId?: string): Promise<{data: Ticket[], error: any}> {
+  async getTickets(guildId: string | null, status?: string, userId?: string, includeDeleted: boolean = false): Promise<{data: Ticket[], error: any}> {
     try {
-      let query = 'SELECT * FROM tickets WHERE guild_id = ?';
-      const params: any[] = [guildId];
+      // Check if users table exists
+      const usersTableExists = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='users'
+      `).get();
       
-      if (status && status !== 'all') {
-        query += ' AND status = ?';
+      if (!usersTableExists) {
+        // If users table doesn't exist, run the migration
+        const { migrateAddUsersTable } = require('../migrations/add_users_table');
+        await migrateAddUsersTable();
+        logInfo('TicketService', 'Created missing users table');
+      }
+      
+      let query = 'SELECT * FROM tickets';
+      const params: any[] = [];
+      
+      // Add WHERE clause conditions
+      const conditions: string[] = [];
+      
+      // Add guild filter if guildId is provided
+      if (guildId) {
+        conditions.push('guild_id = ?');
+        params.push(guildId);
+      }
+      
+      // Filter by soft delete unless includeDeleted is true
+      if (!includeDeleted) {
+        conditions.push('(deleted = 0 OR deleted IS NULL)');
+      }
+      
+      if (status) {
+        conditions.push('status = ?');
         params.push(status);
       }
       
       if (userId) {
-        query += ' AND user_id = ?';
+        conditions.push('user_id = ?');
         params.push(userId);
       }
       
-      query += ' ORDER BY ticket_number DESC';
+      // Add WHERE clause if we have conditions
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+      
+      // Order by status priority (open first, then in_progress, on_hold, closed, deleted)
+      // then by ticket number descending for newest first
+      query += ` ORDER BY 
+        CASE 
+          WHEN status = 'open' THEN 1
+          WHEN status = 'in_progress' THEN 2
+          WHEN status = 'on_hold' THEN 3
+          WHEN status = 'closed' THEN 4
+          WHEN status = 'deleted' THEN 5
+          ELSE 6
+        END,
+        ticket_number DESC`;
       
       const stmt = db.prepare(query);
       const tickets = stmt.all(...params) as Ticket[];
@@ -288,10 +363,17 @@ export const TicketService = {
   
   async create(ticket: Ticket): Promise<Ticket | null> {
     try {
+      // Get the next case number for this guild
+      const caseNumberStmt = db.prepare(`
+        SELECT MAX(case_number) as max_case FROM tickets WHERE guild_id = ?
+      `);
+      const { max_case } = caseNumberStmt.get(ticket.guild_id) as { max_case: number | null };
+      const caseNumber = (max_case !== null ? max_case + 1 : 1);
+
       const stmt = db.prepare(`
         INSERT INTO tickets 
-        (guild_id, channel_id, user_id, ticket_number, subject, status) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        (guild_id, channel_id, user_id, ticket_number, case_number, subject, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
@@ -299,6 +381,7 @@ export const TicketService = {
         ticket.channel_id,
         ticket.user_id,
         ticket.ticket_number,
+        caseNumber,
         ticket.subject,
         ticket.status
       );
@@ -307,10 +390,11 @@ export const TicketService = {
         const newTicket = {
           ...ticket,
           id: result.lastInsertRowid as number,
+          case_number: caseNumber,
           created_at: new Date().toISOString()
         };
         
-        logInfo('TicketService', `Created ticket #${ticket.ticket_number} for user ${ticket.user_id} in guild ${ticket.guild_id}`);
+        logInfo('TicketService', `Created ticket #${ticket.ticket_number} (Case #${caseNumber}) for user ${ticket.user_id} in guild ${ticket.guild_id}`);
         return newTicket;
       }
       
@@ -350,6 +434,50 @@ export const TicketService = {
       
       if (result.changes > 0) {
         logInfo('TicketService', `Closed ticket with channel ID ${channelId} by user ${closedBy}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      logError('TicketService', error);
+      return false;
+    }
+  },
+  
+  async softDeleteTicket(ticketId: number, deletedBy: string, reason?: string): Promise<boolean> {
+    try {
+      const stmt = db.prepare(`
+        UPDATE tickets 
+        SET deleted = 1, status = 'deleted', closed_at = CURRENT_TIMESTAMP, closed_by = ?
+        WHERE id = ?
+      `);
+      
+      const result = stmt.run(deletedBy, ticketId);
+      
+      if (result.changes > 0) {
+        logInfo('TicketService', `Soft deleted ticket ${ticketId} by user ${deletedBy}${reason ? ` (${reason})` : ''}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      logError('TicketService', error);
+      return false;
+    }
+  },
+  
+  async restoreTicket(ticketId: number, restoredBy: string): Promise<boolean> {
+    try {
+      const stmt = db.prepare(`
+        UPDATE tickets 
+        SET deleted = 0, status = 'closed'
+        WHERE id = ?
+      `);
+      
+      const result = stmt.run(ticketId);
+      
+      if (result.changes > 0) {
+        logInfo('TicketService', `Restored ticket ${ticketId} by user ${restoredBy}`);
         return true;
       }
       
@@ -541,392 +669,132 @@ export const ServerLogService = {
   }
 };
 
-// Server Settings Service
-export const ServerSettingsService = {
-  async listServers(): Promise<{data: ServerSettings[], error: any}> {
+// Server Settings Service has been moved to serverSettingsService.ts
+
+// Moderation Case interface
+interface ModerationCase {
+  id?: number;
+  guild_id: string;
+  case_number: number;
+  action_type: string;
+  user_id: string;
+  moderator_id: string;
+  reason: string;
+  created_at?: string;
+  additional_info?: string;
+  active?: boolean;
+}
+
+// Moderation Case Service
+export class ModerationCaseService {
+  static async getNextCaseNumber(guildId: string): Promise<number> {
     try {
-      const stmt = db.prepare('SELECT * FROM server_settings');
-      const settings = stmt.all() as ServerSettings[];
-      
-      // Parse JSON fields
-      settings.forEach(setting => {
-        // Convert auto_mod_enabled to boolean
-        setting.auto_mod_enabled = !!setting.auto_mod_enabled;
-        
-        // Parse auto_mod_settings
-        if (setting.auto_mod_settings && typeof setting.auto_mod_settings === 'string') {
-          try {
-            setting.auto_mod_settings = JSON.parse(setting.auto_mod_settings);
-          } catch (e) {
-            setting.auto_mod_settings = {
-              filter_profanity: true,
-              filter_invites: true,
-              filter_links: false,
-              spam_protection: true,
-              max_mentions: 5,
-              max_emojis: 10
-            };
-          }
-        }
-        
-        // Parse staff_role_ids
-        if (setting.staff_role_ids && typeof setting.staff_role_ids === 'string') {
-          try {
-            setting.staff_role_ids = JSON.parse(setting.staff_role_ids);
-          } catch (e) {
-            setting.staff_role_ids = [];
-          }
-        }
-      });
-      
-      return { data: settings, error: null };
+      const query = 'SELECT MAX(case_number) as max_case FROM moderation_cases WHERE guild_id = ?';
+      const result = db.prepare(query).get(guildId) as { max_case: number | null };
+      return (result?.max_case || 0) + 1;
     } catch (error) {
-      logError('ServerSettingsService', error);
-      return { data: [], error };
+      logError('ModerationCaseService', `Error getting next case number: ${error}`);
+      return 1;
     }
-  },
-  
-  async getOrCreate(guildId: string, guildName: string): Promise<ServerSettings | null> {
+  }
+
+  static async create(moderationCase: Omit<ModerationCase, 'id' | 'created_at' | 'case_number'>): Promise<ModerationCase | null> {
     try {
-      // Try to get existing settings
-      const getStmt = db.prepare('SELECT * FROM server_settings WHERE guild_id = ?');
-      let settings = getStmt.get(guildId) as ServerSettings | undefined;
+      // Get the next case number for this guild
+      const caseNumber = await this.getNextCaseNumber(moderationCase.guild_id);
       
-      if (settings) {
-        // Convert auto_mod_enabled to boolean
-        settings.auto_mod_enabled = !!settings.auto_mod_enabled;
-        
-        // Parse auto_mod_settings
-        if (settings.auto_mod_settings && typeof settings.auto_mod_settings === 'string') {
-          try {
-            settings.auto_mod_settings = JSON.parse(settings.auto_mod_settings);
-          } catch (e) {
-            // If parsing fails, set default values
-            settings.auto_mod_settings = {
-              filter_profanity: true,
-              filter_invites: true,
-              filter_links: false,
-              spam_protection: true,
-              max_mentions: 5,
-              max_emojis: 10
-            };
-            
-            // Update the settings with default auto_mod_settings
-            const updateStmt = db.prepare(`
-              UPDATE server_settings 
-              SET auto_mod_settings = ?
-              WHERE guild_id = ?
-            `);
-            
-            updateStmt.run(JSON.stringify(settings.auto_mod_settings), guildId);
-          }
-        } else if (!settings.auto_mod_settings) {
-          // If auto_mod_settings is missing, set default values
-          settings.auto_mod_settings = {
-            filter_profanity: true,
-            filter_invites: true,
-            filter_links: false,
-            spam_protection: true,
-            max_mentions: 5,
-            max_emojis: 10
-          };
-          
-          // Update the settings with default auto_mod_settings
-          const updateStmt = db.prepare(`
-            UPDATE server_settings 
-            SET auto_mod_settings = ?
-            WHERE guild_id = ?
-          `);
-          
-          updateStmt.run(JSON.stringify(settings.auto_mod_settings), guildId);
-        }
-        
-        // Parse staff_role_ids
-        if (settings.staff_role_ids && typeof settings.staff_role_ids === 'string') {
-          try {
-            settings.staff_role_ids = JSON.parse(settings.staff_role_ids);
-          } catch (e) {
-            settings.staff_role_ids = [];
-          }
-        }
-        
-        return settings;
-      }
-      
-      // If no settings exist, create new ones
-      const defaultSettings: ServerSettings = {
-        guild_id: guildId,
-        name: guildName,
-        auto_mod_enabled: false,
-        auto_mod_settings: {
-          filter_profanity: true,
-          filter_invites: true,
-          filter_links: false,
-          spam_protection: true,
-          max_mentions: 5,
-          max_emojis: 10
-        }
-      };
-      
-      const insertStmt = db.prepare(`
-        INSERT INTO server_settings 
-        (guild_id, name, auto_mod_enabled, auto_mod_settings) 
-        VALUES (?, ?, ?, ?)
+      const stmt = db.prepare(`
+        INSERT INTO moderation_cases 
+        (guild_id, case_number, action_type, user_id, moderator_id, reason, additional_info, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
       
-      const result = insertStmt.run(
-        defaultSettings.guild_id,
-        defaultSettings.name,
-        defaultSettings.auto_mod_enabled ? 1 : 0,
-        JSON.stringify(defaultSettings.auto_mod_settings)
+      const result = stmt.run(
+        moderationCase.guild_id,
+        caseNumber,
+        moderationCase.action_type,
+        moderationCase.user_id,
+        moderationCase.moderator_id,
+        moderationCase.reason,
+        moderationCase.additional_info || null,
+        moderationCase.active !== false ? 1 : 0
       );
       
-      if (result.changes > 0) {
-        const newSettings = {
-          ...defaultSettings,
+      if (result.lastInsertRowid) {
+        const newCase = {
+          ...moderationCase,
           id: result.lastInsertRowid as number,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          case_number: caseNumber,
+          created_at: new Date().toISOString()
         };
         
-        logInfo('ServerSettingsService', `Created settings for guild ${guildId}`);
-        return newSettings;
+        logInfo('ModerationCaseService', `Created moderation case #${caseNumber} for ${moderationCase.action_type}`);
+        return newCase;
       }
       
       return null;
     } catch (error) {
-      logError('ServerSettingsService', error);
-      return null;
-    }
-  },
-  
-  async updateSettings(guildId: string, settings: Partial<ServerSettings>): Promise<boolean> {
-    try {
-      // First, check if the server settings record exists
-      const checkStmt = db.prepare('SELECT COUNT(*) as count FROM server_settings WHERE guild_id = ?');
-      const { count } = checkStmt.get(guildId) as { count: number };
-      
-      // If the record doesn't exist, create it first
-      if (count === 0) {
-        const serverName = settings.name || 'Unknown Server';
-        const insertStmt = db.prepare(`
-          INSERT INTO server_settings (
-            guild_id, name, created_at, updated_at
-          ) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `);
-        
-        insertStmt.run(guildId, serverName);
-        logInfo('ServerSettingsService', `Created new settings record for guild ${guildId}`);
-      }
-      
-      // Build the SET part of the query dynamically based on provided settings
-      const updates: string[] = [];
-      const params: any[] = [];
-      
-      if (settings.name !== undefined) {
-        updates.push('name = ?');
-        params.push(settings.name);
-      }
-      
-      if (settings.log_channel_id !== undefined) {
-        updates.push('log_channel_id = ?');
-        params.push(settings.log_channel_id);
-      }
-      
-      if (settings.mod_log_channel_id !== undefined) {
-        updates.push('mod_log_channel_id = ?');
-        params.push(settings.mod_log_channel_id);
-      }
-      
-      if (settings.member_log_channel_id !== undefined) {
-        updates.push('member_log_channel_id = ?');
-        params.push(settings.member_log_channel_id);
-      }
-      
-      if (settings.message_log_channel_id !== undefined) {
-        updates.push('message_log_channel_id = ?');
-        params.push(settings.message_log_channel_id);
-      }
-      
-      if (settings.server_log_channel_id !== undefined) {
-        updates.push('server_log_channel_id = ?');
-        params.push(settings.server_log_channel_id);
-      }
-      
-      if (settings.language !== undefined) {
-        updates.push('language = ?');
-        params.push(settings.language);
-      }
-      
-      if (settings.welcome_channel_id !== undefined) {
-        updates.push('welcome_channel_id = ?');
-        params.push(settings.welcome_channel_id);
-      }
-      
-      if (settings.welcome_message !== undefined) {
-        updates.push('welcome_message = ?');
-        params.push(settings.welcome_message);
-      }
-      
-      if (settings.ticket_category_id !== undefined) {
-        updates.push('ticket_category_id = ?');
-        params.push(settings.ticket_category_id);
-      }
-      
-      if (settings.ticket_panel_channel_id !== undefined) {
-        updates.push('ticket_panel_channel_id = ?');
-        params.push(settings.ticket_panel_channel_id);
-      }
-      
-      if (settings.ticket_panel_message_id !== undefined) {
-        updates.push('ticket_panel_message_id = ?');
-        params.push(settings.ticket_panel_message_id);
-      }
-      
-      if (settings.ticket_logs_channel_id !== undefined) {
-        updates.push('ticket_logs_channel_id = ?');
-        params.push(settings.ticket_logs_channel_id);
-      }
-      
-      if (settings.faq_channel_id !== undefined) {
-        updates.push('faq_channel_id = ?');
-        params.push(settings.faq_channel_id);
-      }
-      
-      if (settings.rules_channel_id !== undefined) {
-        updates.push('rules_channel_id = ?');
-        params.push(settings.rules_channel_id);
-      }
-      
-      if (settings.red_alert_channels !== undefined) {
-        updates.push('red_alert_channels = ?');
-        // If it's already a string, use it directly, otherwise convert to JSON
-        if (typeof settings.red_alert_channels === 'string') {
-          params.push(settings.red_alert_channels);
-        } else {
-          params.push(JSON.stringify(settings.red_alert_channels || []));
-        }
-      }
-      
-      if (settings.staff_role_ids !== undefined) {
-        updates.push('staff_role_ids = ?');
-        params.push(JSON.stringify(settings.staff_role_ids));
-      }
-      
-      if (settings.auto_mod_enabled !== undefined) {
-        updates.push('auto_mod_enabled = ?');
-        params.push(settings.auto_mod_enabled ? 1 : 0);
-      }
-      
-      if (settings.auto_mod_settings !== undefined) {
-        updates.push('auto_mod_settings = ?');
-        params.push(JSON.stringify(settings.auto_mod_settings));
-      }
-      
-      // Add updated_at timestamp
-      updates.push('updated_at = CURRENT_TIMESTAMP');
-      
-      // If no updates, return early
-      if (updates.length === 0) {
-        return true;
-      }
-      
-      // Build and execute the query
-      const query = `UPDATE server_settings SET ${updates.join(', ')} WHERE guild_id = ?`;
-      params.push(guildId);
-      
-      const stmt = db.prepare(query);
-      const result = stmt.run(...params);
-      
-      // Only log if we actually changed something
-      if (result.changes > 0) {
-        logInfo('ServerSettingsService', `Updated settings for guild ${guildId}`);
-      }
-      return true;
-    } catch (error) {
-      logError('ServerSettingsService', error);
-      return false;
-    }
-  },
-  
-  async getSetting(guildId: string, key: keyof ServerSettings): Promise<any> {
-    try {
-      // For most settings, we can directly query the column
-      const directColumns = [
-        'log_channel_id', 'mod_log_channel_id', 'member_log_channel_id',
-        'message_log_channel_id', 'server_log_channel_id', 'welcome_channel_id',
-        'welcome_message', 'ticket_category_id', 'name', 'language',
-        'faq_channel_id', 'rules_channel_id', 'ticket_logs_channel_id',
-        'ticket_panel_channel_id', 'ticket_panel_message_id'
-      ];
-      
-      if (directColumns.includes(key)) {
-        const stmt = db.prepare(`SELECT ${key} FROM server_settings WHERE guild_id = ?`);
-        const result = stmt.get(guildId) as Record<string, any> | undefined;
-        
-        return result ? result[key] : null;
-      }
-      
-      // For other settings, we need to get the full record and parse JSON fields
-      const stmt = db.prepare('SELECT * FROM server_settings WHERE guild_id = ?');
-      const settings = stmt.get(guildId) as ServerSettings | undefined;
-      
-      if (!settings) {
-        return null;
-      }
-      
-      // Convert auto_mod_enabled to boolean
-      if (key === 'auto_mod_enabled') {
-        return !!settings.auto_mod_enabled;
-      }
-      
-      // Parse red_alert_channels if requested
-      if (key === 'red_alert_channels' && settings.red_alert_channels) {
-        if (typeof settings.red_alert_channels === 'string') {
-          try {
-            return JSON.parse(settings.red_alert_channels);
-          } catch (e) {
-            return [];
-          }
-        }
-        return settings.red_alert_channels;
-      }
-      
-      // Parse auto_mod_settings
-      if (key === 'auto_mod_settings' && settings.auto_mod_settings) {
-        if (typeof settings.auto_mod_settings === 'string') {
-          try {
-            return JSON.parse(settings.auto_mod_settings);
-          } catch (e) {
-            return {
-              filter_profanity: true,
-              filter_invites: true,
-              filter_links: false,
-              spam_protection: true,
-              max_mentions: 5,
-              max_emojis: 10
-            };
-          }
-        }
-        return settings.auto_mod_settings;
-      }
-      
-      // Parse staff_role_ids
-      if (key === 'staff_role_ids' && settings.staff_role_ids) {
-        if (typeof settings.staff_role_ids === 'string') {
-          try {
-            return JSON.parse(settings.staff_role_ids);
-          } catch (e) {
-            return [];
-          }
-        }
-        return settings.staff_role_ids;
-      }
-      
-      return settings[key] || null;
-    } catch (error) {
-      logError('ServerSettingsService', error);
+      logError('ModerationCaseService', `Error creating moderation case: ${error}`);
       return null;
     }
   }
-};
+
+  static async getByGuild(guildId: string, limit: number = 50): Promise<ModerationCase[]> {
+    try {
+      const stmt = db.prepare(`
+        SELECT * FROM moderation_cases 
+        WHERE guild_id = ? 
+        ORDER BY case_number DESC 
+        LIMIT ?
+      `);
+      
+      const results = stmt.all(guildId, limit) as ModerationCase[];
+      return results;
+    } catch (error) {
+      logError('ModerationCaseService', `Error getting moderation cases: ${error}`);
+      return [];
+    }
+  }
+
+  static async getByCaseNumber(guildId: string, caseNumber: number): Promise<ModerationCase | null> {
+    try {
+      const stmt = db.prepare(`
+        SELECT * FROM moderation_cases 
+        WHERE guild_id = ? AND case_number = ?
+      `);
+      
+      const result = stmt.get(guildId, caseNumber) as ModerationCase | undefined;
+      return result || null;
+    } catch (error) {
+      logError('ModerationCaseService', `Error getting moderation case: ${error}`);
+      return null;
+    }
+  }
+
+  static async updateCase(guildId: string, caseNumber: number, updates: Partial<ModerationCase>): Promise<boolean> {
+    try {
+      const setClause = Object.keys(updates)
+        .filter(key => key !== 'id' && key !== 'guild_id' && key !== 'case_number')
+        .map(key => `${key} = ?`)
+        .join(', ');
+      
+      if (!setClause) return false;
+      
+      const values = Object.keys(updates)
+        .filter(key => key !== 'id' && key !== 'guild_id' && key !== 'case_number')
+        .map(key => (updates as any)[key]);
+      
+      const stmt = db.prepare(`
+        UPDATE moderation_cases 
+        SET ${setClause}
+        WHERE guild_id = ? AND case_number = ?
+      `);
+      
+      const result = stmt.run(...values, guildId, caseNumber);
+      return result.changes > 0;
+    } catch (error) {
+      logError('ModerationCaseService', `Error updating moderation case: ${error}`);
+      return false;
+    }
+  }
+}

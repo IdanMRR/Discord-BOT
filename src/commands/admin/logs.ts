@@ -6,7 +6,9 @@ import {
   ContextMenuCommandBuilder,
   ApplicationCommandType,
   MessageContextMenuCommandInteraction,
-  UserContextMenuCommandInteraction
+  UserContextMenuCommandInteraction,
+  MessageFlags,
+  ChannelType
 } from 'discord.js';
 import { Command } from '../../types/command';
 import { LogChannelService } from '../../database/services/logChannelService';
@@ -42,7 +44,7 @@ const logText: Command = {
   async execute(interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction) {
     if (!interaction.isChatInputCommand()) return; // Make sure it's a chat input command
     if (!interaction.guild) {
-      await interaction.reply({ content: 'This command can only be used in a server.', ephemeral: true });
+      await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -53,8 +55,8 @@ const logText: Command = {
         case 'set': {
           const channel = interaction.options.getChannel('channel');
           
-          if (!channel || !(channel instanceof TextChannel)) {
-            await interaction.reply({ content: 'Please provide a valid text channel.', ephemeral: true });
+          if (!channel || channel.type !== ChannelType.GuildText) {
+            await interaction.reply({ content: 'Please provide a valid text channel.', flags: MessageFlags.Ephemeral });
             return;
           }
 
@@ -62,7 +64,7 @@ const logText: Command = {
           
           await interaction.reply({ 
             content: `✅ Log channel set to ${channel}. All server logs will be sent here.`,
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
 
           // Send a test log
@@ -82,7 +84,7 @@ const logText: Command = {
           await LogChannelService.removeLogChannel(interaction.guild.id);
           await interaction.reply({ 
             content: '✅ Logging has been disabled for this server.',
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
           break;
         }
@@ -93,7 +95,7 @@ const logText: Command = {
           if (!channelId) {
             await interaction.reply({ 
               content: 'No log channel is set up for this server. Use `/logs set` to set one up.',
-              ephemeral: true 
+              flags: MessageFlags.Ephemeral 
             });
             return;
           }
@@ -113,7 +115,7 @@ const logText: Command = {
 
           await interaction.reply({ 
             content: `✅ A test log message has been sent to <#${channelId}>.`,
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
           break;
         }
@@ -122,7 +124,7 @@ const logText: Command = {
       console.error('Error in logs command:', error);
       await interaction.reply({ 
         content: 'An error occurred while processing your request. Please try again later.',
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral 
       });
     }
   },

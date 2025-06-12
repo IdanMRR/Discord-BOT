@@ -1,9 +1,15 @@
-import { ButtonInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, MessageFlags, EmbedBuilder } from 'discord.js';
+import { 
+  ButtonInteraction, 
+  EmbedBuilder, 
+  ActionRowBuilder, 
+  StringSelectMenuBuilder, 
+  StringSelectMenuOptionBuilder,
+  MessageFlags
+} from 'discord.js';
 import { Colors } from '../../utils/embeds';
 
 /**
- * Ticket category configuration
- * Each category has a unique identifier, display name, description, emoji, and color
+ * Available ticket categories with their configuration
  */
 export const ticketCategories = [
   {
@@ -103,6 +109,25 @@ export function getPriorityInfo(priority: string) {
  */
 export async function showCategorySelection(interaction: ButtonInteraction | any) {
   try {
+    // Check if interaction has already been handled
+    if (interaction.replied) {
+      console.log('Interaction already replied, skipping category selection');
+      return false;
+    }
+
+    // Only defer if not already deferred (when called from force_create_ticket, it's already deferred)
+    if (!interaction.deferred) {
+      try {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      } catch (deferError: any) {
+        if (deferError.code === 10062) {
+          console.error('Interaction expired before could defer reply in category selection');
+          return false;
+        }
+        throw deferError;
+      }
+    }
+    
     // Get current time for footer timestamp
     const now = new Date();
     const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -152,21 +177,11 @@ export async function showCategorySelection(interaction: ButtonInteraction | any
       embed.setThumbnail(interaction.guild.iconURL({ size: 128 }) || null);
     }
 
-    // Send the selection menu as an ephemeral message (only visible to the user)
-    // Check if the interaction has already been replied to
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        embeds: [embed],
-        components: [actionRow],
-        ephemeral: true
-      });
-    } else {
-      await interaction.reply({
-        embeds: [embed],
-        components: [actionRow],
-        flags: MessageFlags.Ephemeral
-      });
-    }
+    // Send the selection menu using editReply since we deferred
+    await interaction.editReply({
+      embeds: [embed],
+      components: [actionRow]
+    });
     
     return true;
   } catch (error) {
@@ -181,20 +196,23 @@ export async function showCategorySelection(interaction: ButtonInteraction | any
         .setFooter({ text: 'Made by Soggra.' })
         .setTimestamp();
         
-      // Send the error as an ephemeral message
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
+      // Send the error using editReply if deferred, otherwise use reply
+      if (interaction.deferred) {
+        await interaction.editReply({
           embeds: [errorEmbed],
-          ephemeral: true
+          components: []
         });
-      } else {
+      } else if (!interaction.replied) {
         await interaction.reply({
           embeds: [errorEmbed],
           flags: MessageFlags.Ephemeral
         });
       }
-    } catch (replyError) {
-      console.error('Failed to send error message:', replyError);
+    } catch (replyError: any) {
+      // Don't log "already acknowledged" errors as they're expected
+      if (replyError.code !== 40060) {
+        console.error('Failed to send error message:', replyError);
+      }
     }
     
     return false;

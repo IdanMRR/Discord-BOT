@@ -1,0 +1,252 @@
+[2025-06-08T11:05:02.124Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-08-14-05-02.txt
+[2025-06-08T11:05:02.252Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-08T11:05:02.253Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-08T11:05:02.254Z] [LOG] Registering auth router at /auth
+[2025-06-08T11:05:02.254Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-08T11:05:02.254Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-08T11:05:02.254Z] [LOG] Registering servers router at /api/servers
+[2025-06-08T11:05:02.258Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-08T11:05:02.258Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-08T11:05:02.288Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-08T11:05:02.289Z] [LOG] ✅ Loaded: setup-member-events
+[2025-06-08T11:05:02.290Z] [LOG] ✅ Loaded: nuke
+[2025-06-08T11:05:02.291Z] [LOG] ✅ Loaded: remove-redalert
+[2025-06-08T11:05:02.292Z] [LOG] ✅ Loaded: reset-staff-table
+[2025-06-08T11:05:02.293Z] [LOG] ✅ Loaded: roles-setup
+[2025-06-08T11:05:02.294Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-08T11:05:02.294Z] [LOG] ✅ Loaded: rules-manager
+[2025-06-08T11:05:02.295Z] [LOG] ✅ Loaded: server-cleanup
+[2025-06-08T11:05:02.296Z] [LOG] ✅ Loaded: server-setup
+[2025-06-08T11:05:02.307Z] [LOG] ✅ Loaded: set-weather-channel
+[2025-06-08T11:05:02.308Z] [LOG] ✅ Loaded: set-weather-schedule
+[2025-06-08T11:05:02.309Z] [LOG] ✅ Loaded: setup-logs
+[2025-06-08T11:05:02.310Z] [LOG] ✅ Loaded: setup-redalert
+[2025-06-08T11:05:02.310Z] [LOG] ✅ Loaded: ticket-setup-logs
+[2025-06-08T11:05:02.312Z] [LOG] ✅ Loaded: setup-wizard
+[2025-06-08T11:05:02.313Z] [LOG] ✅ Loaded: test-chatbot
+[2025-06-08T11:05:02.313Z] [LOG] ✅ Loaded: test-events
+[2025-06-08T11:05:02.314Z] [LOG] ✅ Loaded: test-logs
+[2025-06-08T11:05:02.325Z] [LOG] ✅ Loaded: test-verification
+[2025-06-08T11:05:02.327Z] [LOG] ✅ Loaded: ticket-add-user
+[2025-06-08T11:05:02.328Z] [LOG] ✅ Loaded: ticket-cleanup
+[2025-06-08T11:05:02.329Z] [LOG] ✅ Loaded: ticket-config
+[2025-06-08T11:05:02.381Z] [LOG] ✅ Loaded: ticket-debug
+[2025-06-08T11:05:02.383Z] [LOG] ✅ Loaded: ticket-logs
+[2025-06-08T11:05:02.384Z] [LOG] ✅ Loaded: ticket-priority
+[2025-06-08T11:05:02.385Z] [LOG] ✅ Loaded: ticket-remove-user
+[2025-06-08T11:05:02.386Z] [LOG] ✅ Loaded: toggle-ai-chatbot
+[2025-06-08T11:05:02.387Z] [LOG] ✅ Loaded: toggle-command-logging
+[2025-06-08T11:05:02.393Z] [LOG] ✅ Loaded: verification-setup
+[2025-06-08T11:05:02.394Z] [LOG] ✅ Loaded: verify-logs
+[2025-06-08T11:05:02.395Z] [LOG] ✅ Loaded: welcome-setup
+[2025-06-08T11:05:02.396Z] [LOG] ✅ Loaded: verify
+[2025-06-08T11:05:02.397Z] [LOG] ✅ Loaded: ban
+[2025-06-08T11:05:02.398Z] [LOG] ✅ Loaded: dm
+[2025-06-08T11:05:02.399Z] [LOG] ✅ Loaded: kick
+[2025-06-08T11:05:02.400Z] [LOG] ✅ Loaded: removewarn
+[2025-06-08T11:05:02.401Z] [LOG] ✅ Loaded: setlogchannel
+[2025-06-08T11:05:02.403Z] [LOG] ✅ Loaded: ticket-staff-message
+[2025-06-08T11:05:02.404Z] [LOG] ✅ Loaded: staff-stats
+[2025-06-08T11:05:02.406Z] [LOG] ✅ Loaded: ticket-rate
+[2025-06-08T11:05:02.408Z] [LOG] ✅ Loaded: ticket-status
+[2025-06-08T11:05:02.410Z] [LOG] ✅ Loaded: timeout
+[2025-06-08T11:05:02.411Z] [LOG] ✅ Loaded: warn
+[2025-06-08T11:05:02.412Z] [LOG] ✅ Loaded: warnings
+[2025-06-08T11:05:02.413Z] [LOG] ⚠️  Skipped chatbot.js: Missing data property
+[2025-06-08T11:05:02.414Z] [LOG] ✅ Loaded: help
+[2025-06-08T11:05:02.415Z] [LOG] ✅ Loaded: invite
+[2025-06-08T11:05:02.416Z] [LOG] ✅ Loaded: invites
+[2025-06-08T11:05:02.416Z] [LOG] ✅ Loaded: language
+[2025-06-08T11:05:02.417Z] [LOG] ✅ Loaded: serverinfo
+[2025-06-08T11:05:02.419Z] [LOG] ✅ Loaded: weather
+[2025-06-08T11:05:02.419Z] [LOG] 
+[2025-06-08T11:05:02.419Z] [LOG] 📝 Found 57 commands to register
+[2025-06-08T11:05:02.419Z] [LOG] 
+[2025-06-08T11:05:02.419Z] [LOG] 🧹 Clearing existing commands...
+[2025-06-08T11:05:02.420Z] [LOG] [INFO][Migration] rules_channel_id column already exists in server_settings table
+[2025-06-08T11:05:02.420Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-08T11:05:02.421Z] [LOG] [INFO][Migration] templates column already exists in server_settings table
+[2025-06-08T11:05:02.421Z] [LOG] [INFO][Migration] active_templates column already exists in server_settings table
+[2025-06-08T11:05:02.421Z] [LOG] [INFO][Database Migration] weather_channel_id column already exists in server_settings table
+[2025-06-08T11:05:02.422Z] [LOG] Connected to database
+[2025-06-08T11:05:02.442Z] [LOG] [INFO][Migration] ticket_action_logs table migration completed successfully
+[2025-06-08T11:05:02.443Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-08T11:05:02.443Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-08T11:05:02.444Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-08T11:05:02.445Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-08T11:05:02.446Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-08T11:05:02.446Z] [LOG] [INFO][Migration] ticket_logs_channel_id column already exists in server_settings table
+[2025-06-08T11:05:02.446Z] [LOG] Ticket categories migration completed successfully
+[2025-06-08T11:05:02.446Z] [LOG] add-ticket-categories migration loaded
+[2025-06-08T11:05:02.446Z] [LOG] add-custom-cities migration loaded
+[2025-06-08T11:05:02.446Z] [LOG] add-weather-schedule migration loaded
+[2025-06-08T11:05:02.446Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-08T11:05:02.446Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-08T11:05:02.447Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-08T11:05:02.447Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-08T11:05:02.447Z] [LOG] add-log-channels migration loaded
+[2025-06-08T11:05:02.447Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-08T11:05:02.447Z] [LOG] ensure-log-channels migration loaded
+[2025-06-08T11:05:02.447Z] [LOG] [INFO][Migration] red_alert_channels column already exists in server_settings table
+[2025-06-08T11:05:02.447Z] [LOG] Creating log_channels table...
+[2025-06-08T11:05:02.448Z] [LOG] Created log_channels table
+[2025-06-08T11:05:02.448Z] [LOG] [INFO][Database Migration] Log channels table migration completed successfully
+[2025-06-08T11:05:02.448Z] [LOG] [INFO][Migration] Notes column already exists in tickets table
+[2025-06-08T11:05:02.448Z] [LOG] [INFO][Database Migration] Ticket notes column migration completed successfully
+[2025-06-08T11:05:02.448Z] [LOG] [INFO][Database Migration] Adding users table...
+[2025-06-08T11:05:02.448Z] [LOG] [INFO][Database Migration] Users table already exists
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Database Migration] Users table migration completed successfully
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Migration] last_activity_at column already exists or could not be added
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Migration] Status column exists, will use new status values in code
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Migration] Created or verified ticket_action_logs table
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Migration] Created or verified ticket_staff_activity table
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Migration] Successfully completed ticket status migration
+[2025-06-08T11:05:02.449Z] [LOG] [INFO][Database Migration] Ticket status migration completed successfully
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Migration] last_activity_at column already exists in tickets table
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Migration] Successfully completed ticket last_activity migration
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Database Migration] Ticket last activity column migration completed successfully
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Migration] Successfully created ticket_staff_activity table
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Database Migration] Ticket staff activity table migration completed successfully
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Staff Activity Migration] ticket_staff_activity table already exists
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Staff Activity Migration] Migration completed successfully
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Database Migration] Ticket staff activity table creation completed successfully
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Migration] action_type column already exists in ticket_staff_activity table
+[2025-06-08T11:05:02.450Z] [LOG] [INFO][Database Migration] Added action_type column to ticket_staff_activity table
+[2025-06-08T11:05:02.451Z] [LOG] [INFO][Migration] Successfully created ticket_transcripts table
+[2025-06-08T11:05:02.451Z] [LOG] [INFO][Database Migration] Ticket transcripts table migration completed successfully
+[2025-06-08T11:05:02.451Z] [LOG] [INFO][Migration] case_number column already exists in tickets table
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Migration] Successfully completed ticket case number migration
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Database Migration] Ticket case number migration completed successfully
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Migration] deleted column already exists in tickets table
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Migration] Successfully completed soft delete migration
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Database Migration] Ticket soft delete column migration completed successfully
+[2025-06-08T11:05:02.452Z] [LOG] [INFO][Migration] dashboard_logs table already exists, checking and adding missing columns...
+[2025-06-08T11:05:02.453Z] [LOG] [INFO][Database Migration] Dashboard logs table migration completed successfully
+[2025-06-08T11:05:02.453Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-08T11:05:02.453Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-08T11:05:02.453Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-08T11:05:02.454Z] [LOG] [INFO][Database Migration] dm_logs table migration completed successfully
+[2025-06-08T11:05:02.454Z] [LOG] [INFO][Database] Database migrations completed successfully
+[2025-06-08T11:05:02.454Z] [LOG] [INFO][Database] Migrations completed successfully
+[2025-06-08T11:05:02.454Z] [LOG] [INFO][Database] Server settings updated with channel IDs
+[2025-06-08T11:05:02.455Z] [LOG] [INFO][Migration] Current dm_logs columns: id, user_id, bot_id, content, embed_json, components_json, source_command, source_guild_id, created_at, guild_id, sender_id, recipient_id, command, success, error
+[2025-06-08T11:05:02.455Z] [LOG] [INFO][Migration] Migrated data from source_guild_id to guild_id
+[2025-06-08T11:05:02.455Z] [LOG] [INFO][Migration] Successfully completed dm_logs table migration
+[2025-06-08T11:05:02.689Z] [LOG] ✅ Cleared existing commands
+[2025-06-08T11:05:02.689Z] [LOG] 📡 Registering commands...
+[2025-06-08T11:05:03.397Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ Member Count: 864
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-08T11:05:03.398Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-08T11:05:03.399Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-08T11:05:03.399Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-08T11:05:03.399Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-08T11:05:03.399Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-08T11:05:03.400Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-08T11:05:03.400Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-08T11:05:03.400Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-08T11:05:03.401Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-08T11:05:03.401Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-08T11:05:03.401Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-08T11:05:03.401Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-08T11:05:03.401Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-08T11:05:03.401Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-08T11:05:03.401Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-08T11:05:03.401Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-08T11:05:03.401Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-08T11:05:03.402Z] [LOG] Processing command folder: admin
+[2025-06-08T11:05:03.402Z] [LOG] Found 39 command files in admin
+[2025-06-08T11:05:03.402Z] [LOG] Processing command folder: general
+[2025-06-08T11:05:03.402Z] [LOG] Found 1 command files in general
+[2025-06-08T11:05:03.402Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-08T11:05:03.402Z] [LOG] Processing command folder: moderation
+[2025-06-08T11:05:03.402Z] [LOG] Found 12 command files in moderation
+[2025-06-08T11:05:03.402Z] [LOG] Processing command folder: utility
+[2025-06-08T11:05:03.403Z] [LOG] Found 7 command files in utility
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: command-logs
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: force-log
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: logs
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-08T11:05:03.404Z] [LOG] Successfully loaded command: nuke
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: server-setup
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: test-events
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: test-logs
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: test-verification
+[2025-06-08T11:05:03.405Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: verify
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: ban
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: dm
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: kick
+[2025-06-08T11:05:03.406Z] [LOG] Successfully loaded command: removewarn
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: timeout
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: warn
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: warnings
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: chatbot
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: help
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: invite
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: invites
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: language
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-08T11:05:03.407Z] [LOG] Successfully loaded command: weather
+[2025-06-08T11:05:03.407Z] [LOG] Loaded 59 commands in total
+[2025-06-08T11:05:03.407Z] [LOG] [Command Initializer] Successfully loaded 59 commands from files
+[2025-06-08T11:05:03.407Z] [LOG] [Command Initializer] Registered 59 commands to client
+[2025-06-08T11:05:03.407Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-08T11:05:03.408Z] [LOG] [Command Register] Starting registration of 59 commands...
+[2025-06-08T11:05:03.408Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-08T11:05:03.683Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-08T11:05:03.683Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-08T11:05:03.683Z] [LOG] Deduplication: 59 commands reduced to 59 unique commands
+[2025-06-08T11:05:03.684Z] [LOG] Registering 59 commands globally for all servers...
+[2025-06-08T11:05:03.762Z] [LOG] 
+[2025-06-08T11:05:03.762Z] [LOG] 🎉 SUCCESS! Commands registered!
+[2025-06-08T11:05:03.762Z] [LOG] ✅ Registered 57 commands to your server
+[2025-06-08T11:05:03.762Z] [LOG] ⚡ Commands are available immediately!
+[2025-06-08T11:05:03.762Z] [LOG] 
+[2025-06-08T11:05:03.762Z] [LOG] 🔄 Try typing "/" in Discord to see your commands!
+[2025-06-08T11:05:03.762Z] [LOG] 
+[2025-06-08T11:05:03.762Z] [LOG] 📋 Available commands include:
+[2025-06-08T11:05:03.763Z] [LOG]    ADMIN: setup-member-events, roles-setup, server-setup, setup-logs, setup-redalert (+5 more)
+[2025-06-08T11:05:03.763Z] [LOG]    UTILITY: set-weather-channel, set-weather-schedule, help, serverinfo, weather
+[2025-06-08T11:05:03.763Z] [LOG]    MODERATION: ban, kick, removewarn, timeout, warn (+1 more)
+[2025-06-08T11:05:03.763Z] [LOG]    GENERAL: check-chatbot-status, command-logs, dm-logs, faq-manager, force-log (+31 more)

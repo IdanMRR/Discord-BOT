@@ -55,10 +55,16 @@ export async function handleHelpSelectMenu(interaction: StringSelectMenuInteract
     await showCategoryHelp(interaction, category);
   } catch (error) {
     console.error('Error handling help select menu:', error);
-    await interaction.reply({ 
-      content: 'There was an error processing this selection.', 
-      flags: MessageFlags.Ephemeral 
-    });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({ 
+        content: 'There was an error processing this selection.'
+      });
+    } else {
+      await interaction.followUp({ 
+        content: 'There was an error processing this selection.',
+        flags: MessageFlags.Ephemeral 
+      });
+    }
   }
 }
 
@@ -109,10 +115,17 @@ async function showMainHelpMenu(interaction: ButtonInteraction | StringSelectMen
         )
     );
 
-  await interaction.update({ 
-    embeds: [helpEmbed], 
-    components: [row] 
-  });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({ 
+        embeds: [helpEmbed], 
+        components: [row] 
+      });
+    } else {
+      await interaction.update({ 
+        embeds: [helpEmbed], 
+        components: [row] 
+      });
+    }
 }
 
 /**
@@ -328,8 +341,16 @@ async function showCategoryHelp(interaction: ButtonInteraction | StringSelectMen
         .setDisabled(category === 'utility')
     );
   
-  await interaction.update({ 
-    embeds: [helpEmbed], 
-    components: [row] 
-  });
+  // Use editReply if the interaction is already deferred, otherwise use update
+  if (interaction.deferred && !interaction.replied) {
+    await interaction.editReply({ 
+      embeds: [helpEmbed], 
+      components: [row] 
+    });
+  } else {
+    await interaction.update({ 
+      embeds: [helpEmbed], 
+      components: [row] 
+    });
+  }
 }

@@ -39,7 +39,7 @@ const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
 
 // The test guild ID
-const guildId = process.env.TEST_GUILD_ID || '1365777891333374022';
+  const guildId = process.env.TEST_GUILD_ID || '';
 
 if (!token) {
   console.error('DISCORD_TOKEN not found in .env file');

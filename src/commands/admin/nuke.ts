@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logCommandUsage, logWarning } from '../../utils/logger';
+import { logWarning } from '../../utils/logger';
 import { getContextLanguage, getTranslation as t } from '../../utils/language';
 
 export const data = new SlashCommandBuilder()
@@ -10,7 +10,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    // Get guild and check if user is owner
+    // Quick validation checks first
     const guild = interaction.guild;
     if (!guild) {
       await interaction.reply({ 
@@ -29,82 +29,127 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    // Get language setting
-    const language = await getContextLanguage(guild.id);
-
-    // Create confirmation modal
+    // Create and show modal immediately (this acknowledges the interaction)
     const modal = new ModalBuilder()
       .setCustomId(`nuke-confirm-${interaction.user.id}-${Date.now()}`)
       .setTitle('⚠️ Server Nuke Confirmation');
 
-    // Create confirmation input
     const confirmInput = new TextInputBuilder()
       .setCustomId('nuke-confirm-input')
       .setLabel('Type CONFIRM-NUKE to proceed')
       .setPlaceholder('Type CONFIRM-NUKE in all caps')
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
-      .setMinLength(0)
-      .setMaxLength(20);
+      .setMinLength(12)
+      .setMaxLength(12);
 
-    // Add warning text
     const warningInput = new TextInputBuilder()
       .setCustomId('nuke-warning')
       .setLabel('WARNING: This will delete ALL channels!')
-      .setValue('• Delete ALL channels\n• Delete ALL categories\n• Create new bot-commands channel')
+      .setValue('This action will:\n• Delete ALL channels\n• Delete ALL categories\n• Create new bot-commands channel\n\nThis action CANNOT be undone!')
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(false);
 
-    // Add inputs to modal
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(confirmInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(warningInput)
     );
 
-    // Show the modal
+    // Show modal - this acknowledges the interaction
     await interaction.showModal(modal);
 
+    // Wait for modal submission
     try {
-      // Wait for modal submission
       const filter = (i: ModalSubmitInteraction) => 
         i.customId.startsWith(`nuke-confirm-${interaction.user.id}`) &&
         i.user.id === interaction.user.id;
 
       const submission = await interaction.awaitModalSubmit({
         filter,
-        time: 60000 // 1 minute
+        time: 60000 // 1 minute timeout
       });
 
       // Get the confirmation text
       const confirmText = submission.fields.getTextInputValue('nuke-confirm-input');
 
-      if (confirmText.trim() !== 'CONFIRM-NUKE') {
-        await submission.reply({
-          content: '❌ Nuke cancelled: Incorrect confirmation text.',
-          flags: MessageFlags.Ephemeral
-        });
+      // IMMEDIATELY defer the modal reply to prevent timeout
+      try {
+        if (!submission.replied && !submission.deferred) {
+          await submission.deferReply({ flags: MessageFlags.Ephemeral });
+        }
+      } catch (deferError: any) {
+        if (deferError.code === 10062 || deferError.code === 10008) {
+          console.log('[Nuke] Modal interaction expired before we could defer');
+          return; // Exit early if interaction expired
+        }
+        console.error('[Nuke] Error deferring modal reply:', deferError);
         return;
       }
 
-      // Log the action first
+      if (confirmText.trim() !== 'CONFIRM-NUKE') {
+        try {
+          await submission.editReply({
+            content: '❌ Nuke cancelled: Incorrect confirmation text. You must type exactly "CONFIRM-NUKE".'
+          });
+        } catch (editError: any) {
+          if (editError.code === 10062 || editError.code === 10008) {
+            console.log('[Nuke] Modal interaction expired during cancellation message');
+          }
+        }
+        return;
+      }
+
+      // Log the action
       await logWarning('Server Nuke', `Server ${guild.name} (${guild.id}) is being nuked by owner ${interaction.user.tag} (${interaction.user.id})`);
 
-      // Defer the reply since this will take a while
-      await submission.deferReply({ flags: MessageFlags.Ephemeral });
+      // Send initial confirmation
+      await submission.editReply({
+        content: '🚀 Initiating server nuke... This may take a moment.'
+      });
 
+      // Try to DM the owner BEFORE starting the nuke (in case channels get deleted)
+      let dmSent = false;
+      try {
+        console.log(`[Nuke] Attempting to fetch owner for guild ${guild.id}`);
+        const owner = await guild.fetchOwner();
+        console.log(`[Nuke] Owner fetched: ${owner.user.tag} (${owner.user.id})`);
+        
+        const dmEmbed = new EmbedBuilder()
+          .setColor(Colors.WARNING)
+          .setTitle(`🚀 Server Nuke Started - ${guild.name}`)
+          .setDescription(`Your server "${guild.name}" nuke operation has begun.\n\n**Initiated by:** ${interaction.user.tag} (${interaction.user.id})\n\nI'll send you another message when it's complete.`)
+          .setTimestamp();
+
+        console.log(`[Nuke] Attempting to send start DM to owner ${owner.user.tag}`);
+        await owner.send({ embeds: [dmEmbed] });
+        dmSent = true;
+        console.log(`[Nuke] Successfully sent start DM to owner ${owner.user.tag}`);
+      } catch (dmError: any) {
+        console.error(`[Nuke] Failed to DM server owner (start notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+        if (dmError.code === 50007) {
+          console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled`);
+        } else if (dmError.code === 10013) {
+          console.log(`[Nuke] Unknown user - owner may have left Discord`);
+        } else {
+          console.error(`[Nuke] Unexpected DM error:`, dmError);
+        }
+      }
+
+      // Perform the nuke operation
       try {
         // Get all channels and categories
         const channels = await guild.channels.fetch();
-
-        // Send initial response
-        await submission.editReply({
-          content: '🚀 Initiating server nuke...'
-        });
+        let deletedCount = 0;
 
         // Delete all channels and categories
         for (const [_, channel] of channels) {
           if (channel) {
-            await channel.delete().catch(console.error);
+            try {
+              await channel.delete();
+              deletedCount++;
+            } catch (error) {
+              console.error(`Failed to delete channel ${channel.name}:`, error);
+            }
           }
         }
 
@@ -117,78 +162,113 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Send completion message in new channel
         const completionEmbed = new EmbedBuilder()
           .setColor(Colors.SUCCESS)
-          .setTitle('Server Reset Complete')
-          .setDescription(`The server has been reset by ${interaction.user.tag}. This is the new bot-commands channel.`)
+          .setTitle('🚀 Server Reset Complete')
+          .setDescription(`The server has been reset by ${interaction.user.tag}.\n\n**Statistics:**\n• Deleted ${deletedCount} channels/categories\n• Created new bot-commands channel\n\nThis is your new bot-commands channel.`)
           .setTimestamp();
 
         await newChannel.send({ embeds: [completionEmbed] });
 
-        // Try to DM the owner
+        // Try to update the modal reply (might fail if interaction expired)
         try {
+          await submission.editReply({
+            content: `✅ Server nuke completed successfully!\n• Deleted ${deletedCount} channels/categories\n• Created new #bot-commands channel\n\nCheck the new #bot-commands channel for confirmation.`
+          });
+        } catch (editError: any) {
+          if (editError.code === 10008) {
+            console.log('[Nuke] Modal interaction expired, but nuke completed successfully');
+          } else {
+            console.error('Error updating modal reply:', editError);
+          }
+        }
+
+        // Send completion DM to owner
+        try {
+          console.log(`[Nuke] Attempting to send completion DM to owner`);
           const owner = await guild.fetchOwner();
-          const dmEmbed = new EmbedBuilder()
-            .setColor(Colors.WARNING)
-            .setTitle(`Server Nuke Executed - ${guild.name}`)
-            .setDescription(`Your server "${guild.name}" has been nuked as requested.\nAll channels have been deleted and a new "bot-commands" channel has been created.\n\nExecuted by: ${interaction.user.tag} (${interaction.user.id})`)
+          const completionDmEmbed = new EmbedBuilder()
+            .setColor(Colors.SUCCESS)
+            .setTitle(`✅ Server Nuke Complete - ${guild.name}`)
+            .setDescription(`Your server "${guild.name}" has been successfully nuked.\n\n**Final Statistics:**\n• Deleted ${deletedCount} channels/categories\n• Created new "bot-commands" channel\n• Executed by: ${interaction.user.tag} (${interaction.user.id})\n\nYou can now find the new #bot-commands channel in your server.`)
             .setTimestamp();
 
-          await owner.send({ embeds: [dmEmbed] });
-        } catch (error) {
-          console.error('Failed to DM server owner:', error);
-        }
-
-        // Log command usage
-        await logCommandUsage({
-          guild: guild,
-          user: interaction.user,
-          command: 'nuke',
-          options: interaction.options.data,
-          channel: newChannel,
-          success: true
-        });
-
-      } catch (error) {
-        console.error('Error during nuke:', error);
-        await submission.followUp({
-          content: '❌ An error occurred while nuking the server.',
-          flags: MessageFlags.Ephemeral
-        });
-      }
-
-    } catch (error: any) {
-      console.error('Error in modal handling:', error);
-      // Don't try to respond to the original interaction as it may have timed out
-      if (error.code === 'InteractionCollectorError') {
-        console.error('Modal submission timeout');
-        // Modal timed out, we can't respond to the original interaction anymore
-      } else { console.error('Error in modal handling:', error);
-        // Only attempt to respond if we haven't already
-        try {
-          // Check if the interaction can still be replied to
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction.followUp({
-              content: '❌ An error occurred while processing your confirmation.',
-              flags: MessageFlags.Ephemeral
-             });
+          await owner.send({ embeds: [completionDmEmbed] });
+          console.log(`[Nuke] Successfully sent completion DM to owner ${owner.user.tag}`);
+        } catch (dmError: any) {
+          console.error(`[Nuke] Failed to DM server owner (completion notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+          if (dmError.code === 50007) {
+            console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled - cannot send completion notification`);
+          } else if (dmError.code === 10013) {
+            console.log(`[Nuke] Unknown user - owner may have left Discord`);
+          } else {
+            console.error(`[Nuke] Unexpected completion DM error:`, dmError);
           }
-        } catch (followUpError) {
-          console.error('Error sending follow-up message:', followUpError);
+        }
+
+      } catch (nukeError) {
+        console.error('Error during nuke operation:', nukeError);
+        
+        try {
+          await submission.editReply({
+            content: '❌ An error occurred during the nuke operation. Some channels may not have been deleted.'
+          });
+        } catch (editError: any) {
+          if (editError.code === 10008) {
+            console.log('[Nuke] Modal interaction expired during error handling');
+          } else {
+            console.error('Error updating modal reply:', editError);
+          }
+        }
+
+        // Send error DM to owner
+        try {
+          console.log(`[Nuke] Attempting to send error DM to owner`);
+          const owner = await guild.fetchOwner();
+          const errorDmEmbed = new EmbedBuilder()
+            .setColor(Colors.ERROR)
+            .setTitle(`❌ Server Nuke Failed - ${guild.name}`)
+            .setDescription(`There was an error during the nuke operation for "${guild.name}".\n\n**Error:** ${nukeError}\n**Initiated by:** ${interaction.user.tag} (${interaction.user.id})\n\nSome channels may not have been deleted. Please check your server.`)
+            .setTimestamp();
+
+          await owner.send({ embeds: [errorDmEmbed] });
+          console.log(`[Nuke] Successfully sent error DM to owner`);
+        } catch (dmError: any) {
+          console.error(`[Nuke] Failed to DM server owner (error notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+          if (dmError.code === 50007) {
+            console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled - cannot send error notification`);
+          } else if (dmError.code === 10013) {
+            console.log(`[Nuke] Unknown user - owner may have left Discord`);
+          } else {
+            console.error(`[Nuke] Unexpected error DM error:`, dmError);
+          }
         }
       }
+
+    } catch (modalError: any) {
+      // Modal timed out or other error
+      if (modalError.code === 'InteractionCollectorError') {
+        console.log('[Nuke] Modal timed out - user did not respond within 60 seconds');
+      } else if (modalError.code === 10062 || modalError.code === 10008) {
+        console.log('[Nuke] Modal interaction expired or unknown');
+      } else {
+        console.error('Error waiting for modal submission:', modalError);
+      }
+      // Don't try to respond - the modal interaction may have expired
+      return;
     }
 
   } catch (error) {
     console.error('Error in nuke command:', error);
+    
+    // Only try to respond if we haven't shown a modal yet
     try {
-      // Only reply if we haven't already responded to the interaction
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ 
           content: '❌ An error occurred while executing the command.',
           flags: MessageFlags.Ephemeral
-         });
+        });
       }
-    } catch (error) {
-      console.error('Error sending error message:', error);
+    } catch (replyError) {
+      console.error('Error sending error message:', replyError);
     }
   }
 }

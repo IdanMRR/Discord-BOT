@@ -1,0 +1,149 @@
+/* Global Settings Styles */
+
+/* Font Size Settings */
+:root.text-sm {
+  --base-font-size: 0.875rem;
+}
+
+:root.text-base {
+  --base-font-size: 1rem;
+}
+
+:root.text-lg {
+  --base-font-size: 1.125rem;
+}
+
+/* Apply font size to all text elements */
+body {
+  font-size: var(--base-font-size, 1rem);
+}
+
+/* This ensures ALL text elements respect the font size setting */
+p, h1, h2, h3, h4, h5, h6, span, div, button, input, textarea, label, a, li {
+  font-size: calc(var(--base-font-size, 1rem) * var(--element-size-ratio, 1));
+}
+
+/* Preserve relative sizing */
+h1 { --element-size-ratio: 2.25; }
+h2 { --element-size-ratio: 1.875; }
+h3 { --element-size-ratio: 1.5; }
+h4 { --element-size-ratio: 1.25; }
+h5 { --element-size-ratio: 1.125; }
+h6 { --element-size-ratio: 1; }
+.text-xs { --element-size-ratio: 0.75; }
+.text-sm { --element-size-ratio: 0.875; }
+.text-base { --element-size-ratio: 1; }
+.text-lg { --element-size-ratio: 1.125; }
+.text-xl { --element-size-ratio: 1.25; }
+.text-2xl { --element-size-ratio: 1.5; }
+.text-3xl { --element-size-ratio: 1.875; }
+.text-4xl { --element-size-ratio: 2.25; }
+.text-5xl { --element-size-ratio: 3; }
+
+/* Interface Scale Settings */
+:root {
+  --ui-scale: 1;
+}
+
+/* Apply scale to the entire application */
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Full screen scaling approach */
+.app-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  transform: scale(var(--ui-scale));
+  transform-origin: top left;
+}
+
+/* Ensure content stretches to fill viewport */
+.main-content-scroll {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content-scroll > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the main content area fills available space */
+main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Fix for scrolling with scaled content */
+body {
+  min-height: 100vh;
+}
+
+/* Toast Positioning and Styling */
+[data-sonner-toaster] {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+[data-sonner-toast] {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* React Hot Toast specific styles */
+.react-hot-toast {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+.react-hot-toast > div {
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+}
+
+/* Ensure toasts are always visible above everything */
+div[data-hot-toast-container] {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+div[data-hot-toast-container] > div {
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+}

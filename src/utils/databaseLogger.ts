@@ -1,6 +1,8 @@
 import { Guild, User, GuildMember } from 'discord.js';
 import { logInfo, logError } from './logger';
-import { ServerLogService, ServerSettingsService } from '../database/services/sqliteService';
+import { ServerLogService } from '../database/services/sqliteService';
+import { ServerSettingsService } from '../database/services/serverSettingsService';
+import { formatIsraeliTime } from './time-formatter';
 
 /**
  * Log an event to the database
@@ -338,6 +340,7 @@ async function sendLogToChannel(
     const settings = await settingsManager.getSettings(guildId);
     
     if (!settings || !settings.ticket_logs_channel_id) {
+      logInfo('Ticket Logger', 'No ticket logs channel configured, skipping log message');
       return;
     }
     
@@ -347,21 +350,49 @@ async function sendLogToChannel(
     const { Colors } = require('../utils/embeds');
     
     // Get the guild
-    const guild = await client.guilds.fetch(guildId);
-    if (!guild) return;
+    const guild = await client.guilds.fetch(guildId).catch((error: any) => {
+      logError('Ticket Logger', `Error fetching guild ${guildId}: ${error}`);
+      return null;
+    });
     
-    // Get the channel
-    const logChannel = await guild.channels.fetch(settings.ticket_logs_channel_id);
+    if (!guild) {
+      logError('Ticket Logger', `Guild ${guildId} not found`);
+      return;
+    }
+    
+    // Get the channel with proper error handling
+    let logChannel;
+    try {
+      logChannel = await guild.channels.fetch(settings.ticket_logs_channel_id);
+    } catch (channelError: any) {
+      if (channelError.code === 10003) {
+        // Unknown Channel error - channel was deleted
+        logError('Ticket Logger', `Ticket logs channel ${settings.ticket_logs_channel_id} no longer exists (deleted). Please reconfigure ticket logs channel.`);
+        
+        // Clear the invalid channel ID from settings to prevent future errors
+        try {
+          delete settings.ticket_logs_channel_id;
+          await settingsManager.updateSettings(guildId, settings);
+          logInfo('Ticket Logger', 'Cleared invalid ticket logs channel ID from settings');
+        } catch (updateError) {
+          logError('Ticket Logger', `Error clearing invalid channel ID: ${updateError}`);
+        }
+      } else {
+        logError('Ticket Logger', `Error fetching ticket logs channel: ${channelError}`);
+      }
+      return;
+    }
+    
     if (!logChannel || !logChannel.isTextBased()) {
+      logError('Ticket Logger', `Ticket logs channel ${settings.ticket_logs_channel_id} is not a text channel`);
       return;
     }
     
     // Get user information
     const user = await client.users.fetch(userId).catch(() => null);
     
-    // Format the current time
-    const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // Format the current time in Israeli timezone
+    const timeString = formatIsraeliTime();
     
     // Get action emoji and color
     let actionEmoji = '🎫';
@@ -471,9 +502,18 @@ async function sendLogToChannel(
       }
     }
     
-    // Send the log embed to the log channel
-    await logChannel.send({ embeds: [logEmbed] });
-    logInfo('Ticket Logger', `Sent ${action} log to ticket logs channel for ticket #${ticketNumber}`);
+    // Send the log embed to the log channel with error handling
+    try {
+      await logChannel.send({ embeds: [logEmbed] });
+      logInfo('Ticket Logger', `Sent ${action} log to ticket logs channel for ticket #${ticketNumber}`);
+    } catch (sendError: any) {
+      if (sendError.code === 10003) {
+        // Channel was deleted while we were processing
+        logError('Ticket Logger', `Ticket logs channel was deleted while sending log for ticket #${ticketNumber}`);
+      } else {
+        logError('Ticket Logger', `Error sending log message: ${sendError}`);
+      }
+    }
   } catch (error) {
     logError('Ticket Logger', `Error sending log to channel: ${error}`);
   }

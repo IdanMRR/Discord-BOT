@@ -3,6 +3,7 @@ import { logInfo, logError } from '../../utils/logger';
 
 /**
  * Update the tickets table to include category information
+ * Also create ticket_categories table for custom categories per server
  */
 export async function addTicketCategoriesSupport() {
   try {
@@ -30,10 +31,9 @@ export async function addTicketCategoriesSupport() {
       `).run();
       
       logInfo('Database Migration', 'Created tickets table with category support');
-      return;
     }
     
-    // Check if the category column exists
+    // Check if the category column exists in tickets table
     const hasCategory = db.prepare(
       "PRAGMA table_info(tickets)"
     ).all().some((column: any) => column.name === 'category');
@@ -48,6 +48,40 @@ export async function addTicketCategoriesSupport() {
     } else {
       logInfo('Database Migration', 'Category column already exists in tickets table');
     }
+    
+    // Check if ticket_categories table exists
+    const categoriesTableExists = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='ticket_categories'"
+    ).get();
+    
+    if (!categoriesTableExists) {
+      // Create the ticket_categories table
+      db.prepare(`
+        CREATE TABLE ticket_categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          guild_id TEXT NOT NULL,
+          category_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          emoji TEXT DEFAULT '📁',
+          color INTEGER DEFAULT 0x5865F2,
+          priority TEXT DEFAULT 'medium',
+          expected_response_time TEXT DEFAULT '24 hours',
+          category_type TEXT DEFAULT 'custom',
+          discord_category_id TEXT,
+          position INTEGER DEFAULT 0,
+          is_active BOOLEAN DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(guild_id, category_id)
+        )
+      `).run();
+      
+      logInfo('Database Migration', 'Created ticket_categories table');
+    } else {
+      logInfo('Database Migration', 'ticket_categories table already exists');
+    }
+    
   } catch (error) {
     logError('Database Migration', error);
     throw error;

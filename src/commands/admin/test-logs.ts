@@ -46,8 +46,51 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       logChannels.set('Verification Logs', { id: verificationSettings.log_channel_id, sent: false });
     }
     
+    // Invite Tracking Diagnostics
+    const inviteTrackingStatus = {
+      memberLogsChannel: serverSettings.member_log_channel_id || null,
+      botPermissions: {
+        manageGuild: interaction.guild!.members.me?.permissions.has('ManageGuild') || false,
+        viewAuditLog: interaction.guild!.members.me?.permissions.has('ViewAuditLog') || false,
+        sendMessages: serverSettings.member_log_channel_id ? 
+          (await interaction.guild!.channels.fetch(serverSettings.member_log_channel_id).catch(() => null))?.permissionsFor(interaction.guild!.members.me!)?.has('SendMessages') || false : false
+      },
+      inviteCount: 0
+    };
+    
+    // Check invite permissions
+    try {
+      const invites = await interaction.guild!.invites.fetch();
+      inviteTrackingStatus.inviteCount = invites.size;
+    } catch (error) {
+      inviteTrackingStatus.inviteCount = -1; // Error fetching
+    }
+    
     if (logChannels.size === 0) {
-      await interaction.editReply('No log channels are configured for this server.');
+      // Still show invite tracking diagnostics even if no log channels
+      const embed = new EmbedBuilder()
+        .setColor(Colors.WARNING)
+        .setTitle('🔍 Log Channels Test Results')
+        .setDescription('No log channels are configured for this server.')
+        .addFields(
+          {
+            name: '📈 Invite Tracking Status',
+            value: `**Member Logs Channel**: ${inviteTrackingStatus.memberLogsChannel ? `<#${inviteTrackingStatus.memberLogsChannel}>` : '❌ Not configured'}\n` +
+                   `**Bot Permissions**:\n` +
+                   `  - Manage Guild: ${inviteTrackingStatus.botPermissions.manageGuild ? '✅' : '❌'}\n` +
+                   `  - View Audit Log: ${inviteTrackingStatus.botPermissions.viewAuditLog ? '✅' : '❌'}\n` +
+                   `  - Send Messages (Member Logs): ${inviteTrackingStatus.botPermissions.sendMessages ? '✅' : '❌'}\n` +
+                   `**Invite Access**: ${inviteTrackingStatus.inviteCount === -1 ? '❌ Cannot fetch invites' : `✅ Found ${inviteTrackingStatus.inviteCount} invites`}\n\n` +
+                   `**Status**: ${!inviteTrackingStatus.memberLogsChannel ? '⚠️ Configure member logs channel to enable invite tracking' : 
+                     !inviteTrackingStatus.botPermissions.manageGuild || !inviteTrackingStatus.botPermissions.viewAuditLog ? '⚠️ Bot missing required permissions' :
+                     !inviteTrackingStatus.botPermissions.sendMessages ? '⚠️ Bot cannot send to member logs channel' :
+                     inviteTrackingStatus.inviteCount === -1 ? '⚠️ Cannot access server invites' : '✅ Invite tracking should work'}`,
+            inline: false
+          }
+        )
+        .setTimestamp();
+        
+      await interaction.editReply({ embeds: [embed] });
       return;
     }
     
@@ -115,6 +158,22 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         inline: true
       }]);
     }
+    
+    // Add invite tracking diagnostics to all responses
+    responseEmbed.addFields([{
+      name: '📈 Invite Tracking Status',
+      value: `**Member Logs Channel**: ${inviteTrackingStatus.memberLogsChannel ? `<#${inviteTrackingStatus.memberLogsChannel}>` : '❌ Not configured'}\n` +
+             `**Bot Permissions**:\n` +
+             `  - Manage Guild: ${inviteTrackingStatus.botPermissions.manageGuild ? '✅' : '❌'}\n` +
+             `  - View Audit Log: ${inviteTrackingStatus.botPermissions.viewAuditLog ? '✅' : '❌'}\n` +
+             `  - Send Messages (Member Logs): ${inviteTrackingStatus.botPermissions.sendMessages ? '✅' : '❌'}\n` +
+             `**Invite Access**: ${inviteTrackingStatus.inviteCount === -1 ? '❌ Cannot fetch invites' : `✅ Found ${inviteTrackingStatus.inviteCount} invites`}\n\n` +
+             `**Status**: ${!inviteTrackingStatus.memberLogsChannel ? '⚠️ Configure member logs channel to enable invite tracking' : 
+               !inviteTrackingStatus.botPermissions.manageGuild || !inviteTrackingStatus.botPermissions.viewAuditLog ? '⚠️ Bot missing required permissions' :
+               !inviteTrackingStatus.botPermissions.sendMessages ? '⚠️ Bot cannot send to member logs channel' :
+               inviteTrackingStatus.inviteCount === -1 ? '⚠️ Cannot access server invites' : '✅ Invite tracking should work'}`,
+      inline: false
+    }]);
     
     // Send response
     await interaction.editReply({ embeds: [responseEmbed] });

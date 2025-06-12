@@ -1,6 +1,7 @@
 import { db } from '../sqlite';
 import { logInfo, logError } from '../../utils/logger';
-import { WarningService, TicketService, ServerLogService, ServerSettingsService } from './sqliteService';
+import { WarningService, TicketService, ServerLogService } from './sqliteService';
+import { ServerSettingsService } from './serverSettingsService';
 import { Warning, Ticket, ServerLog } from './sqliteService';
 
 // Command Service - New service for tracking command usage

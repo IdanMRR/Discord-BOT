@@ -4,8 +4,14 @@ import { logInfo, logError } from '../../utils/logger';
 /**
  * Migration to add ticket status fields and modify existing status field
  */
-(async () => {
+export async function addTicketStatusMigration() {
   try {
+    // Check if db is available
+    if (!db) {
+      logError('Migration', 'Database connection not available');
+      return false;
+    }
+
     // Check if status column exists but needs to be modified from 'open|closed|deleted' to include more statuses
     const tableInfo = db.pragma('table_info(tickets)') as { name: string, type: string, dflt_value: string, pk: number }[];
     const statusColumn = tableInfo.find((col) => col.name === 'status');
@@ -91,7 +97,9 @@ import { logInfo, logError } from '../../utils/logger';
     }
     
     logInfo('Migration', 'Successfully completed ticket status migration');
+    return true;
   } catch (error) {
     logError('Migration', `Error during migration: ${error}`);
+    return false;
   }
-})(); 
+} 

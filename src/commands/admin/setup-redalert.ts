@@ -3,7 +3,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, TextCha
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { addChannelToRedAlerts, validateAlertChannels } from '../../handlers/alerts/red-alert-handler';
-import { ServerSettingsService } from '../../database/services/sqliteService';
+import { ServerSettingsService } from '../../database/services/serverSettingsService';
 
 export const data = new SlashCommandBuilder()
     .setName('setup-redalert')
@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         // Acknowledge the interaction immediately to prevent timeout
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Get the channel where the command was executed
         const channel = interaction.channel;
@@ -52,7 +52,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         
         // Get updated channel list for the message
-        const updatedChannels = await ServerSettingsService.getSetting(interaction.guildId, 'red_alert_channels') || [];
+        const updatedChannels = (await ServerSettingsService.getSetting<string[]>(interaction.guildId, 'red_alert_channels')) || [];
         const channelCount = Array.isArray(updatedChannels) ? updatedChannels.length : 0;
         
         // Send confirmation

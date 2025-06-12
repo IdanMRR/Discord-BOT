@@ -14,6 +14,7 @@ import { db } from '../../database/sqlite';
 import { settingsManager } from '../../utils/settings';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { createRatingButton } from './ticket-rating';
+import { formatIsraeliTime, formatIsraeliDateForTranscript } from '../../utils/time-formatter';
 
 // Create a map to track recently generated transcripts to prevent duplicates
 const recentTranscripts = new Map<string, number>();
@@ -29,9 +30,10 @@ const recentTranscripts = new Map<string, number>();
  */
 export async function saveAndSendTranscript(
   channel: TextChannel,
-  closedBy: GuildMember | User,
+  closedBy: GuildMember | User | string,
   reason?: string,
-  isDeleting: boolean = false
+  isDeleting: boolean = false,
+  sendToUser: boolean = true
 ): Promise<boolean> {
   try {
     // Get ticket info from database
@@ -57,45 +59,113 @@ export async function saveAndSendTranscript(
     const formattedTicketNumber = ticketInfo.ticket_number.toString().padStart(4, '0');
     
     // Get all messages in the channel (up to 100 for now)
-    const messages = await channel.messages.fetch({ limit: 100 });
+    let messages;
+    let sortedMessages: Message[] = [];
     
-    // Sort messages by timestamp (oldest first)
-    const sortedMessages = Array.from(messages.values()).sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+    try {
+      messages = await channel.messages.fetch({ limit: 100 });
+      // Sort messages by timestamp (oldest first)
+      sortedMessages = Array.from(messages.values()).sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+    } catch (fetchError: any) {
+      if (fetchError.code === 10003) {
+        // Channel was deleted, create a minimal transcript
+        logError('Transcript', `Channel ${channel.id} was deleted while generating transcript for ticket #${ticketInfo.ticket_number}`);
+        sortedMessages = []; // Empty messages array
+      } else {
+        throw fetchError;
+      }
+    }
+    
+    // Get the proper user data for the person who closed the ticket
+    let closedByUser: User | GuildMember | null = null;
+    let closedByDisplay = 'Unknown User';
+    let closedById = 'Unknown';
+    
+    try {
+      if (closedBy instanceof GuildMember) {
+        // If it's a GuildMember object
+        closedByUser = closedBy;
+        closedByDisplay = closedBy.user.tag;
+        closedById = closedBy.id;
+      } else if (closedBy instanceof User) {
+        // If it's a User object
+        closedByUser = closedBy;
+        closedByDisplay = closedBy.tag;
+        closedById = closedBy.id;
+      } else if (typeof closedBy === 'string') {
+        // If it's just a string ID, fetch the user
+        closedById = closedBy;
+        try {
+          const fetchedUser = await channel.client.users.fetch(closedBy);
+          if (fetchedUser) {
+            closedByUser = fetchedUser;
+            closedByDisplay = fetchedUser.tag;
+          } else {
+            closedByDisplay = `Unknown User (${closedBy})`;
+          }
+        } catch (fetchError) {
+          logError('Transcript', `Error fetching user ${closedBy}: ${fetchError}`);
+          closedByDisplay = `Unknown User (${closedBy})`;
+        }
+      } else if (typeof closedBy === 'object' && closedBy && 'id' in closedBy) {
+        // If it's an object with an ID property
+        closedById = (closedBy as any).id;
+        try {
+          const fetchedUser = await channel.client.users.fetch((closedBy as any).id);
+          if (fetchedUser) {
+            closedByUser = fetchedUser;
+            closedByDisplay = fetchedUser.tag;
+          } else {
+            closedByDisplay = `Unknown User (${(closedBy as any).id})`;
+          }
+        } catch (fetchError) {
+          logError('Transcript', `Error fetching user ${(closedBy as any).id}: ${fetchError}`);
+          closedByDisplay = `Unknown User (${(closedBy as any).id})`;
+        }
+      }
+    } catch (error) {
+      logError('Transcript', `Error processing closedBy user: ${error}`);
+      closedByDisplay = 'Unknown User';
+    }
     
     // Build plain text transcript instead of HTML
     let textContent = `=============== TICKET TRANSCRIPT #${formattedTicketNumber} ===============\n`;
     textContent += `Category: ${ticketInfo.category}\n`;
     textContent += `Created by: ${ticketInfo.username} (${ticketInfo.user_id})\n`;
     textContent += `Created at: ${ticketInfo.created_at}\n`;
-    textContent += `Closed by: ${closedBy instanceof GuildMember ? closedBy.user.tag : closedBy.tag} (${closedBy.id})\n`;
-    textContent += `Closed at: ${new Date().toLocaleString()}\n`;
+    textContent += `Closed by: ${closedByDisplay} (${closedById})\n`;
+    textContent += `Closed at: ${formatIsraeliDateForTranscript()}\n`;
     if (reason) textContent += `Reason: ${reason}\n`;
     textContent += `\n=== MESSAGES ===\n\n`;
     
     // Add each message to the transcript
-    for (const message of sortedMessages) {
-      const timestamp = new Date(message.createdTimestamp).toLocaleString();
-      
-      textContent += `[${timestamp}] ${message.author.username}: ${message.content || '(No text content)'}\n`;
-      
-      // Add embeds as text summaries
-      if (message.embeds.length > 0) {
-        for (const embed of message.embeds) {
-          textContent += `  [Embed] `;
-          if (embed.title) textContent += `Title: ${embed.title} `;
-          if (embed.description) textContent += `Content: ${embed.description}`;
-          textContent += `\n`;
+    if (sortedMessages.length > 0) {
+      for (const message of sortedMessages) {
+        const timestamp = new Date(message.createdTimestamp).toLocaleString();
+        
+        textContent += `[${timestamp}] ${message.author.username}: ${message.content || '(No text content)'}\n`;
+        
+        // Add embeds as text summaries
+        if (message.embeds.length > 0) {
+          for (const embed of message.embeds) {
+            textContent += `  [Embed] `;
+            if (embed.title) textContent += `Title: ${embed.title} `;
+            if (embed.description) textContent += `Content: ${embed.description}`;
+            textContent += `\n`;
+          }
         }
-      }
-      
-      // Add attachments
-      if (message.attachments.size > 0) {
-        for (const [, attachment] of message.attachments) {
-          textContent += `  [Attachment] ${attachment.name || 'Unnamed file'}: ${attachment.url}\n`;
+        
+        // Add attachments
+        if (message.attachments.size > 0) {
+          for (const [, attachment] of message.attachments) {
+            textContent += `  [Attachment] ${attachment.name || 'Unnamed file'}: ${attachment.url}\n`;
+          }
         }
+        
+        textContent += `\n`;
       }
-      
-      textContent += `\n`;
+    } else {
+      textContent += `No messages found - channel may have been deleted before transcript generation.\n\n`;
     }
     
     // Add footer
@@ -106,6 +176,48 @@ export async function saveAndSendTranscript(
     const buffer = Buffer.from(textContent, 'utf-8');
     const attachment = new AttachmentBuilder(buffer, { name: `ticket-${formattedTicketNumber}-transcript.txt` });
     
+    // Store structured transcript in database for API access
+    try {
+      const { TicketTranscriptService } = require('../../database/services/ticketTranscriptService');
+      
+      // Create structured transcript data
+      const structuredTranscript = sortedMessages.map((msg: Message) => ({
+        id: msg.id,
+        author: {
+          id: msg.author.id,
+          username: msg.author.username,
+          bot: msg.author.bot
+        },
+        content: msg.content,
+        timestamp: msg.createdAt,
+        attachments: Array.from(msg.attachments.values()).map((att: any) => ({
+          url: att.url,
+          name: att.name,
+          contentType: att.contentType
+        })),
+        embeds: msg.embeds.map((embed: any) => ({
+          title: embed.title,
+          description: embed.description,
+          color: embed.color,
+          fields: embed.fields
+        }))
+      }));
+      
+      // Save to database (use ticket ID from database, not ticket number)
+      const ticketQuery = db.prepare('SELECT id FROM tickets WHERE channel_id = ?');
+      const ticketRecord = ticketQuery.get(channel.id) as { id: number } | undefined;
+      
+      if (ticketRecord) {
+        await TicketTranscriptService.saveTranscript(ticketRecord.id, structuredTranscript);
+      } else {
+        logError('Transcript', `Could not find ticket ID for channel ${channel.id}`);
+      }
+      logInfo('Transcript', `Stored structured transcript in database for ticket #${formattedTicketNumber}`);
+    } catch (dbError) {
+      logError('Transcript', `Error storing structured transcript in database: ${dbError}`);
+      // Continue even if database storage fails
+    }
+    
     // Initialize success flag
     let transcriptSuccess = false;
     
@@ -115,13 +227,32 @@ export async function saveAndSendTranscript(
       const settings = await settingsManager.getSettings(channel.guild.id);
       
       if (settings && settings.ticket_logs_channel_id) {
-        // Get log channel
-        const logChannel = await channel.guild.channels.fetch(settings.ticket_logs_channel_id);
+        // Get log channel with proper error handling
+        let logChannel;
+        try {
+          logChannel = await channel.guild.channels.fetch(settings.ticket_logs_channel_id);
+        } catch (channelError: any) {
+          if (channelError.code === 10003) {
+            // Unknown Channel error - channel was deleted
+            logError('Transcript', `Ticket logs channel ${settings.ticket_logs_channel_id} no longer exists (deleted). Please reconfigure ticket logs channel.`);
+            
+            // Clear the invalid channel ID from settings to prevent future errors
+            try {
+              delete settings.ticket_logs_channel_id;
+              await settingsManager.updateSettings(channel.guild.id, settings);
+              logInfo('Transcript', 'Cleared invalid ticket logs channel ID from settings');
+            } catch (updateError) {
+              logError('Transcript', `Error clearing invalid channel ID: ${updateError}`);
+            }
+          } else {
+            logError('Transcript', `Error fetching ticket logs channel: ${channelError}`);
+          }
+          return false; // Return false if we can't send the transcript
+        }
         
         if (logChannel && logChannel.isTextBased()) {
-          // Format the current time for the footer
-          const now = new Date();
-          const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+          // Format the current time for the footer in Israeli timezone
+          const timeString = formatIsraeliTime();
           
           // Create embed
           const embed = new EmbedBuilder()
@@ -130,25 +261,31 @@ export async function saveAndSendTranscript(
             .setDescription(`Transcript for ticket #${formattedTicketNumber} (${ticketInfo.category})`)
             .addFields([
               { name: '👤 Opened By', value: `<@${ticketInfo.user_id}>`, inline: true },
-              { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
+              { name: '🔒 Closed By', value: `<@${closedById}>`, inline: true },
               { name: '📋 Reason', value: reason || 'No reason provided', inline: false },
               { name: '📊 Status', value: isDeleting ? 'Deleted' : 'Closed', inline: true }
             ])
             .setFooter({ text: `Made by Soggra. • ${timeString}` });
           
-          // Send transcript to log channel
-          await logChannel.send({
-            embeds: [embed],
-            files: [attachment]
-          }).catch(err => {
-            logError('Transcript', `Error sending to log channel: ${err}`);
+          // Send transcript to log channel with error handling
+          try {
+            await logChannel.send({
+              embeds: [embed],
+              files: [attachment]
+            });
+            
+            // Log the success
+            logInfo('Transcript', `Sent transcript to log channel for ticket #${formattedTicketNumber}`);
+            transcriptSuccess = true;
+          } catch (sendError: any) {
+            if (sendError.code === 10003) {
+              logError('Transcript', `Ticket logs channel was deleted while sending transcript for ticket #${formattedTicketNumber}`);
+            } else {
+              logError('Transcript', `Error sending transcript to log channel: ${sendError}`);
+            }
             // Don't mark as success if we can't send
             return false;
-          });
-          
-          // Log the success
-          logInfo('Transcript', `Sent transcript to log channel for ticket #${formattedTicketNumber}`);
-          transcriptSuccess = true;
+          }
         } else {
           logError('Transcript', `Invalid ticket log channel: ${settings.ticket_logs_channel_id}`);
         }
@@ -159,15 +296,14 @@ export async function saveAndSendTranscript(
       logError('Transcript', `Error sending transcript to log channel: ${error}`);
     }
     
-    // Only send transcript to user if the ticket is being closed (not deleted)
-    if (!isDeleting) {
+    // Only send transcript to user if the ticket is being closed (not deleted) and sendToUser is true
+    if (!isDeleting && sendToUser) {
       try {
         const user = await channel.client.users.fetch(ticketInfo.user_id);
         
         if (user) {
-          // Format time for user message
-          const now = new Date();
-          const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+          // Format time for user message in Israeli timezone
+          const timeString = formatIsraeliTime();
           
           // Create a more styled embed
           const userEmbed = new EmbedBuilder()
@@ -176,7 +312,7 @@ export async function saveAndSendTranscript(
             .setDescription(`Your ticket #${formattedTicketNumber} has been closed.\nA transcript is attached for your records.`)
             .addFields([
               { name: '📋 Category', value: ticketInfo.category, inline: true },
-              { name: '🔒 Closed By', value: `<@${closedBy.id}>`, inline: true },
+              { name: '🔒 Closed By', value: `<@${closedById}>`, inline: true },
               { name: '📝 Reason', value: reason || 'No reason provided', inline: false }
             ])
             .setFooter({ text: `Made by Soggra. • Today at ${timeString}` })
@@ -205,11 +341,11 @@ export async function saveAndSendTranscript(
     await logTicketEvent({
       guildId: channel.guild.id,
       actionType: isDeleting ? 'ticketDelete' : 'ticketClose',
-      userId: closedBy.id,
+      userId: closedById,
       channelId: channel.id,
       ticketNumber: ticketInfo.ticket_number,
       subject: ticketInfo.category,
-      closedBy: closedBy.id,
+      closedBy: closedById,
       note: `Transcript saved: ticket-${formattedTicketNumber}-transcript.txt`, // Include transcript filename in the logs
       skipChannelLog: true // Skip sending to channel since we're already sending a transcript
     });

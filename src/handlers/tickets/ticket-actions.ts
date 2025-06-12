@@ -27,68 +27,36 @@ function wasActionRecentlyPerformed(key: string, action: string, timeWindowMs: n
  */
 export async function handleDeleteTicket(interaction: ButtonInteraction) {
   try {
-    // Check if the channel is a ticket channel
+    // Check if interaction has already been replied to (not just deferred)
+    if (interaction.replied) {
+      logInfo('Ticket Delete', `Interaction already replied for ticket delete by ${interaction.user.tag}`);
+      return;
+    }
+
     const channel = interaction.channel as TextChannel;
     
-    if (!channel || channel.type !== ChannelType.GuildText) {
-      await interaction.reply({
-        content: 'This action can only be performed in a ticket channel.',
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    
-    // Check if the user has permission to delete tickets (only staff can delete)
-    const member = interaction.guild?.members.cache.get(interaction.user.id);
-    const isStaff = member?.permissions.has(PermissionFlagsBits.ManageChannels);
-    
-    if (!isStaff) {
-      await interaction.reply({
-        content: 'Only server staff can delete tickets.',
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    
-    // Get the ticket from the database
-    const ticketStmt = db.prepare(`
-      SELECT * FROM tickets WHERE channel_id = ?
-    `);
-    const ticket = ticketStmt.get(channel.id) as {
-      id: number;
-      guild_id: string;
-      channel_id: string;
-      user_id: string;
-      ticket_number: number;
-      category: string;
-      subject: string;
-      status: string;
-      created_at: string;
-      closed_at: string | null;
-      closed_by: string | null;
-    } | undefined;
+    // Get ticket info from database
+    const ticketStmt = db.prepare(`SELECT * FROM tickets WHERE channel_id = ?`);
+    const ticket = ticketStmt.get(channel.id) as any;
     
     if (!ticket) {
-      await interaction.reply({
-        content: 'No ticket found in this channel.',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'This channel is not a valid ticket.'
       });
       return;
     }
     
-    // Check if this ticket was recently acted upon to prevent duplicate actions
+    // Check for duplicate action early
     const actionKey = `${ticket.guild_id}_${ticket.ticket_number}`;
     if (wasActionRecentlyPerformed(actionKey, 'delete')) {
       logInfo('Ticket Delete', `Ticket #${ticket.ticket_number} delete action was recently triggered. Preventing duplicate action.`);
-      await interaction.reply({
-        content: 'This ticket is already being deleted. Please wait...',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'This ticket is already being deleted. Please wait...'
       });
       return;
     }
     
-    // Defer the reply to give us time to process
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    // The main handler already deferred this interaction
     
     // Update the ticket status in the database
     const updateStmt = db.prepare(`
@@ -117,49 +85,30 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
       });
     }
     
-    // Create a styled confirmation embed
-    const deleteEmbed = new EmbedBuilder()
-      .setColor(Colors.ERROR)
-      .setTitle('🗑️ Ticket Deleted')
-      .setDescription(`Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully deleted.`)
-      .addFields([
-        { name: '📋 Information', value: 'A transcript has been saved to the logs channel.' },
-        { name: '⏱️ Status', value: 'This channel will be deleted in a few seconds.' }
-      ])
-      .setFooter({ text: `Made by Soggra. • Deleted by ${interaction.user.username}` })
-      .setTimestamp();
-    
-    // Reply to the user with the styled embed before deleting the channel
-    await interaction.editReply({
-      embeds: [deleteEmbed]
-    });
-    
-    // Wait a short time to let the user see the message before deletion
+    // Wait a moment before deleting the channel to ensure logs are sent
     setTimeout(async () => {
       try {
-        await channel.delete(`Ticket #${ticket.ticket_number} deleted by ${interaction.user.tag}`);
+        await channel.delete('Ticket deleted by staff');
+        logInfo('Ticket Delete', `Deleted ticket channel #${ticket.ticket_number}`);
       } catch (deleteError) {
         logError('Ticket Delete', `Error deleting channel: ${deleteError}`);
-        // Clear the action from the recent actions in case we need to retry
-        recentActions.delete(`${actionKey}_delete`);
-        recentActions.delete(`${actionKey}_log_delete`);
       }
-    }, 5000);
+    }, 2000);
+    
+    // Send success message
+    await interaction.editReply({
+      content: '✅ Ticket deleted successfully. The channel will be removed shortly.'
+    });
+    
   } catch (error) {
     logError('Ticket Delete', `Error handling delete ticket: ${error}`);
     
     try {
-      if (interaction.deferred) {
-        await interaction.editReply({
-          content: 'An error occurred while deleting the ticket. Please try again or contact a server administrator.'
-        });
-      } else {
-        await interaction.reply({
-          content: 'An error occurred while deleting the ticket. Please try again or contact a server administrator.',
-          flags: MessageFlags.Ephemeral
-        });
-      }
+      await interaction.editReply({
+        content: 'An error occurred while deleting the ticket. Please try again later.'
+      });
     } catch (replyError) {
+      // If we can't reply, just log it
       logError('Ticket Delete', `Error replying to interaction: ${replyError}`);
     }
   }
@@ -170,13 +119,18 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
  */
 export async function handleReopenTicket(interaction: ButtonInteraction) {
   try {
-    // Check if the channel is a ticket channel
+    // Check if interaction has already been replied to
+    if (interaction.replied) {
+      logInfo('Ticket Reopen', `Interaction already replied for ticket reopen by ${interaction.user.tag}`);
+      return;
+    }
+
+    // The main handler already deferred this interaction
     const channel = interaction.channel as TextChannel;
     
     if (!channel || channel.type !== ChannelType.GuildText) {
-      await interaction.reply({
-        content: 'This action can only be performed in a ticket channel.',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'This action can only be performed in a ticket channel.'
       });
       return;
     }
@@ -204,24 +158,19 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     } | undefined;
     
     if (!ticket) {
-      await interaction.reply({
-        content: 'No closed ticket found in this channel.',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'No closed ticket found in this channel.'
       });
       return;
     }
     
     // Check if the user is the ticket creator or has staff permissions
     if (ticket.user_id !== interaction.user.id && !isStaff) {
-      await interaction.reply({
-        content: 'Only the ticket creator or server staff can reopen this ticket.',
-        flags: MessageFlags.Ephemeral
+      await interaction.editReply({
+        content: 'Only the ticket creator or server staff can reopen this ticket.'
       });
       return;
     }
-    
-    // Defer the reply to give us time to process
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
     // Update the ticket status in the database
     const updateStmt = db.prepare(`
@@ -265,7 +214,7 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     
     // Reply to the user
     await interaction.editReply({
-      content: `Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully reopened.`
+      content: `✅ Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully reopened.`
     });
     
     // Try to send a DM to the ticket creator
@@ -294,16 +243,9 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     console.error('Error reopening ticket:', error);
     
     try {
-      if (interaction.deferred) {
-        await interaction.editReply({
-          content: 'An error occurred while reopening the ticket. Please try again later or contact a staff member.'
-        });
-      } else {
-        await interaction.reply({
-          content: 'An error occurred while reopening the ticket. Please try again later or contact a staff member.',
-          flags: MessageFlags.Ephemeral
-        });
-      }
+      await interaction.editReply({
+        content: 'An error occurred while reopening the ticket. Please try again later or contact a staff member.'
+      });
     } catch (replyError) {
       console.error('Failed to send error message:', replyError);
     }

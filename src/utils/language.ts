@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Guild, User } from 'discord.js';
 import { logError, logInfo } from './logger';
 import { UserSettingsService } from '../database/services/userSettingsService';
-import { ServerSettingsService } from '../database/services/sqliteService';
+import { ServerSettingsService } from '../database/services/serverSettingsService';
 import { db } from '../database/sqlite';
 
 // Define available languages

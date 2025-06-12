@@ -4,7 +4,8 @@ import {
   PermissionFlagsBits,
   EmbedBuilder,
   Colors,
-  TextChannel
+  TextChannel,
+  MessageFlags
 } from 'discord.js';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 
@@ -25,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     // First try to defer the reply
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       isReplySent = true;
     } catch (deferError) {
       logError('Test Chatbot', `Failed to defer reply: ${deferError}`);

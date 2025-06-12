@@ -3,7 +3,8 @@ import {
   ChatInputCommandInteraction, 
   PermissionFlagsBits,
   EmbedBuilder,
-  Colors
+  Colors,
+  MessageFlags
 } from 'discord.js';
 import { settingsManager } from '../../utils/settings';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
@@ -88,7 +89,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     logError('Ticket Config', `Error configuring tickets: ${error}`);
     await interaction.reply({
       content: 'An error occurred while updating the ticket configuration.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 } 

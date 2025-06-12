@@ -2,7 +2,7 @@
 node_modules/
 npm-debug.log
 yarn-debug.log
-.env
+
 yarn-error.log
 
 # Build output
@@ -23,8 +23,7 @@ dist/
 .DS_Store
 
 # Logs
-logs
-*.log
+
 
 # Database files
 *.sqlite

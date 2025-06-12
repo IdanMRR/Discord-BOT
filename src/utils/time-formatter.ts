@@ -1,36 +1,88 @@
 /**
- * Utility functions for formatting time in Israeli format
+ * Utility functions for formatting time in Israeli timezone (UTC+3)
  */
+
+/**
+ * Get Israeli time from any date
+ * @param date The date to convert (defaults to current time)
+ * @returns Date object representing Israeli time
+ */
+export function getIsraeliTime(date: Date = new Date()): Date {
+  // Convert to Israeli timezone (UTC+3)
+  const israeliTime = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+  return israeliTime;
+}
 
 /**
  * Format a date in Israeli format (DD/MM/YYYY, HH:MM)
  * 
- * @param date The date to format
+ * @param date The date to format (defaults to current Israeli time)
  * @returns The formatted date string
  */
 export function formatIsraeliDate(date: Date = new Date()): string {
+  const israeliTime = getIsraeliTime(date);
+  
   // Format date as DD/MM/YYYY, HH:MM (Israeli format)
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const day = israeliTime.getDate().toString().padStart(2, '0');
+  const month = (israeliTime.getMonth() + 1).toString().padStart(2, '0');
+  const year = israeliTime.getFullYear();
+  const hours = israeliTime.getHours().toString().padStart(2, '0');
+  const minutes = israeliTime.getMinutes().toString().padStart(2, '0');
   
   return `${day}/${month}/${year}, ${hours}:${minutes}`;
 }
 
 /**
- * Format a time in Israeli format (HH:MM)
+ * Format a time in Israeli format (HH:MM) - for Discord footers
  * 
- * @param date The date to format
- * @returns The formatted time string
+ * @param date The date to format (defaults to current Israeli time)
+ * @returns The formatted time string (HH:MM)
  */
 export function formatIsraeliTime(date: Date = new Date()): string {
+  const israeliTime = getIsraeliTime(date);
+  
   // Format time as HH:MM (24-hour format)
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const hours = israeliTime.getHours().toString().padStart(2, '0');
+  const minutes = israeliTime.getMinutes().toString().padStart(2, '0');
   
   return `${hours}:${minutes}`;
+}
+
+/**
+ * Format Israeli date and time for database logs (DD.MM.YYYY HH:MM:SS)
+ * 
+ * @param date The date to format (defaults to current Israeli time)
+ * @returns The formatted date and time string
+ */
+export function formatIsraeliDateTime(date: Date = new Date()): string {
+  const israeliTime = getIsraeliTime(date);
+  
+  const day = israeliTime.getDate().toString().padStart(2, '0');
+  const month = (israeliTime.getMonth() + 1).toString().padStart(2, '0');
+  const year = israeliTime.getFullYear();
+  const hours = israeliTime.getHours().toString().padStart(2, '0');
+  const minutes = israeliTime.getMinutes().toString().padStart(2, '0');
+  const seconds = israeliTime.getSeconds().toString().padStart(2, '0');
+  
+  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+}
+
+/**
+ * Format Israeli date for ticket transcripts (DD/MM/YYYY at HH:MM)
+ * 
+ * @param date The date to format (defaults to current Israeli time)
+ * @returns The formatted date string
+ */
+export function formatIsraeliDateForTranscript(date: Date = new Date()): string {
+  const israeliTime = getIsraeliTime(date);
+  
+  const day = israeliTime.getDate().toString().padStart(2, '0');
+  const month = (israeliTime.getMonth() + 1).toString().padStart(2, '0');
+  const year = israeliTime.getFullYear();
+  const hours = israeliTime.getHours().toString().padStart(2, '0');
+  const minutes = israeliTime.getMinutes().toString().padStart(2, '0');
+  
+  return `${day}/${month}/${year} at ${hours}:${minutes}`;
 }
 
 /**
@@ -42,8 +94,10 @@ export function formatIsraeliTime(date: Date = new Date()): string {
  */
 export function formatRelativeTime(timestamp: number | Date): string {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const now = getIsraeliTime();
+  const israeliDate = getIsraeliTime(date);
+  
+  const diffMs = now.getTime() - israeliDate.getTime();
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
   const diffHour = Math.floor(diffMin / 60);

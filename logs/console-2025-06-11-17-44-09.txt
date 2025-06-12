@@ -1,0 +1,684 @@
+[2025-06-11T14:44:09.587Z] [LOG] Console logging initialized. Log file: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\logs\console-2025-06-11-17-44-09.txt
+[2025-06-11T14:44:09.594Z] [LOG] [DASHBOARD] Successfully loaded database and client utilities
+[2025-06-11T14:44:09.604Z] [LOG] [API] Using port 3001 from environment variables or default
+[2025-06-11T14:44:09.604Z] [LOG] [INFO][API] API server connected to SQLite database
+[2025-06-11T14:44:09.605Z] [LOG] Registering auth router at /auth
+[2025-06-11T14:44:09.605Z] [LOG] Registering admin panel router at /api/admin
+[2025-06-11T14:44:09.605Z] [LOG] Registering warnings router at /api/warnings
+[2025-06-11T14:44:09.605Z] [LOG] Registering tickets router at /api/tickets
+[2025-06-11T14:44:09.605Z] [LOG] Registering servers router at /api/servers
+[2025-06-11T14:44:09.606Z] [LOG] Registering moderation cases router at /api/moderation-cases
+[2025-06-11T14:44:09.608Z] [LOG] Registering dashboard router at /api/dashboard
+[2025-06-11T14:44:09.611Z] [LOG] [INFO][Database] Connected to SQLite database successfully
+[2025-06-11T14:44:09.618Z] [LOG] [INFO][Rules Manager] Server rules table created or already exists
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: command-logs
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-11T14:44:09.746Z] [LOG] [INFO][FAQ Manager] FAQ table created or already exists
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: force-log
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-11T14:44:09.746Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: logs
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: member-list
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: migrate-warnings
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: nuke
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-11T14:44:09.747Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: server-setup
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: test-events
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: test-logs
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: test-verification
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-11T14:44:09.748Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: verify
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ban
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: cases
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: dm
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: kick
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: removewarn
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-11T14:44:09.749Z] [LOG] Successfully loaded command: timeout
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: warn
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: warnings
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: avatar
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: chatbot
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: dm-user
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: help
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: invite
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: invites
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: language
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: quote
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: userinfo
+[2025-06-11T14:44:09.750Z] [LOG] Successfully loaded command: weather
+[2025-06-11T14:44:09.750Z] [LOG] Connected to database
+[2025-06-11T14:44:09.751Z] [LOG] Loaded 66 commands in total
+[2025-06-11T14:44:09.752Z] [LOG] [INFO][Database Migration] Category column already exists in tickets table
+[2025-06-11T14:44:09.752Z] [LOG] [INFO][Database Migration] ticket_categories table already exists
+[2025-06-11T14:44:09.753Z] [LOG] [INFO][Migration] custom_cities column already exists in server_settings table
+[2025-06-11T14:44:09.754Z] [LOG] [INFO][Migration] weather_schedule column already exists in server_settings table
+[2025-06-11T14:44:09.755Z] [LOG] [INFO][Migration] log_channels table already exists
+[2025-06-11T14:44:09.756Z] [LOG] [Command Initializer] Successfully loaded 66 commands from files
+[2025-06-11T14:44:09.756Z] [LOG] [Command Initializer] Registered 66 commands to client
+[2025-06-11T14:44:09.756Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-11T14:44:09.756Z] [LOG] [Command Register] Starting registration of 66 commands...
+[2025-06-11T14:44:09.756Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-11T14:44:09.756Z] [LOG] Ticket categories migration completed successfully
+[2025-06-11T14:44:09.757Z] [LOG] add-ticket-categories migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-custom-cities migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-weather-schedule migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-ticket-last-activity migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-ticket-case-number migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-soft-delete-column migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] fix-dm-logs-table migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] add-log-channels migration loaded
+[2025-06-11T14:44:09.757Z] [LOG] [INFO][Migration] Completed log_channels table migration
+[2025-06-11T14:44:09.757Z] [LOG] ensure-log-channels migration loaded
+[2025-06-11T14:44:10.024Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-11T14:44:10.024Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-11T14:44:10.024Z] [LOG] Deduplication: 66 commands reduced to 66 unique commands
+[2025-06-11T14:44:10.025Z] [LOG] Registering 66 commands globally for all servers...
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot] 🚀 Ready! Logged in as BotAI#6384
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot] 📊 Guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T14:44:10.741Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ Member Count: 862
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot] 📊 Guild: Coding API (1365777891333374022)
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ Manage Guild: ✅
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ View Audit Log: ✅
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ View Channel: ✅
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ Send Messages: ✅
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot]    └─ Member Count: 3
+[2025-06-11T14:44:10.742Z] [LOG] [INFO][Bot] 🔧 Initializing unified member handler (replaces invite tracker + member events)...
+[2025-06-11T14:44:10.743Z] [LOG] [INFO][UnifiedMemberHandler] 🔧 Starting unified member handler initialization...
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][UnifiedMemberHandler] Bot has GuildMembers intent: true
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][UnifiedMemberHandler] Bot has Guilds intent: true
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberAdd: 1
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][UnifiedMemberHandler] 🔍 Total event listeners registered for GuildMemberRemove: 1
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][UnifiedMemberHandler] ✅ Unified member handler initialized successfully
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][Bot] ✅ Unified member handler initialized successfully
+[2025-06-11T14:44:10.744Z] [LOG] [INFO][Bot] 📋 Starting command initialization in background...
+[2025-06-11T14:44:10.744Z] [LOG] [Command Initializer] Starting command initialization...
+[2025-06-11T14:44:10.744Z] [LOG] [Command Initializer] Cleared existing command collection
+[2025-06-11T14:44:10.745Z] [LOG] [Command Loader] Loading commands from: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands
+[2025-06-11T14:44:10.745Z] [LOG] Found command folders: admin, general, index.js, moderation, utility
+[2025-06-11T14:44:10.745Z] [LOG] Processing command folder: admin
+[2025-06-11T14:44:10.745Z] [LOG] Found 41 command files in admin
+[2025-06-11T14:44:10.745Z] [LOG] Processing command folder: general
+[2025-06-11T14:44:10.745Z] [LOG] Found 1 command files in general
+[2025-06-11T14:44:10.746Z] [LOG] Skipping non-directory: C:\Users\PC\Desktop\DiscordBOT\Discord-BOT\dist\commands\index.js
+[2025-06-11T14:44:10.746Z] [LOG] Processing command folder: moderation
+[2025-06-11T14:44:10.746Z] [LOG] Found 13 command files in moderation
+[2025-06-11T14:44:10.746Z] [LOG] Processing command folder: utility
+[2025-06-11T14:44:10.746Z] [LOG] Found 11 command files in utility
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: check-chatbot-status
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: command-logs
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: dm-logs
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: faq-manager
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: force-log
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: invite-leaderboard
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: invite-stats
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: list-redalert
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: logs
+[2025-06-11T14:44:10.748Z] [LOG] Successfully loaded command: setup-member-events
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: member-list
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: migrate-warnings
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: nuke
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: remove-redalert
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: reset-staff-table
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: roles-setup
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: rules-manager
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: server-cleanup
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: server-setup
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: set-weather-channel
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: set-weather-schedule
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: setup-logs
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: setup-redalert
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: ticket-setup-logs
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: setup-wizard
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: test-chatbot
+[2025-06-11T14:44:10.749Z] [LOG] Successfully loaded command: test-events
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: test-logs
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: test-verification
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-add-user
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-cleanup
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-config
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-debug
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-logs
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-priority
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: ticket-remove-user
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: toggle-ai-chatbot
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: toggle-command-logging
+[2025-06-11T14:44:10.750Z] [LOG] Successfully loaded command: verification-setup
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: verify-logs
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: welcome-setup
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: verify
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: ban
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: cases
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: dm
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: kick
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: removewarn
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: setlogchannel
+[2025-06-11T14:44:10.751Z] [LOG] Successfully loaded command: ticket-staff-message
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: staff-stats
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: ticket-rate
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: ticket-status
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: timeout
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: warn
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: warnings
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: avatar
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: chatbot
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: dm-user
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: help
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: invite
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: invites
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: language
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: quote
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: serverinfo
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: userinfo
+[2025-06-11T14:44:10.752Z] [LOG] Successfully loaded command: weather
+[2025-06-11T14:44:10.753Z] [LOG] Loaded 66 commands in total
+[2025-06-11T14:44:10.753Z] [LOG] [Command Initializer] Successfully loaded 66 commands from files
+[2025-06-11T14:44:10.753Z] [LOG] [Command Initializer] Registered 66 commands to client
+[2025-06-11T14:44:10.753Z] [LOG] [Command Initializer] Registering commands with Discord...
+[2025-06-11T14:44:10.753Z] [LOG] [Command Register] Starting registration of 66 commands...
+[2025-06-11T14:44:10.753Z] [LOG] [Command Register] Clearing existing commands...
+[2025-06-11T14:44:23.428Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:44:23.746Z] [LOG] [DASHBOARD] Fetched user for 471204846855258123: soggra
+[2025-06-11T14:44:23.747Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.747Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.747Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.747Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.748Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.748Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.748Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.748Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:23.748Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:44:24.007Z] [LOG] [DASHBOARD] Fetched user for 525342157834289163: _soill_
+[2025-06-11T14:44:24.007Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:44:24.008Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:44:24.015Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:44:24.016Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:44:40.030Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-11T14:44:40.031Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-11T14:44:40.031Z] [LOG] Command registration complete.
+[2025-06-11T14:44:40.031Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-11T14:44:40.031Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-11T14:44:40.031Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-11T14:45:10.384Z] [LOG] [Command Register] Successfully cleared existing commands
+[2025-06-11T14:45:10.385Z] [LOG] [Command Register] Started refreshing application (/) commands.
+[2025-06-11T14:45:10.385Z] [LOG] Deduplication: 66 commands reduced to 66 unique commands
+[2025-06-11T14:45:10.386Z] [LOG] Registering 66 commands globally for all servers...
+[2025-06-11T14:45:40.397Z] [WARN] [Command Register] Command registration timed out, but continuing with bot startup...
+[2025-06-11T14:45:40.397Z] [WARN] [Command Register] Commands may still be registering in the background.
+[2025-06-11T14:45:40.397Z] [LOG] Command registration complete.
+[2025-06-11T14:45:40.397Z] [LOG] [Command Initializer] Commands initialized and registered successfully
+[2025-06-11T14:45:40.397Z] [LOG] [INFO][Bot] Commands loaded into memory successfully
+[2025-06-11T14:45:40.397Z] [LOG] [INFO][Bot] Bot initialization completed successfully
+[2025-06-11T14:47:04.162Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:47:04.164Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:47:04.182Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.183Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.184Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.189Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:47:04.190Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:47:04.192Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.193Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.194Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.194Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.194Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.194Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.194Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.200Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:47:04.200Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:47:04.201Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:47:04.201Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.202Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.203Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.203Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.203Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.208Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:47:04.209Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:47:04.209Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.210Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.211Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.211Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:47:04.211Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.211Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.211Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:47:04.217Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:47:04.217Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:47:04.221Z] [LOG] [WebSocket] 1 total connections (latest: GIHzOEf0Xhh7o_9zAAAO)
+[2025-06-11T14:48:22.494Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:48:22.494Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:48:22.494Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:48:22.494Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:48:22.896Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:48:23.158Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:48:23.158Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:48:23.159Z] [LOG] [INFO][API] === getAllServers completed in 665ms with 2 servers ===
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:48:23.160Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-11T14:48:23.167Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:48:23.167Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:48:23.173Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:48:23.173Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.177Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.178Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.179Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.179Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.179Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.179Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.179Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:48:23.480Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:48:23.480Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.481Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.482Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.482Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.487Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:48:23.487Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:48:23.488Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:48:23.488Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.488Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.489Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.490Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.490Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.490Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.495Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:48:23.495Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:48:23.496Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:48:23.496Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.496Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.497Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.498Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.498Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.503Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:48:23.503Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:48:23.504Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.505Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.506Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:48:23.511Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:48:23.512Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:52:24.943Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:24.945Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:24.965Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-11T14:52:24.966Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-11T14:52:24.966Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-11T14:52:24.967Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-11T14:52:24.968Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-11T14:52:24.968Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-11T14:52:24.991Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-11T14:52:24.992Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-11T14:52:24.994Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-11T14:52:24.995Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-11T14:52:24.995Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-11T14:52:24.995Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-11T14:52:24.996Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-11T14:52:24.997Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-11T14:52:25.002Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.002Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.003Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-11T14:52:25.004Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.004Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-11T14:52:25.004Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-11T14:52:25.009Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.010Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.010Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-11T14:52:25.011Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.011Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-11T14:52:25.017Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.018Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.018Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-11T14:52:25.019Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.024Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.025Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.025Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-11T14:52:25.026Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-11T14:52:25.026Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-11T14:52:25.026Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-11T14:52:25.027Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-11T14:52:25.027Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-11T14:52:25.032Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.033Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.035Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-11T14:52:25.035Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.035Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-11T14:52:25.036Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-11T14:52:25.041Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.041Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.042Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-11T14:52:25.042Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.042Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-11T14:52:25.047Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.048Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.048Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-11T14:52:25.048Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.054Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.054Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.054Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-11T14:52:25.055Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-11T14:52:25.055Z] [LOG] [WebSocket] 1 total connections (latest: bCQutMxSdiH64dzWAAAR)
+[2025-06-11T14:52:25.056Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-11T14:52:25.056Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.061Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.061Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:25.062Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-11T14:52:25.062Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-11T14:52:25.069Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:25.069Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:29.870Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:29.872Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:29.909Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:29.909Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:29.915Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:29.915Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:35.766Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:35.768Z] [LOG] [INFO][Auth] Fetched real Discord data for soggra
+[2025-06-11T14:52:35.801Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:35.801Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:35.806Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:35.807Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:38.090Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:52:38.091Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:52:38.093Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:52:38.094Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:52:38.094Z] [LOG] [INFO][API] === getAllServers completed in 1ms with 2 servers ===
+[2025-06-11T14:52:38.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:38.102Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:38.108Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:38.108Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:38.112Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.112Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.112Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.112Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.112Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.113Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:38.114Z] [LOG] [INFO][API] Found guild name for 1365777891333374022: Coding API
+[2025-06-11T14:52:45.053Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:45.053Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:45.059Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on dashboard
+[2025-06-11T14:52:45.060Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on dashboard
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:52:48.345Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] === Starting getAllServers request ===
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Client status: {"exists":true,"ready":true,"userTag":"BotAI#6384","guildCount":2}
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Attempting to fetch servers from Discord...
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Found 2 guilds in Discord client cache
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Successfully processed guild: vShop - החנות האמינה בארץ! (1180940682626600960)
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Successfully processed guild: Coding API (1365777891333374022)
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] Successfully fetched 2 servers from Discord
+[2025-06-11T14:52:48.347Z] [LOG] [INFO][API] === getAllServers completed in 0ms with 2 servers ===
+[2025-06-11T14:52:49.145Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-11T14:52:49.146Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-11T14:52:49.146Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-11T14:52:49.148Z] [LOG] [INFO][API] Getting server by ID: 1365777891333374022
+[2025-06-11T14:52:49.148Z] [LOG] [INFO][API] Added server settings to response for server 1365777891333374022
+[2025-06-11T14:52:49.148Z] [LOG] [INFO][API] Successfully retrieved server 1365777891333374022
+[2025-06-11T14:52:49.150Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-11T14:52:49.150Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-11T14:52:49.151Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-11T14:52:49.151Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-11T14:52:49.151Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-11T14:52:49.151Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-11T14:52:49.152Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-11T14:52:49.152Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-11T14:52:49.157Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.158Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.158Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-11T14:52:49.158Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.159Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-11T14:52:49.159Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-11T14:52:49.164Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.164Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.164Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-11T14:52:49.165Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.165Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-11T14:52:49.170Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.170Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.171Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-11T14:52:49.171Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.176Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.177Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.177Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-11T14:52:49.177Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.182Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.183Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.183Z] [LOG] [INFO][API] Getting channels for server 1365777891333374022, type: text
+[2025-06-11T14:52:49.183Z] [LOG] [INFO][API] Successfully fetched 10 channels for server 1365777891333374022
+[2025-06-11T14:52:49.185Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/welcome-config Method: GET
+[2025-06-11T14:52:49.185Z] [LOG] [DASHBOARD] Getting welcome message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.185Z] [LOG] [DASHBOARD] Welcome config query result: {
+  "welcome_message_config": null
+}
+[2025-06-11T14:52:49.185Z] [LOG] [DASHBOARD] No welcome config found, returning defaults
+[2025-06-11T14:52:49.190Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.190Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.191Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/member-events/goodbye-config Method: GET
+[2025-06-11T14:52:49.191Z] [LOG] [DASHBOARD] Getting goodbye message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.191Z] [LOG] [DASHBOARD] Goodbye config query result: {
+  "goodbye_message_config": "{\"title\":\"👋 Goodbye {username}!\",\"description\":\"{user} has left {server}. We'll miss you!\",\"color\":\"#f04747\",\"fields\":[{\"name\":\"📊 Member Count\",\"value\":\"We now have {memberCount} members.\"},{\"name\":\"🕐 Joined On\",\"value\":\"They were with us since {joinedDate}.\"}]}"
+}
+[2025-06-11T14:52:49.196Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.196Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.197Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/join-config Method: GET
+[2025-06-11T14:52:49.197Z] [LOG] [DASHBOARD] Getting invite join message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.202Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.202Z] [LOG] [INFO][API] Fetching ticket categories for server 1365777891333374022
+[2025-06-11T14:52:49.203Z] [LOG] [INFO][TicketCategoriesService] Retrieved 3 categories for guild 1365777891333374022
+[2025-06-11T14:52:49.203Z] [LOG] [INFO][API] Found 3 Discord category channels in server 1365777891333374022
+[2025-06-11T14:52:49.203Z] [LOG] [INFO][API] Returning 3 categories for server 1365777891333374022
+[2025-06-11T14:52:49.204Z] [LOG] [INFO][API] Getting channels and roles for server: 1365777891333374022
+[2025-06-11T14:52:49.204Z] [LOG] [INFO][API] Successfully retrieved 13 channels and 4 roles for server 1365777891333374022
+[2025-06-11T14:52:49.209Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.209Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:49.209Z] [LOG] [DASHBOARD] Request to: /server/1365777891333374022/invite-tracker/leave-config Method: GET
+[2025-06-11T14:52:49.209Z] [LOG] [DASHBOARD] Getting invite leave message config for guild: 1365777891333374022
+[2025-06-11T14:52:49.214Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by soggra on server
+[2025-06-11T14:52:49.214Z] [LOG] [INFO][DashboardLogs] Logged activity: view_page by 471204846855258123 on server
+[2025-06-11T14:52:52.663Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.664Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.665Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.665Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.665Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.665Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.665Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.666Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.672Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:52:52.672Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:52:52.672Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.673Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.674Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.674Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.674Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.674Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.675Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.675Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.675Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.681Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:52:52.681Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.682Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.683Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.683Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.683Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.683Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.684Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.684Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.689Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:52:52.689Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs
+[2025-06-11T14:52:52.690Z] [LOG] [DASHBOARD] Request to: /logs?guild_id=1365777891333374022&page=1&limit=1000 Method: GET
+[2025-06-11T14:52:52.690Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.690Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.690Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found sync username for 471204846855258123: Soggra
+[2025-06-11T14:52:52.691Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.692Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.692Z] [LOG] [DASHBOARD] Found cached user for 525342157834289163: _soill_
+[2025-06-11T14:52:52.697Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by soggra on logs
+[2025-06-11T14:52:52.697Z] [LOG] [INFO][DashboardLogs] Logged activity: view_logs by 471204846855258123 on logs

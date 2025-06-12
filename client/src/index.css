@@ -1,0 +1,859 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base body styles - No hardcoded heights */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  overflow: hidden;
+  background: #f8fafc; /* Light mode background */
+}
+
+/* Dark mode body background */
+body.dark {
+  background: #0f172a; /* Dark mode background */
+}
+
+html {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background: #f8fafc; /* Light mode background */
+}
+
+/* Dark mode html background */
+html.dark {
+  background: #0f172a; /* Dark mode background */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Professional theme styles */
+.bg-primary {
+  background-color: #64748b;
+}
+
+.text-primary {
+  color: #475569;
+}
+
+.bg-surface {
+  background-color: #f8fafc;
+}
+
+.bg-surface-dark {
+  background-color: #1e293b;
+}
+
+.text-surface {
+  color: #334155;
+}
+
+.text-surface-dark {
+  color: #cbd5e1;
+}
+
+/* Custom scrollbar */
+:root {
+  --scrollbar-track: #e2e8f0;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #64748b;
+  --primary-color: #64748b;
+  --primary-color-rgb: 100, 116, 139;
+  --animation-duration: 200ms;
+  --interface-scale: 1;
+  --font-scale: 1;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-300: #cbd5e1;
+  --surface-400: #94a3b8;
+  --surface-500: #64748b;
+  --surface-600: #475569;
+  --surface-700: #334155;
+  --surface-800: #1e293b;
+  --surface-900: #0f172a;
+  
+  /* Light mode stronger borders and hovers */
+  --light-border: #cbd5e1;
+  --light-border-hover: #94a3b8;
+  --light-border-strong: #64748b;
+  --light-hover-bg: #f1f5f9;
+  --light-hover-bg-strong: #e2e8f0;
+}
+
+.dark {
+  --scrollbar-track: #334155;
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+  --primary-color: #94a3b8;
+  --primary-color-rgb: 148, 163, 184;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Enhanced scrollbar for main content */
+.main-content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.main-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* FIXED INTERFACE SCALING SYSTEM - SIMPLIFIED AND WORKING */
+:root {
+  --interface-scale: 1;
+  --font-scale: 1;
+}
+
+/* Interface scaling classes - CORRECTED LOGIC */
+.interface-scale-75 {
+  --interface-scale: 0.75; /* 75% scale = smaller content */
+}
+
+.interface-scale-90 {
+  --interface-scale: 0.9; /* 90% scale = slightly smaller content */
+}
+
+.interface-scale-100 {
+  --interface-scale: 1; /* 100% scale = normal content */
+}
+
+.interface-scale-110 {
+  --interface-scale: 1.1; /* 110% scale = slightly bigger content */
+}
+
+.interface-scale-125 {
+  --interface-scale: 1.25; /* 125% scale = bigger content */
+}
+
+.interface-scale-150 {
+  --interface-scale: 1.5; /* 150% scale = biggest content */
+}
+
+/* App container - FIXED scaling that works properly */
+.app-container {
+  transform: scale(var(--interface-scale));
+  transform-origin: top left;
+  width: calc(100vw / var(--interface-scale));
+  height: calc(100vh / var(--interface-scale));
+  position: relative;
+  background: inherit;
+  overflow: hidden;
+}
+
+/* Ensure all containers are responsive and fill space */
+.h-screen {
+  height: 100vh !important;
+  }
+  
+.w-screen {
+  width: 100vw !important;
+  }
+  
+.flex-1 {
+  flex: 1 1 0% !important;
+}
+
+.min-h-0 {
+  min-height: 0 !important;
+  }
+
+/* FIXED PRIMARY COLOR SYSTEM - COMPREHENSIVE COVERAGE */
+.bg-primary,
+.bg-blue-500,
+.bg-blue-600,
+.bg-blue-400 {
+  background-color: var(--primary-color) !important;
+}
+
+.text-primary,
+.text-blue-500,
+.text-blue-600,
+.text-blue-400 {
+  color: var(--primary-color) !important;
+}
+
+.border-primary,
+.border-blue-500,
+.border-blue-600,
+.border-blue-400 {
+  border-color: var(--primary-color) !important;
+}
+
+.ring-primary,
+.ring-blue-500,
+.ring-blue-600,
+.ring-blue-400 {
+  --tw-ring-color: var(--primary-color) !important;
+}
+
+/* Button primary colors */
+button.bg-primary,
+button.bg-blue-500,
+button.bg-blue-600,
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+button.bg-primary:hover,
+button.bg-blue-500:hover,
+button.bg-blue-600:hover,
+.btn-primary:hover {
+  background-color: var(--primary-color) !important;
+  opacity: 0.9;
+}
+
+/* Enhanced primary color with opacity using CSS variables */
+.bg-primary-50 {
+  background-color: rgba(var(--primary-color-rgb), 0.05) !important;
+}
+
+.bg-primary-100 {
+  background-color: rgba(var(--primary-color-rgb), 0.1) !important;
+}
+
+.bg-primary-200 {
+  background-color: rgba(var(--primary-color-rgb), 0.2) !important;
+}
+
+.bg-primary-500 {
+  background-color: var(--primary-color) !important;
+}
+
+.text-primary-600 {
+  color: var(--primary-color) !important;
+}
+
+.border-primary-500 {
+  border-color: var(--primary-color) !important;
+}
+
+/* Specific targeting for common UI elements */
+.sidebar-link.active,
+.nav-link.active,
+.tab-active {
+  background-color: rgba(var(--primary-color-rgb), 0.1) !important;
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Icons and accents */
+.text-primary-accent,
+.icon-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary-accent {
+  background-color: var(--primary-color) !important;
+}
+
+/* Form elements */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-color) !important;
+  --tw-ring-color: var(--primary-color) !important;
+}
+
+/* Progress bars and indicators */
+.progress-bar,
+.indicator-primary {
+  background-color: var(--primary-color) !important;
+}
+
+/* Cards and containers with primary accents */
+.card-primary {
+  border-color: var(--primary-color) !important;
+}
+
+.card-primary .card-header {
+  background-color: rgba(var(--primary-color-rgb), 0.05) !important;
+}
+
+/* Status indicators */
+.status-primary {
+  background-color: rgba(var(--primary-color-rgb), 0.1) !important;
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Badges and labels */
+.badge-primary,
+.label-primary {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* Links */
+a.text-primary,
+a.link-primary {
+  color: var(--primary-color) !important;
+}
+
+a.text-primary:hover,
+a.link-primary:hover {
+  color: var(--primary-color) !important;
+  opacity: 0.8;
+}
+
+/* Shadows and glows */
+.shadow-primary {
+  box-shadow: 0 4px 6px -1px rgba(var(--primary-color-rgb), 0.1), 0 2px 4px -1px rgba(var(--primary-color-rgb), 0.06) !important;
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px rgba(var(--primary-color-rgb), 0.3) !important;
+}
+
+/* Compact mode styles */
+.compact-mode {
+  --spacing-scale: 0.85;
+}
+
+.compact-mode .space-y-4 > * + * {
+  margin-top: calc(1rem * var(--spacing-scale));
+}
+
+.compact-mode .space-y-6 > * + * {
+  margin-top: calc(1.5rem * var(--spacing-scale));
+}
+
+.compact-mode .space-y-8 > * + * {
+  margin-top: calc(2rem * var(--spacing-scale));
+}
+
+.compact-mode .p-4 {
+  padding: calc(1rem * var(--spacing-scale));
+}
+
+.compact-mode .p-6 {
+  padding: calc(1.5rem * var(--spacing-scale));
+}
+
+.compact-mode .p-8 {
+  padding: calc(2rem * var(--spacing-scale));
+}
+
+/* Container adjustments */
+.compact-mode .container {
+  max-width: calc(100% - 2rem);
+}
+
+.compact-mode .card {
+  padding: calc(1rem * var(--spacing-scale));
+}
+
+/* Sidebar adjustments */
+.compact-mode .sidebar {
+  width: calc(16rem * var(--spacing-scale));
+}
+
+.compact-mode .text-lg-compact {
+  font-size: calc(1.125rem * var(--spacing-scale));
+}
+
+.compact-mode .text-xl-compact {
+  font-size: calc(1.25rem * var(--spacing-scale));
+}
+
+.compact-mode .text-2xl-compact {
+  font-size: calc(1.5rem * var(--spacing-scale));
+}
+
+.compact-mode .text-3xl-compact {
+  font-size: calc(1.875rem * var(--spacing-scale));
+}
+
+.compact-mode .p-3-compact {
+  padding: calc(0.75rem * var(--spacing-scale));
+}
+
+.compact-mode .py-4-compact {
+  padding-top: calc(1rem * var(--spacing-scale));
+  padding-bottom: calc(1rem * var(--spacing-scale));
+}
+
+.compact-mode .py-6-compact {
+  padding-top: calc(1.5rem * var(--spacing-scale));
+  padding-bottom: calc(1.5rem * var(--spacing-scale));
+}
+
+/* Disable animations */
+.no-animations,
+.no-animations *,
+.no-animations *:before,
+.no-animations *:after {
+  animation-delay: -1ms !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  background-attachment: initial !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* Professional card styling */
+.card-professional {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm;
+  border: 2px solid #cbd5e1 !important;
+  transition: all 0.2s ease;
+}
+
+.card-professional:hover {
+  @apply shadow-lg;
+  border-color: #64748b !important;
+  transform: translateY(-1px);
+}
+
+.dark .card-professional {
+  border-color: #4b5563 !important;
+}
+
+.dark .card-professional:hover {
+  border-color: #6b7280 !important;
+}
+
+/* Remove colorful effects */
+.glass-effect {
+  @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg;
+  border: 2px solid #cbd5e1 !important;
+}
+
+.dark .glass-effect {
+  border-color: #4b5563 !important;
+}
+
+.enhanced-card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm;
+  border: 2px solid #cbd5e1 !important;
+  transition: all 0.2s ease;
+}
+
+.enhanced-card:hover {
+  @apply shadow-lg;
+  border-color: #64748b !important;
+  transform: translateY(-1px);
+}
+
+.dark .enhanced-card {
+  border-color: #4b5563 !important;
+}
+
+.dark .enhanced-card:hover {
+  border-color: #6b7280 !important;
+}
+
+/* Stronger borders for all rounded containers */
+.rounded-xl {
+  border: 2px solid #e2e8f0;
+}
+
+.dark .rounded-xl {
+  border-color: #374151;
+}
+
+/* Enhanced border styles - use specific classes instead of overriding Tailwind utilities */
+.border-enhanced {
+  border-width: 2px !important;
+}
+
+.border-light {
+  border-color: #cbd5e1 !important;
+}
+
+.border-light-hover {
+  border-color: #94a3b8 !important;
+}
+
+.border-light-strong {
+  border-color: #64748b !important;
+}
+
+.dark .border-dark {
+  border-color: #4b5563 !important;
+}
+
+.dark .border-dark-hover {
+  border-color: #6b7280 !important;
+}
+
+/* Table and list improvements */
+.table-row {
+  @apply transition-all duration-200;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-row:hover {
+  @apply bg-gray-50;
+  border-bottom-color: #64748b;
+  transform: translateX(2px);
+}
+
+.dark .table-row {
+  @apply border-gray-700;
+}
+
+.dark .table-row:hover {
+  @apply bg-gray-800 border-gray-600;
+}
+
+/* Stronger borders for inputs */
+input, textarea, select {
+  border: 2px solid #cbd5e1 !important;
+  transition: all 0.2s ease !important;
+}
+
+input:hover, textarea:hover, select:hover {
+  border-color: #94a3b8 !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #64748b !important;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1) !important;
+}
+
+.dark input, .dark textarea, .dark select {
+  border-color: #4b5563 !important;
+}
+
+.dark input:hover, .dark textarea:hover, .dark select:hover {
+  border-color: #6b7280 !important;
+}
+
+.dark input:focus, .dark textarea:focus, .dark select:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1) !important;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .compact-mode .text-4xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  .compact-mode .text-2xl {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Remove gradient effects */
+.gradient-enhanced {
+  @apply bg-primary-600;
+}
+
+/* Remove all color animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.log-entry {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+  background-color: #f9fafb;
+  border-left-color: #64748b;
+  transform: translateX(2px);
+}
+
+.dark .log-entry {
+  border-left-color: #374151;
+}
+
+.dark .log-entry:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+  border-left-color: #6b7280;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-indicator::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  margin-right: 0.5rem;
+  content: '';
+}
+
+.status-success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border-color: #22c55e;
+}
+
+.status-success::before {
+  background-color: #22c55e;
+}
+
+.dark .status-success {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.status-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.status-error::before {
+  background-color: #ef4444;
+}
+
+.dark .status-error {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.status-warning {
+  background-color: #fefce8;
+  color: #a16207;
+  border-color: #eab308;
+}
+
+.status-warning::before {
+  background-color: #eab308;
+}
+
+.dark .status-warning {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+}
+
+.status-info {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border-color: #3b82f6;
+}
+
+.status-info::before {
+  background-color: #3b82f6;
+}
+
+.dark .status-info {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+/* Simplified loading animation */
+.loading-shimmer {
+  background-color: #e5e7eb;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .loading-shimmer {
+  background-color: #374151;
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.btn-enhanced {
+  color: white;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  border: 2px solid #64748b;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(100, 116, 139, 0.1);
+}
+
+.btn-enhanced:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  border-color: #334155;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(100, 116, 139, 0.2);
+}
+
+.btn-enhanced:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(100, 116, 139, 0.1);
+}
+
+/* Enhanced focus states */
+.focus-enhanced:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.3);
+  border-color: #64748b;
+}
+
+.dark .focus-enhanced:focus {
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
+  border-color: #94a3b8;
+}
+
+/* Prevent horizontal scrolling globally */
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  overflow: hidden;
+  background: #f8fafc; /* Light mode background */
+}
+
+/* Dark mode root background */
+#root.dark {
+  background: #0f172a; /* Dark mode background */
+}
+
+/* Ensure the main layout fills the scaled space and provides its own scrolling */
+.layout-container {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Additional fix to prevent white space */
+html, body, #root, .app-container {
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Ensure no scrolling can happen at any level */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure scaled content doesn't create overflow */
+.app-container * {
+  box-sizing: border-box;
+}
+
+/* Force consistent background coverage */
+.layout-container {
+  background: inherit;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Font size classes for settings */
+.font-small {
+  font-size: 14px;
+}
+
+.font-small h1 { font-size: 1.875rem; }
+.font-small h2 { font-size: 1.5rem; }
+.font-small h3 { font-size: 1.25rem; }
+.font-small h4 { font-size: 1.125rem; }
+.font-small .text-xs { font-size: 0.75rem; }
+.font-small .text-sm { font-size: 0.875rem; }
+.font-small .text-base { font-size: 1rem; }
+.font-small .text-lg { font-size: 1.125rem; }
+.font-small .text-xl { font-size: 1.25rem; }
+.font-small .text-2xl { font-size: 1.5rem; }
+.font-small .text-3xl { font-size: 1.875rem; }
+.font-small .text-4xl { font-size: 2.25rem; }
+
+.font-medium {
+  font-size: 16px;
+}
+
+.font-large {
+  font-size: 18px;
+}
+
+.font-large h1 { font-size: 2.5rem; }
+.font-large h2 { font-size: 2rem; }
+.font-large h3 { font-size: 1.75rem; }
+.font-large h4 { font-size: 1.5rem; }
+.font-large .text-xs { font-size: 0.875rem; }
+.font-large .text-sm { font-size: 1rem; }
+.font-large .text-base { font-size: 1.125rem; }
+.font-large .text-lg { font-size: 1.25rem; }
+.font-large .text-xl { font-size: 1.5rem; }
+.font-large .text-2xl { font-size: 1.875rem; }
+.font-large .text-3xl { font-size: 2.25rem; }
+.font-large .text-4xl { font-size: 3rem; }
+

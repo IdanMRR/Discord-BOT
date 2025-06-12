@@ -30,16 +30,11 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
+    // Defer the reply immediately to prevent timeout
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    
     const category = interaction.options.getString('category') || 'all';
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'help',
-      options: { category },
-      channel: interaction.channel,
-      success: true
-    });
-
+    
     if (category === 'all') {
       // Create the main help embed
       const helpEmbed = new EmbedBuilder()
@@ -84,11 +79,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             )
         );
 
-      await interaction.reply({ 
+      await interaction.editReply({ 
         embeds: [helpEmbed], 
-        components: [row], 
-        flags: MessageFlags.Ephemeral 
+        components: [row]
       });
+      
+      // Log the command usage after successful execution
+      await logCommandUsage({
+        guild: interaction.guild!,
+        user: interaction.user,
+        command: 'help',
+        options: { category },
+        channel: interaction.channel,
+        success: true
+      });
+      
       return;
     }
 
@@ -199,25 +204,30 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           .setDisabled(category === 'utility')
       );
 
-    await interaction.reply({ 
+    await interaction.editReply({ 
       embeds: [helpEmbed], 
-      components: [row], 
-      flags: MessageFlags.Ephemeral 
+      components: [row]
     });
-  } catch (error: any) {
-    console.error('Error executing help command:', error);
-    await interaction.reply({ 
-      content: 'There was an error executing the help command.', 
-      flags: MessageFlags.Ephemeral 
-    });
+    
+    // Log the command usage after successful execution
     await logCommandUsage({
       guild: interaction.guild!,
       user: interaction.user,
       command: 'help',
-      options: interaction.options.getString('category') ? { category: interaction.options.getString('category') } : {},
+      options: { category },
       channel: interaction.channel,
-      success: false,
-      error: error.message
+      success: true
     });
+    
+  } catch (error: any) {
+    console.error('Error executing help command:', error);
+    
+    try {
+      await interaction.editReply({ 
+        content: 'There was an error executing the help command.'
+      });
+    } catch (replyError) {
+      console.error('Failed to send error response:', replyError);
+    }
   }
 }

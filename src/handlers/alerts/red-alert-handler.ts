@@ -1,7 +1,7 @@
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import { ServerSettingsService } from '../../database/services/sqliteService';
+import { ServerSettingsService } from '../../database/services/serverSettingsService';
 import { db } from '../../database/sqlite';
 import { logInfo, logError, logWarning } from '../../utils/logger';
 
@@ -253,8 +253,8 @@ export async function sendTestAlert(client: Client, channelId: string) {
  */
 async function getAlertChannelsForGuild(guildId: string): Promise<string[]> {
     try {
-        // Get the channels from the database
-        const channels = await ServerSettingsService.getSetting(guildId, 'red_alert_channels');
+        // Get the channels from the database with proper type safety
+        const channels = await ServerSettingsService.getSetting<string[]>(guildId, 'red_alert_channels');
         
         // If we got a valid array, return it
         if (Array.isArray(channels)) {
@@ -352,7 +352,7 @@ export async function validateAlertChannels(client: Client): Promise<Map<string,
             const invalidChannels: string[] = [];
             
             // Skip if no channels
-            if (alertChannels.length === 0) {
+            if (!alertChannels || alertChannels.length === 0) {
                 validChannelsMap.set(server.guild_id, []);
                 continue;
             }

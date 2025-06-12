@@ -3,7 +3,8 @@ import {
   ChatInputCommandInteraction, 
   PermissionFlagsBits,
   EmbedBuilder,
-  Colors
+  Colors,
+  MessageFlags
 } from 'discord.js';
 import { settingsManager } from '../../utils/settings';
 import { logInfo, logError, logCommandUsage } from '../../utils/logger';
@@ -47,7 +48,11 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    // Defer the reply immediately to prevent timeout
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    
+    // Get the guild ID
+    const guildId = interaction.guildId;
     
     // Log command usage
     await logCommandUsage({
