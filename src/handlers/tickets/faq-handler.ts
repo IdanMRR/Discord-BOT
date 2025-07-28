@@ -1,6 +1,7 @@
 import { ButtonInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
+import { formatIsraeliTime } from '../../utils/time-formatter';
 
 /**
  * FAQ entries for the ticket system
@@ -45,8 +46,7 @@ export async function handleFaqButtonClick(interaction: ButtonInteraction) {
     logInfo('Tickets', `User ${interaction.user.tag} (${interaction.user.id}) clicked the FAQ button`);
     
     // Format the current time for the footer
-    const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeString = formatIsraeliTime();
     
     // Create the FAQ embed
     const faqEmbed = new EmbedBuilder()

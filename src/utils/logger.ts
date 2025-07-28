@@ -5,6 +5,7 @@ import { settingsManager } from './settings';
 import { db } from '../database/sqlite';
 import fetch from 'node-fetch';
 import { ServerSettingsService } from '../database/services/serverSettingsService';
+import { formatIsraeliTime } from './time-formatter';
 
 // Dashboard API configuration - use environment variable or detect the actual port
 const DASHBOARD_API_BASE_URL = process.env.API_URL || `http://localhost:${process.env.API_PORT || 3001}`;
@@ -194,8 +195,8 @@ export async function logModeration(options: {
       { name: '📋 Case Number', value: `#${formattedCaseNumber}`, inline: true }
     ]);
     
-    // Format the footer with the current time
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // Format the footer with the current time in Israeli timezone
+    const timeString = formatIsraeliTime(now);
     logEmbed.setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
     
     if (options.duration) {
@@ -371,9 +372,9 @@ export async function logDirectMessage(options: {
       return { success: true };
     }
     
-    // Format the current time
+    // Format the current time in Israeli timezone
     const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeString = formatIsraeliTime(now);
     
     // Create a log embed
     const logEmbed = new EmbedBuilder()
@@ -425,6 +426,18 @@ export async function logCommandUsage(options: {
     if (!options.user) {
       logError('Command Logger', 'User is undefined in logCommandUsage');
       return;
+    }
+
+    // Check if command logging is enabled
+    try {
+      const settingsStmt = db.prepare('SELECT command_logging FROM logging_settings WHERE guild_id = ?');
+      const settings = settingsStmt.get(options.guild.id) as { command_logging?: number } | undefined;
+      
+      if (settings && settings.command_logging === 0) {
+        return; // Command logging disabled
+      }
+    } catch (error) {
+      // If no settings table, default to enabled
     }
 
     // Log to console
@@ -496,9 +509,9 @@ export async function logCommandUsage(options: {
       return;
     }
     
-    // Format the current time
+    // Format the current time in Israeli timezone
     const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeString = formatIsraeliTime(now);
     
     // Create a log embed for Discord channel
     const logEmbed = new EmbedBuilder()
@@ -607,9 +620,9 @@ export async function logTicketAction(options: {
       return;
     }
     
-    // Format the current time
+    // Format the current time in Israeli timezone
     const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeString = formatIsraeliTime(now);
     
     // Get action emoji and color
     let actionEmoji = '🎫';

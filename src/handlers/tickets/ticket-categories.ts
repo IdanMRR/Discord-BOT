@@ -7,6 +7,7 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
+import { formatIsraeliTime } from '../../utils/time-formatter';
 
 /**
  * Available ticket categories with their configuration
@@ -128,9 +129,8 @@ export async function showCategorySelection(interaction: ButtonInteraction | any
       }
     }
     
-    // Get current time for footer timestamp
-    const now = new Date();
-    const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // Get current time for footer timestamp in Israeli timezone
+    const timeString = formatIsraeliTime();
     
     // Create the category selection menu with all available options
     const categorySelect = new StringSelectMenuBuilder()

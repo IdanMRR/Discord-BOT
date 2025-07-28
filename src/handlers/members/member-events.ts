@@ -14,6 +14,7 @@ import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { client } from '../../index';
 import { db } from '../../database/sqlite';
+import { formatIsraeliTime } from '../../utils/time-formatter';
 
 // Configuration for member events
 export interface MemberEventConfig {
@@ -244,7 +245,7 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
                 .setTitle(replacePlaceholders(customConfig.title))
                 .setDescription(replacePlaceholders(customConfig.description))
                 .setThumbnail(member.user.displayAvatarURL())
-                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${formatIsraeliTime()}` })
                 .setTimestamp();
               
               // Add custom fields if they exist
@@ -266,7 +267,7 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
                 .setTitle('👋 Welcome!')
                 .setDescription(`Welcome <@${member.id}> to ${guild.name}! We're glad to have you here.`)
                 .setThumbnail(member.user.displayAvatarURL())
-                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+                .setFooter({ text: `Made by Soggra • Welcome System • Today at ${formatIsraeliTime()}` })
                 .setTimestamp();
             }
           } else {
@@ -277,7 +278,7 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
               .setTitle('👋 Welcome!')
               .setDescription(`Welcome <@${member.id}> to ${guild.name}! We're glad to have you here.`)
               .setThumbnail(member.user.displayAvatarURL())
-              .setFooter({ text: `Made by Soggra • Welcome System • Today at ${new Date().toLocaleTimeString()}` })
+              .setFooter({ text: `Made by Soggra • Welcome System • Today at ${formatIsraeliTime()}` })
               .setTimestamp();
           }
           
@@ -364,7 +365,7 @@ async function handleMemberLeave(member: GuildMember | PartialGuildMember): Prom
               { name: 'Member Count', value: `${memberCount} members`, inline: true },
               { name: 'Joined Server', value: `${guild.name}`, inline: true }
             ])
-            .setFooter({ text: `Made By Soggra • Coding API - Leave System • Today at ${new Date().toLocaleTimeString()}` })
+            .setFooter({ text: `Made By Soggra • Coding API - Leave System • Today at ${formatIsraeliTime()}` })
             .setTimestamp();
           
           await leaveChannel.send({
