@@ -4,18 +4,17 @@ import { logModeration, logError, logInfo, LogResult } from '../../utils/logger'
 import { logModerationToDatabase } from '../../utils/databaseLogger';
 import { ModerationCaseService } from '../../database/services/sqliteService';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('timeout')
-    .setDescription('Timeout a user for a specified duration')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to timeout')
-        .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
+export const data = new SlashCommandBuilder()
+  .setName('timeout')
+  .setDescription('Timeout a user for a specified duration')
+  .addUserOption(option => 
+    option
+      .setName('user')
+      .setDescription('The user to timeout')
+      .setRequired(true))
+  .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers);
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if user has permission to moderate members
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) {
@@ -29,12 +28,48 @@ module.exports = {
       
       const targetUser = interaction.options.getUser('user', true);
       
+      // Check if user is trying to timeout themselves
+      if (targetUser.id === interaction.user.id) {
+        const errorEmbed = createErrorEmbed('Invalid Target', 'You cannot timeout yourself.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
+      // Check if user is trying to timeout the bot
+      if (targetUser.id === interaction.client.user.id) {
+        const errorEmbed = createErrorEmbed('Invalid Target', 'I cannot timeout myself.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
       // Get the guild and member objects
       const guild = interaction.guild;
-      const member = guild?.members.cache.get(targetUser.id);
+      if (!guild) {
+        const errorEmbed = createErrorEmbed('Guild Error', 'This command can only be used in a server.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
       
-      if (!guild || !member) {
-        const errorEmbed = createErrorEmbed('Member Not Found', 'Could not find that member in this server.');
+      let member = guild.members.cache.get(targetUser.id);
+      
+      // If member not in cache, try to fetch from API
+      if (!member) {
+        try {
+          member = await guild.members.fetch(targetUser.id);
+        } catch (error) {
+          const errorEmbed = createErrorEmbed('Member Not Found', 'Could not find that member in this server.');
+          await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+          return;
+        }
+      }
+      
+      // Check role hierarchy - ensure the moderator can timeout this member
+      const moderatorMember = guild.members.cache.get(interaction.user.id);
+      if (moderatorMember && member.roles.highest.position >= moderatorMember.roles.highest.position && guild.ownerId !== interaction.user.id) {
+        const errorEmbed = createErrorEmbed(
+          'Permission Error', 
+          'You cannot timeout someone with an equal or higher role than you.'
+        );
         await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
         return;
       }
@@ -201,11 +236,12 @@ module.exports = {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {
           logInfo('Timeout Command', `${interaction.user.tag} started but didn't complete timing out ${targetUser.tag}`);
-        } else { logError('Timeout Modal', error);
+        } else {
+          logError('Timeout Modal', error);
           await interaction.followUp({ 
             content: 'There was an error processing your timeout request. Please try again.', 
             flags: MessageFlags.Ephemeral 
-           }).catch(() => {});
+          }).catch(() => {});
         }
       }
     } catch (error) {
@@ -213,8 +249,7 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to timeout this user. Please try again later.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  },
-};
+}
 
 // Helper function to parse duration strings like "10m", "1h", "1d" into milliseconds
 function parseDuration(durationString: string): number | null {

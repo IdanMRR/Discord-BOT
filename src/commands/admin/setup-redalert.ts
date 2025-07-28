@@ -58,14 +58,49 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Send confirmation
         const embed = new EmbedBuilder()
             .setColor(Colors.SUCCESS)
-            .setTitle('✅ Red Alert Notifications Set Up!')
-            .setDescription('This channel will now receive Red Alert notifications.')
+            .setTitle('🚨 Red Alert Notifications Successfully Set Up! 🚨')
+            .setDescription('**This channel is now configured to receive real-time Red Alert notifications from Israel**')
             .addFields(
-                { name: 'Channel', value: `<#${channel.id}>`, inline: true },
-                { name: 'Server', value: interaction.guild?.name || 'Unknown Server', inline: true },
-                { name: 'Total Channels', value: `${channelCount} channel${channelCount !== 1 ? 's' : ''} in this server`, inline: false }
+                { name: '📺 Alert Channel', value: `<#${channel.id}>`, inline: true },
+                { name: '🏠 Server', value: interaction.guild?.name || 'Unknown Server', inline: true },
+                { name: '📊 Total Channels', value: `${channelCount} channel${channelCount !== 1 ? 's' : ''} configured`, inline: true },
+                {
+                    name: '🌍 Coverage Areas',
+                    value: [
+                        '• **עוטף גזה** (Gaza Envelope) - 15s shelter time',
+                        '• **מחוז המרכז** (Central District) - 90s shelter time',
+                        '• **מחוז הצפון** (Northern District) - 30-60s',
+                        '• **מחוז הדרום** (Southern District) - 30-60s',
+                        '• **ירושלים** (Jerusalem District) - 90s'
+                    ].join('\n'),
+                    inline: true
+                },
+                {
+                    name: '⚡ Alert Features',
+                    value: [
+                        '✅ Real-time monitoring (10-second intervals)',
+                        '✅ Hebrew & English dual language support',
+                        '✅ Interactive map links',
+                        '✅ Shelter time calculations',
+                        '✅ Population impact data',
+                        '✅ Multiple alert type detection'
+                    ].join('\n'),
+                    inline: true
+                },
+                {
+                    name: '🛠️ Management Commands',
+                    value: [
+                        '• `/redalert-status` - Check system status',
+                        '• `/list-redalert` - View all channels',
+                        '• `/test-redalert` - Send test alerts',
+                        '• `/remove-redalert` - Remove notifications',
+                        '• `/redalert-settings` - Configure preferences'
+                    ].join('\n'),
+                    inline: false
+                }
             )
-            .setTimestamp();
+            .setTimestamp()
+            .setFooter({ text: 'Red Alert System • Made by Soggra • Data from פיקוד העורף' });
         
         await interaction.editReply({ embeds: [embed] });
         

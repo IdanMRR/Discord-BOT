@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { logInfo, logError } from '../utils/logger';
-import { requireAdmin, requireAuth, AuthenticatedRequest } from '../middleware/adminAuth';
+import { authenticateToken } from '../middleware/auth';
 import { db } from '../database/sqlite';
 import { getClient, isClientReady } from '../utils/client-utils';
 import { DashboardLogsService } from '../database/services/dashboardLogsService';
@@ -10,7 +10,7 @@ const router = express.Router();
 /**
  * GET /admin/dashboard-stats - Get enhanced dashboard statistics for admins
  */
-router.get('/dashboard-stats', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/dashboard-stats', authenticateToken, async (req: Request, res: Response) => {
   try {
     const stats = {
       // Basic stats
@@ -91,7 +91,7 @@ router.get('/dashboard-stats', requireAdmin, async (req: AuthenticatedRequest, r
 /**
  * GET /admin/system-info - Get system information for admins
  */
-router.get('/system-info', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/system-info', authenticateToken, async (req: Request, res: Response) => {
   try {
     const client = getClient();
     
@@ -152,14 +152,14 @@ router.get('/system-info', requireAdmin, async (req: AuthenticatedRequest, res: 
 /**
  * POST /admin/bot/restart - Restart bot (admin only)
  */
-router.post('/bot/restart', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/bot/restart', authenticateToken, async (req: Request, res: Response) => {
   try {
-    logInfo('AdminPanel', `Bot restart requested by ${req.dashboardUser?.username} (${req.dashboardUser?.userId})`);
+    logInfo('AdminPanel', `Bot restart requested by ${req.user?.userId} (${req.user?.userId})`);
     
     // Log the admin action
     await DashboardLogsService.logActivity({
-      user_id: req.dashboardUser?.userId || 'unknown',
-      username: req.dashboardUser?.username || 'Unknown Admin',
+      user_id: req.user?.userId || 'unknown',
+      username: req.user?.userId || 'Unknown Admin',
       action_type: 'bot_restart',
       page: 'admin_panel',
       target_type: 'system',
@@ -189,7 +189,7 @@ router.post('/bot/restart', requireAdmin, async (req: AuthenticatedRequest, res:
 /**
  * GET /admin/users - Get list of dashboard users (admin only)
  */
-router.get('/users', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/users', authenticateToken, async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -251,20 +251,113 @@ router.get('/users', requireAdmin, async (req: AuthenticatedRequest, res: Respon
 });
 
 /**
+ * GET /admin/logs - Get dashboard logs (admin only)
+ */
+router.get('/logs', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = (page - 1) * limit;
+    const userId = req.query.userId as string;
+    const actionType = req.query.actionType as string;
+    const guildId = req.query.guildId as string;
+
+    let whereConditions: string[] = [];
+    let params: any[] = [];
+
+    // Build WHERE conditions
+    if (userId) {
+      whereConditions.push('user_id = ?');
+      params.push(userId);
+    }
+    
+    if (actionType) {
+      whereConditions.push('action_type = ?');
+      params.push(actionType);
+    }
+    
+    if (guildId) {
+      whereConditions.push('guild_id = ?');
+      params.push(guildId);
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Get logs with pagination
+    const logsQuery = `
+      SELECT 
+        id,
+        user_id,
+        username,
+        action_type,
+        page,
+        target_type,
+        target_id,
+        old_value,
+        new_value,
+        ip_address,
+        user_agent,
+        details,
+        success,
+        error_message,
+        guild_id,
+        created_at
+      FROM dashboard_logs 
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const logs = db.prepare(logsQuery).all(...params, limit, offset) as any[];
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as count FROM dashboard_logs ${whereClause}`;
+    const { count: total } = db.prepare(countQuery).get(...params) as { count: number };
+
+    // Format logs
+    const formattedLogs = logs.map(log => ({
+      ...log,
+      created_at: log.created_at + 'Z', // SQLite CURRENT_TIMESTAMP is UTC, add Z to indicate UTC
+      success: Boolean(log.success)
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        logs: formattedLogs,
+        pagination: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error: any) {
+    logError('AdminPanel', `Error getting dashboard logs: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get dashboard logs'
+    });
+  }
+});
+
+/**
  * DELETE /admin/logs/cleanup - Clean old logs (admin only)
  */
-router.delete('/logs/cleanup', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/logs/cleanup', authenticateToken, async (req: Request, res: Response) => {
   try {
     const daysOld = parseInt(req.query.days as string) || 30;
     
-    logInfo('AdminPanel', `Log cleanup requested by ${req.dashboardUser?.username} for logs older than ${daysOld} days`);
+    logInfo('AdminPanel', `Log cleanup requested by ${req.user?.userId} for logs older than ${daysOld} days`);
     
     const deletedCount = await DashboardLogsService.cleanOldLogs(daysOld);
 
     // Log the admin action
     await DashboardLogsService.logActivity({
-      user_id: req.dashboardUser?.userId || 'unknown',
-      username: req.dashboardUser?.username || 'Unknown Admin',
+      user_id: req.user?.userId || 'unknown',
+      username: req.user?.userId || 'Unknown Admin',
       action_type: 'log_cleanup',
       page: 'admin_panel',
       target_type: 'logs',
@@ -292,7 +385,7 @@ router.delete('/logs/cleanup', requireAdmin, async (req: AuthenticatedRequest, r
 /**
  * PUT /admin/users/:userId - Update user permissions (admin only)
  */
-router.put('/users/:userId', requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/users/:userId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const { permissions, role, dashboardAccess } = req.body;
@@ -308,7 +401,7 @@ router.put('/users/:userId', requireAdmin, async (req: AuthenticatedRequest, res
     const client = getClient();
     const guildId = client?.guilds.cache.first()?.id || 'default';
     
-    logInfo('AdminPanel', `Admin ${req.dashboardUser?.username} updating permissions for user ${userId}`);
+    logInfo('AdminPanel', `Admin ${req.user?.userId} updating permissions for user ${userId}`);
 
     // Import the permissions functions
     const { saveDashboardPermissions, getDashboardPermissions } = await import('../database/migrations/add-dashboard-permissions');

@@ -3,19 +3,19 @@ import { createModerationEmbed, createErrorEmbed, createInfoEmbed, createSuccess
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
 import { WarningService, ModerationCaseService } from '../../database/services/sqliteService';
 import { logModerationToDatabase } from '../../utils/databaseLogger';
+import { AutomodEscalationHandler } from '../../handlers/automod/automodEscalationHandler';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('warn')
-    .setDescription('Warn a user for rule violations')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to warn')
-        .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
+export const data = new SlashCommandBuilder()
+  .setName('warn')
+  .setDescription('Warn a user for rule violations')
+  .addUserOption(option => 
+    option
+      .setName('user')
+      .setDescription('The user to warn')
+      .setRequired(true))
+  .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers);
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if user has permission to moderate members
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) {
@@ -169,6 +169,34 @@ module.exports = {
         // Count active warnings for this user
         const activeWarnings = await WarningService.countActiveWarnings(guild.id, targetUser.id);
         
+        // Check for automod escalation using the proper handler
+        let escalationResult = null;
+        try {
+          console.log(`[Warn] Checking automod escalation for ${targetUser.tag} with ${activeWarnings} warnings`);
+          
+          // Get the guild member for escalation check
+          const member = await guild.members.fetch(targetUser.id).catch(() => null);
+          
+          if (member) {
+            const escalationTriggerResult = await AutomodEscalationHandler.checkAndExecuteEscalation(
+              guild,
+              member,
+              `Warning issued - escalation triggered at ${activeWarnings} warnings`
+            );
+            
+            console.log(`[Warn] Escalation check result: triggered=${escalationTriggerResult.triggered}, warningCount=${escalationTriggerResult.warningCount}`);
+            
+            if (escalationTriggerResult.triggered && escalationTriggerResult.punishmentResult) {
+              escalationResult = escalationTriggerResult.punishmentResult;
+              console.log(`[Warn] Automod punishment executed: ${escalationResult.success ? 'SUCCESS' : 'FAILED'} - ${escalationResult.action}`);
+            }
+          } else {
+            console.log(`[Warn] Could not fetch member for escalation - user may have left the server`);
+          }
+        } catch (escalationError) {
+          console.error('[Warn] Error during automod escalation:', escalationError);
+        }
+        
         // Log to moderation channel with the case number
         const logResult = await logModeration({
           guild: guild,
@@ -179,6 +207,29 @@ module.exports = {
           caseNumber: moderationCase.case_number
         });
         
+        // Create additional fields for the embed
+        const additionalFields = [
+          { name: '🏠 Server', value: guild.name, inline: true },
+          { name: '⚠️ Active Warnings', value: activeWarnings.toString(), inline: true }
+        ];
+        
+        // Add escalation information if punishment was applied
+        if (escalationResult) {
+          if (escalationResult.success) {
+            additionalFields.push({
+              name: '🛡️ Auto-Punishment Applied',
+              value: `${escalationResult.action}${escalationResult.caseNumber ? ` (Case #${escalationResult.caseNumber})` : ''}`,
+              inline: false
+            });
+          } else {
+            additionalFields.push({
+              name: '⚠️ Auto-Punishment Failed',
+              value: escalationResult.error || 'Unknown error occurred',
+              inline: false
+            });
+          }
+        }
+        
         // Create a stylish moderation embed for the server
         const warnEmbed = createModerationEmbed({
           action: 'Warning',
@@ -186,10 +237,7 @@ module.exports = {
           moderator: interaction.user,
           reason: reason,
           caseNumber: moderationCase.case_number,
-          additionalFields: [
-            { name: '🏠 Server', value: guild.name, inline: true },
-            { name: '⚠️ Active Warnings', value: activeWarnings.toString(), inline: true }
-          ]
+          additionalFields: additionalFields
         });
         
         // Update the reply with the warning information
@@ -261,5 +309,4 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to warn this user. Please try again later.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  },
-};
+}

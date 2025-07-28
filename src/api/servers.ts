@@ -119,6 +119,27 @@ const getAllServers: RequestHandler = async (req, res, next) => {
   logInfo('API', '=== Starting getAllServers request ===');
   
   try {
+    // Check if user has server permissions
+    if (!req.user?.serverPermissions) {
+      sendJsonResponse(res, 403, {
+        success: false,
+        error: 'No server permissions found'
+      });
+      return;
+    }
+    
+    // Get accessible server IDs
+    const accessibleServerIds = Object.keys(req.user.serverPermissions);
+    
+    if (accessibleServerIds.length === 0) {
+      sendJsonResponse(res, 200, {
+        success: true,
+        data: [],
+        message: 'No accessible servers found'
+      });
+      return;
+    }
+    
     const clientStatus = getClientStatus();
     logInfo('API', `Client status: ${JSON.stringify(clientStatus)}`);
     
@@ -129,8 +150,12 @@ const getAllServers: RequestHandler = async (req, res, next) => {
     if (clientStatus.exists && clientStatus.ready) {
       try {
         logInfo('API', 'Attempting to fetch servers from Discord...');
-        servers = await fetchServersFromDiscord();
-        logInfo('API', `Successfully fetched ${servers.length} servers from Discord`);
+        const allServers = await fetchServersFromDiscord();
+        
+        // Filter servers to only include those the user has access to
+        servers = allServers.filter(server => accessibleServerIds.includes(server.id));
+        
+        logInfo('API', `Successfully fetched ${servers.length} accessible servers from Discord (out of ${allServers.length} total)`);
       } catch (discordError: any) {
         logError('API', `Discord fetch failed: ${discordError.message}`);
         errorMessage = discordError.message;
@@ -150,19 +175,24 @@ const getAllServers: RequestHandler = async (req, res, next) => {
         const dbResult = await ServerSettingsService.listServers();
         
         if (dbResult.success && dbResult.data && Array.isArray(dbResult.data) && dbResult.data.length > 0) {
-          servers = dbResult.data.map((server: ServerSettings) => ({
-        id: server.guild_id,
-        name: server.name || 'Unknown Server',
-        memberCount: 0,
+          // Filter database servers to only include accessible ones
+          const filteredDbServers = dbResult.data.filter((server: ServerSettings) => 
+            accessibleServerIds.includes(server.guild_id)
+          );
+          
+          servers = filteredDbServers.map((server: ServerSettings) => ({
+            id: server.guild_id,
+            name: server.name || 'Unknown Server',
+            memberCount: 0,
             icon: null,
             owner: null,
             ownerId: null,
             available: true,
             source: 'database'
           }));
-          logInfo('API', `Database fallback successful: ${servers.length} servers`);
+          logInfo('API', `Database fallback successful: ${servers.length} accessible servers`);
         } else {
-          logInfo('API', 'No servers found in database either');
+          logInfo('API', 'No accessible servers found in database either');
         }
       } catch (dbError: any) {
         logError('API', `Database fallback failed: ${dbError.message}`);
@@ -174,24 +204,16 @@ const getAllServers: RequestHandler = async (req, res, next) => {
       success: true,
       data: servers,
       clientStatus,
-      message: servers.length === 0 ? 'No servers found' : undefined
+      message: servers.length === 0 ? 'No accessible servers found' : undefined
     };
     
     // Add specific error messages based on the situation
     if (servers.length === 0) {
-      if (!clientStatus.exists) {
-        response.error = 'Discord bot is starting up. Please wait a moment and try again.';
-      } else if (!clientStatus.ready) {
-        response.error = 'Discord bot is connecting. Please wait a moment and try again.';
-      } else if (clientStatus.guildCount === 0) {
-        response.error = 'Your Discord bot is not currently invited to any servers. Please invite the bot to a server to see it here.';
-      } else {
-        response.error = 'No servers found. Please ensure your Discord bot has proper permissions or try again.';
-      }
+      response.error = 'You do not have permission to access any servers. Please contact an administrator to grant you dashboard permissions.';
     }
     
     const duration = Date.now() - startTime;
-    logInfo('API', `=== getAllServers completed in ${duration}ms with ${servers.length} servers ===`);
+    logInfo('API', `=== getAllServers completed in ${duration}ms with ${servers.length} accessible servers ===`);
     
     sendJsonResponse(res, 200, response);
     
@@ -199,13 +221,11 @@ const getAllServers: RequestHandler = async (req, res, next) => {
     const duration = Date.now() - startTime;
     logError('API', `getAllServers failed after ${duration}ms: ${error.message}`);
     
-    const errorResponse: ApiResponse = {
+    sendJsonResponse(res, 500, {
       success: false,
-      error: 'Internal server error while fetching servers',
+      error: 'Internal server error',
       clientStatus: getClientStatus()
-    };
-    
-    sendJsonResponse(res, 500, errorResponse);
+    });
   }
 };
 
@@ -378,6 +398,9 @@ router.get('/test', (req, res) => {
     clientStatus: getClientStatus()
   });
 });
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
 
 // Main routes
 router.get('/', getAllServers);

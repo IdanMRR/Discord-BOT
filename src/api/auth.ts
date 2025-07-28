@@ -6,8 +6,15 @@ import { getDashboardPermissions } from '../database/migrations/add-dashboard-pe
 
 const router = express.Router();
 
-// Simple configuration
-const JWT_SECRET = 'discord-bot-dashboard-secret-key-2024';
+// JWT secret from environment variables with secure fallback
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  logError('Auth', 'JWT_SECRET not found in environment variables! Using temporary fallback.');
+  console.warn('WARNING: Please set JWT_SECRET in your .env file for production security!');
+  return 'discord-dashboard-jwt-secret-2024-secure-key';
+})();
+
+// Log the actual JWT secret being used for debugging
+console.log('🔑 Auth API using JWT_SECRET:', JWT_SECRET.substring(0, 20) + '...');
 
 // Function to fetch real Discord user data using the bot client
 async function fetchDiscordUserData(userId: string) {
@@ -505,7 +512,7 @@ router.post('/store-auth', (req: Request, res: Response) => {
   }
 });
 
-// Get current user
+// Get current user with server-specific permissions
 router.get('/me', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
@@ -522,22 +529,29 @@ router.get('/me', async (req: Request, res: Response) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       
-      // Get guild ID from request headers or use a default
-      // For now, we'll use the first guild the bot is in as the context
-      // In a production app, you might want to pass guild ID in the request
-      const client = getClient();
-      const guildId = client?.guilds.cache.first()?.id || 'default';
+      logInfo('Auth', `Getting server-specific permissions for user ${decoded.userId}`);
       
-      logInfo('Auth', `Getting permissions for user ${decoded.userId} in guild ${guildId}`);
+      // Get permissions per server instead of combined permissions
+      const serverPermissions = await getServerSpecificPermissions(decoded.userId);
       
-      // Get permissions from database
-      const userPermissions = await getPermissions(decoded.userId, guildId);
+      logInfo('Auth', `Server-specific permissions for user ${decoded.userId}: ${JSON.stringify(serverPermissions)}`);
       
-      logInfo('Auth', `Database permissions for user ${decoded.userId}: ${userPermissions.join(', ')}`);
+      // Check if user has any permissions at all
+      const hasAnyPermissions = Object.keys(serverPermissions).length > 0;
       
-      // Check if user is admin based on permissions or hardcoded list (fallback)
+      if (!hasAnyPermissions) {
+        logInfo('Auth', `User ${decoded.userId} has no permissions in any server`);
+        return res.status(403).json({
+          success: false,
+          error: 'No dashboard permissions found for any server'
+        });
+      }
+      
+      // Check if user is admin in any server
       const isAdminByHardcode = ADMIN_USER_IDS.includes(decoded.userId);
-      const isAdminByPermissions = userPermissions.includes('admin') || userPermissions.includes('system_admin');
+      const isAdminByPermissions = Object.values(serverPermissions).some((perms: string[]) => 
+        perms.includes('admin') || perms.includes('system_admin')
+      );
       const isAdmin = isAdminByHardcode || isAdminByPermissions;
       
       logInfo('Auth', `Admin check for user ${decoded.userId}: hardcoded=${isAdminByHardcode}, permissions=${isAdminByPermissions}, final=${isAdmin}`);
@@ -545,14 +559,10 @@ router.get('/me', async (req: Request, res: Response) => {
       // Try to fetch real Discord user data
       const realUserData = await fetchDiscordUserData(decoded.userId);
       
-      // Only users with database permissions get any access
-      // Empty permissions array means no dashboard access
-      const finalPermissions = userPermissions;
+      // Get list of accessible servers with their names
+      const accessibleServers = await getAccessibleServers(decoded.userId, serverPermissions);
       
-      logInfo('Auth', `Final permissions for user ${decoded.userId}: ${finalPermissions.join(', ')}`);
-      
-      // Log which guild we're using for context
-      logInfo('Auth', `Using guild ${guildId} for permission context`);
+      logInfo('Auth', `User ${decoded.userId} has access to ${accessibleServers.length} servers`);
       
       let user;
       if (realUserData) {
@@ -564,7 +574,10 @@ router.get('/me', async (req: Request, res: Response) => {
           avatar: realUserData.avatar,
           email: null,
           isAdmin,
-          permissions: finalPermissions
+          serverPermissions, // Server-specific permissions map
+          accessibleServers, // List of servers user can access
+          // Legacy field for backward compatibility (combined permissions)
+          permissions: Object.values(serverPermissions).flat().filter((v, i, a) => a.indexOf(v) === i)
         };
       } else {
         // Fallback to token data with default avatar
@@ -572,10 +585,12 @@ router.get('/me', async (req: Request, res: Response) => {
           id: decoded.userId,
           username: decoded.username || `User_${decoded.userId.slice(-4)}`,
           discriminator: '0000',
-          avatar: null, // Remove hardcoded avatar check
+          avatar: null,
           email: null,
           isAdmin,
-          permissions: finalPermissions
+          serverPermissions,
+          accessibleServers,
+          permissions: Object.values(serverPermissions).flat().filter((v, i, a) => a.indexOf(v) === i)
         };
       }
 
@@ -668,6 +683,75 @@ router.post('/setup-admin', async (req: Request, res: Response) => {
   }
 });
 
+// Quick setup endpoint to grant permissions to the current user
+router.post('/quick-setup', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No valid authorization token provided'
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    const client = getClient();
+    if (!client || !client.guilds.cache.size) {
+      return res.status(503).json({
+        success: false,
+        error: 'Discord client not available'
+      });
+    }
+
+    const { saveDashboardPermissions } = await import('../database/migrations/add-dashboard-permissions');
+    
+    // Grant full permissions to the user in all available guilds
+    const adminPermissions = [
+      'view_dashboard', 'admin', 'system_admin', 'manage_users', 
+      'manage_tickets', 'manage_warnings', 'manage_settings', 
+      'view_logs', 'view_tickets', 'view_warnings', 'moderate_users', 'manage_roles'
+    ];
+    
+    const guildResults = [];
+    for (const guild of client.guilds.cache.values()) {
+      try {
+        saveDashboardPermissions(decoded.userId, guild.id, adminPermissions);
+        guildResults.push({
+          id: guild.id,
+          name: guild.name,
+          success: true
+        });
+        logInfo('Auth', `Granted admin permissions to user ${decoded.userId} in guild ${guild.name} (${guild.id})`);
+      } catch (error: any) {
+        guildResults.push({
+          id: guild.id,
+          name: guild.name,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Granted admin permissions in ${guildResults.filter(g => g.success).length} guilds`,
+      guilds: guildResults,
+      permissions: adminPermissions
+    });
+    
+  } catch (error: any) {
+    logError('Auth', `Error in quick-setup: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
+});
+
 // Debug endpoint to check database permissions
 router.get('/debug-permissions', async (req: Request, res: Response) => {
   try {
@@ -737,21 +821,106 @@ router.all('*', (req: Request, res: Response) => {
   });
 });
 
-async function getPermissions(userId: string, guildId?: string): Promise<string[]> {
+async function getServerSpecificPermissions(userId: string): Promise<Record<string, string[]>> {
   try {
-    // Get permissions from database instead of generating fake ones
-    const dbPermissions = getDashboardPermissions(userId, guildId || 'default');
+    const client = getClient();
+    const serverPermissions: Record<string, string[]> = {};
     
-    if (!dbPermissions || !Array.isArray(dbPermissions)) {
-      console.log(`[INFO][Auth] No database permissions found for user ${userId}, returning empty permissions`);
-      return []; // Return empty permissions instead of defaults
+    if (client && client.guilds.cache.size > 0) {
+      console.log(`[INFO][Auth] Checking permissions for user ${userId} across ${client.guilds.cache.size} guilds`);
+      
+      for (const guild of client.guilds.cache.values()) {
+        const guildPermissions = getDashboardPermissions(userId, guild.id);
+        
+        if (guildPermissions && Array.isArray(guildPermissions) && guildPermissions.length > 0) {
+          console.log(`[INFO][Auth] Found permissions for user ${userId} in guild ${guild.name} (${guild.id}):`, guildPermissions);
+          serverPermissions[guild.id] = guildPermissions;
+        }
+      }
     }
     
-    console.log(`[INFO][Auth] Retrieved permissions for user ${userId}:`, dbPermissions);
-    return dbPermissions;
+    console.log(`[INFO][Auth] Server-specific permissions for user ${userId}:`, serverPermissions);
+    return serverPermissions;
+  } catch (error) {
+    console.error('[ERROR][Auth] Error getting server-specific permissions:', error);
+    return {};
+  }
+}
+
+async function getAccessibleServers(userId: string, serverPermissions: Record<string, string[]>): Promise<Array<{id: string, name: string, permissions: string[]}>> {
+  try {
+    const client = getClient();
+    const accessibleServers: Array<{id: string, name: string, permissions: string[]}> = [];
+    
+    if (client && client.guilds.cache.size > 0) {
+      for (const [guildId, permissions] of Object.entries(serverPermissions)) {
+        const guild = client.guilds.cache.get(guildId);
+        if (guild) {
+          accessibleServers.push({
+            id: guildId,
+            name: guild.name,
+            permissions: permissions
+          });
+        }
+      }
+    }
+    
+    return accessibleServers;
+  } catch (error) {
+    console.error('[ERROR][Auth] Error getting accessible servers:', error);
+    return [];
+  }
+}
+
+async function getPermissions(userId: string, guildId?: string): Promise<string[]> {
+  try {
+    const client = getClient();
+    
+    if (guildId) {
+      // If specific guild ID is provided, check only that guild
+      const dbPermissions = getDashboardPermissions(userId, guildId);
+      
+      if (!dbPermissions || !Array.isArray(dbPermissions)) {
+        console.log(`[INFO][Auth] No database permissions found for user ${userId} in guild ${guildId}`);
+        return [];
+      }
+      
+      console.log(`[INFO][Auth] Retrieved permissions for user ${userId} in guild ${guildId}:`, dbPermissions);
+      return dbPermissions;
+    } else {
+      // If no specific guild ID, check ALL guilds the bot is in
+      const allPermissions: string[] = [];
+      
+      if (client && client.guilds.cache.size > 0) {
+        console.log(`[INFO][Auth] Checking permissions for user ${userId} across ${client.guilds.cache.size} guilds`);
+        
+        for (const guild of client.guilds.cache.values()) {
+          const guildPermissions = getDashboardPermissions(userId, guild.id);
+          
+          if (guildPermissions && Array.isArray(guildPermissions) && guildPermissions.length > 0) {
+            console.log(`[INFO][Auth] Found permissions for user ${userId} in guild ${guild.name} (${guild.id}):`, guildPermissions);
+            
+            // Add permissions that aren't already in the array
+            for (const permission of guildPermissions) {
+              if (!allPermissions.includes(permission)) {
+                allPermissions.push(permission);
+              }
+            }
+          }
+        }
+      }
+      
+      if (allPermissions.length > 0) {
+        console.log(`[INFO][Auth] Combined permissions for user ${userId} across all guilds:`, allPermissions);
+        return allPermissions;
+      } else {
+        console.log(`[INFO][Auth] No permissions found for user ${userId} in any guild`);
+        return [];
+      }
+    }
   } catch (error) {
     console.error('[ERROR][Auth] Error getting permissions:', error);
-    return []; // Return empty permissions on error
+    return [];
   }
 }
 

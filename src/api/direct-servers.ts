@@ -2,8 +2,12 @@ import express from 'express';
 import { logInfo, logError } from '../utils/logger';
 import { getClient, isClientReady } from '../utils/client-utils';
 import { ServerSettingsService } from '../database/services/serverSettingsService';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
 
 // Define server interface
 interface ServerData {
@@ -243,11 +247,43 @@ router.put('/:serverId/settings', async (req, res) => {
     logInfo('API', `Updating settings for server ${serverId}: ${JSON.stringify(settings)}`);
     
     try {
+      // Get current settings for comparison
+      const currentSettings = await ServerSettingsService.getServerSettings(serverId);
+      
       // Update server settings in database
       const result = await ServerSettingsService.updateSettings(serverId, settings);
       
       if (result) {
         logInfo('API', `Successfully updated settings for server ${serverId}`);
+        
+        // Log the settings update activity
+        try {
+          const { logDashboardActivity } = require('../middleware/dashboardLogger');
+          
+          // Extract user info from request (assuming auth middleware set req.user)
+          const userId = (req as any).user?.userId || (req as any).user?.id || 'unknown';
+          const username = (req as any).user?.username || (req as any).user?.global_name || null;
+          if (userId !== 'unknown') {
+            await logDashboardActivity(
+              userId,
+              'update_server_settings',
+              'settings',
+              `Updated server settings for ${serverId}`,
+              {
+                target_type: 'server',
+                target_id: serverId,
+                guild_id: serverId,
+                old_value: currentSettings ? JSON.stringify(currentSettings) : null,
+                new_value: JSON.stringify(settings),
+                username: username,
+                success: true
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Failed to log settings update activity: ${logErr}`);
+        }
+        
         // Get the updated settings to return
         const updatedSettings = await ServerSettingsService.getServerSettings(serverId);
         return res.json({
@@ -257,6 +293,31 @@ router.put('/:serverId/settings', async (req, res) => {
       } else {
         logError('API', `Failed to update settings for server ${serverId} - updateSettings returned false`);
         logError('API', `Settings that failed to update: ${JSON.stringify(settings)}`);
+        
+        // Log failed attempt
+        try {
+          const { logDashboardActivity } = require('../middleware/dashboardLogger');
+          const userId = (req as any).user?.userId || (req as any).user?.id || 'unknown';
+          if (userId !== 'unknown') {
+            await logDashboardActivity(
+              userId,
+              'update_server_settings',
+              'settings',
+              `Failed to update server settings for ${serverId}`,
+              {
+                target_type: 'server',
+                target_id: serverId,
+                guild_id: serverId,
+                new_value: JSON.stringify(settings),
+                success: false,
+                error_message: 'No rows affected'
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Failed to log failed settings update: ${logErr}`);
+        }
+        
         return res.status(500).json({
           success: false,
           error: 'Failed to update server settings - no rows affected'
@@ -264,6 +325,31 @@ router.put('/:serverId/settings', async (req, res) => {
       }
     } catch (dbError: any) {
       logError('API', `Database error updating settings for server ${serverId}: ${dbError?.message || String(dbError)}`);
+      
+      // Log error
+      try {
+        const { logDashboardActivity } = require('../middleware/dashboardLogger');
+        const userId = (req as any).user?.userId || (req as any).user?.id || 'unknown';
+        if (userId !== 'unknown') {
+          await logDashboardActivity(
+            userId,
+            'update_server_settings',
+            'settings',
+            `Database error updating server settings for ${serverId}`,
+            {
+              target_type: 'server',
+              target_id: serverId,
+              guild_id: serverId,
+              new_value: JSON.stringify(settings),
+              success: false,
+              error_message: dbError?.message || String(dbError)
+            }
+          );
+        }
+              } catch (logErr) {
+          logError('API', `Failed to log database error: ${logErr}`);
+      }
+      
       return res.status(500).json({
         success: false,
         error: 'Database error occurred while updating settings'

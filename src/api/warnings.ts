@@ -6,10 +6,37 @@ import { db } from '../database/sqlite'; // Import db directly
 import { logInfo, logError } from '../utils/logger';
 import { TextChannel } from 'discord.js';
 import { createModerationEmbed } from '../utils/embeds';
+import { logDashboardActivity } from '../middleware/dashboardLogger';
+
+// Helper function to extract user info from request
+function extractUserInfo(req: Request): { userId: string; username?: string } | null {
+  try {
+    // Try to get user info from headers (API key authentication)
+    const userId = req.headers['x-user-id'] as string;
+    if (userId) {
+      return { userId, username: undefined };
+    }
+    
+    // Try to get from JWT token if available
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // For now, just return null since we're using API key auth
+      return null;
+    }
+    
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
 const { getUserName } = require('./user-helper');
 const { getClient } = require('../utils/client-utils');
 
 const router = express.Router();
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
 
 // Define custom response type
 interface ApiResponse<T = any> {
@@ -319,6 +346,28 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
           // Continue with the API response even if Discord notification fails
         }
         
+        // Log the dashboard activity
+        try {
+          const userInfo = extractUserInfo(req);
+          if (userInfo?.userId) {
+            await logDashboardActivity(
+              userInfo.userId,
+              'remove_warning',
+              'warnings',
+              `Removed warning ID ${warningId} - Reason: ${reason || 'No reason provided'}`,
+              {
+                target_type: 'warning',
+                target_id: warningId.toString(),
+                guild_id: warning?.guild_id || null,
+                username: userInfo.username,
+                success: 1
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Error logging warning removal activity: ${logErr}`);
+        }
+
         sendJsonResponse(res, 200, {
           success: true,
           message: 'Warning removed successfully'
@@ -344,6 +393,7 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
 // Register route handlers - removing authentication for dashboard access
 router.get('/', getWarnings);
 router.get('/:id', getWarningById);
+
 
 // Add direct endpoint for removing warnings
 router.post('/:id/remove', removeWarning);
@@ -427,6 +477,28 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
         // Continue with the API response even if Discord notification fails
       }
       
+      // Log the dashboard activity
+      try {
+        const userInfo = extractUserInfo(req);
+        if (userInfo?.userId) {
+          await logDashboardActivity(
+            userInfo.userId,
+            'delete_warning',
+            'warnings',
+            `Deleted warning ID ${warningId} via DELETE endpoint`,
+            {
+              target_type: 'warning',
+              target_id: warningId.toString(),
+              guild_id: warning?.guild_id || null,
+              username: userInfo.username,
+              success: 1
+            }
+          );
+        }
+      } catch (logErr) {
+        logError('API', `Error logging warning deletion activity: ${logErr}`);
+      }
+
       return sendJsonResponse(res, 200, {
         success: true,
         message: 'Warning removed successfully'

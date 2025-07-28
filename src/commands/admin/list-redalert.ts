@@ -60,11 +60,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         
         // Create the embed
         const embed = new EmbedBuilder()
-            .setColor(Colors.INFO)
-            .setTitle('📋 Red Alert Notification Channels')
+            .setColor(channelReports.length > 0 ? Colors.SUCCESS : Colors.WARNING)
+            .setTitle('📋 Red Alert System Channel Overview')
             .setDescription(channelReports.length > 0 
-                ? 'The following channels are configured to receive Red Alert notifications:'
-                : 'No channels are currently configured for Red Alert notifications.')
+                ? '**Active Red Alert notification channels and their status:**'
+                : '⚠️ **No channels are currently configured for Red Alert notifications.**\n\nUse `/setup-redalert` to get started!')
             .setTimestamp();
         
         // Add channel status fields
@@ -87,17 +87,23 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 embed.addFields({ name: '❌ Problem Channels', value: invalidChannelsText, inline: false });
             }
             
-            // Add summary fields
+            // Add summary fields with better formatting
             embed.addFields(
-                { name: 'Total Channels', value: configuredChannelIds.length.toString(), inline: true },
-                { name: 'Valid Channels', value: totalValidChannels.toString(), inline: true },
-                { name: 'Invalid Channels', value: removedChannels.toString(), inline: true }
+                { name: '📊 Total Channels', value: `**${configuredChannelIds.length}** configured`, inline: true },
+                { name: '✅ Valid Channels', value: `**${totalValidChannels}** active`, inline: true },
+                { name: '❌ Invalid Channels', value: `**${removedChannels}** removed`, inline: true }
             );
             
-            // Add usage instructions
+            // Add enhanced management section
             embed.addFields({
-                name: 'Management Commands',
-                value: '• `/setup-redalert` - Add a channel\n• `/remove-redalert` - Remove a channel',
+                name: '🛠️ Management Commands',
+                value: [
+                    '• `/setup-redalert` - Add alert channel',
+                    '• `/remove-redalert` - Remove alert channel', 
+                    '• `/redalert-status` - System dashboard',
+                    '• `/test-redalert` - Send test alerts',
+                    '• `/redalert-settings` - Configure preferences'
+                ].join('\n'),
                 inline: false
             });
         } else {

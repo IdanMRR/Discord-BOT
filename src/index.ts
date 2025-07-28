@@ -13,13 +13,15 @@ import {
   ChannelType, 
   ModalSubmitInteraction, 
   StringSelectMenuInteraction, 
-  AutocompleteInteraction 
+  AutocompleteInteraction,
+  EmbedBuilder
 } from 'discord.js';
 import { replyEphemeral } from './utils/interaction-utils';
 import { startApiServer } from './api/server';
 import { connectToDatabase } from './database/connection';
 import { createSuccessEmbed, createErrorEmbed } from './utils/embeds';
 import { logInfo, logError } from './utils/logger';
+import { AnalyticsService } from './database/services/analyticsService';
 import * as dotenv from 'dotenv';
 import { loadCommands, registerCommands } from './command-handler';
 import { setClient } from './utils/client-utils';
@@ -55,52 +57,100 @@ export { client };
 // Set client for utilities
 setClient(client);
 
-// Flag to ensure commands are loaded only once
-let commandsAlreadyLoaded = false;
-
-// Load commands
-const initializeCommands = async () => {
-  if (commandsAlreadyLoaded) {
-    console.log('[Command Initializer] Commands already loaded. Skipping to prevent duplicates.');
-    return;
-  }
-
+// Improved command initialization with better error handling and state management
+const initializeCommands = async (): Promise<void> => {
   try {
     console.log('[Command Initializer] Starting command initialization...');
     
+    // Clear existing commands from client
     client.commands.clear();
     console.log('[Command Initializer] Cleared existing command collection');
     
+    // Load commands using the improved handler
     const commands = await loadCommands();
     console.log(`[Command Initializer] Successfully loaded ${commands.size} commands from files`);
     
     if (commands.size === 0) {
-      console.warn('[Command Initializer] No commands were loaded. Check if the commands directory exists and contains valid command files.');
+      console.warn('[Command Initializer] ⚠️ No commands were loaded. Check if the commands directory exists and contains valid command files.');
+      return;
     }
     
+    // Add commands to client collection
     for (const [name, command] of commands) {
       client.commands.set(name, command);
     }
     
     console.log(`[Command Initializer] Registered ${commands.size} commands to client`);
     
+    // Register commands with Discord (this handles its own state management now)
     console.log('[Command Initializer] Registering commands with Discord...');
     await registerCommands(commands);
     
-    commandsAlreadyLoaded = true;
-    
-    console.log('[Command Initializer] Commands initialized and registered successfully');
+    console.log('[Command Initializer] ✅ Commands initialized and registered successfully');
   } catch (error) {
-    console.error('[Command Initializer] Error initializing commands:', error);
+    console.error('[Command Initializer] ❌ Error initializing commands:', error);
+    console.warn('[Command Initializer] ⚠️ Bot will continue running without commands');
   }
 };
 
-// Track whether commands have been initialized
-let commandsInitialized = false;
+// Simple flag to prevent multiple initialization attempts
+let commandInitializationStarted = false;
 
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, async (readyClient) => {
   logInfo('Bot', `🚀 Ready! Logged in as ${readyClient.user.tag}`);
+  
+  // Set initial bot activity
+  const updateBotActivity = () => {
+    const serverCount = client.guilds.cache.size;
+    const memberCount = client.guilds.cache.reduce((total, guild) => total + guild.memberCount, 0);
+    
+    client.user?.setActivity({
+      name: `${serverCount} servers | ${memberCount.toLocaleString()} members`,
+      type: 2 // LISTENING activity type
+    });
+    
+    logInfo('Bot', `🎵 Activity updated: Listening to ${serverCount} servers | ${memberCount.toLocaleString()} members`);
+  };
+  
+  // Set initial activity
+  updateBotActivity();
+  
+  // Update activity every 10 minutes
+  setInterval(updateBotActivity, 10 * 60 * 1000);
+  
+  // Server health monitoring - every 5 minutes
+  const updateServerHealth = async () => {
+    try {
+      for (const guild of client.guilds.cache.values()) {
+        const onlineCount = guild.members.cache.filter(member => 
+          member.presence?.status === 'online' || 
+          member.presence?.status === 'idle' || 
+          member.presence?.status === 'dnd'
+        ).size;
+
+        await AnalyticsService.recordServerHealth({
+          guild_id: guild.id,
+          member_count: guild.memberCount,
+          online_count: onlineCount,
+          bot_latency: client.ws.ping,
+          uptime: Math.floor(process.uptime()),
+          memory_usage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024), // MB
+          error_count: 0 // Could be tracked from error logs
+        }).catch(error => logError('Analytics', `Failed to record server health: ${error}`));
+      }
+    } catch (error) {
+      logError('Analytics', `Error in server health monitoring: ${error}`);
+    }
+  };
+  
+  // Initial health check
+  setTimeout(updateServerHealth, 5000); // Wait 5 seconds after bot ready
+  // Schedule health checks every 5 minutes
+  setInterval(updateServerHealth, 5 * 60 * 1000);
+  
+  // Store the function globally so other events can use it
+  (global as any).updateBotActivity = updateBotActivity;
   
   // Debug: Check guilds and permissions
   for (const guild of client.guilds.cache.values()) {
@@ -127,15 +177,33 @@ client.once(Events.ClientReady, async (readyClient) => {
     await initializeUnifiedMemberHandler(client);
     logInfo('Bot', '✅ Unified member handler initialized successfully');
     
+    // Initialize the Red Alert tracking system
+    logInfo('Bot', '🚨 Initializing Red Alert tracking system...');
+    const { startRedAlertTracker } = await import('./handlers/alerts/red-alert-handler');
+    await startRedAlertTracker(client);
+    logInfo('Bot', '✅ Red Alert tracking system initialized successfully');
+    
+    // Initialize the Giveaway system
+    logInfo('Bot', '🎁 Initializing Giveaway tracking system...');
+    const { startGiveawayChecker } = await import('./handlers/giveaway/giveaway-handler');
+    await startGiveawayChecker(client);
+    logInfo('Bot', '✅ Giveaway tracking system initialized successfully');
+    
+    // Initialize unified logging system (consolidates all message events)
+    logInfo('Bot', '📝 Initializing unified logging system...');
+    const { initializeMessageLogger } = await import('./handlers/messages/message-logger');
+    initializeMessageLogger(client);
+    logInfo('Bot', '✅ Unified logging system initialized successfully');
+    
     // Load commands in the background (don't block member events)
-    if (!commandsInitialized) {
+    if (!commandInitializationStarted) {
+      commandInitializationStarted = true;
       try {
         logInfo('Bot', '📋 Starting command initialization in background...');
         await initializeCommands();
-        commandsInitialized = true;
-        logInfo('Bot', 'Commands loaded into memory successfully');
+        logInfo('Bot', '✅ Commands loaded into memory successfully');
       } catch (error) {
-        logError('Bot', `Error initializing commands: ${error}`);
+        logError('Bot', `❌ Error initializing commands: ${error}`);
       }
     }
     
@@ -143,6 +211,52 @@ client.once(Events.ClientReady, async (readyClient) => {
 
   } catch (error) {
     logError('Bot', `Error in client ready handler: ${error}`);
+  }
+});
+
+// Update bot activity when joining or leaving guilds
+client.on(Events.GuildCreate, (guild) => {
+  logInfo('Bot', `📈 Joined new guild: ${guild.name} (${guild.id}) with ${guild.memberCount} members`);
+  if ((global as any).updateBotActivity) {
+    (global as any).updateBotActivity();
+  }
+});
+
+client.on(Events.GuildDelete, (guild) => {
+  logInfo('Bot', `📉 Left guild: ${guild.name} (${guild.id})`);
+  if ((global as any).updateBotActivity) {
+    (global as any).updateBotActivity();
+  }
+});
+
+// Track member joins and leaves
+client.on(Events.GuildMemberAdd, async (member) => {
+  try {
+    logInfo('Bot', `👋 Member joined: ${member.user.tag} in guild: ${member.guild.name}`);
+    
+    await AnalyticsService.trackActivity({
+      guild_id: member.guild.id,
+      metric_type: 'member_join',
+      user_id: member.user.id,
+      value: 1
+    }).catch(error => logError('Analytics', `Failed to track member join: ${error}`));
+  } catch (error) {
+    logError('Bot', `Error tracking member join: ${error}`);
+  }
+});
+
+client.on(Events.GuildMemberRemove, async (member) => {
+  try {
+    logInfo('Bot', `👋 Member left: ${member.user?.tag || 'Unknown'} in guild: ${member.guild.name}`);
+    
+    await AnalyticsService.trackActivity({
+      guild_id: member.guild.id,
+      metric_type: 'member_leave',
+      user_id: member.user?.id || '',
+      value: 1
+    }).catch(error => logError('Analytics', `Failed to track member leave: ${error}`));
+  } catch (error) {
+    logError('Bot', `Error tracking member leave: ${error}`);
   }
 });
 
@@ -159,9 +273,36 @@ client.on(Events.InteractionCreate, async (interaction) => {
     
     try {
       logInfo('Bot', `Executing command: ${interaction.commandName} by user: ${interaction.user.tag} in guild: ${interaction.guild?.name || 'DM'}`);
+      
+      const startTime = Date.now();
       await command.execute(interaction);
+      const executionTime = Date.now() - startTime;
+      
+      // Track successful command execution
+      if (interaction.guild) {
+        await AnalyticsService.trackCommand({
+          guild_id: interaction.guild.id,
+          command_name: interaction.commandName,
+          user_id: interaction.user.id,
+          channel_id: interaction.channel?.id || '',
+          success: true,
+          execution_time: executionTime
+        }).catch(error => logError('Analytics', `Failed to track command: ${error}`));
+      }
     } catch (error) {
       logError('Bot', `Error executing command ${interaction.commandName}: ${error}`);
+      
+      // Track failed command execution
+      if (interaction.guild) {
+        await AnalyticsService.trackCommand({
+          guild_id: interaction.guild.id,
+          command_name: interaction.commandName,
+          user_id: interaction.user.id,
+          channel_id: interaction.channel?.id || '',
+          success: false,
+          error_message: error instanceof Error ? error.message : String(error)
+        }).catch(analyticsError => logError('Analytics', `Failed to track failed command: ${analyticsError}`));
+      }
       
       const errorEmbed = createErrorEmbed('Error executing command', 'There was an error while executing this command!');
       
@@ -465,6 +606,68 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
       
+      // Giveaway system buttons
+      else if (customId.startsWith('giveaway_enter_')) {
+        const { handleGiveawayButton } = await import('./handlers/giveaway/giveaway-handler');
+        await handleGiveawayButton(interaction);
+        return;
+      }
+      else if (customId.startsWith('giveaway_info_')) {
+        // Handle giveaway info button
+        const giveawayId = parseInt(customId.replace('giveaway_info_', ''));
+        const { GiveawayService } = await import('./database/services/giveawayService');
+        
+        const giveawayResult = GiveawayService.getGiveawayById(giveawayId);
+        if (!giveawayResult.success || !giveawayResult.giveaway) {
+          await interaction.editReply({ content: 'Giveaway not found.' });
+          return;
+        }
+        
+        const giveaway = giveawayResult.giveaway;
+        const entryCountResult = GiveawayService.getEntryCount(giveawayId);
+        const entryCount = entryCountResult.success ? entryCountResult.count || 0 : 0;
+        
+        const endTime = new Date(giveaway.end_time);
+        const isEnded = giveaway.status !== 'active' || endTime <= new Date();
+        
+        const embed = new EmbedBuilder()
+          .setColor('#3b82f6')
+          .setTitle(`📋 Giveaway Info: ${giveaway.title}`)
+          .setDescription(giveaway.description || 'No description provided')
+          .addFields(
+            { name: '🏆 Prize', value: giveaway.prize, inline: true },
+            { name: '👑 Winners', value: `${giveaway.winner_count}`, inline: true },
+            { name: '📊 Entries', value: `${entryCount}`, inline: true },
+            { name: '📅 Created', value: `<t:${Math.floor(new Date(giveaway.created_at).getTime() / 1000)}:R>`, inline: true },
+            { name: '⏰ Ends', value: `<t:${Math.floor(endTime.getTime() / 1000)}:R>`, inline: true },
+            { name: '🎭 Host', value: `<@${giveaway.host_user_id}>`, inline: true },
+            { name: '🆔 Giveaway ID', value: `${giveaway.id}`, inline: true },
+            { name: '⚡ Status', value: isEnded ? '🔴 Ended' : '🟢 Active', inline: true }
+          )
+          .setTimestamp();
+        
+        await interaction.editReply({ embeds: [embed] });
+        return;
+      }
+      else if (customId.startsWith('giveaway_end_') || 
+               customId.startsWith('giveaway_cancel_') ||
+               customId.startsWith('giveaway_refresh_') ||
+               customId.startsWith('giveaway_entries_') ||
+               customId.startsWith('giveaway_export_') ||
+               customId.startsWith('giveaway_clear_') ||
+               customId.startsWith('giveaway_remove_')) {
+        try {
+          const { handleGiveawayManagementButton } = require('./handlers/giveaway/giveaway-management');
+          await handleGiveawayManagementButton(interaction);
+        } catch (error) {
+          console.error('Error loading giveaway management handler:', error);
+          if (interaction.isRepliable()) {
+            await interaction.reply({ content: 'An error occurred processing your request.', ephemeral: true });
+          }
+        }
+        return;
+      }
+      
       // FAQ system buttons
       else if (customId === 'dismiss_faq') {
         await interaction.editReply({
@@ -556,18 +759,27 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Handle basic message events
-client.on(Events.MessageCreate, async (message) => {
-  // Skip bot messages
-  if (message.author.bot) return;
-  
+// Message events are now handled by the unified message logger
+// This prevents duplicate logging and improves performance
+
+// Track reactions
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
   try {
-    // Basic message logging
-    if (message.guild) {
-      logInfo('Bot', `Message in ${message.guild.name}: ${message.content.substring(0, 50)}...`);
+    // Skip bot reactions
+    if (user.bot) return;
+    
+    if (reaction.message.guild) {
+      await AnalyticsService.trackActivity({
+        guild_id: reaction.message.guild.id,
+        metric_type: 'reaction_count',
+        channel_id: reaction.message.channel.id,
+        user_id: user.id,
+        value: 1,
+        metadata: JSON.stringify({ emoji: reaction.emoji.name })
+      }).catch(error => logError('Analytics', `Failed to track reaction: ${error}`));
     }
   } catch (error) {
-    logError('Bot', `Error processing message: ${error}`);
+    logError('Bot', `Error tracking reaction: ${error}`);
   }
 });
 

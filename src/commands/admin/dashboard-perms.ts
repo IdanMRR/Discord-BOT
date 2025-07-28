@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, CommandInteraction, PermissionsBitField } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChatInputCommandInteraction, PermissionsBitField, MessageFlags } from 'discord.js';
 import { logInfo, logError } from '../../utils/logger';
 import { 
   getDashboardPermissions as getPerms, 
@@ -17,6 +17,7 @@ const DASHBOARD_PERMISSIONS = {
   'view_logs': 'View server and system logs',
   'view_tickets': 'View tickets (read-only)',
   'view_warnings': 'View warnings (read-only)',
+  'view_analytics': 'View server analytics and statistics',
   'view_dashboard': 'Basic dashboard access',
   'moderate_users': 'Moderate users (kick, ban, timeout)',
   'manage_roles': 'Manage server roles and permissions'
@@ -24,11 +25,11 @@ const DASHBOARD_PERMISSIONS = {
 
 // Permission levels for easier management
 const PERMISSION_LEVELS = {
-  'owner': ['admin', 'system_admin', 'manage_users', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_dashboard', 'moderate_users', 'manage_roles'],
-  'admin': ['manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_dashboard', 'moderate_users', 'manage_roles'],
-  'moderator': ['manage_tickets', 'manage_warnings', 'view_logs', 'view_tickets', 'view_warnings', 'view_dashboard', 'moderate_users'],
-  'support': ['view_tickets', 'view_warnings', 'view_dashboard'],
-  'viewer': ['view_dashboard']
+  'owner': ['admin', 'system_admin', 'manage_users', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles'],
+  'admin': ['manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles'],
+  'moderator': ['manage_tickets', 'manage_warnings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users'],
+  'support': ['view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard'],
+  'viewer': ['view_analytics', 'view_dashboard']
 };
 
 export const data = new SlashCommandBuilder()
@@ -37,7 +38,7 @@ export const data = new SlashCommandBuilder()
   .addSubcommand(subcommand =>
     subcommand
       .setName('grant')
-      .setDescription('Grant dashboard permissions to a user')
+      .setDescription('Grant a permission level to a user')
       .addUserOption(option =>
         option
           .setName('user')
@@ -48,7 +49,7 @@ export const data = new SlashCommandBuilder()
         option
           .setName('level')
           .setDescription('Permission level to grant')
-          .setRequired(false)
+          .setRequired(true)
           .addChoices(
             { name: 'Owner (Full Access)', value: 'owner' },
             { name: 'Admin (Most Access)', value: 'admin' },
@@ -57,11 +58,23 @@ export const data = new SlashCommandBuilder()
             { name: 'Viewer (Read Only)', value: 'viewer' }
           )
       )
+  )
+
+  .addSubcommand(subcommand =>
+    subcommand
+      .setName('grant-perm')
+      .setDescription('Grant a specific permission to a user')
+      .addUserOption(option =>
+        option
+          .setName('user')
+          .setDescription('The user to grant permission to')
+          .setRequired(true)
+      )
       .addStringOption(option =>
         option
           .setName('permission')
-          .setDescription('Specific permission to grant (alternative to level)')
-          .setRequired(false)
+          .setDescription('Specific permission to grant')
+          .setRequired(true)
           .addChoices(
             ...Object.entries(DASHBOARD_PERMISSIONS).map(([key, desc]) => ({
               name: `${key} - ${desc}`,
@@ -93,6 +106,7 @@ export const data = new SlashCommandBuilder()
           )
       )
   )
+
   .addSubcommand(subcommand =>
     subcommand
       .setName('list')
@@ -111,13 +125,13 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(interaction: CommandInteraction): Promise<void> {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   // Check if user has permission to manage dashboard permissions
   const member = interaction.member;
   if (!member || !interaction.guild) {
     await interaction.reply({ 
       content: '❌ This command can only be used in a server.', 
-      ephemeral: true 
+      flags: MessageFlags.Ephemeral 
     });
     return;
   }
@@ -131,17 +145,21 @@ export async function execute(interaction: CommandInteraction): Promise<void> {
   if (!isOwner && !hasAdminPerm) {
     await interaction.reply({
       content: '❌ You need to be the server owner or have Administrator permission to manage dashboard permissions.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
 
-  const subcommand = interaction.options.data[0]?.name;
+  const subcommand = interaction.options.getSubcommand();
+  logInfo('DashboardPerms', `Executing subcommand: ${subcommand} by user ${interaction.user.tag} in guild ${interaction.guild!.id}`);
 
   try {
     switch (subcommand) {
       case 'grant':
         await handleGrantPermissions(interaction);
+        break;
+      case 'grant-perm':
+        await handleGrantSpecificPermission(interaction);
         break;
       case 'revoke':
         await handleRevokePermissions(interaction);
@@ -155,36 +173,35 @@ export async function execute(interaction: CommandInteraction): Promise<void> {
       default:
         await interaction.reply({
           content: '❌ Unknown subcommand.',
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
     }
   } catch (error) {
     logError('DashboardPerms', `Error executing dashboard-perms command: ${error}`);
     await interaction.reply({
       content: '❌ An error occurred while managing dashboard permissions.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 }
 
-async function handleGrantPermissions(interaction: CommandInteraction) {
-  const user = interaction.options.data[0]?.options?.find(opt => opt.name === 'user')?.user;
-  const level = interaction.options.data[0]?.options?.find(opt => opt.name === 'level')?.value as string;
-  const permission = interaction.options.data[0]?.options?.find(opt => opt.name === 'permission')?.value as string;
+async function handleGrantPermissions(interaction: ChatInputCommandInteraction) {
+  const user = interaction.options.getUser('user', true);
+  const level = interaction.options.getString('level');
   const guildId = interaction.guild!.id;
 
   if (!user) {
     await interaction.reply({
       content: '❌ User not found.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
 
-  if (!level && !permission) {
+  if (!level) {
     await interaction.reply({
-      content: '❌ You must specify either a permission level or a specific permission.',
-      ephemeral: true
+      content: '❌ You must specify a permission level.',
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
@@ -193,14 +210,12 @@ async function handleGrantPermissions(interaction: CommandInteraction) {
   
   if (level) {
     permissionsToGrant = PERMISSION_LEVELS[level as keyof typeof PERMISSION_LEVELS] || [];
-  } else if (permission) {
-    permissionsToGrant = [permission];
   }
 
   if (permissionsToGrant.length === 0) {
     await interaction.reply({
       content: '❌ No valid permissions found.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
@@ -223,8 +238,8 @@ async function handleGrantPermissions(interaction: CommandInteraction) {
         inline: true
       },
       {
-        name: level ? 'Permission Level' : 'Permission',
-        value: level ? `${level.charAt(0).toUpperCase() + level.slice(1)}` : permission!,
+        name: 'Permission Level',
+        value: level.charAt(0).toUpperCase() + level.slice(1),
         inline: true
       },
       {
@@ -235,20 +250,71 @@ async function handleGrantPermissions(interaction: CommandInteraction) {
     ])
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
   logInfo('DashboardPerms', `${interaction.user.tag} granted dashboard permissions ${permissionsToGrant.join(', ')} to ${user.tag} in guild ${guildId}`);
 }
 
-async function handleRevokePermissions(interaction: CommandInteraction) {
-  const user = interaction.options.data[0]?.options?.find(opt => opt.name === 'user')?.user;
-  const permission = interaction.options.data[0]?.options?.find(opt => opt.name === 'permission')?.value as string;
+async function handleGrantSpecificPermission(interaction: ChatInputCommandInteraction) {
+  const user = interaction.options.getUser('user', true);
+  const permission = interaction.options.getString('permission', true);
   const guildId = interaction.guild!.id;
 
   if (!user) {
     await interaction.reply({
       content: '❌ User not found.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
+    });
+    return;
+  }
+
+  if (!permission) {
+    await interaction.reply({
+      content: '❌ You must specify a permission.',
+      flags: MessageFlags.Ephemeral
+    });
+    return;
+  }
+
+  // Get existing permissions
+  const existingPerms = getPerms(user.id, guildId);
+  const newPerms = [...new Set([...existingPerms, permission])];
+
+  // Save to database
+  savePerms(user.id, guildId, newPerms);
+
+  const embed = new EmbedBuilder()
+    .setColor('#00ff00')
+    .setTitle('✅ Dashboard Permission Granted')
+    .setDescription(`Successfully granted dashboard permission to ${user.tag}`)
+    .addFields([
+      {
+        name: 'User',
+        value: `${user.tag} (${user.id})`,
+        inline: true
+      },
+      {
+        name: 'Permission',
+        value: permission,
+        inline: true
+      }
+    ])
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+
+  logInfo('DashboardPerms', `${interaction.user.tag} granted dashboard permission ${permission} to ${user.tag} in guild ${guildId}`);
+}
+
+async function handleRevokePermissions(interaction: ChatInputCommandInteraction) {
+  const user = interaction.options.getUser('user', true);
+  const permission = interaction.options.getString('permission');
+  const guildId = interaction.guild!.id;
+
+  if (!user) {
+    await interaction.reply({
+      content: '❌ User not found.',
+      flags: MessageFlags.Ephemeral
     });
     return;
   }
@@ -270,7 +336,7 @@ async function handleRevokePermissions(interaction: CommandInteraction) {
       ])
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   } else {
     // Revoke specific permission
     const existingPerms = getPerms(user.id, guildId);
@@ -296,14 +362,14 @@ async function handleRevokePermissions(interaction: CommandInteraction) {
       ])
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
   logInfo('DashboardPerms', `${interaction.user.tag} revoked dashboard permission ${permission || 'ALL'} from ${user.tag} in guild ${guildId}`);
 }
 
-async function handleListPermissions(interaction: CommandInteraction) {
-  const user = interaction.options.data[0]?.options?.find(opt => opt.name === 'user')?.user;
+async function handleListPermissions(interaction: ChatInputCommandInteraction) {
+  const user = interaction.options.getUser('user');
   const guildId = interaction.guild!.id;
 
   if (user) {
@@ -328,7 +394,7 @@ async function handleListPermissions(interaction: CommandInteraction) {
       ])
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   } else {
     // Show all users with permissions
     const allPermissions = getAllPerms(guildId);
@@ -336,7 +402,7 @@ async function handleListPermissions(interaction: CommandInteraction) {
     if (allPermissions.length === 0) {
       await interaction.reply({
         content: '📋 No users currently have dashboard permissions in this server.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -374,11 +440,11 @@ async function handleListPermissions(interaction: CommandInteraction) {
       embed.setFooter({ text: `Showing first 10 of ${allPermissions.length} users` });
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 }
 
-async function handleShowLevels(interaction: CommandInteraction) {
+async function handleShowLevels(interaction: ChatInputCommandInteraction) {
   const embed = new EmbedBuilder()
     .setColor('#0099ff')
     .setTitle('📊 Dashboard Permission Levels')
@@ -404,5 +470,5 @@ async function handleShowLevels(interaction: CommandInteraction) {
     }
   ]);
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 } 

@@ -2,6 +2,7 @@
 export { WarningService } from './sqliteService';
 export { TicketService } from './sqliteService';
 export { ServerLogService } from './sqliteService';
+export { ModerationCaseService } from './sqliteService';
 export { ServerSettingsService } from './serverSettingsService';
 export { UserSettingsService } from './userSettingsService';
 export { TicketCategoriesService } from './ticketCategoriesService';

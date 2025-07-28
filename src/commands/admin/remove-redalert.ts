@@ -61,16 +61,35 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Send confirmation
         const embed = new EmbedBuilder()
             .setColor(Colors.SUCCESS)
-            .setTitle('✅ Red Alert Notifications Removed')
-            .setDescription(`The channel will no longer receive Red Alert notifications.`)
+            .setTitle('🔕 Red Alert Notifications Successfully Removed')
+            .setDescription(`**<#${targetChannel.id}> will no longer receive Red Alert notifications**`)
             .addFields(
-                { name: 'Channel', value: `<#${targetChannel.id}>`, inline: true },
-                { name: 'Status', value: 'Successfully removed', inline: true },
-                { name: 'Remaining Channels', value: channelCount > 0 ? 
-                    (updatedChannels as string[]).map(id => `<#${id}>`).join('\n') : 
-                    'No channels remaining', inline: false }
-            )
-            .setTimestamp();
+                { name: '📺 Removed Channel', value: `<#${targetChannel.id}>`, inline: true },
+                { name: '✅ Status', value: '**Successfully removed**', inline: true },
+                { name: '📊 Remaining Channels', value: channelCount > 0 ? 
+                    `**${channelCount}** channel${channelCount !== 1 ? 's' : ''} still active:\n${(updatedChannels as string[]).map(id => `<#${id}>`).join('\n')}` : 
+                    '⚠️ **No channels remaining**\nUse `/setup-redalert` to add new channels', inline: false }
+            );
+
+        if (channelCount === 0) {
+            embed.addFields({
+                name: '⚠️ Important Notice',
+                value: 'This server no longer has any Red Alert channels configured. Your server will not receive emergency notifications until you set up new channels.',
+                inline: false
+            });
+        }
+
+        embed.addFields({
+            name: '🛠️ Quick Actions',
+            value: [
+                '• `/setup-redalert` - Add new alert channel',
+                '• `/list-redalert` - View all channels',
+                '• `/redalert-status` - System overview'
+            ].join('\n'),
+            inline: false
+        })
+        .setTimestamp()
+        .setFooter({ text: 'Red Alert Management • Made by Soggra' });
         
         await interaction.editReply({ embeds: [embed] });
         

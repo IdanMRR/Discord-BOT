@@ -17,6 +17,7 @@ export async function addDashboardLogsTable(): Promise<void> {
       db.exec(`
         CREATE TABLE dashboard_logs (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          guild_id TEXT,
           user_id TEXT NOT NULL,
           username TEXT,
           action_type TEXT NOT NULL,
@@ -40,6 +41,7 @@ export async function addDashboardLogsTable(): Promise<void> {
       db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_page ON dashboard_logs(page)');
       db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_created ON dashboard_logs(created_at)');
       db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_target ON dashboard_logs(target_type, target_id)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_guild ON dashboard_logs(guild_id)');
       
       logInfo('Migration', 'dashboard_logs table created successfully');
     } else {
@@ -51,6 +53,7 @@ export async function addDashboardLogsTable(): Promise<void> {
       
       // Check and add missing columns one by one
       const requiredColumns = [
+        { name: 'guild_id', type: 'TEXT' },
         { name: 'username', type: 'TEXT' },
         { name: 'action_type', type: 'TEXT NOT NULL DEFAULT "unknown_action"' },
         { name: 'page', type: 'TEXT NOT NULL DEFAULT "unknown"' },
@@ -83,6 +86,7 @@ export async function addDashboardLogsTable(): Promise<void> {
         db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_page ON dashboard_logs(page)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_created ON dashboard_logs(created_at)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_target ON dashboard_logs(target_type, target_id)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_dashboard_logs_guild ON dashboard_logs(guild_id)');
       } catch (error) {
         logError('Migration', `Error creating indexes: ${error}`);
       }

@@ -3,40 +3,61 @@ import { DashboardLogsService, DashboardLogEntry } from '../database/services/da
 import { logInfo, logError } from '../utils/logger';
 import jwt from 'jsonwebtoken';
 
-// Map HTTP methods to action types
-function getActionType(method: string, path: string): string {
+// Map HTTP methods to action types - only log meaningful actions
+function getActionType(method: string, path: string): string | null {
   const pathLower = path.toLowerCase();
   
   switch (method.toUpperCase()) {
     case 'GET':
-      if (pathLower.includes('/logs')) return 'view_logs';
-      if (pathLower.includes('/tickets')) return 'view_tickets';
-      if (pathLower.includes('/warnings')) return 'view_warnings';
-      if (pathLower.includes('/servers')) return 'view_servers';
-      if (pathLower.includes('/settings')) return 'view_settings';
-      if (pathLower.includes('/dashboard')) return 'view_dashboard';
-      return 'view_page';
+      // Log important viewing activities
+      if (pathLower.includes('/export') || pathLower.includes('/download')) return 'export_data';
+      if (pathLower.includes('/transcript')) return 'view_transcript';
+      if (pathLower.includes('/tickets/') && pathLower.match(/\/tickets\/\d+$/)) return 'view_ticket';
+      if (pathLower.includes('/warnings/') && pathLower.match(/\/warnings\/\d+$/)) return 'view_warning';
+      if (pathLower.includes('/logs') && !pathLower.includes('/dashboard-logs')) return 'view_logs';
+      if (pathLower.includes('/members/') && pathLower.match(/\/members\/\d+$/)) return 'view_member';
+      if (pathLower.includes('/servers/') && pathLower.match(/\/servers\/\d+$/)) return 'view_server';
+      // Skip general page views and API calls
+      return null;
     
     case 'POST':
       if (pathLower.includes('/tickets')) return 'create_ticket';
       if (pathLower.includes('/warnings')) return 'create_warning';
+      if (pathLower.includes('/ban')) return 'ban_user';
+      if (pathLower.includes('/kick')) return 'kick_user';
+      if (pathLower.includes('/mute')) return 'mute_user';
+      if (pathLower.includes('/role')) return 'assign_role';
+      if (pathLower.includes('/channel')) return 'create_channel';
+      if (pathLower.includes('/category')) return 'create_category';
+      if (pathLower.includes('/webhook')) return 'create_webhook';
+      if (pathLower.includes('/remove')) return 'remove_warning'; // For warning removal
+      if (pathLower.includes('/transcript')) return 'generate_transcript';
       return 'create_resource';
     
     case 'PUT':
     case 'PATCH':
+      if (pathLower.includes('/tickets/') && pathLower.includes('/close')) return 'close_ticket';
+      if (pathLower.includes('/tickets/') && pathLower.includes('/reopen')) return 'reopen_ticket';
       if (pathLower.includes('/tickets')) return 'update_ticket';
       if (pathLower.includes('/warnings')) return 'update_warning';
-      if (pathLower.includes('/settings')) return 'update_settings';
+      if (pathLower.includes('/settings')) return 'update_server_settings';
       if (pathLower.includes('/servers')) return 'update_server';
+      if (pathLower.includes('/members')) return 'update_member';
+      if (pathLower.includes('/roles')) return 'update_roles';
+      if (pathLower.includes('/channels')) return 'update_channel';
+      if (pathLower.includes('/permissions')) return 'update_permissions';
       return 'update_resource';
     
     case 'DELETE':
       if (pathLower.includes('/tickets')) return 'delete_ticket';
       if (pathLower.includes('/warnings')) return 'delete_warning';
+      if (pathLower.includes('/messages')) return 'delete_message';
+      if (pathLower.includes('/channels')) return 'delete_channel';
+      if (pathLower.includes('/roles')) return 'delete_role';
       return 'delete_resource';
     
     default:
-      return 'unknown_action';
+      return null; // Don't log unknown methods
   }
 }
 
@@ -64,41 +85,66 @@ function extractPageName(path: string): string {
       return 'settings';
     case 'profile':
       return 'profile';
+    case 'members':
+      return 'members';
+    case 'moderation':
+      return 'moderation';
+    case 'channels':
+      return 'channels';
+    case 'roles':
+      return 'roles';
     default:
       return firstSegment;
   }
 }
 
 // Extract target information from request
-function extractTargetInfo(req: Request): { targetType?: string; targetId?: string } {
+function extractTargetInfo(req: Request): { targetType?: string; targetId?: string; guildId?: string } {
   const path = req.path;
   const params = req.params;
+  const query = req.query;
+  
+  let result: { targetType?: string; targetId?: string; guildId?: string } = {};
   
   // Add null check for params before accessing its properties
   if (params && typeof params === 'object') {
-  // Extract from URL parameters
-  if (params.id) {
-    if (path.includes('/tickets/')) return { targetType: 'ticket', targetId: params.id };
-    if (path.includes('/warnings/')) return { targetType: 'warning', targetId: params.id };
-    if (path.includes('/servers/')) return { targetType: 'server', targetId: params.id };
-  }
-  
-  if (params.serverId) {
-    return { targetType: 'server', targetId: params.serverId };
-  }
-  
-  if (params.ticketId) {
-    return { targetType: 'ticket', targetId: params.ticketId };
+    // Extract from URL parameters
+    if (params.id) {
+      if (path.includes('/tickets/')) {
+        result = { targetType: 'ticket', targetId: params.id };
+      } else if (path.includes('/warnings/')) {
+        result = { targetType: 'warning', targetId: params.id };
+      } else if (path.includes('/servers/')) {
+        result = { targetType: 'server', targetId: params.id, guildId: params.id };
+      }
+    }
+    
+    if (params.serverId) {
+      result = { targetType: 'server', targetId: params.serverId, guildId: params.serverId };
+    }
+    
+    if (params.ticketId) {
+      result = { targetType: 'ticket', targetId: params.ticketId };
     }
   }
   
   // Extract from query parameters
-  const query = req.query;
-  if (query && typeof query === 'object' && query.serverId) {
-    return { targetType: 'server', targetId: query.serverId as string };
+  if (query && typeof query === 'object') {
+    if (query.serverId) {
+      result = { ...result, targetType: 'server', targetId: query.serverId as string, guildId: query.serverId as string };
+    }
+    
+    // Check for guild_id in query parameters
+    if (query.guild_id) {
+      result = { ...result, guildId: query.guild_id as string };
+    }
+    
+    if (query.guildId) {
+      result = { ...result, guildId: query.guildId as string };
+    }
   }
   
-  return {};
+  return result;
 }
 
 // Extract old and new values for updates
@@ -228,7 +274,7 @@ function extractUserInfo(req: Request): { userId: string; username?: string } {
 
 // Main dashboard logging middleware
 export const dashboardLogger = (req: Request, res: Response, next: NextFunction) => {
-  // Skip logging for certain paths
+  // Skip logging for certain paths and all static resources
   const skipPaths = [
     '/api/auth/',
     '/auth/',
@@ -241,9 +287,6 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
     '/js/',
     '/api/dashboard-logs', // Skip the dashboard logs API endpoint to prevent recursive logging
     '/api/logs/', // Skip other log API endpoints
-    '/api/warnings/', // Skip API endpoints that don't have user sessions
-    '/api/tickets/', // Skip API endpoints that don't have user sessions
-    '/api/servers/', // Skip API endpoints that don't have user sessions
     '/api/command-logs', // Skip command logs API to prevent recursive logging
     '/api/mod-logs', // Skip mod logs API
     '/api/ticket-logs', // Skip ticket logs API
@@ -258,6 +301,13 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
   
   const shouldSkip = skipPaths.some(skipPath => req.path.startsWith(skipPath));
   if (shouldSkip) {
+    return next();
+  }
+
+  // Check if this action should be logged
+  const actionType = getActionType(req.method || 'GET', req.path || '/');
+  if (!actionType) {
+    // Don't log this action (likely a page view or other non-meaningful action)
     return next();
   }
   
@@ -298,11 +348,10 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
       const userId = userInfo?.userId || 'unknown';
       const username = userInfo?.username || null;
       
-      const actionType = getActionType(req.method || 'GET', req.path || '/');
       const page = extractPageName(req.path || '/');
       
       // Add try-catch around extractTargetInfo to prevent any remaining undefined access errors
-      let targetInfo: { targetType?: string; targetId?: string } = {};
+      let targetInfo: { targetType?: string; targetId?: string; guildId?: string } = {};
       try {
         targetInfo = extractTargetInfo(req);
       } catch (targetError) {
@@ -312,6 +361,7 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
       
       const targetType = targetInfo?.targetType || null;
       const targetId = targetInfo?.targetId || null;
+      const guildId = targetInfo?.guildId || null;
       
       const valueInfo = extractValues(req, res);
       const oldValue = valueInfo?.oldValue || null;
@@ -336,6 +386,26 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
         }
       }
       
+      // Create more detailed log entry for meaningful actions
+      let details = `${req.method || 'GET'} ${req.path || '/'}`;
+      
+      // Add more context for different action types
+      if (req.body && Object.keys(req.body).length > 0) {
+        // Don't log sensitive data like passwords
+        const sanitizedBody = { ...req.body };
+        delete sanitizedBody.password;
+        delete sanitizedBody.token;
+        delete sanitizedBody.secret;
+        
+        if (Object.keys(sanitizedBody).length > 0) {
+          details += ` | Body: ${JSON.stringify(sanitizedBody)}`;
+        }
+      }
+      
+      if (req.query && Object.keys(req.query).length > 0) {
+        details += ` | Query: ${new URLSearchParams(req.query as any).toString()}`;
+      }
+      
       // Create log entry with proper data types for SQLite and null safety
       const logEntry: DashboardLogEntry = {
         user_id: userId,
@@ -348,16 +418,17 @@ export const dashboardLogger = (req: Request, res: Response, next: NextFunction)
         new_value: newValue,
         ip_address: (req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress) || null,
         user_agent: req.get('User-Agent') || null,
-        details: `${req.method || 'GET'} ${req.path || '/'}${req.query && Object.keys(req.query).length > 0 ? '?' + new URLSearchParams(req.query as any).toString() : ''}`,
+        details: details,
         success: success ? 1 : 0, // Convert boolean to number for SQLite
-        error_message: errorMessage || null
+        error_message: errorMessage || null,
+        guild_id: guildId
       };
       
       // Log the activity with additional error handling
       const logResult = await DashboardLogsService.logActivity(logEntry);
       
       if (logResult) {
-        logInfo('DashboardLogs', `Logged activity: ${actionType} by ${userId} on ${page}`);
+        logInfo('DashboardLogs', `Logged meaningful action: ${actionType} by ${username || userId} on ${page}`);
       } else {
         logError('DashboardLogs', `Failed to log activity: ${actionType} by ${userId} on ${page}`);
       }

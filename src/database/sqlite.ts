@@ -13,12 +13,107 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Initialize SQLite database synchronously
+// Initialize SQLite database with optimizations
 const dbPath = path.join(dataDir, 'discord-bot.db');
-const db = new Database(dbPath);
+const db = new Database(dbPath, { 
+  verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
+  fileMustExist: false,
+  timeout: 5000 // 5 second timeout
+});
 
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+// Performance optimizations
+db.pragma('journal_mode = WAL'); // Write-Ahead Logging for better concurrency
+db.pragma('synchronous = NORMAL'); // Balance between performance and safety
+db.pragma('foreign_keys = ON'); // Enable foreign key constraints
+db.pragma('temp_store = MEMORY'); // Store temporary tables in memory
+db.pragma('mmap_size = 268435456'); // 256MB memory mapped I/O
+db.pragma('cache_size = -16000'); // 16MB cache size (negative value = KB)
+
+// Connection pool simulation for SQLite (prepare statements for reuse)
+const preparedStatements = new Map<string, any>();
+
+// Helper function to get or create prepared statement
+export function getPreparedStatement(sql: string): any {
+  if (!preparedStatements.has(sql)) {
+    preparedStatements.set(sql, db.prepare(sql));
+  }
+  return preparedStatements.get(sql);
+}
+
+// Cleanup function for prepared statements
+export function cleanupDatabase(): void {
+  preparedStatements.clear();
+  db.close();
+}
+
+// Create database indexes for better performance
+function createIndexes(): void {
+  try {
+    logInfo('SQLite', 'Creating database indexes...');
+
+    // Server settings indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_settings_guild_id ON server_settings(guild_id)');
+
+    // Warnings indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_guild_id ON warnings(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_user_id ON warnings(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_active ON warnings(active)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_guild_user ON warnings(guild_id, user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_created_at ON warnings(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_case_number ON warnings(guild_id, case_number)');
+
+    // Tickets indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_guild_id ON tickets(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_channel_id ON tickets(channel_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_guild_status ON tickets(guild_id, status)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(guild_id, ticket_number)');
+
+    // Server logs indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_guild_id ON server_logs(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_user_id ON server_logs(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_action_type ON server_logs(action_type)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_created_at ON server_logs(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_guild_action ON server_logs(guild_id, action_type)');
+
+    // Command logs indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_command_logs_guild_id ON command_logs(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_command_logs_user_id ON command_logs(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_command_logs_command ON command_logs(command)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_command_logs_created_at ON command_logs(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_command_logs_success ON command_logs(success)');
+
+    // DM logs indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_dm_logs_user_id ON dm_logs(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_dm_logs_source_guild_id ON dm_logs(source_guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_dm_logs_created_at ON dm_logs(created_at)');
+
+    // Ticket action logs indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_action_logs_guild_id ON ticket_action_logs(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_action_logs_ticket_id ON ticket_action_logs(ticket_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_action_logs_user_id ON ticket_action_logs(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_action_logs_action ON ticket_action_logs(action)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_action_logs_created_at ON ticket_action_logs(created_at)');
+
+    // User settings indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_user_settings_setting_key ON user_settings(setting_key)');
+
+    // Moderation cases indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_guild_id ON moderation_cases(guild_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_user_id ON moderation_cases(user_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_moderator_id ON moderation_cases(moderator_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_action_type ON moderation_cases(action_type)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_created_at ON moderation_cases(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_moderation_cases_active ON moderation_cases(active)');
+
+    logInfo('SQLite', 'Database indexes created successfully');
+  } catch (error) {
+    logError('SQLite', `Error creating indexes: ${error}`);
+  }
+}
 
 // Initialize database function
 function initDatabase() {
@@ -336,6 +431,9 @@ function initDatabase() {
         UNIQUE(guild_id, case_number)
       )
     `);
+    
+    // Create indexes for better query performance
+    createIndexes();
     
     logInfo('SQLite', 'Database initialized successfully');
     return true;

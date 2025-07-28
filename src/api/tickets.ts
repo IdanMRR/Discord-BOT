@@ -7,10 +7,37 @@ import { validateTicketAction, sendTicketNotification } from './ticket-handlers'
 import { TicketTranscriptService } from '../database/services/ticketTranscriptService';
 import { storeTicketTranscript, createTextTranscript } from '../utils/transcript-utils';
 import { regenerateMissingTranscripts, getTranscriptStats } from '../utils/transcript-management';
+import { logDashboardActivity } from '../middleware/dashboardLogger';
+
+// Helper function to extract user info from request
+function extractUserInfo(req: Request): { userId: string; username?: string } | null {
+  try {
+    // Try to get user info from headers (API key authentication)
+    const userId = req.headers['x-user-id'] as string;
+    if (userId) {
+      return { userId, username: undefined };
+    }
+    
+    // Try to get from JWT token if available
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // For now, just return null since we're using API key auth
+      return null;
+    }
+    
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
 const { getUserName } = require('./user-helper');
 const { getClient } = require('../utils/client-utils');
 
 const router = express.Router();
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
 
 // Define custom response type
 interface ApiResponse<T = any> {
@@ -37,8 +64,44 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
     const limit = parseInt(req.query.limit as string) || 25;
     const status = req.query.status as string;
     
-    // Use guildId if provided, otherwise get tickets from all guilds
-    const targetGuildId = guildId ? guildId as string : null;
+    // Check if user has server permissions
+    if (!req.user?.serverPermissions) {
+      sendJsonResponse(res, 403, {
+        success: false,
+        error: 'No server permissions found'
+      });
+      return;
+    }
+    
+    // Get accessible server IDs
+    const accessibleServerIds = Object.keys(req.user.serverPermissions);
+    
+    if (accessibleServerIds.length === 0) {
+      sendJsonResponse(res, 200, {
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          pages: 0
+        }
+      });
+      return;
+    }
+    
+    // If guildId is specified, check if user has access to that server
+    let targetGuildId: string | null = null;
+    if (guildId) {
+      if (!accessibleServerIds.includes(guildId as string)) {
+        sendJsonResponse(res, 403, {
+          success: false,
+          error: 'No permission to access this server'
+        });
+        return;
+      }
+      targetGuildId = guildId as string;
+    }
 
     try {
       // Get tickets from database
@@ -48,8 +111,13 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
         req.query.userId as string
       );
 
+      // Filter tickets to only include those from accessible servers
+      const filteredTickets = tickets.data.filter(ticket => 
+        accessibleServerIds.includes(ticket.guild_id)
+      );
+
       // Fetch usernames and server names for tickets
-      const ticketsWithUsernames = await Promise.all(tickets.data.map(async (ticket) => {
+      const ticketsWithUsernames = await Promise.all(filteredTickets.map(async (ticket) => {
         const client = await getClient();
         const username = await getUserName(client, ticket.user_id);
         
@@ -75,10 +143,10 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
         success: true,
         data: ticketsWithUsernames || [],
         pagination: {
-          total: tickets.data?.length || 0,
+          total: ticketsWithUsernames?.length || 0,
           page,
           limit,
-          pages: Math.ceil((tickets.data?.length || 0) / limit)
+          pages: Math.ceil((ticketsWithUsernames?.length || 0) / limit)
         }
       });
     } catch (dbError) {
@@ -189,6 +257,28 @@ const closeTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         logInfo('API', `Closed ticket #${ticket.ticket_number} via API request`);
         
+        // Log the dashboard activity
+        try {
+          const userInfo = extractUserInfo(req);
+          if (userInfo?.userId) {
+            await logDashboardActivity(
+              userInfo.userId,
+              'close_ticket',
+              'tickets',
+              `Closed ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
+              {
+                target_type: 'ticket',
+                target_id: ticketId.toString(),
+                guild_id: ticket.guild_id,
+                username: userInfo.username,
+                success: 1
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Error logging ticket close activity: ${logErr}`);
+        }
+        
         // Send notification in Discord channel and log channel
         await sendTicketNotification(ticket, 'closed', reason);
         
@@ -241,6 +331,28 @@ const reopenTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         // Log the action
         logInfo('API', `Ticket #${ticket.ticket_number} reopened via API. Reason: ${reason || 'Not specified'}`);
+        
+        // Log the dashboard activity
+        try {
+          const userInfo = extractUserInfo(req);
+          if (userInfo?.userId) {
+            await logDashboardActivity(
+              userInfo.userId,
+              'reopen_ticket',
+              'tickets',
+              `Reopened ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
+              {
+                target_type: 'ticket',
+                target_id: ticketId.toString(),
+                guild_id: ticket.guild_id,
+                username: userInfo.username,
+                success: 1
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Error logging ticket reopen activity: ${logErr}`);
+        }
         
         // Send notification in Discord channel and log channel
         await sendTicketNotification(ticket, 'reopened', reason);
@@ -326,6 +438,28 @@ const deleteTicket: express.RequestHandler = async (req, res, next) => {
       
       if (result.changes > 0) {
         logInfo('API', `Deleted ticket #${ticket.ticket_number} via API request`);
+        
+        // Log the dashboard activity
+        try {
+          const userInfo = extractUserInfo(req);
+          if (userInfo?.userId) {
+            await logDashboardActivity(
+              userInfo.userId,
+              'delete_ticket',
+              'tickets',
+              `Deleted ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
+              {
+                target_type: 'ticket',
+                target_id: ticketId.toString(),
+                guild_id: ticket.guild_id,
+                username: userInfo.username,
+                success: 1
+              }
+            );
+          }
+        } catch (logErr) {
+          logError('API', `Error logging ticket delete activity: ${logErr}`);
+        }
         
         // Send notification in log channel (don't try to send to the ticket channel as it's being deleted)
         await sendTicketNotification(ticket, 'deleted', reason);

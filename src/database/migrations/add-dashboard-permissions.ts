@@ -39,18 +39,20 @@ export async function createDashboardPermissionsTable(): Promise<void> {
 // Helper function to get dashboard permissions for a user
 export function getDashboardPermissions(userId: string, guildId: string): string[] {
   try {
-    logInfo('DashboardPermissions', `Getting permissions for user ${userId} in guild ${guildId}`);
-    
+    // Only log for debugging when needed - removed verbose logging to prevent spam
     const stmt = db.prepare('SELECT permissions FROM dashboard_permissions WHERE user_id = ? AND guild_id = ?');
     const result = stmt.get(userId, guildId) as { permissions: string } | undefined;
     
     if (result) {
       const permissions = JSON.parse(result.permissions || '[]');
-      logInfo('DashboardPermissions', `Found permissions for user ${userId}: ${permissions.join(', ')}`);
+      // Only log if user actually has permissions
+      if (permissions.length > 0) {
+        logInfo('DashboardPermissions', `Found permissions for user ${userId}: ${permissions.join(', ')}`);
+      }
       return permissions;
     }
     
-    logInfo('DashboardPermissions', `No permissions found for user ${userId} in guild ${guildId}`);
+    // Don't log when no permissions found - this is normal for most users
     return [];
   } catch (error) {
     logError('DashboardPermissions', `Error getting dashboard permissions for user ${userId} in guild ${guildId}: ${error}`);
@@ -93,6 +95,41 @@ export function getAllDashboardPermissions(guildId: string): Array<{ user_id: st
   } catch (error) {
     logError('DashboardPermissions', `Error getting all dashboard permissions: ${error}`);
     return [];
+  }
+}
+
+// Helper function to get all dashboard permissions for a user across all guilds
+export function getAllUserDashboardPermissions(userId: string): { 
+  serverPermissions: { [guildId: string]: string[] };
+  accessibleServers: Array<{ id: string; name: string; permissions: string[] }>;
+} {
+  try {
+    logInfo('DashboardPermissions', `Getting all permissions for user ${userId}`);
+    
+    const stmt = db.prepare("SELECT guild_id, permissions FROM dashboard_permissions WHERE user_id = ? AND permissions != '[]'");
+    const results = stmt.all(userId) as Array<{ guild_id: string; permissions: string }>;
+    
+    const serverPermissions: { [guildId: string]: string[] } = {};
+    const accessibleServers: Array<{ id: string; name: string; permissions: string[] }> = [];
+    
+    for (const row of results) {
+      const permissions = JSON.parse(row.permissions || '[]');
+      if (permissions.length > 0) {
+        serverPermissions[row.guild_id] = permissions;
+        accessibleServers.push({
+          id: row.guild_id,
+          name: `Server ${row.guild_id}`, // Will be updated with real name later
+          permissions: permissions
+        });
+      }
+    }
+    
+    logInfo('DashboardPermissions', `Found permissions for user ${userId} in ${Object.keys(serverPermissions).length} guilds`);
+    
+    return { serverPermissions, accessibleServers };
+  } catch (error) {
+    logError('DashboardPermissions', `Error getting all dashboard permissions for user ${userId}: ${error}`);
+    return { serverPermissions: {}, accessibleServers: [] };
   }
 }
 

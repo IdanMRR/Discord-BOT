@@ -13,7 +13,9 @@ async function loadAllCommands() {
   const commands = [];
   const commandNames = new Set();
   const duplicateCommands = [];
-  const foldersPath = path.join(__dirname, 'commands');
+  
+  // Use process.cwd() to get the current working directory
+  const foldersPath = path.join(process.cwd(), 'src', 'commands');
   const commandFolders = fs.readdirSync(foldersPath);
 
   for (const folder of commandFolders) {
@@ -22,27 +24,33 @@ async function loadAllCommands() {
     
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file);
-      const command = require(filePath);
       
-      // Set a new item in the Collection with the key as the command name and the value as the exported module
-      if ('data' in command) {
-        const commandName = command.data.name || command.data.toJSON().name;
+      // Use dynamic import for TypeScript files
+      try {
+        const command = await import(filePath);
         
-        // Check for duplicate command names
-        if (commandNames.has(commandName)) {
-          duplicateCommands.push({
-            name: commandName,
-            file: filePath
-          });
-          console.log(`[WARNING] Duplicate command name "${commandName}" found in ${filePath}. Skipping duplicate.`);
-          // We're not adding this command since it's a duplicate
+        // Set a new item in the Collection with the key as the command name and the value as the exported module
+        if ('data' in command) {
+          const commandName = command.data.name || command.data.toJSON().name;
+          
+          // Check for duplicate command names
+          if (commandNames.has(commandName)) {
+            duplicateCommands.push({
+              name: commandName,
+              file: filePath
+            });
+            console.log(`[WARNING] Duplicate command name "${commandName}" found in ${filePath}. Skipping duplicate.`);
+            // We're not adding this command since it's a duplicate
+          } else {
+            commandNames.add(commandName);
+            commands.push(command.data.toJSON());
+            console.log(`Added command: ${commandName}`);
+          }
         } else {
-          commandNames.add(commandName);
-          commands.push(command.data.toJSON());
-          console.log(`Added command: ${commandName}`);
+          console.log(`[WARNING] The command at ${filePath} is missing a required "data" property.`);
         }
-      } else {
-        console.log(`[WARNING] The command at ${filePath} is missing a required "data" property.`);
+      } catch (error) {
+        console.log(`[WARNING] Failed to load command at ${filePath}:`, error);
       }
     }
   }

@@ -4,18 +4,17 @@ import { logModeration, logError, logInfo, LogResult } from '../../utils/logger'
 import { logModerationToDatabase } from '../../utils/databaseLogger';
 import { ModerationCaseService } from '../../database/services/sqliteService';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('kick')
-    .setDescription('Kick a user from the server')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to kick')
-        .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
+export const data = new SlashCommandBuilder()
+  .setName('kick')
+  .setDescription('Kick a user from the server')
+  .addUserOption(option => 
+    option
+      .setName('user')
+      .setDescription('The user to kick')
+      .setRequired(true))
+  .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if user has permission to kick members
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.KickMembers)) {
@@ -35,12 +34,48 @@ module.exports = {
         return;
       }
       
+      // Check if user is trying to kick themselves
+      if (targetUser.id === interaction.user.id) {
+        const errorEmbed = createErrorEmbed('Invalid Target', 'You cannot kick yourself.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
+      // Check if user is trying to kick the bot
+      if (targetUser.id === interaction.client.user.id) {
+        const errorEmbed = createErrorEmbed('Invalid Target', 'I cannot kick myself.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      
       // Get the guild and member objects
       const guild = interaction.guild;
-      const member = guild?.members.cache.get(targetUser.id);
+      if (!guild) {
+        const errorEmbed = createErrorEmbed('Guild Error', 'This command can only be used in a server.');
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+        return;
+      }
       
-      if (!guild || !member) {
-        const errorEmbed = createErrorEmbed('Member Not Found', 'Could not find that member in this server.');
+      let member = guild.members.cache.get(targetUser.id);
+      
+      // If member not in cache, try to fetch from API
+      if (!member) {
+        try {
+          member = await guild.members.fetch(targetUser.id);
+        } catch (error) {
+          const errorEmbed = createErrorEmbed('Member Not Found', 'Could not find that member in this server.');
+          await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+          return;
+        }
+      }
+      
+      // Check role hierarchy - ensure the moderator can kick this member
+      const moderatorMember = guild.members.cache.get(interaction.user.id);
+      if (moderatorMember && member.roles.highest.position >= moderatorMember.roles.highest.position && guild.ownerId !== interaction.user.id) {
+        const errorEmbed = createErrorEmbed(
+          'Permission Error', 
+          'You cannot kick someone with an equal or higher role than you.'
+        );
         await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
         return;
       }
@@ -180,7 +215,7 @@ module.exports = {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {
           logInfo('Kick Command', `${interaction.user.tag} started but didn't complete kicking ${targetUser.tag}`);
-        } else { 
+        } else {
           logError('Kick Modal', error);
           await interaction.followUp({ 
             content: 'There was an error processing your kick request. Please try again.', 
@@ -193,5 +228,4 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to kick this user. Check my permissions and try again.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  }
-};
+}

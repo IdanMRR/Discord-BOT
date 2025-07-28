@@ -21,6 +21,11 @@ import { addSoftDeleteColumn } from './add-soft-delete-column';
 import { addDashboardLogsTable } from './007-add-dashboard-logs';
 import { fixDmLogsTable } from './fix-dm-logs-table';
 import { createDashboardPermissionsTable } from './add-dashboard-permissions';
+import { addGiveawaysTable } from './add-giveaways';
+import { addAutomodEscalation } from './add-automod-escalation';
+import { addAnalyticsSystem } from './add-analytics-system';
+import { addLoggingSettings } from './add-logging-settings';
+import { addComprehensiveSettingsSystem } from './add-comprehensive-settings-system';
 
 /**
  * Run all database migrations
@@ -161,6 +166,51 @@ export async function runMigrations(): Promise<void> {
       logInfo('Database Migration', 'Dashboard permissions table migration completed successfully');
     } catch (error) {
       logError('Database Migration', `Error in dashboard permissions migration: ${error}`);
+      throw error;
+    }
+    
+    // Add giveaways tables if they don't exist
+    try {
+      await addGiveawaysTable();
+      logInfo('Database Migration', 'Giveaways tables migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in giveaways tables migration: ${error}`);
+      throw error;
+    }
+    
+    // Add automod escalation system tables if they don't exist
+    try {
+      addAutomodEscalation.up(db);
+      logInfo('Database Migration', 'Automod escalation system migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in automod escalation migration: ${error}`);
+      throw error;
+    }
+    
+    // Add analytics system tables if they don't exist
+    try {
+      addAnalyticsSystem.up(db);
+      logInfo('Database Migration', 'Analytics system migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in analytics system migration: ${error}`);
+      throw error;
+    }
+    
+    // Add logging settings table if it doesn't exist
+    try {
+      addLoggingSettings();
+      logInfo('Database Migration', 'Logging settings table migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in logging settings migration: ${error}`);
+      throw error;
+    }
+    
+    // Add comprehensive settings system tables if they don't exist
+    try {
+      await addComprehensiveSettingsSystem();
+      logInfo('Database Migration', 'Comprehensive settings system migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in comprehensive settings system migration: ${error}`);
       throw error;
     }
     
