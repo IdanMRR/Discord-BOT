@@ -54,6 +54,27 @@ class ApiService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // Add API key for dashboard access (from environment)
+        const apiKey = process.env.REACT_APP_API_KEY;
+        if (apiKey) {
+          config.headers['x-api-key'] = apiKey;
+        }
+        
+        // Add user ID for server-specific permissions
+        // We'll get this from the token payload or user data stored in localStorage
+        try {
+          if (token) {
+            // Decode the JWT token to get user ID
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.userId) {
+              config.headers['x-user-id'] = payload.userId;
+            }
+          }
+        } catch (error) {
+          console.warn('Could not extract user ID from token:', error);
+        }
+        
         return config;
       },
       (error) => {
@@ -175,7 +196,24 @@ class ApiService {
 
   // Dashboard Stats
   async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    return this.makeRequest<DashboardStats>('GET', '/api/dashboard/stats');
+    try {
+      logger.info('ApiService', 'Attempting to fetch dashboard stats...');
+      const result = await this.makeRequest<DashboardStats>('GET', '/api/dashboard/stats');
+      
+      if (result.success) {
+        logger.info('ApiService', 'Dashboard stats fetched successfully');
+      } else {
+        logger.warn('ApiService', 'Dashboard stats request failed:', result.error);
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('ApiService', 'Error in getDashboardStats:', error);
+      return {
+        success: false,
+        error: 'Failed to connect to dashboard API'
+      };
+    }
   }
 
   async getRecentActivity(): Promise<ApiResponse<ActivityLog[]>> {
@@ -394,6 +432,42 @@ class ApiService {
         data: []
       };
     }
+  }
+
+  // Logging Settings
+  async getLoggingSettings(serverId: string): Promise<ApiResponse<any>> {
+    try {
+      logger.info('ApiService', `Fetching logging settings for server ${serverId}`);
+      const response = await this.makeRequest('GET', `/api/servers/${serverId}/logging-settings`);
+      return response;
+    } catch (error: any) {
+      logger.error('ApiService', `Error getting logging settings for server ${serverId}:`, error);
+      return {
+        success: false,
+        error: `Failed to fetch logging settings: ${error.message || 'Unknown error'}`,
+        data: null
+      };
+    }
+  }
+
+  async updateLoggingSettings(serverId: string, settings: any): Promise<ApiResponse<any>> {
+    try {
+      logger.info('ApiService', `Updating logging settings for server ${serverId}`, settings);
+      const response = await this.makeRequest('PUT', `/api/servers/${serverId}/logging-settings`, settings);
+      return response;
+    } catch (error: any) {
+      logger.error('ApiService', `Error updating logging settings for server ${serverId}:`, error);
+      return {
+        success: false,
+        error: `Failed to update logging settings: ${error.message || 'Unknown error'}`,
+        data: null
+      };
+    }
+  }
+
+  // Server Info (fallback to getServerById)
+  async getServerInfo(serverId: string): Promise<ApiResponse<any>> {
+    return this.getServerById(serverId);
   }
 
   async updateServerSettings(serverId: string, settings: Partial<ServerSettings>): Promise<ApiResponse<ServerSettings>> {
@@ -1355,6 +1429,111 @@ class ApiService {
       color: customMessage.color,
       fields: customMessage.fields
     });
+  }
+
+  // Dashboard Logs
+  async getDashboardLogs(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    actionType?: string;
+    guildId?: string;
+  }): Promise<ApiResponse<{
+    logs: any[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    };
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.userId) queryParams.append('user_id', params.userId);
+    if (params?.actionType) queryParams.append('action_type', params.actionType);
+    if (params?.guildId) queryParams.append('guild_id', params.guildId);
+
+    return this.makeRequest<{
+      logs: any[];
+      pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        pages: number;
+      };
+    }>('GET', `/api/dashboard-logs?${queryParams}`);
+  }
+
+  // Create Dashboard Log
+  async createDashboardLog(logData: {
+    user_id?: string;
+    username: string;
+    action_type: string;
+    page: string;
+    target_type?: string;
+    target_id?: string;
+    details?: string;
+    success?: boolean;
+    guild_id?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', '/api/dashboard-logs', logData);
+  }
+
+  // Delete Dashboard Logs (cleanup)
+  async deleteDashboardLogs(logIds?: number[]): Promise<ApiResponse<any>> {
+    if (logIds && logIds.length > 0) {
+      // If specific log IDs are provided, we'd need a different endpoint
+      // For now, just call cleanup
+      return this.makeRequest('DELETE', '/api/dashboard-logs/cleanup');
+    }
+    return this.makeRequest('DELETE', '/api/dashboard-logs/cleanup');
+  }
+
+  // Export Dashboard Logs (placeholder - would need backend implementation)
+  async exportDashboardLogs(filters?: any, format: 'csv' | 'json' = 'csv'): Promise<ApiResponse<{
+    data: string;
+    filename: string;
+  }>> {
+    // This would need to be implemented in the backend
+    throw new Error('Export dashboard logs not implemented in backend');
+  }
+
+  // Automod Escalation Methods
+  async getAutomodSettings(guildId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('GET', `/api/automod-escalation/${guildId}/settings`);
+  }
+
+  async updateAutomodSettings(guildId: string, settings: any): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('PUT', `/api/automod-escalation/${guildId}/settings`, settings);
+  }
+
+  async getAutomodRules(guildId: string): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<any[]>('GET', `/api/automod-escalation/${guildId}/rules`);
+  }
+
+  async createAutomodRule(guildId: string, rule: any): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('POST', `/api/automod-escalation/${guildId}/rules`, rule);
+  }
+
+  async updateAutomodRule(guildId: string, ruleId: number, updates: any): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('PUT', `/api/automod-escalation/${guildId}/rules/${ruleId}`, updates);
+  }
+
+  async deleteAutomodRule(guildId: string, ruleId: number): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('DELETE', `/api/automod-escalation/${guildId}/rules/${ruleId}`);
+  }
+
+  async getAutomodStats(guildId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('GET', `/api/automod-escalation/${guildId}/stats`);
+  }
+
+  async getAutomodLogs(guildId: string, params?: { limit?: number; offset?: number }): Promise<ApiResponse<any[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    
+    return this.makeRequest<any[]>('GET', `/api/automod-escalation/${guildId}/logs?${queryParams}`);
   }
 }
 

@@ -418,7 +418,7 @@ const TicketsContent: React.FC = () => {
                     setCurrentPage(1);
                   }}
                   placeholder="Select a server"
-                  showAllOption={true}
+                  showAllOption={false}
                 />
               </div>
             </div>
@@ -455,10 +455,38 @@ const TicketsContent: React.FC = () => {
         </div>
       </div>
 
-      <Card className={classNames(
-        "shadow-xl border-0 rounded-xl overflow-hidden",
-        darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-      )}>
+      {!selectedServerId ? (
+        <Card className={classNames(
+          "shadow-xl border-0 rounded-xl overflow-hidden",
+          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+        )}>
+          <div className={classNames(
+            "p-6",
+            darkMode ? "bg-gray-900" : "bg-white"
+          )}>
+            <div className="text-center py-8">
+              <svg className={classNames(
+                "w-12 h-12 mx-auto mb-4",
+                darkMode ? "text-gray-600" : "text-gray-400"
+              )} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125V9.129a2.999 2.999 0 010-5.198V3.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
+              </svg>
+              <h4 className={classNames(
+                "text-lg font-medium mb-2",
+                darkMode ? "text-gray-300" : "text-gray-900"
+              )}>Select a Server</h4>
+              <p className={classNames(
+                "text-sm",
+                darkMode ? "text-gray-400" : "text-gray-500"
+              )}>Choose a server above to view and manage tickets</p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card className={classNames(
+          "shadow-xl border-0 rounded-xl overflow-hidden",
+          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+        )}>
         <div className={classNames(
           "p-6 border-b",
           darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
@@ -785,6 +813,7 @@ const TicketsContent: React.FC = () => {
           )}
         </div>
       </Card>
+      )}
       
       {/* Reason Modal */}
       <Transition appear show={isReasonModalOpen} as={Fragment}>

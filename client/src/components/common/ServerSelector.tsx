@@ -20,13 +20,15 @@ interface ServerSelectorProps {
   onServerSelect: (serverId: string | null) => void;
   placeholder?: string;
   showAllOption?: boolean;
+  allServersText?: string;
 }
 
 const ServerSelector: React.FC<ServerSelectorProps> = ({
   selectedServerId,
   onServerSelect,
   placeholder = "Select a server",
-  showAllOption = true
+  showAllOption = true,
+  allServersText = "All Servers"
 }) => {
   const { darkMode } = useTheme();
   const [servers, setServers] = useState<Server[]>([]);
@@ -59,7 +61,7 @@ const ServerSelector: React.FC<ServerSelectorProps> = ({
   const selectedServer = selectedServerId ? servers.find(s => s.id === selectedServerId) : null;
 
   const options = [
-    ...(showAllOption ? [{ id: null, name: 'All Servers', memberCount: 0, icon: null }] : []),
+    ...(showAllOption ? [{ id: null, name: allServersText, memberCount: 0, icon: null }] : []),
     ...servers
   ];
 
@@ -111,7 +113,7 @@ const ServerSelector: React.FC<ServerSelectorProps> = ({
             ) : selectedServerId === null && showAllOption ? (
               <div className="flex items-center">
                 <ServerIcon className="w-6 h-6 mr-3 text-gray-400" />
-                <span className="block truncate font-medium">All Servers</span>
+                <span className="block truncate font-medium">{allServersText}</span>
               </div>
             ) : (
               <span className={classNames(

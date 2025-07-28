@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Import global settings CSS
 import './styles/global-settings.css';
@@ -23,6 +24,15 @@ import DashboardLogs from './pages/DashboardLogs';
 import ServerLogs from './pages/ServerLogs';
 import Admin from './pages/Admin';
 import NoPermissions from './pages/NoPermissions';
+import { Analytics } from './pages/Analytics';
+import ServerSettings from './pages/ServerSettings';
+import AdvancedServerSettings from './pages/AdvancedServerSettings';
+import GeneralSettings from './pages/settings/GeneralSettings';
+import ModerationSettings from './pages/settings/ModerationSettings';
+import WelcomeSettings from './pages/settings/WelcomeSettings';
+import RoleSettings from './pages/settings/RoleSettings';
+import EconomySettings from './pages/settings/EconomySettings';
+import LevelingSettings from './pages/settings/LevelingSettings';
 // Fix import for Settings component
 const Settings = React.lazy(() => import('./pages/Settings'));
 
@@ -85,10 +95,19 @@ const AppRoutes: React.FC = () => {
                 <Route path="/servers/:serverId" element={<ServerDetail />} />
                 <Route path="/servers/:serverId/members" element={<Members />} />
                 <Route path="/servers/:serverId/logs" element={<ServerLogs />} />
+                <Route path="/servers/:serverId/settings" element={<ServerSettings />} />
+                <Route path="/servers/:serverId/settings/advanced" element={<AdvancedServerSettings />} />
+                <Route path="/servers/:serverId/settings/general" element={<GeneralSettings />} />
+                <Route path="/servers/:serverId/settings/moderation" element={<ModerationSettings />} />
+                <Route path="/servers/:serverId/settings/welcome" element={<WelcomeSettings />} />
+                <Route path="/servers/:serverId/settings/roles" element={<RoleSettings />} />
+                <Route path="/servers/:serverId/settings/economy" element={<EconomySettings />} />
+                <Route path="/servers/:serverId/settings/leveling" element={<LevelingSettings />} />
                 <Route path="/tickets" element={<Tickets />} />
                 <Route path="/warnings" element={<Warnings />} />
                 <Route path="/logs" element={<Logs />} />
-                <Route path="/analytics" element={<div>Analytics Page (Coming Soon)</div>} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/servers/:serverId/analytics" element={<Analytics />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/dashboard-logs" element={<DashboardLogs />} />
@@ -103,26 +122,10 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-// Settings Applier Component - applies scale and other DOM changes
+// Settings Applier Component - applies theme and modern settings
 const SettingsApplier: React.FC = () => {
   const { settings } = useSettings();
   const { darkMode } = useTheme();
-
-  React.useEffect(() => {
-    // Apply interface scaling
-    const root = document.documentElement;
-    // Remove all existing scale classes
-    root.classList.remove('interface-scale-75', 'interface-scale-90', 'interface-scale-100', 'interface-scale-110', 'interface-scale-125', 'interface-scale-150');
-    // Add the current scale class
-    root.classList.add(`interface-scale-${settings.scale}`);
-  }, [settings.scale]);
-
-  React.useEffect(() => {
-    // Apply font size
-    const root = document.documentElement;
-    root.classList.remove('font-small', 'font-medium', 'font-large');
-    root.classList.add(`font-${settings.fontSize}`);
-  }, [settings.fontSize]);
 
   React.useEffect(() => {
     // Apply dark mode classes to all necessary elements
@@ -134,10 +137,22 @@ const SettingsApplier: React.FC = () => {
       html.classList.add('dark');
       body.classList.add('dark');
       if (root) root.classList.add('dark');
+      // Apply dark mode CSS variables
+      html.style.setProperty('--bg-primary', 'var(--dark-bg)');
+      html.style.setProperty('--bg-secondary', 'var(--dark-surface)');
+      html.style.setProperty('--text-primary', 'var(--dark-text)');
+      html.style.setProperty('--text-secondary', 'var(--dark-text-muted)');
+      html.style.setProperty('--border-color', 'var(--dark-border)');
     } else {
       html.classList.remove('dark');
       body.classList.remove('dark');
       if (root) root.classList.remove('dark');
+      // Apply light mode CSS variables
+      html.style.setProperty('--bg-primary', 'white');
+      html.style.setProperty('--bg-secondary', 'var(--gray-50)');
+      html.style.setProperty('--text-primary', 'var(--gray-900)');
+      html.style.setProperty('--text-secondary', 'var(--gray-600)');
+      html.style.setProperty('--border-color', 'var(--gray-200)');
     }
   }, [darkMode]);
 
@@ -172,7 +187,7 @@ const SettingsApplier: React.FC = () => {
   }, [settings.animationsEnabled]);
 
   React.useEffect(() => {
-    // Apply compact mode
+    // Apply modern compact mode
     const body = document.body;
     if (settings.compactMode) {
       body.classList.add('compact-mode');
@@ -181,23 +196,37 @@ const SettingsApplier: React.FC = () => {
     }
   }, [settings.compactMode]);
 
+  React.useEffect(() => {
+    // Apply font size scaling
+    const root = document.documentElement;
+    const fontSizeMap = {
+      small: '0.9',
+      medium: '1.0', 
+      large: '1.1'
+    };
+    
+    const scale = fontSizeMap[settings.fontSize] || '1.0';
+    root.style.setProperty('--font-scale', scale);
+  }, [settings.fontSize]);
+
   return null;
 };
 
 function App() {
   // Set the document title when the app loads
   React.useEffect(() => {
-    document.title = 'Soggra\'s Dashboard';
+    document.title = 'PanelOps - Modern Dashboard';
   }, []);
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <Router>
-            <div className="App app-container">
-              <SettingsApplier />
-              <AppRoutes />
-              <Toaster 
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <Router>
+              <div className="App app-container">
+                <SettingsApplier />
+                <AppRoutes />
+                <Toaster 
                 position="top-center" 
                 containerStyle={{
                   position: 'fixed',
@@ -260,12 +289,13 @@ function App() {
                     },
                   },
                 }}
-              />
-            </div>
-          </Router>
-        </SettingsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+                />
+              </div>
+            </Router>
+          </SettingsProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

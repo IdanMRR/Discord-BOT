@@ -122,7 +122,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
       
       {showText && (
         <span className={`font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent ${textSizeClasses[size]}`}>
-          SOGGRA'S DASHBOARD
+          PanelOps
         </span>
       )}
     </div>

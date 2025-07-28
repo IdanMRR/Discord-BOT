@@ -75,25 +75,45 @@ const Dashboard: React.FC = () => {
           memoryUsage: statsResponse.data.memoryUsage || 'Unknown',
           apiLatency: statsResponse.data.apiLatency || '25ms'
         });
-        console.log('Server status updated:', {
-          uptime: statsResponse.data.uptime,
-          memoryUsage: statsResponse.data.memoryUsage,
-          apiLatency: statsResponse.data.apiLatency
-        });
+        console.log('Dashboard stats loaded successfully');
       } else {
-        console.warn('Failed to load dashboard statistics');
+        console.warn('Failed to load dashboard statistics - using fallback data');
+        // Provide fallback stats so the dashboard still works
+        const fallbackStats = {
+          serverCount: 2,
+          activeTickets: 0,
+          totalWarnings: 0,
+          commandsUsed: 0,
+          recentActivity: [],
+          uptime: '0h 0m',
+          memoryUsage: 'Unknown',
+          apiLatency: 'Unknown'
+        };
+        setStats(fallbackStats);
         setServerStatus({
-          uptime: 'Error',
-          memoryUsage: 'Error',
-          apiLatency: 'Error'
+          uptime: 'Offline',
+          memoryUsage: 'Unknown', 
+          apiLatency: 'Unknown'
         });
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      // Provide fallback stats so the dashboard still works
+      const fallbackStats = {
+        serverCount: 2,
+        activeTickets: 0,
+        totalWarnings: 0,
+        commandsUsed: 0,
+        recentActivity: [],
+        uptime: '0h 0m',
+        memoryUsage: 'Unknown',
+        apiLatency: 'Unknown'
+      };
+      setStats(fallbackStats);
       setServerStatus({
-        uptime: 'Error',
-        memoryUsage: 'Error',
-        apiLatency: 'Error'
+        uptime: 'Offline',
+        memoryUsage: 'Unknown',
+        apiLatency: 'Unknown'
       });
     } finally {
       setLoading(false);
@@ -195,10 +215,10 @@ const Dashboard: React.FC = () => {
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className={classNames(
-        'relative rounded-lg border p-6',
+        'relative rounded-lg border p-6 card-modern transition-all duration-300 hover:shadow-xl',
         darkMode 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white border-gray-200'
+          ? 'bg-gray-800 border-gray-700 hover:border-primary-500' 
+          : 'bg-white border-gray-200 hover:border-primary-400'
       )}>
           <div className="flex items-center justify-between">
             <div>
@@ -206,18 +226,18 @@ const Dashboard: React.FC = () => {
               'text-2xl font-bold',
                 darkMode ? 'text-white' : 'text-gray-900'
               )}>
-                Control Center
+                PanelOps Control Center
             </h1>
               <p className={classNames(
               'text-base mt-1',
               darkMode ? 'text-gray-400' : 'text-gray-600'
               )}>
-              Monitor and manage your Discord bot operations
+              Modern dashboard for Discord bot operations
               </p>
             </div>
             <div className={classNames(
-            'p-3 rounded-lg',
-            darkMode ? 'bg-primary-500/20' : 'bg-primary-100'
+            'p-3 rounded-lg transition-all duration-300 hover:scale-110',
+            darkMode ? 'bg-primary-500/20 hover:bg-primary-500/30' : 'bg-primary-100 hover:bg-primary-200'
             )}>
             <ChartBarIcon className={classNames(
               'h-6 w-6',
@@ -233,19 +253,19 @@ const Dashboard: React.FC = () => {
           <div
             key={card.title}
             className={classNames(
-              'relative p-6 rounded-lg border transition-colors',
+              'relative p-6 rounded-lg border transition-all duration-300 card-modern group',
               darkMode 
-                ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
-                : 'bg-white border-gray-200 hover:border-gray-300'
+                ? 'bg-gray-800 border-gray-700 hover:border-primary-500 hover:shadow-xl hover:-translate-y-1' 
+                : 'bg-white border-gray-200 hover:border-primary-400 hover:shadow-xl hover:-translate-y-1'
             )}
           >
             <div className="flex items-center">
                 <div className={classNames(
-                  'p-3 rounded-lg',
-                card.color === 'blue' && (darkMode ? 'bg-blue-500/20' : 'bg-blue-100'),
-                card.color === 'green' && (darkMode ? 'bg-green-500/20' : 'bg-green-100'),
-                card.color === 'yellow' && (darkMode ? 'bg-yellow-500/20' : 'bg-yellow-100'),
-                card.color === 'purple' && (darkMode ? 'bg-purple-500/20' : 'bg-purple-100')
+                  'p-3 rounded-lg transition-all duration-300 group-hover:scale-110',
+                card.color === 'blue' && (darkMode ? 'bg-blue-500/20 group-hover:bg-blue-500/30' : 'bg-blue-100 group-hover:bg-blue-200'),
+                card.color === 'green' && (darkMode ? 'bg-green-500/20 group-hover:bg-green-500/30' : 'bg-green-100 group-hover:bg-green-200'),
+                card.color === 'yellow' && (darkMode ? 'bg-yellow-500/20 group-hover:bg-yellow-500/30' : 'bg-yellow-100 group-hover:bg-yellow-200'),
+                card.color === 'purple' && (darkMode ? 'bg-purple-500/20 group-hover:bg-purple-500/30' : 'bg-purple-100 group-hover:bg-purple-200')
                 )}>
                 <card.icon className={classNames(
                   'h-6 w-6',
@@ -292,10 +312,10 @@ const Dashboard: React.FC = () => {
         {/* Primary Metrics */}
         <div className="lg:col-span-2">
           <Card className={classNames(
-            'border-0 overflow-hidden',
+            'border-0 overflow-hidden card-modern transition-all duration-300 hover:shadow-2xl hover:-translate-y-2',
             darkMode 
-              ? 'bg-gray-800/60 backdrop-blur-sm shadow-lg' 
-              : 'bg-white/80 backdrop-blur-sm shadow-md'
+              ? 'bg-gray-800/60 backdrop-blur-sm shadow-lg hover:bg-gray-800/80' 
+              : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white/90'
           )}>
             <div className="p-6">
               <h3 className={classNames(
@@ -308,10 +328,10 @@ const Dashboard: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-6">
                 <div className={classNames(
-                  'p-4 rounded-xl border',
+                  'p-4 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group',
                   darkMode 
-                    ? 'bg-gray-700/30 border-gray-600/30' 
-                    : 'bg-gray-50/50 border-gray-200/50'
+                    ? 'bg-gray-700/30 border-gray-600/30 hover:bg-gray-700/50 hover:border-gray-500' 
+                    : 'bg-gray-50/50 border-gray-200/50 hover:bg-gray-100/70 hover:border-gray-300'
                 )}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -329,17 +349,17 @@ const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <ServerIcon className={classNames(
-                      'h-8 w-8',
-                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                      'h-8 w-8 transition-all duration-300 group-hover:scale-110',
+                      darkMode ? 'text-blue-400 group-hover:text-blue-300' : 'text-blue-600 group-hover:text-blue-700'
                     )} />
                   </div>
                 </div>
 
                 <div className={classNames(
-                  'p-4 rounded-xl border',
+                  'p-4 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group',
                   darkMode 
-                    ? 'bg-gray-700/30 border-gray-600/30' 
-                    : 'bg-gray-50/50 border-gray-200/50'
+                    ? 'bg-gray-700/30 border-gray-600/30 hover:bg-gray-700/50 hover:border-gray-500' 
+                    : 'bg-gray-50/50 border-gray-200/50 hover:bg-gray-100/70 hover:border-gray-300'
                 )}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -357,17 +377,17 @@ const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <CommandLineIcon className={classNames(
-                      'h-8 w-8',
-                      darkMode ? 'text-purple-400' : 'text-purple-600'
+                      'h-8 w-8 transition-all duration-300 group-hover:scale-110',
+                      darkMode ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700'
                     )} />
                   </div>
                 </div>
 
                 <div className={classNames(
-                  'p-4 rounded-xl border',
+                  'p-4 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group',
                   darkMode 
-                    ? 'bg-gray-700/30 border-gray-600/30' 
-                    : 'bg-gray-50/50 border-gray-200/50'
+                    ? 'bg-gray-700/30 border-gray-600/30 hover:bg-gray-700/50 hover:border-gray-500' 
+                    : 'bg-gray-50/50 border-gray-200/50 hover:bg-gray-100/70 hover:border-gray-300'
                 )}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -385,17 +405,17 @@ const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <TicketIcon className={classNames(
-                      'h-8 w-8',
-                      darkMode ? 'text-green-400' : 'text-green-600'
+                      'h-8 w-8 transition-all duration-300 group-hover:scale-110',
+                      darkMode ? 'text-green-400 group-hover:text-green-300' : 'text-green-600 group-hover:text-green-700'
                     )} />
                   </div>
                 </div>
 
                 <div className={classNames(
-                  'p-4 rounded-xl border',
+                  'p-4 rounded-xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group',
                   darkMode 
-                    ? 'bg-gray-700/30 border-gray-600/30' 
-                    : 'bg-gray-50/50 border-gray-200/50'
+                    ? 'bg-gray-700/30 border-gray-600/30 hover:bg-gray-700/50 hover:border-gray-500' 
+                    : 'bg-gray-50/50 border-gray-200/50 hover:bg-gray-100/70 hover:border-gray-300'
                 )}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -413,8 +433,8 @@ const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <ExclamationTriangleIcon className={classNames(
-                      'h-8 w-8',
-                      darkMode ? 'text-yellow-400' : 'text-yellow-600'
+                      'h-8 w-8 transition-all duration-300 group-hover:scale-110',
+                      darkMode ? 'text-yellow-400 group-hover:text-yellow-300' : 'text-yellow-600 group-hover:text-yellow-700'
                     )} />
                   </div>
                 </div>
@@ -426,10 +446,10 @@ const Dashboard: React.FC = () => {
         {/* System Status */}
         <div>
           <Card className={classNames(
-            'border-0 overflow-hidden',
+            'border-0 overflow-hidden card-modern transition-all duration-300 hover:shadow-2xl hover:-translate-y-2',
             darkMode 
-              ? 'bg-gray-800/60 backdrop-blur-sm shadow-lg' 
-              : 'bg-white/80 backdrop-blur-sm shadow-md'
+              ? 'bg-gray-800/60 backdrop-blur-sm shadow-lg hover:bg-gray-800/80' 
+              : 'bg-white/80 backdrop-blur-sm shadow-md hover:bg-white/90'
           )}>
             <div className="p-6">
               <h3 className={classNames(
@@ -517,10 +537,10 @@ const Dashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className={classNames(
-        'rounded-lg border p-6',
+        'rounded-lg border p-6 card-modern transition-all duration-300 hover:shadow-xl',
         darkMode 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white border-gray-200'
+          ? 'bg-gray-800 border-gray-700 hover:border-primary-500' 
+          : 'bg-white border-gray-200 hover:border-primary-400'
       )}>
         <div className="flex items-center justify-between mb-6">
         <h3 className={classNames(
@@ -541,26 +561,26 @@ const Dashboard: React.FC = () => {
               key={action.title}
               onClick={() => navigate(action.route)}
               className={classNames(
-                'p-4 rounded-lg border text-left transition-colors group',
+                'p-4 rounded-lg border text-left transition-all duration-300 group btn-modern hover:-translate-y-1 hover:shadow-lg',
                 darkMode 
-                  ? 'bg-gray-700 border-gray-600 hover:border-gray-500 hover:bg-gray-600' 
-                  : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100'
+                  ? 'bg-gray-700 border-gray-600 hover:border-primary-500 hover:bg-gray-600' 
+                  : 'bg-gray-50 border-gray-200 hover:border-primary-400 hover:bg-gray-100'
               )}
             >
               <div className="flex items-center justify-between mb-3">
                     <div className={classNames(
-                  'p-2 rounded-lg',
-                  action.color === 'blue' && (darkMode ? 'bg-blue-500/20' : 'bg-blue-100'),
-                  action.color === 'red' && (darkMode ? 'bg-red-500/20' : 'bg-red-100'),
-                  action.color === 'green' && (darkMode ? 'bg-green-500/20' : 'bg-green-100'),
-                  action.color === 'purple' && (darkMode ? 'bg-purple-500/20' : 'bg-purple-100')
+                  'p-2 rounded-lg transition-all duration-300 group-hover:scale-110',
+                  action.color === 'blue' && (darkMode ? 'bg-blue-500/20 group-hover:bg-blue-500/30' : 'bg-blue-100 group-hover:bg-blue-200'),
+                  action.color === 'red' && (darkMode ? 'bg-red-500/20 group-hover:bg-red-500/30' : 'bg-red-100 group-hover:bg-red-200'),
+                  action.color === 'green' && (darkMode ? 'bg-green-500/20 group-hover:bg-green-500/30' : 'bg-green-100 group-hover:bg-green-200'),
+                  action.color === 'purple' && (darkMode ? 'bg-purple-500/20 group-hover:bg-purple-500/30' : 'bg-purple-100 group-hover:bg-purple-200')
                 )}>
                   <action.icon className={classNames(
-                    'h-5 w-5',
-                    action.color === 'blue' && (darkMode ? 'text-blue-400' : 'text-blue-600'),
-                    action.color === 'red' && (darkMode ? 'text-red-400' : 'text-red-600'),
-                    action.color === 'green' && (darkMode ? 'text-green-400' : 'text-green-600'),
-                    action.color === 'purple' && (darkMode ? 'text-purple-400' : 'text-purple-600')
+                    'h-5 w-5 transition-all duration-300 group-hover:scale-110',
+                    action.color === 'blue' && (darkMode ? 'text-blue-400 group-hover:text-blue-300' : 'text-blue-600 group-hover:text-blue-700'),
+                    action.color === 'red' && (darkMode ? 'text-red-400 group-hover:text-red-300' : 'text-red-600 group-hover:text-red-700'),
+                    action.color === 'green' && (darkMode ? 'text-green-400 group-hover:text-green-300' : 'text-green-600 group-hover:text-green-700'),
+                    action.color === 'purple' && (darkMode ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700')
                   )} />
                     </div>
                     {action.count > 0 && (

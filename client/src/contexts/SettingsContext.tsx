@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 
 export interface UserSettings {
-  scale: number;
   theme: 'light' | 'dark' | 'auto';
   primaryColor: string;
   fontSize: 'small' | 'medium' | 'large';
@@ -23,9 +22,8 @@ interface SettingsContextType {
 }
 
 const defaultSettings: UserSettings = {
-  scale: 100,
   theme: 'dark',
-  primaryColor: '#64748b',
+  primaryColor: '#3b82f6',
   fontSize: 'medium',
   animationsEnabled: true,
   compactMode: false,
@@ -65,14 +63,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     }
   }, []);
 
-  // Set up auto-refresh interval
+  // Set up auto-refresh interval with proper cleanup
   useEffect(() => {
-    if (settings.autoRefresh && autoRefreshCallbacks.current.size > 0) {
-      // Clear existing interval
-      if (autoRefreshInterval.current) {
-        clearInterval(autoRefreshInterval.current);
-      }
+    // Clear any existing interval first
+    if (autoRefreshInterval.current) {
+      clearInterval(autoRefreshInterval.current);
+      autoRefreshInterval.current = null;
+    }
 
+    if (settings.autoRefresh && autoRefreshCallbacks.current.size > 0) {
       // Set up new interval
       autoRefreshInterval.current = setInterval(() => {
         // Call all registered refresh callbacks
@@ -84,20 +83,37 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           }
         });
       }, settings.refreshInterval * 1000);
-    } else {
-      // Clear interval if auto-refresh is disabled
+    }
+
+    // Cleanup function
+    return () => {
       if (autoRefreshInterval.current) {
         clearInterval(autoRefreshInterval.current);
         autoRefreshInterval.current = null;
       }
-    }
+    };
+  }, [settings.autoRefresh, settings.refreshInterval]);
 
+  // Separate effect to handle callback changes without recreating interval
+  useEffect(() => {
+    // If we have no callbacks, clear the interval
+    if (autoRefreshCallbacks.current.size === 0 && autoRefreshInterval.current) {
+      clearInterval(autoRefreshInterval.current);
+      autoRefreshInterval.current = null;
+    }
+  });
+
+  // Cleanup effect on unmount
+  useEffect(() => {
+    const callbacks = autoRefreshCallbacks.current;
     return () => {
       if (autoRefreshInterval.current) {
         clearInterval(autoRefreshInterval.current);
+        autoRefreshInterval.current = null;
       }
+      callbacks.clear();
     };
-  }, [settings.autoRefresh, settings.refreshInterval, autoRefreshCallbacks.current.size]);
+  }, []);
 
   const updateSetting = (key: keyof UserSettings, value: any) => {
     setSettings(prev => {

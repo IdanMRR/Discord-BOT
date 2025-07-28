@@ -11,7 +11,8 @@ import {
   UsersIcon, 
   PlusIcon, 
   ArrowPathIcon,
-  EyeIcon
+  EyeIcon,
+  CogIcon
 } from '@heroicons/react/24/outline';
 
 // Utility function for conditional class names
@@ -154,6 +155,12 @@ const Servers: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     navigate(`/servers/${serverId}`);
+  };
+
+  const handleLoginConfig = (e: React.MouseEvent, serverId: string, serverName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/servers/${serverId}/login-config`);
   };
 
   if (loading) {
@@ -510,16 +517,26 @@ const Servers: React.FC = () => {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="mt-4">
+                    <div className="mt-4 flex space-x-2">
                       <button
                         onClick={(e) => handleViewDetails(e, server.id, server.name)}
                         className={classNames(
-                          "w-full px-3 py-2 rounded-lg text-center text-sm font-medium transition-colors",
+                          "flex-1 px-3 py-2 rounded-lg text-center text-sm font-medium transition-colors",
                           darkMode ? "bg-primary-600 text-white hover:bg-primary-700" : "bg-primary-600 text-white hover:bg-primary-700"
                         )}
                       >
                         <EyeIcon className="h-4 w-4 inline mr-1" />
                         View Details
+                      </button>
+                      <button
+                        onClick={(e) => handleLoginConfig(e, server.id, server.name)}
+                        className={classNames(
+                          "flex-1 px-3 py-2 rounded-lg text-center text-sm font-medium transition-colors",
+                          darkMode ? "bg-gray-600 text-white hover:bg-gray-700" : "bg-gray-600 text-white hover:bg-gray-700"
+                        )}
+                      >
+                        <CogIcon className="h-4 w-4 inline mr-1" />
+                        Login Config
                       </button>
                     </div>
                   </div>

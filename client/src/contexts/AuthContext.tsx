@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { AuthState, User } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -25,44 +25,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     permissions: []
   });
   const [loading, setLoading] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // Prevent concurrent login attempts
+  const loginPromiseRef = useRef<Promise<void> | null>(null);
 
   const login = async (token: string): Promise<void> => {
-    try {
-      setLoading(true);
-      apiService.setAuthToken(token);
-      
-      const response = await apiService.getCurrentUser();
-      if (response.success && response.data) {
-        const user = response.data;
-        const isAdmin = checkAdminPermissions(user);
-        
-        setAuthState({
-          isAuthenticated: true,
-          user,
-          token,
-          isAdmin,
-          permissions: getPermissions(user)
-        });
-        
-        // Only show welcome message if this is a fresh login, not on page refresh
-        const isPageRefresh = localStorage.getItem('auth_token') === token;
-        if (!isPageRefresh) {
-          toast.success(`Welcome back, ${user.username}!`, { 
-            id: 'login-success',
-            duration: 3000 
-          });
-        }
-      } else {
-        throw new Error(response.error || 'Failed to get user data');
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error('Login failed: ' + error.message, { id: 'login-error' });
-      logout();
-      throw error;
-    } finally {
-      setLoading(false);
+    // If already logging in with the same token, return existing promise
+    if (loginPromiseRef.current && isLoggingIn) {
+      return loginPromiseRef.current;
     }
+
+    // Create new login promise
+    const loginPromise = (async () => {
+      try {
+        setIsLoggingIn(true);
+        setLoading(true);
+        apiService.setAuthToken(token);
+        
+        const response = await apiService.getCurrentUser();
+        if (response.success && response.data) {
+          const user = response.data;
+          const isAdmin = checkAdminPermissions(user);
+          
+          setAuthState({
+            isAuthenticated: true,
+            user,
+            token,
+            isAdmin,
+            permissions: getPermissions(user)
+          });
+          
+          // Only show welcome message if this is a fresh login, not on page refresh
+          const isPageRefresh = localStorage.getItem('auth_token') === token;
+          if (!isPageRefresh) {
+            toast.success(`Welcome back, ${user.username}!`, { 
+              id: 'login-success',
+              duration: 3000 
+            });
+          }
+        } else {
+          throw new Error(response.error || 'Failed to get user data');
+        }
+      } catch (error: any) {
+        console.error('Login error:', error);
+        toast.error('Login failed: ' + error.message, { id: 'login-error' });
+        logout();
+        throw error;
+      } finally {
+        setLoading(false);
+        setIsLoggingIn(false);
+        loginPromiseRef.current = null;
+      }
+    })();
+
+    loginPromiseRef.current = loginPromise;
+    return loginPromise;
   };
 
   const logout = (): void => {

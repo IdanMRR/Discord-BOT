@@ -7,21 +7,78 @@ import {
   MoonIcon, 
   ComputerDesktopIcon,
   SwatchIcon,
-  DocumentTextIcon,
   ArrowsPointingOutIcon,
-  CheckIcon
+  CheckIcon,
+  MagnifyingGlassIcon,
+  BellIcon,
+  EyeIcon,
+  Cog6ToothIcon,
+  CommandLineIcon
 } from '@heroicons/react/24/outline';
+
+// Utility function for conditional class names
+function classNames(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
+interface SettingCategory {
+  id: string;
+  name: string;
+  icon: React.ComponentType<any>;
+  description: string;
+}
 
 const Settings: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const { settings, updateSetting } = useSettings();
   
+  // Active category
+  const [activeCategory, setActiveCategory] = useState('appearance');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Local state for settings
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
   const [primaryColor, setPrimaryColor] = useState('#64748b');
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
-  const [interfaceScale, setInterfaceScale] = useState(100);
+  const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [compactMode, setCompactMode] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Setting categories
+  const categories: SettingCategory[] = [
+    {
+      id: 'appearance',
+      name: 'Appearance',
+      icon: SwatchIcon,
+      description: 'Theme, colors, and visual settings'
+    },
+    {
+      id: 'interface',
+      name: 'Interface',
+      icon: ArrowsPointingOutIcon,
+      description: 'Layout, scaling, and UI preferences'
+    },
+    {
+      id: 'notifications',
+      name: 'Notifications',
+      icon: BellIcon,
+      description: 'Auto-refresh and alert settings'
+    },
+    {
+      id: 'accessibility',
+      name: 'Accessibility',
+      icon: EyeIcon,
+      description: 'Accessibility and usability options'
+    },
+    {
+      id: 'advanced',
+      name: 'Advanced',
+      icon: Cog6ToothIcon,
+      description: 'Developer and debug options'
+    }
+  ];
 
   // Predefined color options
   const colorPresets = [
@@ -44,14 +101,6 @@ const Settings: React.FC = () => {
     { label: 'Large', value: 'large' as const }
   ];
 
-  // Interface scale presets
-  const scalePresets = [
-    { label: '75%', value: 75 },
-    { label: '90%', value: 90 },
-    { label: '100%', value: 100 },
-    { label: '110%', value: 110 },
-    { label: '125%', value: 125 }
-  ];
 
   // Load settings on mount
   useEffect(() => {
@@ -59,11 +108,13 @@ const Settings: React.FC = () => {
       setTheme(settings.theme || 'auto');
       setPrimaryColor(settings.primaryColor || '#64748b');
       setFontSize(settings.fontSize || 'medium');
-      setInterfaceScale(settings.scale || 100);
+      setAnimationsEnabled(settings.animationsEnabled ?? true);
+      setCompactMode(settings.compactMode ?? false);
+      setAutoRefresh(settings.autoRefresh ?? true);
+      setRefreshInterval(settings.refreshInterval || 30);
       
       // Apply settings immediately when loaded
       handleColorChange(settings.primaryColor || '#64748b');
-      handleScaleChange(settings.scale || 100);
       handleFontSizeChange(settings.fontSize || 'medium');
     }
   }, [settings]);
@@ -74,9 +125,12 @@ const Settings: React.FC = () => {
       theme !== (settings?.theme || 'auto') ||
       primaryColor !== (settings?.primaryColor || '#64748b') ||
       fontSize !== (settings?.fontSize || 'medium') ||
-      interfaceScale !== (settings?.scale || 100);
+      animationsEnabled !== (settings?.animationsEnabled ?? true) ||
+      compactMode !== (settings?.compactMode ?? false) ||
+      autoRefresh !== (settings?.autoRefresh ?? true) ||
+      refreshInterval !== (settings?.refreshInterval || 30);
     setHasChanges(changed);
-  }, [theme, primaryColor, fontSize, interfaceScale, settings]);
+  }, [theme, primaryColor, fontSize, animationsEnabled, compactMode, autoRefresh, refreshInterval, settings]);
 
   // Apply theme changes
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
@@ -98,315 +152,580 @@ const Settings: React.FC = () => {
   // Apply primary color
   const handleColorChange = (color: string) => {
     setPrimaryColor(color);
-    document.documentElement.style.setProperty('--primary-color', color);
     
-    // Calculate RGB values for opacity variants
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    document.documentElement.style.setProperty('--primary-color-rgb', `${r}, ${g}, ${b}`);
+    // Convert hex to RGB for CSS variables
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+    
+    const rgb = hexToRgb(color);
+    if (rgb) {
+      document.documentElement.style.setProperty('--primary-color', color);
+      document.documentElement.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
   };
 
   // Apply font size
   const handleFontSizeChange = (size: 'small' | 'medium' | 'large') => {
     setFontSize(size);
-    // Apply font size class to root element
-    document.documentElement.classList.remove('font-small', 'font-medium', 'font-large');
-    document.documentElement.classList.add(`font-${size}`);
+    // Remove all font size classes
+    document.documentElement.classList.remove('text-sm', 'text-base', 'text-lg');
+    
+    // Apply the correct font size class based on the size
+    switch (size) {
+      case 'small':
+        document.documentElement.classList.add('text-sm');
+        break;
+      case 'medium':
+        document.documentElement.classList.add('text-base');
+        break;
+      case 'large':
+        document.documentElement.classList.add('text-lg');
+        break;
+    }
   };
 
-  // Apply interface scale
-  const handleScaleChange = (scale: number) => {
-    setInterfaceScale(scale);
-    // Remove any existing scale classes
-    document.documentElement.className = document.documentElement.className
-      .replace(/interface-scale-\d+/g, '');
-    // Add the new scale class
-    document.documentElement.classList.add(`interface-scale-${scale}`);
-  };
 
   // Save all settings
-  const handleSave = async () => {
+  const handleSave = () => {
+    if (!hasChanges) return;
+    
     try {
-      // Apply the primary color immediately when saving
-      handleColorChange(primaryColor);
-      handleScaleChange(interfaceScale);
-      handleFontSizeChange(fontSize);
-      
       updateSetting('theme', theme);
       updateSetting('primaryColor', primaryColor);
       updateSetting('fontSize', fontSize);
-      updateSetting('scale', interfaceScale);
+      updateSetting('animationsEnabled', animationsEnabled);
+      updateSetting('compactMode', compactMode);
+      updateSetting('autoRefresh', autoRefresh);
+      updateSetting('refreshInterval', refreshInterval);
       
       setHasChanges(false);
       toast.success('Settings saved successfully!');
     } catch (error) {
+      console.error('Failed to save settings:', error);
       toast.error('Failed to save settings');
-      console.error('Error saving settings:', error);
     }
   };
 
-  // Reset to defaults
+  // Reset settings
   const handleReset = () => {
-    handleThemeChange('auto');
-    handleColorChange('#64748b');
-    handleFontSizeChange('medium');
-    handleScaleChange(100);
-    toast.success('Settings reset to defaults');
+    if (!settings) return;
+    
+    setTheme(settings.theme || 'auto');
+    setPrimaryColor(settings.primaryColor || '#64748b');
+    setFontSize(settings.fontSize || 'medium');
+    setAnimationsEnabled(settings.animationsEnabled ?? true);
+    setCompactMode(settings.compactMode ?? false);
+    setAutoRefresh(settings.autoRefresh ?? true);
+    setRefreshInterval(settings.refreshInterval || 30);
+    
+    // Re-apply current settings
+    handleColorChange(settings.primaryColor || '#64748b');
+    handleFontSizeChange(settings.fontSize || 'medium');
+    
+    toast.success('Settings reset');
   };
 
-  // Get font size display text
-  const getFontSizeDisplay = (size: 'small' | 'medium' | 'large') => {
-    switch (size) {
-      case 'small': return '14px';
-      case 'medium': return '16px';
-      case 'large': return '18px';
+  // Filter categories based on search
+  const filteredCategories = searchQuery 
+    ? categories.filter(category => 
+        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : categories;
+
+  // Render category content
+  const renderCategoryContent = () => {
+    switch (activeCategory) {
+      case 'appearance':
+        return (
+          <div className="space-y-8">
+            {/* Theme Selection */}
+            <div className="space-y-4">
+              <h3 className={classNames(
+                'text-lg font-semibold',
+                darkMode ? 'text-white' : 'text-gray-900'
+              )}>Theme</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { id: 'light', name: 'Light', icon: SunIcon },
+                  { id: 'dark', name: 'Dark', icon: MoonIcon },
+                  { id: 'auto', name: 'Auto', icon: ComputerDesktopIcon }
+                ].map(({ id, name, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => handleThemeChange(id as any)}
+                    className={classNames(
+                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern group hover:-translate-y-1 hover:shadow-lg',
+                      theme === id
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                        : darkMode
+                          ? 'border-gray-600 bg-gray-700 hover:border-primary-500 hover:bg-gray-600'
+                          : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
+                    )}
+                  >
+                    <Icon className={classNames(
+                      'w-6 h-6 mx-auto mb-2 transition-all duration-300 group-hover:scale-110',
+                      theme === id
+                        ? 'text-primary-600'
+                        : darkMode ? 'text-gray-400 group-hover:text-primary-400' : 'text-gray-500 group-hover:text-primary-600'
+                    )} />
+                    <span className={classNames(
+                      'text-sm font-medium',
+                      theme === id
+                        ? 'text-primary-700 dark:text-primary-300'
+                        : darkMode ? 'text-gray-300' : 'text-gray-700'
+                    )}>{name}</span>
+                    {theme === id && (
+                      <CheckIcon className="absolute top-2 right-2 w-5 h-5 text-primary-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Primary Color */}
+            <div className="space-y-4">
+              <h3 className={classNames(
+                'text-lg font-semibold',
+                darkMode ? 'text-white' : 'text-gray-900'
+              )}>Primary Color</h3>
+              
+              <div className="grid grid-cols-5 gap-3">
+                {colorPresets.map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => handleColorChange(preset.value)}
+                    className={classNames(
+                      'relative h-12 rounded-lg border-2 transition-all duration-300 hover:shadow-lg',
+                      primaryColor === preset.value
+                        ? 'border-gray-900 dark:border-white scale-110 shadow-lg'
+                        : 'border-gray-300 dark:border-gray-600 hover:scale-110 hover:border-gray-400 dark:hover:border-gray-500'
+                    )}
+                    style={{ backgroundColor: preset.value }}
+                    title={preset.name}
+                  >
+                    {primaryColor === preset.value && (
+                      <CheckIcon className="absolute inset-0 m-auto w-6 h-6 text-white drop-shadow-lg" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex items-center space-x-4 pt-2">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  className="h-12 w-20 rounded-lg cursor-pointer border border-gray-300 dark:border-gray-600"
+                />
+                <input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  placeholder="#64748b"
+                  className={classNames(
+                    'flex-1 px-4 py-3 rounded-lg border transition-colors',
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
+                    'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'interface':
+        return (
+          <div className="space-y-8">
+            {/* Font Size */}
+            <div className="space-y-4">
+              <h3 className={classNames(
+                'text-lg font-semibold',
+                darkMode ? 'text-white' : 'text-gray-900'
+              )}>Font Size</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {fontSizePresets.map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => handleFontSizeChange(preset.value)}
+                    className={classNames(
+                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-lg group',
+                      fontSize === preset.value
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                        : darkMode
+                          ? 'border-gray-600 bg-gray-700 hover:border-primary-500 hover:bg-gray-600'
+                          : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
+                    )}
+                  >
+                    <span className={classNames(
+                      'font-medium',
+                      preset.value === 'small' ? 'text-sm' : preset.value === 'large' ? 'text-lg' : 'text-base',
+                      fontSize === preset.value
+                        ? 'text-primary-700 dark:text-primary-300'
+                        : darkMode ? 'text-gray-300' : 'text-gray-700'
+                    )}>{preset.label}</span>
+                    {fontSize === preset.value && (
+                      <CheckIcon className="absolute top-2 right-2 w-5 h-5 text-primary-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+
+            {/* Interface Options */}
+            <div className="space-y-6">
+              <h3 className={classNames(
+                'text-lg font-semibold',
+                darkMode ? 'text-white' : 'text-gray-900'
+              )}>Interface Options</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className={classNames(
+                      'text-sm font-medium',
+                      darkMode ? 'text-gray-200' : 'text-gray-800'
+                    )}>
+                      Enable Animations
+                    </label>
+                    <p className={classNames(
+                      'text-sm',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>
+                      Show smooth transitions and animations
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                    className={classNames(
+                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
+                      animationsEnabled ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
+                    )}
+                  >
+                    <span
+                      className={classNames(
+                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                        animationsEnabled ? 'translate-x-6' : 'translate-x-1'
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className={classNames(
+                      'text-sm font-medium',
+                      darkMode ? 'text-gray-200' : 'text-gray-800'
+                    )}>
+                      Compact Mode
+                    </label>
+                    <p className={classNames(
+                      'text-sm',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>
+                      Reduce spacing for more content
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCompactMode(!compactMode)}
+                    className={classNames(
+                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
+                      compactMode ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
+                    )}
+                  >
+                    <span
+                      className={classNames(
+                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                        compactMode ? 'translate-x-6' : 'translate-x-1'
+                      )}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <h3 className={classNames(
+                'text-lg font-semibold',
+                darkMode ? 'text-white' : 'text-gray-900'
+              )}>Auto Refresh</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className={classNames(
+                      'text-sm font-medium',
+                      darkMode ? 'text-gray-200' : 'text-gray-800'
+                    )}>
+                      Enable Auto Refresh
+                    </label>
+                    <p className={classNames(
+                      'text-sm',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>
+                      Automatically refresh data at set intervals
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAutoRefresh(!autoRefresh)}
+                    className={classNames(
+                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
+                      autoRefresh ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
+                    )}
+                  >
+                    <span
+                      className={classNames(
+                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                        autoRefresh ? 'translate-x-6' : 'translate-x-1'
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {autoRefresh && (
+                  <div>
+                    <label className={classNames(
+                      'block text-sm font-medium mb-2',
+                      darkMode ? 'text-gray-200' : 'text-gray-800'
+                    )}>
+                      Refresh Interval (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      min="5"
+                      max="300"
+                      value={refreshInterval}
+                      onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                      className={classNames(
+                        'w-32 px-3 py-2 rounded-lg border transition-colors',
+                        darkMode
+                          ? 'bg-gray-700 border-gray-600 text-white focus:border-primary-500'
+                          : 'bg-white border-gray-300 text-gray-900 focus:border-primary-500',
+                        'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'accessibility':
+        return (
+          <div className="space-y-8">
+            <div className={classNames(
+              'p-6 rounded-lg border-2 border-dashed',
+              darkMode ? 'border-gray-600' : 'border-gray-300'
+            )}>
+              <div className="text-center">
+                <EyeIcon className={classNames(
+                  'mx-auto h-12 w-12 mb-4',
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                )} />
+                <h3 className={classNames(
+                  'text-lg font-semibold mb-2',
+                  darkMode ? 'text-white' : 'text-gray-900'
+                )}>
+                  Accessibility Features
+                </h3>
+                <p className={classNames(
+                  'text-sm',
+                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                )}>
+                  Accessibility options will be available in a future update
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'advanced':
+        return (
+          <div className="space-y-8">
+            <div className={classNames(
+              'p-6 rounded-lg border-2 border-dashed',
+              darkMode ? 'border-gray-600' : 'border-gray-300'
+            )}>
+              <div className="text-center">
+                <CommandLineIcon className={classNames(
+                  'mx-auto h-12 w-12 mb-4',
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                )} />
+                <h3 className={classNames(
+                  'text-lg font-semibold mb-2',
+                  darkMode ? 'text-white' : 'text-gray-900'
+                )}>
+                  Advanced Settings
+                </h3>
+                <p className={classNames(
+                  'text-sm',
+                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                )}>
+                  Developer and debug options will be available in a future update
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          Settings
-        </h1>
-        <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Customize your dashboard appearance and preferences
-        </p>
-      </div>
-
-      <div className="space-y-8">
-        {/* Theme Selection */}
-        <div className={`p-6 rounded-lg border-2 ${
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center mb-4">
-            <SunIcon className="w-5 h-5 mr-2 text-primary" />
-            <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Theme
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { value: 'light' as const, label: 'Light', icon: SunIcon },
-              { value: 'dark' as const, label: 'Dark', icon: MoonIcon },
-              { value: 'auto' as const, label: 'System', icon: ComputerDesktopIcon }
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleThemeChange(option.value)}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  theme === option.value
-                    ? darkMode
-                      ? 'bg-gray-700 border-primary text-white'
-                      : 'bg-gray-100 border-primary text-gray-900'
-                    : darkMode
-                      ? 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <option.icon className="w-8 h-8 mx-auto mb-2" />
-                <span className="block text-sm font-medium">{option.label}</span>
-              </button>
-            ))}
-          </div>
+    <div className={classNames(
+      'min-h-screen',
+      darkMode ? 'bg-gray-900' : 'bg-gray-50'
+    )}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className={classNames(
+            'text-3xl font-bold',
+            darkMode ? 'text-white' : 'text-gray-900'
+          )}>
+            PanelOps Settings
+          </h1>
+          <p className={classNames(
+            'mt-2 text-lg',
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          )}>
+            Customize your modern dashboard experience
+          </p>
         </div>
 
-        {/* Primary Color */}
-        <div className={`p-6 rounded-lg border-2 ${
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center mb-4">
-            <SwatchIcon className="w-5 h-5 mr-2 text-primary" />
-            <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Primary Color
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-5 gap-3">
-              {colorPresets.map((preset) => (
-                <button
-                  key={preset.value}
-                  onClick={() => handleColorChange(preset.value)}
-                  className={`relative h-12 rounded-lg border-2 transition-all ${
-                    primaryColor === preset.value
-                      ? 'border-gray-900 dark:border-white scale-110'
-                      : 'border-gray-300 dark:border-gray-600 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: preset.value }}
-                  title={preset.name}
-                >
-                  {primaryColor === preset.value && (
-                    <CheckIcon className="absolute inset-0 m-auto w-6 h-6 text-white" />
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="lg:w-64 flex-shrink-0">
+            <div className={classNames(
+              'rounded-lg border p-4 space-y-4 card-modern transition-all duration-300 hover:shadow-lg',
+              darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
+            )}>
+              {/* Search */}
+              <div className="relative">
+                <MagnifyingGlassIcon className={classNames(
+                  'absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4',
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                )} />
+                <input
+                  type="text"
+                  placeholder="Search settings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={classNames(
+                    'w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors',
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
+                    'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
                   )}
-                </button>
-              ))}
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Custom Color:
-              </label>
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => handleColorChange(e.target.value)}
-                className="h-10 w-20 rounded cursor-pointer"
-              />
-              <input
-                type="text"
-                value={primaryColor}
-                onChange={(e) => handleColorChange(e.target.value)}
-                className={`px-3 py-2 rounded-lg border ${
-                  darkMode
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
-                }`}
-                placeholder="#000000"
-              />
-            </div>
-          </div>
-        </div>
+                />
+              </div>
 
-        {/* Font Size */}
-        <div className={`p-6 rounded-lg border-2 ${
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center mb-4">
-            <DocumentTextIcon className="w-5 h-5 mr-2 text-primary" />
-            <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Font Size
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Current size: {fontSize.charAt(0).toUpperCase() + fontSize.slice(1)}
-              </span>
-              <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {getFontSizeDisplay(fontSize)}
-              </span>
-            </div>
-            
-            <div className="flex justify-between">
-              {fontSizePresets.map((preset) => (
-                <button
-                  key={preset.value}
-                  onClick={() => handleFontSizeChange(preset.value)}
-                  className={`flex-1 mx-1 px-4 py-2 rounded-lg border-2 transition-all ${
-                    fontSize === preset.value
-                      ? 'bg-primary text-white border-primary'
-                      : darkMode
-                        ? 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-500'
-                        : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-            
-            <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-              <p className={`
-                ${fontSize === 'small' ? 'text-sm' : ''}
-                ${fontSize === 'medium' ? 'text-base' : ''}
-                ${fontSize === 'large' ? 'text-lg' : ''}
-              `}>
-                The quick brown fox jumps over the lazy dog. 1234567890
-              </p>
+              {/* Categories */}
+              <nav className="space-y-1">
+                {filteredCategories.map((category) => {
+                  const Icon = category.icon;
+                  const isActive = activeCategory === category.id;
+                  
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setActiveCategory(category.id)}
+                      className={classNames(
+                        'w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 text-left group hover:shadow-md',
+                        isActive
+                          ? darkMode
+                            ? 'bg-primary-600 text-white shadow-lg'
+                            : 'bg-primary-600 text-white shadow-lg'
+                          : darkMode
+                            ? 'text-gray-300 hover:bg-gray-700 hover:text-white hover:-translate-y-0.5'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-0.5'
+                      )}
+                    >
+                      <Icon className={classNames(
+                        'h-5 w-5 mr-3 transition-all duration-300 group-hover:scale-110',
+                        isActive ? 'text-white' : darkMode ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700'
+                      )} />
+                      <div className="flex-1">
+                        <div>{category.name}</div>
+                        <div className={classNames(
+                          'text-xs',
+                          isActive 
+                            ? 'text-white/80' 
+                            : darkMode ? 'text-gray-500' : 'text-gray-500'
+                        )}>
+                          {category.description}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
           </div>
-        </div>
 
-        {/* Interface Scale */}
-        <div className={`p-6 rounded-lg border-2 ${
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center mb-4">
-            <ArrowsPointingOutIcon className="w-5 h-5 mr-2 text-primary" />
-            <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Interface Scale
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Adjust the overall size of the interface
-              </span>
-              <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {interfaceScale}%
-              </span>
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className={classNames(
+              'rounded-lg border p-8 card-modern transition-all duration-300 hover:shadow-lg',
+              darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
+            )}>
+              {renderCategoryContent()}
             </div>
-            
-            <input
-              type="range"
-              min="75"
-              max="150"
-              step="5"
-              value={interfaceScale}
-              onChange={(e) => handleScaleChange(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-            />
-            
-            <div className="flex justify-between">
-              {scalePresets.map((preset) => (
-                <button
-                  key={preset.value}
-                  onClick={() => handleScaleChange(preset.value)}
-                  className={`text-xs px-3 py-1 rounded ${
-                    interfaceScale === preset.value
-                      ? 'bg-primary text-white'
-                      : darkMode
-                        ? 'text-gray-400 hover:text-gray-300'
-                        : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-6">
-          <button
-            onClick={handleReset}
-            className={`px-6 py-2 rounded-lg border-2 transition-all ${
-              darkMode
-                ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Reset to Defaults
-          </button>
-          
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges}
-            className={`px-8 py-2 rounded-lg font-medium transition-all ${
-              hasChanges
-                ? 'bg-primary text-white hover:opacity-90'
-                : darkMode
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {hasChanges ? 'Save Changes' : 'No Changes'}
-          </button>
+            {/* Action Buttons */}
+            {hasChanges && (
+              <div className={classNames(
+                'mt-6 p-4 rounded-lg border flex items-center justify-between card-modern transition-all duration-300 hover:shadow-lg',
+                darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
+              )}>
+                <p className={classNames(
+                  'text-sm font-medium',
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                )}>
+                  You have unsaved changes
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleReset}
+                    className={classNames(
+                      'px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-md',
+                      darkMode
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                    )}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

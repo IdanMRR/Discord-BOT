@@ -1135,7 +1135,6 @@ interface ServerDetailProps {}
               >
                 📊 Activity Logs
               </button>
-
             </div>
           </div>
         </Card>
@@ -4719,7 +4718,7 @@ interface ServerDetailProps {}
                               title: customTicketMessage.title,
                               description: customTicketMessage.description,
                               color: customTicketMessage.color,
-                              footer: 'Made by Soggra • Support Ticket System',
+                              footer: 'Made by PanelOps • Support Ticket System',
                               buttonText: customTicketMessage.buttonText,
                               fields: customTicketMessage.fields
                             }
@@ -4785,7 +4784,7 @@ interface ServerDetailProps {}
                               title: customTicketMessage.title,
                               description: customTicketMessage.description,
                               color: customTicketMessage.color,
-                              footer: 'Made by Soggra • Support Ticket System',
+                              footer: 'Made by PanelOps • Support Ticket System',
                               buttonText: customTicketMessage.buttonText,
                               fields: customTicketMessage.fields
                             }

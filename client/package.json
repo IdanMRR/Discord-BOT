@@ -9,11 +9,14 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/chart.js": "^2.9.41",
     "@types/classnames": "^2.3.0",
     "axios": "^0.21.4",
+    "chart.js": "^4.5.0",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.0",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
@@ -24,7 +27,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set PORT=3002 && react-app-rewired start",
+    "start": "PORT=3002 react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"

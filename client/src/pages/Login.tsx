@@ -45,11 +45,22 @@ const Login: React.FC = () => {
   };
 
   // Handle OAuth callback
+  // Note: React StrictMode in development causes effects to run twice,
+  // so we use sessionStorage to prevent double-processing of OAuth codes
   useEffect(() => {
     const handleAuthCallback = async () => {
       const urlParams = new URLSearchParams(location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
+
+      // Create a unique key for this OAuth code to prevent double processing
+      const codeKey = code ? `oauth_${code.substring(0, 10)}` : null;
+      
+      // Check if this code has already been processed (survives React StrictMode)
+      if (codeKey && sessionStorage.getItem(codeKey)) {
+        console.log('OAuth code already processed, skipping');
+        return;
+      }
 
       // Prevent multiple calls or reprocessing
       if (isLoggingIn || callbackProcessed) {
@@ -66,14 +77,19 @@ const Login: React.FC = () => {
         return;
       }
 
-      if (code) {
+      if (code && codeKey) {
         console.log('Processing Discord OAuth code:', code.substring(0, 10) + '...');
+        
+        // Mark this code as being processed immediately
+        sessionStorage.setItem(codeKey, 'processing');
         setIsLoggingIn(true);
         setCallbackProcessed(true);
         
         try {
           const response = await apiService.handleAuthCallback(code);
           if (response.success && response.data) {
+            // Mark as successfully processed
+            sessionStorage.setItem(codeKey, 'completed');
             await login(response.data.token);
             toast.success(`Welcome ${response.data.user.username}! 🎉`, { 
               id: 'oauth-success',
@@ -82,10 +98,14 @@ const Login: React.FC = () => {
           } else {
             console.error('Auth callback failed:', response.error);
             toast.error('Failed to authenticate with Discord.', { id: 'oauth-error' });
+            // Remove the processing flag on failure so user can retry
+            sessionStorage.removeItem(codeKey);
           }
         } catch (error) {
           console.error('Auth callback error:', error);
           toast.error('Discord authentication failed. Please try again.', { id: 'oauth-error' });
+          // Remove the processing flag on failure so user can retry
+          sessionStorage.removeItem(codeKey);
         } finally {
           setIsLoggingIn(false);
           // Clean up URL
@@ -129,6 +149,18 @@ const Login: React.FC = () => {
     
     setIsLoggingIn(true);
     setCallbackProcessed(false);
+    
+    // Clean up old OAuth codes from sessionStorage (older than 10 minutes)
+    const cleanupOldOAuthCodes = () => {
+      const keys = Object.keys(sessionStorage);
+      keys.forEach(key => {
+        if (key.startsWith('oauth_')) {
+          // Remove old OAuth codes to prevent sessionStorage bloat
+          sessionStorage.removeItem(key);
+        }
+      });
+    };
+    cleanupOldOAuthCodes();
     
     // Small delay to prevent rapid clicks
     setTimeout(() => {
@@ -200,7 +232,7 @@ const Login: React.FC = () => {
               ? "from-white to-gray-300" 
               : "from-gray-900 to-gray-700"
           )}>
-            Soggra's Dashboard
+            PanelOps
           </h2>
           
           <p className={classNames(

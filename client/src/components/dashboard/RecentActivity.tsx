@@ -94,6 +94,10 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, loading = f
     switch (type) {
       case 'warning_issued':
       case 'warning': {
+        // Check for case number in activity metadata or description
+        const caseMatch = description.match(/Case #(\d+)/i) || description.match(/#(\d+)/);
+        const caseNumber = caseMatch ? caseMatch[1] : null;
+        
         // If the description already starts with "Warning issued", use it as-is
         if (description.toLowerCase().startsWith('warning issued')) {
           return (
@@ -110,7 +114,9 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, loading = f
           const [, adminName, targetName, reason] = warnMatch;
           return (
             <span className={getActivityColor(type)}>
-              <span className="font-semibold">Warning issued</span> to{' '}
+              <span className="font-semibold">
+                {caseNumber ? `Warning Case #${caseNumber}` : 'Warning issued'}
+              </span> to{' '}
               <span className={classNames("font-medium", darkMode ? "text-blue-400" : "text-blue-600")}>
                 {targetName}
               </span>{' '}
@@ -130,10 +136,12 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, loading = f
           // Fallback for other warning formats
           return (
             <span className={getActivityColor(type)}>
-              <span className="font-semibold">Warning issued</span>
+              <span className="font-semibold">
+                {caseNumber ? `Warning Case #${caseNumber}` : 'Warning issued'}
+              </span>
               {description.includes('Warns') ? 
-                <span className="ml-1">{description.replace('Warns', '')}</span> : 
-                <span className="ml-1">{description}</span>
+                <span className="ml-1">{description.replace('Warns', '').replace(/Case #\d+/i, '').trim()}</span> : 
+                <span className="ml-1">{description.replace(/Case #\d+/i, '').trim()}</span>
               }
             </span>
           );
@@ -141,11 +149,17 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, loading = f
       }
       
       case 'warning_removed': {
+        // Check for case number in description
+        const caseMatch = description.match(/Case #(\d+)/i) || description.match(/#(\d+)/);
+        const caseNumber = caseMatch ? caseMatch[1] : null;
+        
         // Handle warning removal
-        const removalText = description.replace(/^Warning removed:?\s*/i, '');
+        const removalText = description.replace(/^Warning removed:?\s*/i, '').replace(/Case #\d+/i, '').trim();
         return (
           <span className={getActivityColor(type)}>
-            <span className="font-semibold">Warning removed</span>
+            <span className="font-semibold">
+              {caseNumber ? `Warning Case #${caseNumber} removed` : 'Warning removed'}
+            </span>
             {removalText && (
               <span className="ml-1 text-sm opacity-80">• {removalText}</span>
             )}
@@ -221,6 +235,60 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities, loading = f
         );
       }
       
+      case 'member_kick':
+      case 'kick': {
+        const caseMatch = description.match(/Case #(\d+)/i) || description.match(/#(\d+)/);
+        const caseNumber = caseMatch ? caseMatch[1] : null;
+        const cleanDescription = description.replace(/Case #\d+/i, '').trim();
+        
+        return (
+          <span className={getActivityColor(type)}>
+            <span className="font-semibold">
+              {caseNumber ? `Member Kick Case #${caseNumber}` : 'Member kicked'}
+            </span>
+            {cleanDescription && (
+              <span className="ml-1 text-sm opacity-80">• {cleanDescription}</span>
+            )}
+          </span>
+        );
+      }
+      
+      case 'member_ban':
+      case 'ban': {
+        const caseMatch = description.match(/Case #(\d+)/i) || description.match(/#(\d+)/);
+        const caseNumber = caseMatch ? caseMatch[1] : null;
+        const cleanDescription = description.replace(/Case #\d+/i, '').trim();
+        
+        return (
+          <span className={getActivityColor(type)}>
+            <span className="font-semibold">
+              {caseNumber ? `Member Ban Case #${caseNumber}` : 'Member banned'}
+            </span>
+            {cleanDescription && (
+              <span className="ml-1 text-sm opacity-80">• {cleanDescription}</span>
+            )}
+          </span>
+        );
+      }
+      
+      case 'member_timeout':
+      case 'timeout': {
+        const caseMatch = description.match(/Case #(\d+)/i) || description.match(/#(\d+)/);
+        const caseNumber = caseMatch ? caseMatch[1] : null;
+        const cleanDescription = description.replace(/Case #\d+/i, '').trim();
+        
+        return (
+          <span className={getActivityColor(type)}>
+            <span className="font-semibold">
+              {caseNumber ? `Member Timeout Case #${caseNumber}` : 'Member timed out'}
+            </span>
+            {cleanDescription && (
+              <span className="ml-1 text-sm opacity-80">• {cleanDescription}</span>
+            )}
+          </span>
+        );
+      }
+
       default: {
         // For all other activities, return normal formatting with fallback for empty descriptions
         const displayDescription = description || 'Activity recorded';

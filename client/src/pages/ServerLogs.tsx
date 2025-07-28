@@ -117,12 +117,12 @@ const ServerLogsContent: React.FC = () => {
     }
     
     const str = String(content);
+    // Only escape the most dangerous characters, but preserve forward slashes for commands
     return str
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/'/g, '&#x27;');
   }, []);
 
 
@@ -176,11 +176,49 @@ const ServerLogsContent: React.FC = () => {
             userName = `User_${userIdSuffix}`;
           }
           
+          // Format action for better display
+          let actionDescription = log.action || 'Unknown Action';
+          if (log.action) {
+            const actionLower = log.action.toLowerCase();
+            switch (actionLower) {
+              case 'ban':
+              case 'memberban':
+                actionDescription = 'Member Ban';
+                break;
+              case 'kick':
+              case 'memberkick':
+                actionDescription = 'Member Kick';
+                break;
+              case 'timeout':
+              case 'membertimeout':
+                actionDescription = 'Member Timeout';
+                break;
+              case 'warning':
+              case 'warn':
+                actionDescription = 'Member Warning';
+                break;
+              default:
+                // Format camelCase actions to proper case
+                if (actionLower.includes('kick')) {
+                  actionDescription = 'Member Kick';
+                } else if (actionLower.includes('ban')) {
+                  actionDescription = 'Member Ban';
+                } else if (actionLower.includes('timeout')) {
+                  actionDescription = 'Member Timeout';
+                } else if (actionLower.includes('warn')) {
+                  actionDescription = 'Member Warning';
+                } else {
+                  actionDescription = log.action;
+                }
+            }
+          }
+
           return {
             ...log,
             log_type: log.type || 'server',
             id: log.id || Math.random() * 1000000,
-            action: log.action || 'Unknown Action',
+            action: actionDescription,
+            action_type: log.action_type || log.action || 'server',
             details: safeRender(log.details) || 'No details available',
             timestamp: log.timestamp || log.created_at,
             userName: userName // Ensure userName is set
@@ -217,40 +255,77 @@ const ServerLogsContent: React.FC = () => {
             }
 
             // Create better action descriptions
-            let actionDescription = 'Warning';
+            let actionDescription = 'Member Warning';
             let detailsDescription = '';
             
             if (log.case_number) {
-              actionDescription = `Warning Case #${log.case_number}`;
-              detailsDescription = `⚠️ ${moderatorName} warned ${userName}`;
+              actionDescription = `Member Warning`;
+              detailsDescription = `⚠️ Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} warned ${userName}`;
               if (log.reason && log.reason !== 'No reason provided') {
                 detailsDescription += ` | Reason: ${log.reason}`;
               }
             } else if (log.action) {
-              switch (log.action.toLowerCase()) {
-                case 'ban':
-                case 'memberban':
-                  actionDescription = 'Member Ban';
-                  detailsDescription = `🔨 ${moderatorName} banned ${userName}`;
-                  break;
-                case 'kick':
-                case 'memberkick':
-                  actionDescription = 'Member Kick';
-                  detailsDescription = `👢 ${moderatorName} kicked ${userName}`;
-                  break;
-                case 'timeout':
-                case 'membertimeout':
-                  actionDescription = 'Member Timeout';
-                  detailsDescription = `⏰ ${moderatorName} timed out ${userName}`;
-                  break;
-                case 'warning':
-                case 'warn':
-                  actionDescription = 'Warning';
-                  detailsDescription = `⚠️ ${moderatorName} warned ${userName}`;
-                  break;
-                default:
-                  actionDescription = log.action;
+              const actionLower = log.action.toLowerCase();
+              
+              // Check if it has a case number for proper formatting
+              if (log.case_number) {
+                if (actionLower.includes('kick')) {
+                  actionDescription = `Member Kick`;
+                  detailsDescription = `👢 Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} kicked ${userName}`;
+                } else if (actionLower.includes('ban')) {
+                  actionDescription = `Member Ban`;
+                  detailsDescription = `🔨 Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} banned ${userName}`;
+                } else if (actionLower.includes('timeout')) {
+                  actionDescription = `Member Timeout`;
+                  detailsDescription = `⏰ Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} timed out ${userName}`;
+                } else if (actionLower.includes('warn')) {
+                  actionDescription = `Member Warning`;
+                  detailsDescription = `⚠️ Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} warned ${userName}`;
+                } else {
+                  actionDescription = `${log.action}`;
                   detailsDescription = `${moderatorName} performed ${log.action} on ${userName}`;
+                }
+              } else {
+                switch (actionLower) {
+                  case 'ban':
+                  case 'memberban':
+                    actionDescription = 'Member Ban';
+                    detailsDescription = `🔨 ${moderatorName} banned ${userName}`;
+                    break;
+                  case 'kick':
+                  case 'memberkick':
+                    actionDescription = 'Member Kick';
+                    detailsDescription = `👢 ${moderatorName} kicked ${userName}`;
+                    break;
+                  case 'timeout':
+                  case 'membertimeout':
+                    actionDescription = 'Member Timeout';
+                    detailsDescription = `⏰ ${moderatorName} timed out ${userName}`;
+                    break;
+                  case 'warning':
+                  case 'warn':
+                    actionDescription = 'Member Warning';
+                    detailsDescription = `⚠️ ${moderatorName} warned ${userName}`;
+                    break;
+                  default:
+                    // Format camelCase actions to proper case
+                    if (actionLower.includes('kick')) {
+                      actionDescription = 'Member Kick';
+                      detailsDescription = `👢 ${moderatorName} kicked ${userName}`;
+                    } else if (actionLower.includes('ban')) {
+                      actionDescription = 'Member Ban';
+                      detailsDescription = `🔨 ${moderatorName} banned ${userName}`;
+                    } else if (actionLower.includes('timeout')) {
+                      actionDescription = 'Member Timeout';
+                      detailsDescription = `⏰ ${moderatorName} timed out ${userName}`;
+                    } else if (actionLower.includes('warn')) {
+                      actionDescription = 'Member Warning';
+                      detailsDescription = `⚠️ ${moderatorName} warned ${userName}`;
+                    } else {
+                      actionDescription = log.action;
+                      detailsDescription = `${moderatorName} performed ${log.action} on ${userName}`;
+                    }
+                }
               }
               
               if (log.reason && log.reason !== 'No reason provided') {
@@ -266,7 +341,7 @@ const ServerLogsContent: React.FC = () => {
               moderatorId: log.moderator_id,
               moderatorName: moderatorName,
               action: actionDescription,
-              action_type: log.action || 'warning',
+              action_type: log.action_type || log.action || 'warning',
               log_type: 'moderation',
               details: detailsDescription,
               channel_id: log.channel_id,

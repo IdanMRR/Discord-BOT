@@ -1,8 +1,11 @@
 // Environment configuration for the Discord Bot Dashboard
 export const environment = {
   // API Configuration
-  API_URL: 'http://localhost:3001', // Back to 3001 as requested
+  API_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001',
   WS_URL: process.env.REACT_APP_WS_URL || 'ws://localhost:3001',
+  
+  // Security Configuration
+  API_KEY: process.env.REACT_APP_API_KEY, // Remove hardcoded key
   
   // Auto-detection fallback ports (in order of preference)
   FALLBACK_PORTS: [3001, 3002, 3003],
@@ -14,7 +17,8 @@ export const environment = {
   features: {
     enableWebSocket: true,
     enableAutoDetection: true, // Enable auto-detection to find correct port
-    enableLogging: process.env.NODE_ENV === 'development'
+    enableLogging: process.env.NODE_ENV === 'development',
+    disableWebSocketOnError: true // Temporarily disable WebSocket if server is not available
   }
 };
 

@@ -1,30 +1,81 @@
 import { io, Socket } from 'socket.io-client';
 import { WebSocketMessage, RealTimeUpdate } from '../types';
+import { environment } from '../config/environment';
 import toast from 'react-hot-toast';
+
+interface ConnectionState {
+  connected: boolean;
+  connecting: boolean;
+  disconnected: boolean;
+  error: boolean;
+}
 
 class WebSocketService {
   private socket: Socket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
-  private isDisabled = false; // Re-enable WebSocket
+  private connectionStateListeners: Set<(state: ConnectionState) => void> = new Set();
+  private isDisabled = !environment.features.enableWebSocket;
+  private isDestroyed = false;
+  private connectionState: ConnectionState = { connected: false, connecting: false, disconnected: true, error: false };
 
   constructor() {
-    if (!this.isDisabled) {
-      this.connect();
+    // Don't auto-connect in constructor - let the app control when to connect
+    if (this.isDisabled) {
+      console.log('WebSocket disabled by environment configuration');
     }
   }
 
+  private updateConnectionState(newState: Partial<ConnectionState>): void {
+    this.connectionState = { ...this.connectionState, ...newState };
+    this.connectionStateListeners.forEach(listener => {
+      try {
+        listener(this.connectionState);
+      } catch (error) {
+        console.error('Error in connection state listener:', error);
+      }
+    });
+  }
+
+  onConnectionStateChange(callback: (state: ConnectionState) => void): () => void {
+    this.connectionStateListeners.add(callback);
+    // Immediately call with current state
+    callback(this.connectionState);
+    
+    // Return cleanup function
+    return () => {
+      this.connectionStateListeners.delete(callback);
+    };
+  }
+
+  getConnectionState(): ConnectionState {
+    return { ...this.connectionState };
+  }
+
   connect(): void {
-    // Re-enable WebSocket connections
+    // Check if WebSocket connections are disabled
     if (this.isDisabled) {
-      console.log('WebSocket connection disabled for now');
+      console.log('WebSocket connection disabled by configuration');
       return;
     }
+
+    // If already connected, don't create a new connection
+    if (this.socket && this.socket.connected) {
+      console.log('WebSocket already connected');
+      return;
+    }
+
+    // Clean up existing socket if any
+    if (this.socket) {
+      this.socket.disconnect();
+    }
     
-    // Connect to the server port (3001) not the client port (3002)
-    const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+    // Use environment configuration for WebSocket URL
+    const wsUrl = environment.WS_URL || process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+    console.log(`Attempting to connect to WebSocket at: ${wsUrl}`);
     
     this.socket = io(wsUrl, {
       transports: ['websocket', 'polling'],
@@ -40,12 +91,19 @@ class WebSocketService {
 
     this.socket.on('disconnect', (reason) => {
       console.log('WebSocket disconnected:', reason);
-      toast.error('Lost connection to real-time updates');
+      // Only show disconnect toast if it was an unexpected disconnect
+      if (reason !== 'io client disconnect') {
+        toast.error('Lost connection to real-time updates');
+      }
       this.handleReconnect();
     });
 
     this.socket.on('connect_error', (error) => {
       console.error('WebSocket connection error:', error);
+      // Only show error toast on first connection attempt, not on retries
+      if (this.reconnectAttempts === 0) {
+        toast.error('Unable to connect to real-time updates');
+      }
       this.handleReconnect();
     });
 
@@ -89,17 +147,37 @@ class WebSocketService {
   private handleReconnect(): void {
     if (this.isDisabled) return;
     
+    // Clear any existing reconnect timeout
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       
-      setTimeout(() => {
-        console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-        this.connect();
+      console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms`);
+      
+      this.reconnectTimeout = setTimeout(() => {
+        // Only attempt reconnect if we're still supposed to be connected
+        if (!this.isDisabled && this.socket) {
+          this.connect();
+        }
+        this.reconnectTimeout = null;
       }, delay);
     } else {
       console.error('Max reconnection attempts reached');
-      toast.error('Failed to reconnect to real-time updates');
+      // Only show error toast once when max attempts reached
+      if (this.reconnectAttempts === this.maxReconnectAttempts) {
+        toast.error('Failed to reconnect to real-time updates');
+        
+        // Temporarily disable WebSocket if configured to do so
+        if (environment.features.disableWebSocketOnError) {
+          console.log('Temporarily disabling WebSocket due to connection failures');
+          this.isDisabled = true;
+        }
+      }
     }
   }
 
@@ -197,11 +275,33 @@ class WebSocketService {
 
   // Disconnect
   disconnect(): void {
+    // Clear any pending reconnection attempts
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
     }
+    
+    this.updateConnectionState({ 
+      connected: false, 
+      connecting: false, 
+      disconnected: true, 
+      error: false 
+    });
+    
+    this.reconnectAttempts = 0;
+  }
+
+  // Destroy and cleanup all resources
+  destroy(): void {
+    this.isDestroyed = true;
+    this.disconnect();
     this.listeners.clear();
+    this.connectionStateListeners.clear();
   }
 
   // Reconnect manually
@@ -214,6 +314,32 @@ class WebSocketService {
     this.disconnect();
     this.reconnectAttempts = 0;
     this.connect();
+  }
+
+  // Enable/disable WebSocket connections
+  enable(): void {
+    this.isDisabled = false;
+    console.log('WebSocket enabled');
+  }
+
+  disable(): void {
+    this.isDisabled = true;
+    this.disconnect();
+    console.log('WebSocket disabled');
+  }
+
+  // Check if WebSocket is available and should be used
+  isAvailable(): boolean {
+    return environment.features.enableWebSocket && !this.isDisabled;
+  }
+
+  // Get current status
+  getStatus(): { connected: boolean; disabled: boolean; reconnectAttempts: number } {
+    return {
+      connected: this.isConnected(),
+      disabled: this.isDisabled,
+      reconnectAttempts: this.reconnectAttempts
+    };
   }
 }
 

@@ -8,7 +8,19 @@ import PermissionGuard from '../components/common/PermissionGuard';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  ExclamationTriangleIcon,
+  ShieldCheckIcon as Shield,
+  ClockIcon as Clock,
+  UserMinusIcon as UserX,
+  NoSymbolIcon as Ban,
+  UsersIcon as Users,
+  MinusIcon as UserMinus,
+  PlusIcon as UserPlus,
+  PlusIcon as Plus,
+  TrashIcon as Trash2
+} from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -20,6 +32,37 @@ function classNames(...classes: string[]) {
 // Helper function to check if a warning is active (handles different data types)
 function isWarningActive(active: any): boolean {
   return active === true || active === 1 || active === '1' || active === 'true';
+}
+
+// Automod interfaces
+interface AutomodSettings {
+  id?: number;
+  guild_id: string;
+  enabled: boolean;
+  reset_warnings_after_days: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface AutomodRule {
+  id?: number;
+  guild_id: string;
+  warning_threshold: number;
+  punishment_type: 'timeout' | 'kick' | 'ban' | 'role_remove' | 'role_add' | 'nothing';
+  punishment_duration?: number;
+  punishment_reason: string;
+  role_id?: string;
+  enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface AutomodStats {
+  totalRules: number;
+  activeRules: number;
+  totalActions: number;
+  successfulActions: number;
+  recentActions: number;
 }
 
 const WarningsContent: React.FC = () => {
@@ -38,6 +81,32 @@ const WarningsContent: React.FC = () => {
   const [selectedWarnings, setSelectedWarnings] = useState<Set<number>>(new Set());
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
   const itemsPerPage = 20;
+
+  // Automod state
+  const [automodSettings, setAutomodSettings] = useState<AutomodSettings | null>(null);
+  const [automodRules, setAutomodRules] = useState<AutomodRule[]>([]);
+  const [automodStats, setAutomodStats] = useState<AutomodStats | null>(null);
+  const [automodLoading, setAutomodLoading] = useState(false);
+  const [showAddRule, setShowAddRule] = useState(false);
+  const [resetDaysInput, setResetDaysInput] = useState<string>('');
+  
+  // Update resetDaysInput when automodSettings changes
+  useEffect(() => {
+    if (automodSettings?.reset_warnings_after_days) {
+      setResetDaysInput(automodSettings.reset_warnings_after_days.toString());
+    } else if (automodSettings && typeof automodSettings.reset_warnings_after_days === 'number') {
+      setResetDaysInput(automodSettings.reset_warnings_after_days.toString());
+    } else {
+      setResetDaysInput('30'); // Default value
+    }
+  }, [automodSettings]);
+  const [newRule, setNewRule] = useState<Partial<AutomodRule>>({
+    warning_threshold: 3,
+    punishment_type: 'timeout',
+    punishment_duration: 60,
+    punishment_reason: 'Automatic punishment for excessive warnings',
+    enabled: true
+  });
 
   const fetchWarnings = useCallback(async (page: number = 1) => {
     try {
@@ -114,9 +183,33 @@ const WarningsContent: React.FC = () => {
     }
   }, [statusFilter, itemsPerPage, selectedServerId]);
 
+  // Fetch automod data
+  const fetchAutomodData = useCallback(async () => {
+    if (!selectedServerId) return;
+    
+    try {
+      setAutomodLoading(true);
+      const [settingsRes, rulesRes, statsRes] = await Promise.all([
+        apiService.getAutomodSettings(selectedServerId),
+        apiService.getAutomodRules(selectedServerId),
+        apiService.getAutomodStats(selectedServerId)
+      ]);
+
+      setAutomodSettings(settingsRes.data);
+      setAutomodRules(rulesRes.data || []);
+      setAutomodStats(statsRes.data);
+    } catch (error) {
+      console.error('Error fetching automod data:', error);
+      toast.error('Failed to load automod data');
+    } finally {
+      setAutomodLoading(false);
+    }
+  }, [selectedServerId]);
+
   useEffect(() => {
     fetchWarnings(1);
-  }, [fetchWarnings]);
+    fetchAutomodData();
+  }, [fetchWarnings, fetchAutomodData]);
   
   // Register auto-refresh
   useEffect(() => {
@@ -196,6 +289,101 @@ const WarningsContent: React.FC = () => {
       toast.error('An error occurred during bulk removal');
     } finally {
       closeBulkRemoveConfirm();
+    }
+  };
+
+  // Automod management functions
+  const updateAutomodSettings = async (updatedSettings: Partial<AutomodSettings>) => {
+    if (!selectedServerId) return;
+    try {
+      // Update local state immediately for better UX
+      setAutomodSettings(prev => prev ? { ...prev, ...updatedSettings } : null);
+      
+      const response = await apiService.updateAutomodSettings(selectedServerId, updatedSettings);
+      
+      // Only update with response if it contains complete data
+      if (response.success && response.data && typeof response.data === 'object') {
+        setAutomodSettings(response.data);
+      }
+      
+      toast.success('Automod settings updated successfully');
+    } catch (error) {
+      console.error('Error updating automod settings:', error);
+      toast.error('Failed to update automod settings');
+      
+      // Revert local state on error
+      fetchAutomodData();
+    }
+  };
+
+  const createAutomodRule = async () => {
+    if (!selectedServerId) return;
+    
+    try {
+      const response = await apiService.createAutomodRule(selectedServerId, newRule);
+      setAutomodRules([...automodRules, response.data]);
+      setShowAddRule(false);
+      setNewRule({
+        warning_threshold: 3,
+        punishment_type: 'timeout',
+        punishment_duration: 60,
+        punishment_reason: 'Automatic punishment for excessive warnings',
+        enabled: true
+      });
+      fetchAutomodData();
+      toast.success('Automod rule created successfully');
+    } catch (error) {
+      console.error('Error creating automod rule:', error);
+      toast.error('Failed to create automod rule');
+    }
+  };
+
+  const deleteAutomodRule = async (ruleId: number) => {
+    if (!selectedServerId || !window.confirm('Are you sure you want to delete this automod rule?')) return;
+    
+    try {
+      await apiService.deleteAutomodRule(selectedServerId, ruleId);
+      setAutomodRules(automodRules.filter(rule => rule.id !== ruleId));
+      fetchAutomodData();
+      toast.success('Automod rule deleted successfully');
+    } catch (error) {
+      console.error('Error deleting automod rule:', error);
+      toast.error('Failed to delete automod rule');
+    }
+  };
+
+  // Helper functions for automod UI
+  const getPunishmentIcon = (type: string) => {
+    switch (type) {
+      case 'timeout': return <Clock className="w-4 h-4" />;
+      case 'kick': return <UserX className="w-4 h-4" />;
+      case 'ban': return <Ban className="w-4 h-4" />;
+      case 'role_remove': return <UserMinus className="w-4 h-4" />;
+      case 'role_add': return <UserPlus className="w-4 h-4" />;
+      default: return <ExclamationTriangleIcon className="w-4 h-4" />;
+    }
+  };
+
+  const getPunishmentColor = (type: string) => {
+    switch (type) {
+      case 'timeout': return 'bg-yellow-100 text-yellow-800';
+      case 'kick': return 'bg-orange-100 text-orange-800';
+      case 'ban': return 'bg-red-100 text-red-800';
+      case 'role_remove': return 'bg-purple-100 text-purple-800';
+      case 'role_add': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatPunishmentType = (type: string) => {
+    switch (type) {
+      case 'timeout': return 'Timeout';
+      case 'kick': return 'Kick';
+      case 'ban': return 'Ban';
+      case 'role_remove': return 'Remove Role';
+      case 'role_add': return 'Add Role';
+      case 'nothing': return 'Warning Only';
+      default: return type;
     }
   };
 
@@ -330,7 +518,7 @@ const WarningsContent: React.FC = () => {
                     setCurrentPage(1);
                   }}
                   placeholder="Select a server"
-                  showAllOption={true}
+                  showAllOption={false}
                 />
               </div>
             </div>
@@ -367,10 +555,39 @@ const WarningsContent: React.FC = () => {
         </div>
       </div>
 
-      <Card className={classNames(
-        "shadow-xl border-0 rounded-xl overflow-hidden",
-        darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-      )}>
+
+      {!selectedServerId ? (
+        <Card className={classNames(
+          "shadow-xl border-0 rounded-xl overflow-hidden",
+          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+        )}>
+          <div className={classNames(
+            "p-6",
+            darkMode ? "bg-gray-900" : "bg-white"
+          )}>
+            <div className="text-center py-8">
+              <svg className={classNames(
+                "w-12 h-12 mx-auto mb-4",
+                darkMode ? "text-gray-600" : "text-gray-400"
+              )} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <h4 className={classNames(
+                "text-lg font-medium mb-2",
+                darkMode ? "text-gray-300" : "text-gray-900"
+              )}>Select a Server</h4>
+              <p className={classNames(
+                "text-sm",
+                darkMode ? "text-gray-400" : "text-gray-500"
+              )}>Choose a server above to view and manage warnings</p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card className={classNames(
+          "shadow-xl border-0 rounded-xl overflow-hidden",
+          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+        )}>
         <div className={classNames(
           "p-6 border-b",
           darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
@@ -631,6 +848,343 @@ const WarningsContent: React.FC = () => {
         )}
         </div>
       </Card>
+      )}
+
+      {/* Automod Escalation Section */}
+      <Card className={classNames(
+        "shadow-xl border-0 rounded-xl overflow-hidden",
+        darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+      )}>
+        <div className={classNames(
+          "p-6 border-b",
+          darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="w-6 h-6 text-blue-600" />
+              <div>
+                <h3 className={classNames(
+                  "text-xl font-semibold",
+                  darkMode ? "text-white" : "text-gray-900"
+                )}>
+                  Automod Escalation
+                </h3>
+                <p className={classNames(
+                  "text-sm",
+                  darkMode ? "text-gray-400" : "text-gray-600"
+                )}>
+                  Configure automatic punishments based on warning thresholds
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={classNames(
+          "p-6",
+          darkMode ? "bg-gray-900" : "bg-white"
+        )}>
+          {!selectedServerId ? (
+            <div className="text-center py-8">
+              <Shield className={classNames(
+                "w-12 h-12 mx-auto mb-4",
+                darkMode ? "text-gray-600" : "text-gray-400"
+              )} />
+              <h4 className={classNames(
+                "text-lg font-medium mb-2",
+                darkMode ? "text-gray-300" : "text-gray-900"
+              )}>Select a Server</h4>
+              <p className={classNames(
+                "text-sm",
+                darkMode ? "text-gray-400" : "text-gray-500"
+              )}>Choose a server above to configure automod escalation rules</p>
+            </div>
+          ) : automodLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner className="text-blue-500" size="lg" />
+              <span className={classNames(
+                "ml-3",
+                darkMode ? "text-gray-300" : "text-gray-600"
+              )}>Loading automod settings...</span>
+            </div>
+          ) : (
+            <div className="space-y-6">
+                {/* Stats Cards */}
+                {automodStats && (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div className={classNames(
+                      "p-4 rounded-lg border",
+                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>Total Rules</p>
+                          <p className={classNames(
+                            "text-2xl font-bold",
+                            darkMode ? "text-white" : "text-gray-900"
+                          )}>{automodStats.totalRules}</p>
+                        </div>
+                        <Users className="w-8 h-8 text-blue-600" />
+                      </div>
+                    </div>
+                    
+                    <div className={classNames(
+                      "p-4 rounded-lg border",
+                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>Active Rules</p>
+                          <p className="text-2xl font-bold text-green-600">{automodStats.activeRules}</p>
+                        </div>
+                        <Shield className="w-8 h-8 text-green-600" />
+                      </div>
+                    </div>
+
+                    <div className={classNames(
+                      "p-4 rounded-lg border",
+                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>Total Actions</p>
+                          <p className={classNames(
+                            "text-2xl font-bold",
+                            darkMode ? "text-white" : "text-gray-900"
+                          )}>{automodStats.totalActions}</p>
+                        </div>
+                        <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
+                      </div>
+                    </div>
+
+                    <div className={classNames(
+                      "p-4 rounded-lg border",
+                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>Success Rate</p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {automodStats.totalActions > 0 ? Math.round((automodStats.successfulActions / automodStats.totalActions) * 100) : 0}%
+                          </p>
+                        </div>
+                        <Shield className="w-8 h-8 text-green-600" />
+                      </div>
+                    </div>
+
+                    <div className={classNames(
+                      "p-4 rounded-lg border",
+                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>Recent (24h)</p>
+                          <p className="text-2xl font-bold text-blue-600">{automodStats.recentActions}</p>
+                        </div>
+                        <Clock className="w-8 h-8 text-blue-600" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Settings */}
+                {automodSettings && (
+                  <div className={classNames(
+                    "p-4 rounded-lg border",
+                    darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  )}>
+                    <h4 className={classNames(
+                      "text-lg font-medium mb-4",
+                      darkMode ? "text-white" : "text-gray-900"
+                    )}>Settings</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-300" : "text-gray-700"
+                          )}>Enable Automod Escalation</label>
+                          <p className={classNames(
+                            "text-sm",
+                            darkMode ? "text-gray-400" : "text-gray-500"
+                          )}>Automatically punish users based on warning count</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={automodSettings.enabled || false}
+                            onChange={(e) => updateAutomodSettings({ enabled: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className={classNames(
+                            "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all",
+                            darkMode 
+                              ? "bg-gray-700 peer-checked:bg-blue-600 peer-focus:ring-blue-800" 
+                              : "peer-checked:bg-blue-600"
+                          )}></div>
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <label className={classNames(
+                            "text-sm font-medium",
+                            darkMode ? "text-gray-300" : "text-gray-700"
+                          )}>Reset warnings after (days)</label>
+                          <input
+                            type="number"
+                            value={resetDaysInput}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setResetDaysInput(value);
+                            }}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (!isNaN(value) && value >= 1 && value <= 365) {
+                                updateAutomodSettings({ reset_warnings_after_days: value });
+                              } else {
+                                // Reset to current value if invalid
+                                setResetDaysInput(automodSettings?.reset_warnings_after_days?.toString() || '30');
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const value = parseInt(e.currentTarget.value);
+                                if (!isNaN(value) && value >= 1 && value <= 365) {
+                                  updateAutomodSettings({ reset_warnings_after_days: value });
+                                }
+                              }
+                            }}
+                            min="1"
+                            max="365"
+                            placeholder="Enter number of days"
+                            className={classNames(
+                              "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
+                              darkMode 
+                                ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
+                                : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rules */}
+                <div className={classNames(
+                  "p-4 rounded-lg border",
+                  darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                )}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className={classNames(
+                      "text-lg font-medium",
+                      darkMode ? "text-white" : "text-gray-900"
+                    )}>Escalation Rules</h4>
+                    <button
+                      onClick={() => setShowAddRule(true)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Rule
+                    </button>
+                  </div>
+                  
+                  {automodRules.length === 0 ? (
+                    <div className="text-center py-8">
+                      <ExclamationTriangleIcon className={classNames(
+                        "w-12 h-12 mx-auto mb-4",
+                        darkMode ? "text-gray-600" : "text-gray-400"
+                      )} />
+                      <h5 className={classNames(
+                        "text-lg font-medium mb-2",
+                        darkMode ? "text-gray-300" : "text-gray-900"
+                      )}>No Rules Configured</h5>
+                      <p className={classNames(
+                        "mb-4",
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      )}>Create your first escalation rule to get started</p>
+                      <button
+                        onClick={() => setShowAddRule(true)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Rule
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {automodRules.map((rule) => (
+                        <div key={rule.id} className={classNames(
+                          "border rounded-lg p-4 flex items-center justify-between",
+                          darkMode ? "border-gray-600" : "border-gray-200"
+                        )}>
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2 rounded-full ${getPunishmentColor(rule.punishment_type)}`}>
+                              {getPunishmentIcon(rule.punishment_type)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className={classNames(
+                                  "font-medium",
+                                  darkMode ? "text-white" : "text-gray-900"
+                                )}>
+                                  {rule.warning_threshold} warning{rule.warning_threshold !== 1 ? 's' : ''}
+                                </span>
+                                <span className={classNames(
+                                  darkMode ? "text-gray-400" : "text-gray-500"
+                                )}>→</span>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPunishmentColor(rule.punishment_type)}`}>
+                                  {formatPunishmentType(rule.punishment_type)}
+                                  {rule.punishment_duration && ` (${rule.punishment_duration}min)`}
+                                </span>
+                                {!rule.enabled && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    Disabled
+                                  </span>
+                                )}
+                              </div>
+                              <p className={classNames(
+                                "text-sm mt-1",
+                                darkMode ? "text-gray-400" : "text-gray-600"
+                              )}>{rule.punishment_reason}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => rule.id && deleteAutomodRule(rule.id)}
+                              className={classNames(
+                                "p-2 hover:text-red-600",
+                                darkMode ? "text-red-400" : "text-red-400"
+                              )}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Bulk Remove Confirmation Modal */}
       <Transition appear show={isBulkRemoveConfirmOpen} as={Fragment}>
@@ -861,6 +1415,222 @@ const WarningsContent: React.FC = () => {
                       🗑️ Remove Warning
                     </button>
                   </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Add Automod Rule Modal */}
+      <Transition appear show={showAddRule} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setShowAddRule(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className={classNames(
+              "fixed inset-0 backdrop-blur-sm",
+              darkMode ? "bg-gray-900/80" : "bg-black/60"
+            )} />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className={classNames(
+                  "w-full max-w-lg transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
+                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                )}>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className={classNames("p-3 rounded-full", darkMode ? "bg-blue-900/20" : "bg-blue-100")}>
+                      <svg className={classNames("h-6 w-6", darkMode ? "text-blue-400" : "text-blue-600")} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className={classNames(
+                        "text-xl font-semibold",
+                        darkMode ? "text-white" : "text-gray-900"
+                      )}>
+                        Add Escalation Rule
+                      </h3>
+                      <p className={classNames(
+                        "text-sm mt-1",
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      )}>Configure automatic punishment rules</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAddRule(false)}
+                    className={classNames(
+                      "p-2 rounded-lg transition-colors",
+                      darkMode ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"
+                    )}
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Info Box */}
+                <div className={classNames(
+                  "p-4 rounded-lg mb-6",
+                  darkMode ? "bg-gray-700/50" : "bg-gray-50"
+                )}>
+                  <p className={classNames(
+                    "text-sm",
+                    darkMode ? "text-gray-300" : "text-gray-600"
+                  )}>Create a rule that automatically applies punishment when a user reaches a specific warning threshold. This action will be logged for audit purposes.</p>
+                </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className={classNames(
+                        "text-sm font-medium",
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      )}>Warning Threshold</label>
+                      <input
+                        type="number"
+                        value={newRule.warning_threshold || ''}
+                        onChange={(e) => setNewRule({ ...newRule, warning_threshold: parseInt(e.target.value) })}
+                        min="1"
+                        placeholder="Number of warnings"
+                        className={classNames(
+                          "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
+                          darkMode 
+                            ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
+                            : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                        )}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={classNames(
+                        "text-sm font-medium",
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      )}>Punishment Type</label>
+                      <select
+                        value={newRule.punishment_type || ''}
+                        onChange={(e) => setNewRule({ ...newRule, punishment_type: e.target.value as any })}
+                        className={classNames(
+                          "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10",
+                          darkMode 
+                            ? "border-gray-600 bg-gray-700/50 text-white hover:border-gray-500" 
+                            : "border-gray-200 bg-gray-50/50 text-gray-900 hover:border-gray-300",
+                          "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzZCNzI4MCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+')]"
+                        )}
+                      >
+                        <option value="timeout">Timeout</option>
+                        <option value="kick">Kick</option>
+                        <option value="ban">Ban</option>
+                        <option value="role_remove">Remove Role</option>
+                        <option value="role_add">Add Role</option>
+                        <option value="nothing">Warning Only</option>
+                      </select>
+                    </div>
+
+                    {newRule.punishment_type === 'timeout' && (
+                      <div>
+                        <label className={classNames(
+                          "text-sm font-medium",
+                          darkMode ? "text-gray-300" : "text-gray-700"
+                        )}>Duration (minutes)</label>
+                        <input
+                          type="number"
+                          value={newRule.punishment_duration || ''}
+                          onChange={(e) => setNewRule({ ...newRule, punishment_duration: parseInt(e.target.value) })}
+                          min="1"
+                          placeholder="Timeout duration in minutes"
+                          className={classNames(
+                            "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
+                            darkMode 
+                              ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
+                              : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                          )}
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className={classNames(
+                        "text-sm font-medium",
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      )}>Reason</label>
+                      <input
+                        value={newRule.punishment_reason || ''}
+                        onChange={(e) => setNewRule({ ...newRule, punishment_reason: e.target.value })}
+                        placeholder="Reason for the punishment"
+                        className={classNames(
+                          "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
+                          darkMode 
+                            ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
+                            : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className={classNames(
+                        "text-sm font-medium",
+                        darkMode ? "text-gray-300" : "text-gray-700"
+                      )}>Enabled</label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newRule.enabled !== false}
+                          onChange={(e) => setNewRule({ ...newRule, enabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className={classNames(
+                          "w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all",
+                          darkMode 
+                            ? "bg-gray-700 peer-checked:bg-blue-600 peer-focus:ring-blue-800" 
+                            : "peer-checked:bg-blue-600"
+                        )}></div>
+                      </label>
+                    </div>
+
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-6">
+                  <button
+                    onClick={() => setShowAddRule(false)}
+                    className={classNames(
+                      "flex-1 px-6 py-3 text-sm font-medium rounded-lg border transition-colors",
+                      darkMode 
+                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={createAutomodRule}
+                    className="flex-1 inline-flex justify-center items-center px-6 py-3 text-sm font-medium rounded-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Create Rule
+                  </button>
+                </div>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
