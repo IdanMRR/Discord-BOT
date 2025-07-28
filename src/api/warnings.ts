@@ -7,6 +7,8 @@ import { logInfo, logError } from '../utils/logger';
 import { TextChannel } from 'discord.js';
 import { createModerationEmbed } from '../utils/embeds';
 import { logDashboardActivity } from '../middleware/dashboardLogger';
+import { DashboardLogsService } from '../database/services/dashboardLogsService';
+import { getClient as getDiscordClient, isClientReady } from '../utils/client-utils';
 
 // Helper function to extract user info from request
 function extractUserInfo(req: Request): { userId: string; username?: string } | null {
@@ -31,7 +33,7 @@ function extractUserInfo(req: Request): { userId: string; username?: string } | 
   }
 }
 const { getUserName } = require('./user-helper');
-const { getClient } = require('../utils/client-utils');
+// Removed duplicate import - using getDiscordClient from import above
 
 const router = express.Router();
 
@@ -106,7 +108,7 @@ const getWarnings: express.RequestHandler = async (req: Request, res: Response, 
 
       // Fetch usernames, admin usernames, and server names for warnings
       const warningsWithUsernames = await Promise.all(warnings.data.map(async (warning) => {
-        const client = await getClient();
+        const client = getClient();
         const username = await getUserName(client, warning.user_id);
         
         // Get admin username if moderator_id exists
@@ -195,7 +197,7 @@ const getWarningById: express.RequestHandler = async (req: Request, res: Respons
       }
 
       // Fetch username for warning
-      const client = await getClient();
+      const client = getClient();
       const username = await getUserName(client, warning.user_id);
       const warningWithUsername = { ...warning, username };
 
@@ -277,7 +279,7 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
         
         // Send notification in Discord if possible
         try {
-          const client = getClient();
+          const client = getDiscordClient();
           if (client && warning.guild_id && warning.user_id) {
             // Try to send DM to the user
             try {
@@ -318,21 +320,23 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
                     const moderator = await client.users.fetch(warning.moderator_id).catch(() => null);
                     const targetUser = await client.users.fetch(warning.user_id).catch(() => null);
                     
-                    const logEmbed = createModerationEmbed({
-                      action: 'Warning Removed',
-                      target: targetUser,
-                      moderator: moderator,
-                      reason: reason || 'No reason provided',
-                      caseNumber: warning.case_number || warningId,
-                      additionalFields: [
-                        { name: 'Warning ID', value: `${warningId}`, inline: true },
-                        { name: 'Removed Via', value: 'Dashboard', inline: true },
-                        { name: 'Original Case #', value: warning.case_number ? `#${String(warning.case_number).padStart(4, '0')}` : `#${String(warningId).padStart(4, '0')}`, inline: true }
-                      ]
-                    });
+                    if (targetUser && moderator) {
+                      const logEmbed = createModerationEmbed({
+                        action: 'Warning Removed',
+                        target: targetUser,
+                        moderator: moderator,
+                        reason: reason || 'No reason provided',
+                        caseNumber: warning.case_number || warningId,
+                        additionalFields: [
+                          { name: 'Warning ID', value: `${warningId}`, inline: true },
+                          { name: 'Removed Via', value: 'Dashboard', inline: true },
+                          { name: 'Original Case #', value: warning.case_number ? `#${String(warning.case_number).padStart(4, '0')}` : `#${String(warningId).padStart(4, '0')}`, inline: true }
+                        ]
+                      });
                     
-                    await memberLogChannel.send({ embeds: [logEmbed] });
-                    logInfo('API', `Logged warning removal to member log channel ${memberLogChannel.id}`);
+                      await memberLogChannel.send({ embeds: [logEmbed] });
+                      logInfo('API', `Logged warning removal to member log channel ${memberLogChannel.id}`);
+                    }
                   }
                 }
               }
@@ -346,24 +350,52 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
           // Continue with the API response even if Discord notification fails
         }
         
-        // Log the dashboard activity
+        // Enhanced dashboard activity logging with Discord usernames
         try {
-          const userInfo = extractUserInfo(req);
-          if (userInfo?.userId) {
-            await logDashboardActivity(
-              userInfo.userId,
-              'remove_warning',
-              'warnings',
-              `Removed warning ID ${warningId} - Reason: ${reason || 'No reason provided'}`,
-              {
-                target_type: 'warning',
-                target_id: warningId.toString(),
-                guild_id: warning?.guild_id || null,
-                username: userInfo.username,
-                success: 1
+          // Get admin username from Discord
+          let adminUsername = 'Unknown Admin';
+          const adminUserId = req.user?.userId;
+          if (adminUserId) {
+            try {
+              const client = getDiscordClient();
+              if (client && isClientReady()) {
+                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+                if (adminUser) {
+                  adminUsername = adminUser.username;
+                }
               }
-            );
+            } catch (fetchError) {
+              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
+            }
           }
+
+          // Get target user info for better logging
+          let targetUsername = 'Unknown User';
+          try {
+            const client = getDiscordClient();
+            if (client && isClientReady() && warning.user_id) {
+              const targetUser = await client.users.fetch(warning.user_id).catch(() => null);
+              if (targetUser) {
+                targetUsername = targetUser.username;
+              }
+            }
+          } catch (error) {
+            targetUsername = `User ${warning.user_id?.slice(-4) || 'Unknown'}`;
+          }
+
+          await DashboardLogsService.logActivity({
+            user_id: adminUserId || 'unknown',
+            username: adminUsername,
+            action_type: 'warning_removal',
+            page: 'warnings',
+            target_type: 'warning',
+            target_id: warningId.toString(),
+            old_value: JSON.stringify({ active: true, reason: warning.reason }),
+            new_value: JSON.stringify({ active: false, removal_reason: reason }),
+            details: `⚠️ Warning Removal: ${adminUsername} removed warning #${warningId} from ${targetUsername} (${warning.user_id}).\n📝 Removal Reason: ${reason || 'No reason provided'}\n🏷️ Original Warning: ${warning.reason || 'No reason provided'}`,
+            success: true,
+            guild_id: warning?.guild_id || 'unknown'
+          });
         } catch (logErr) {
           logError('API', `Error logging warning removal activity: ${logErr}`);
         }
@@ -432,7 +464,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
       
       // Send notification in Discord if possible
       try {
-        const client = getClient();
+        const client = getDiscordClient();
         if (client && warning && warning.guild_id) {
           // Log the warning removal to the member's log channel
           try {
@@ -449,21 +481,23 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
                   const moderator = await client.users.fetch(warning.moderator_id).catch(() => null);
                   const targetUser = await client.users.fetch(warning.user_id).catch(() => null);
                   
-                  const logEmbed = createModerationEmbed({
-                    action: 'Warning Removed',
-                    target: targetUser,
-                    moderator: moderator,
-                    reason: req.body.reason || 'No reason provided',
-                    caseNumber: warning.case_number || warningId,
-                    additionalFields: [
-                      { name: 'Warning ID', value: `${warningId}`, inline: true },
-                      { name: 'Removed Via', value: 'Dashboard', inline: true },
-                      { name: 'Original Case #', value: warning.case_number ? `#${String(warning.case_number).padStart(4, '0')}` : `#${String(warningId).padStart(4, '0')}`, inline: true }
-                    ]
-                  });
+                  if (targetUser && moderator) {
+                    const logEmbed = createModerationEmbed({
+                      action: 'Warning Removed',
+                      target: targetUser,
+                      moderator: moderator,
+                      reason: req.body.reason || 'No reason provided',
+                      caseNumber: warning.case_number || warningId,
+                      additionalFields: [
+                        { name: 'Warning ID', value: `${warningId}`, inline: true },
+                        { name: 'Removed Via', value: 'Dashboard', inline: true },
+                        { name: 'Original Case #', value: warning.case_number ? `#${String(warning.case_number).padStart(4, '0')}` : `#${String(warningId).padStart(4, '0')}`, inline: true }
+                      ]
+                    });
                   
-                  await memberLogChannel.send({ embeds: [logEmbed] });
-                  logInfo('API', `Logged warning removal to member log channel ${memberLogChannel.id}`);
+                    await memberLogChannel.send({ embeds: [logEmbed] });
+                    logInfo('API', `Logged warning removal to member log channel ${memberLogChannel.id}`);
+                  }
                 }
               }
             }

@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import { db } from '../database/sqlite';
 import { logInfo, logError } from '../utils/logger';
 import { createValidationMiddleware, commonSchemas } from '../middleware/validation';
+import { DashboardLogsService } from '../database/services/dashboardLogsService';
+import { getClient, isClientReady } from '../utils/client-utils';
 
 const router = express.Router();
 
@@ -204,6 +206,43 @@ router.put('/:serverId/logging-settings',
       const responseSettings = convertToBoolean(updatedSettings);
       
       logInfo('Logging Settings API', `Successfully updated settings for server ${serverId}`);
+      
+      // Enhanced dashboard activity logging with Discord usernames
+      try {
+        // Get admin username from Discord
+        let adminUsername = 'Unknown Admin';
+        const adminUserId = req.user?.userId;
+        if (adminUserId) {
+          try {
+            const client = getClient();
+            if (client && isClientReady()) {
+              const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+              if (adminUser) {
+                adminUsername = adminUser.username;
+              }
+            }
+          } catch (fetchError) {
+            adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
+          }
+        }
+
+        // Log the server settings update
+        await DashboardLogsService.logActivity({
+          user_id: adminUserId || 'unknown',
+          username: adminUsername,
+          action_type: 'logging_settings_update',
+          page: 'server_settings',
+          target_type: 'server',
+          target_id: serverId,
+          old_value: 'Previous logging settings', // Could fetch old settings for comparison
+          new_value: JSON.stringify(responseSettings),
+          details: `⚙️ Logging Settings Update: ${adminUsername} updated logging settings for server ${serverId}.\n📝 Changes: Message Delete=${responseSettings.message_delete_logging ? 'ENABLED' : 'DISABLED'} | Message Edit=${responseSettings.message_edit_logging ? 'ENABLED' : 'DISABLED'} | Commands=${responseSettings.command_logging ? 'ENABLED' : 'DISABLED'} | DMs=${responseSettings.dm_logging ? 'ENABLED' : 'DISABLED'}`,
+          success: true,
+          guild_id: serverId
+        });
+      } catch (logErr) {
+        logError('Logging Settings API', `Error logging settings update activity: ${logErr}`);
+      }
       
       return res.json({
         success: true,

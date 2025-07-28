@@ -32,6 +32,9 @@ const Settings: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const { settings, updateSetting } = useSettings();
   
+  // Track if this is the initial load to prevent infinite loops
+  const isInitialLoad = React.useRef(true);
+  
   // Active category
   const [activeCategory, setActiveCategory] = useState('appearance');
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,7 +107,9 @@ const Settings: React.FC = () => {
 
   // Load settings on mount
   useEffect(() => {
-    if (settings) {
+    if (settings && isInitialLoad.current) {
+      isInitialLoad.current = false;
+      
       setTheme(settings.theme || 'auto');
       setPrimaryColor(settings.primaryColor || '#64748b');
       setFontSize(settings.fontSize || 'medium');
@@ -113,9 +118,34 @@ const Settings: React.FC = () => {
       setAutoRefresh(settings.autoRefresh ?? true);
       setRefreshInterval(settings.refreshInterval || 30);
       
-      // Apply settings immediately when loaded
-      handleColorChange(settings.primaryColor || '#64748b');
-      handleFontSizeChange(settings.fontSize || 'medium');
+      // Apply settings immediately when loaded - but only set CSS, don't update context
+      const primaryColorToApply = settings.primaryColor || '#64748b';
+      const fontSizeToApply = settings.fontSize || 'medium';
+      
+      // Apply primary color directly to DOM
+      const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null;
+      };
+      
+      const rgb = hexToRgb(primaryColorToApply);
+      if (rgb) {
+        document.documentElement.style.setProperty('--primary-color', primaryColorToApply);
+        document.documentElement.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      }
+      
+      // Apply font size directly to DOM
+      const fontSizeMap = {
+        small: '0.9',
+        medium: '1.0', 
+        large: '1.1'
+      };
+      const scale = fontSizeMap[fontSizeToApply] || '1.0';
+      document.documentElement.style.setProperty('--font-scale', scale);
     }
   }, [settings]);
 
@@ -136,6 +166,9 @@ const Settings: React.FC = () => {
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
     setTheme(newTheme);
     
+    // Update the context immediately for persistence
+    updateSetting('theme', newTheme);
+    
     if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (prefersDark !== darkMode) {
@@ -149,9 +182,39 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Handle animation toggle
+  const handleAnimationsToggle = () => {
+    const newValue = !animationsEnabled;
+    setAnimationsEnabled(newValue);
+    updateSetting('animationsEnabled', newValue);
+  };
+
+  // Handle compact mode toggle
+  const handleCompactModeToggle = () => {
+    const newValue = !compactMode;
+    setCompactMode(newValue);
+    updateSetting('compactMode', newValue);
+  };
+
+  // Handle auto refresh toggle
+  const handleAutoRefreshToggle = () => {
+    const newValue = !autoRefresh;
+    setAutoRefresh(newValue);
+    updateSetting('autoRefresh', newValue);
+  };
+
+  // Handle refresh interval change
+  const handleRefreshIntervalChange = (newInterval: number) => {
+    setRefreshInterval(newInterval);
+    updateSetting('refreshInterval', newInterval);
+  };
+
   // Apply primary color
   const handleColorChange = (color: string) => {
     setPrimaryColor(color);
+    
+    // Update the context immediately for instant effect
+    updateSetting('primaryColor', color);
     
     // Convert hex to RGB for CSS variables
     const hexToRgb = (hex: string) => {
@@ -173,21 +236,19 @@ const Settings: React.FC = () => {
   // Apply font size
   const handleFontSizeChange = (size: 'small' | 'medium' | 'large') => {
     setFontSize(size);
-    // Remove all font size classes
-    document.documentElement.classList.remove('text-sm', 'text-base', 'text-lg');
     
-    // Apply the correct font size class based on the size
-    switch (size) {
-      case 'small':
-        document.documentElement.classList.add('text-sm');
-        break;
-      case 'medium':
-        document.documentElement.classList.add('text-base');
-        break;
-      case 'large':
-        document.documentElement.classList.add('text-lg');
-        break;
-    }
+    // Update the context immediately for instant effect and persistence
+    updateSetting('fontSize', size);
+    
+    // Apply font size scaling using CSS custom property
+    const fontSizeMap = {
+      small: '0.9',
+      medium: '1.0', 
+      large: '1.1'
+    };
+    
+    const scale = fontSizeMap[size] || '1.0';
+    document.documentElement.style.setProperty('--font-scale', scale);
   };
 
 
@@ -250,7 +311,9 @@ const Settings: React.FC = () => {
               <h3 className={classNames(
                 'text-lg font-semibold',
                 darkMode ? 'text-white' : 'text-gray-900'
-              )}>Theme</h3>
+              )}>
+                🎨 Theme
+              </h3>
               
               <div className="grid grid-cols-3 gap-4">
                 {[
@@ -295,7 +358,9 @@ const Settings: React.FC = () => {
               <h3 className={classNames(
                 'text-lg font-semibold',
                 darkMode ? 'text-white' : 'text-gray-900'
-              )}>Primary Color</h3>
+              )}>
+                🌈 Primary Color
+              </h3>
               
               <div className="grid grid-cols-5 gap-3">
                 {colorPresets.map((preset) => (
@@ -351,7 +416,9 @@ const Settings: React.FC = () => {
               <h3 className={classNames(
                 'text-lg font-semibold',
                 darkMode ? 'text-white' : 'text-gray-900'
-              )}>Font Size</h3>
+              )}>
+                📏 Font Size
+              </h3>
               
               <div className="grid grid-cols-3 gap-4">
                 {fontSizePresets.map((preset) => (
@@ -359,7 +426,7 @@ const Settings: React.FC = () => {
                     key={preset.value}
                     onClick={() => handleFontSizeChange(preset.value)}
                     className={classNames(
-                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-lg group',
+                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern group hover:-translate-y-1 hover:shadow-lg',
                       fontSize === preset.value
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
                         : darkMode
@@ -388,7 +455,9 @@ const Settings: React.FC = () => {
               <h3 className={classNames(
                 'text-lg font-semibold',
                 darkMode ? 'text-white' : 'text-gray-900'
-              )}>Interface Options</h3>
+              )}>
+                🎛️ Interface Options
+              </h3>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -407,7 +476,7 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                    onClick={handleAnimationsToggle}
                     className={classNames(
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
                       animationsEnabled ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
@@ -438,7 +507,7 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => setCompactMode(!compactMode)}
+                    onClick={handleCompactModeToggle}
                     className={classNames(
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
                       compactMode ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
@@ -483,7 +552,7 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => setAutoRefresh(!autoRefresh)}
+                    onClick={handleAutoRefreshToggle}
                     className={classNames(
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
                       autoRefresh ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
@@ -511,7 +580,7 @@ const Settings: React.FC = () => {
                       min="5"
                       max="300"
                       value={refreshInterval}
-                      onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                      onChange={(e) => handleRefreshIntervalChange(parseInt(e.target.value))}
                       className={classNames(
                         'w-32 px-3 py-2 rounded-lg border transition-colors',
                         darkMode
@@ -592,27 +661,27 @@ const Settings: React.FC = () => {
 
   return (
     <div className={classNames(
-      'min-h-screen',
-      darkMode ? 'bg-gray-900' : 'bg-gray-50'
+      'min-h-full w-full',
+      darkMode ? 'bg-transparent' : 'bg-transparent'
     )}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full h-full px-0 py-0">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className={classNames(
-            'text-3xl font-bold',
+            'text-2xl font-bold',
             darkMode ? 'text-white' : 'text-gray-900'
           )}>
-            PanelOps Settings
+            ⚙️ Settings
           </h1>
           <p className={classNames(
-            'mt-2 text-lg',
+            'mt-2 text-base',
             darkMode ? 'text-gray-400' : 'text-gray-600'
           )}>
-            Customize your modern dashboard experience
+            Customize your dashboard experience
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
             <div className={classNames(
@@ -665,10 +734,10 @@ const Settings: React.FC = () => {
                         'h-5 w-5 mr-3 transition-all duration-300 group-hover:scale-110',
                         isActive ? 'text-white' : darkMode ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700'
                       )} />
-                      <div className="flex-1">
-                        <div>{category.name}</div>
+                      <div className="flex-1 text-left">
+                        <div className="text-sm font-medium">{category.name}</div>
                         <div className={classNames(
-                          'text-xs',
+                          'text-xs mt-0.5',
                           isActive 
                             ? 'text-white/80' 
                             : darkMode ? 'text-gray-500' : 'text-gray-500'
@@ -684,9 +753,9 @@ const Settings: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className={classNames(
-              'rounded-lg border p-8 card-modern transition-all duration-300 hover:shadow-lg',
+              'rounded-lg border p-6 card-modern transition-all duration-300 hover:shadow-lg',
               darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
             )}>
               {renderCategoryContent()}
@@ -698,12 +767,18 @@ const Settings: React.FC = () => {
                 'mt-6 p-4 rounded-lg border flex items-center justify-between card-modern transition-all duration-300 hover:shadow-lg',
                 darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
               )}>
-                <p className={classNames(
-                  'text-sm font-medium',
-                  darkMode ? 'text-gray-300' : 'text-gray-700'
-                )}>
-                  You have unsaved changes
-                </p>
+                <div className="flex items-center">
+                  <div className={classNames(
+                    'w-2 h-2 rounded-full mr-2 animate-pulse',
+                    'bg-orange-500'
+                  )}></div>
+                  <p className={classNames(
+                    'text-sm font-medium',
+                    darkMode ? 'text-gray-300' : 'text-gray-700'
+                  )}>
+                    You have unsaved changes
+                  </p>
+                </div>
                 <div className="flex space-x-3">
                   <button
                     onClick={handleReset}

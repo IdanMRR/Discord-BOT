@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PermissionGuard from '../components/common/PermissionGuard';
 import toast from 'react-hot-toast';
+import { formatDashboardLogDate } from '../utils/dateUtils';
 import {
   EyeIcon,
   FunnelIcon,
@@ -357,54 +358,6 @@ const LogsContent: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      // Handle different date formats
-      let date: Date;
-      if (dateString.includes('T') || dateString.includes('Z')) {
-        date = new Date(dateString);
-      } else if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-        date = new Date(dateString + 'Z'); // SQLite format - treat as UTC
-      } else {
-        date = new Date(dateString);
-      }
-
-      if (isNaN(date.getTime())) {
-        return 'Invalid date';
-      }
-
-      const now = new Date();
-      const diffTime = now.getTime() - date.getTime();
-      const diffMinutes = Math.floor(diffTime / (1000 * 60));
-      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      // Show relative time for recent entries
-      if (diffMinutes < 1 && diffTime >= 0) {
-        return 'Just now';
-      } else if (diffMinutes < 60 && diffTime >= 0) {
-        return `${diffMinutes} min ago`;
-      } else if (diffHours < 24 && diffTime >= 0) {
-        return `${diffHours}h ago`;
-      } else if (diffDays < 7 && diffTime >= 0) {
-        return `${diffDays}d ago`;
-      } else {
-        // For older entries, convert to Israeli timezone properly
-        const israeliDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-        
-        return israeliDate.toLocaleString('en-GB', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-      }
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
 
   const handleRefresh = () => {
     fetchLogs(true, true);
@@ -903,7 +856,7 @@ const LogsContent: React.FC = () => {
                               "text-sm font-medium",
                               darkMode ? "text-gray-300" : "text-gray-600"
                             )}>
-                              {formatDate(log.created_at || log.timestamp || '')}
+                              {formatDashboardLogDate(log.created_at || log.timestamp || '')}
                             </p>
                             <p className={classNames(
                               "text-xs",

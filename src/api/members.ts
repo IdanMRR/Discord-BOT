@@ -103,6 +103,8 @@ router.get('/:serverId/members', async (req: Request, res: Response) => {
     // Get dashboard permissions for all members
     const { getDashboardPermissions } = await import('../database/migrations/add-dashboard-permissions');
     
+    console.log(`🏘️ Members API using server ID: ${serverId}`);
+    
     // Transform members to our interface
     const transformedMembers: Member[] = members.map(member => {
       // Get dashboard permissions for this user
@@ -227,6 +229,7 @@ router.get('/:serverId/members/:memberId', async (req: Request, res: Response) =
     
     // Get dashboard permissions for this user
     const { getDashboardPermissions } = await import('../database/migrations/add-dashboard-permissions');
+    console.log(`🏘️ Single member API using server ID: ${serverId} for user: ${member.user.username}`);
     const dashboardPermissions = getDashboardPermissions(member.id, serverId);
 
     const memberData: Member & { warnings: any[] } = {

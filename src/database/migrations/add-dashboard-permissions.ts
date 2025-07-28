@@ -39,12 +39,18 @@ export async function createDashboardPermissionsTable(): Promise<void> {
 // Helper function to get dashboard permissions for a user
 export function getDashboardPermissions(userId: string, guildId: string): string[] {
   try {
-    // Only log for debugging when needed - removed verbose logging to prevent spam
+    // Debug logging to trace permission fetching
+    console.log(`🔍 getDashboardPermissions called for user ${userId} in guild ${guildId}`);
+    
     const stmt = db.prepare('SELECT permissions FROM dashboard_permissions WHERE user_id = ? AND guild_id = ?');
     const result = stmt.get(userId, guildId) as { permissions: string } | undefined;
     
+    console.log(`📊 Database result for user ${userId}:`, result);
+    
     if (result) {
       const permissions = JSON.parse(result.permissions || '[]');
+      console.log(`✅ Parsed permissions for user ${userId}:`, permissions);
+      
       // Only log if user actually has permissions
       if (permissions.length > 0) {
         logInfo('DashboardPermissions', `Found permissions for user ${userId}: ${permissions.join(', ')}`);
@@ -52,9 +58,10 @@ export function getDashboardPermissions(userId: string, guildId: string): string
       return permissions;
     }
     
-    // Don't log when no permissions found - this is normal for most users
+    console.log(`❌ No permissions found for user ${userId} in guild ${guildId}`);
     return [];
   } catch (error) {
+    console.error(`💥 Error getting dashboard permissions for user ${userId}:`, error);
     logError('DashboardPermissions', `Error getting dashboard permissions for user ${userId} in guild ${guildId}: ${error}`);
     return [];
   }
@@ -65,6 +72,13 @@ export function saveDashboardPermissions(userId: string, guildId: string, permis
   try {
     const permissionsJson = JSON.stringify(permissions);
     
+    console.log(`💾 saveDashboardPermissions called:`, {
+      userId,
+      guildId,
+      permissions,
+      permissionsJson
+    });
+    
     logInfo('DashboardPermissions', `Saving permissions for user ${userId} in guild ${guildId}: ${permissions.join(', ')}`);
     
     const stmt = db.prepare(`
@@ -73,8 +87,15 @@ export function saveDashboardPermissions(userId: string, guildId: string, permis
     `);
     
     const result = stmt.run(userId, guildId, permissionsJson);
+    console.log(`✅ Database save result:`, result);
+    
     logInfo('DashboardPermissions', `Successfully saved permissions for user ${userId}. Rows affected: ${result.changes}`);
+    
+    // Verify the save by reading it back
+    const verification = db.prepare('SELECT permissions FROM dashboard_permissions WHERE user_id = ? AND guild_id = ?').get(userId, guildId) as { permissions: string } | undefined;
+    console.log(`🔍 Verification read after save:`, verification);
   } catch (error) {
+    console.error(`💥 Error saving dashboard permissions:`, error);
     logError('DashboardPermissions', `Error saving dashboard permissions for user ${userId} in guild ${guildId}: ${error}`);
     throw error;
   }

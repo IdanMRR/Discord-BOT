@@ -54,11 +54,16 @@ export const DashboardLogsService = {
         return false; // Don't log duplicates
       }
 
+      // Get current time in Israeli timezone as ISO string with timezone offset
+      const israeliTime = new Date().toLocaleString('sv-SE', { 
+        timeZone: 'Asia/Jerusalem'
+      }).replace(' ', 'T') + '+03:00';
+
       const stmt = db.prepare(`
         INSERT INTO dashboard_logs (
           guild_id, user_id, username, action_type, page, target_type, target_id,
-          old_value, new_value, ip_address, user_agent, details, success, error_message
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          old_value, new_value, ip_address, user_agent, details, success, error_message, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
@@ -75,7 +80,8 @@ export const DashboardLogsService = {
         entry.user_agent || null,
         entry.details || null,
         entry.success !== undefined ? (typeof entry.success === 'number' ? entry.success : (entry.success ? 1 : 0)) : 1,
-        entry.error_message || null
+        entry.error_message || null,
+        israeliTime
       );
 
       if (result.changes > 0) {

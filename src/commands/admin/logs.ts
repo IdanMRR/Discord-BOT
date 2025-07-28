@@ -10,7 +10,7 @@ import {
   MessageFlags,
   ChannelType
 } from 'discord.js';
-import { Command } from '../../types/command';
+import { Command } from '../../types/Command';
 import { LogChannelService } from '../../database/services/logChannelService';
 import { sendLog } from '../../utils/logUtils';
 

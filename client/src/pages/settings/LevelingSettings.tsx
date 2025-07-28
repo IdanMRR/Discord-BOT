@@ -166,7 +166,7 @@ const LevelingSettingsContent: React.FC = () => {
         const [serverResponse, channelsResponse, settingsResponse] = await Promise.all([
           apiService.getServerInfo(serverId),
           apiService.getServerChannels(serverId),
-          fetch(`/api/settings/${serverId}/leveling`)
+          fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`)
         ]);
 
         if (serverResponse.success && serverResponse.data) {
@@ -326,7 +326,7 @@ const LevelingSettingsContent: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/settings/${serverId}/leveling`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

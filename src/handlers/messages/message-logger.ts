@@ -3,6 +3,7 @@ import { logInfo, logError } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { Colors } from '../../utils/embeds';
 import { AnalyticsService } from '../../database/services/analyticsService';
+import { XPHandler } from '../leveling/xp-handler';
 
 interface LoggingSettings {
   id: number;
@@ -231,10 +232,8 @@ export class MessageLogger {
         return;
       }
       
-      // Log basic message info for debugging (reduced verbosity)
-      if (message.content.length > 0) {
-        logInfo('Message Logger', `Message in ${message.guild.name}: ${message.content.substring(0, 30)}...`);
-      }
+      // Message logging disabled to reduce console spam
+      // Only log important events like level ups, not every message
       
       // Track analytics for guild messages
       await AnalyticsService.trackActivity({
@@ -254,6 +253,9 @@ export class MessageLogger {
           'text'
         ).catch(error => logError('Analytics', `Failed to update channel analytics: ${error}`));
       }
+      
+      // Process XP gain for leveling system
+      await XPHandler.processMessage(message);
       
       // Log to database (optional - can be disabled if too much data)
       // Uncomment the line below if you want to log all messages

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git pull:*)",
+      "Bash(npm install:*)",
+      "Bash(npm start)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(taskkill:*)",
+      "Bash(pkill:*)",
+      "Bash(mv:*)",
+      "Bash(npx tsc:*)",
+      "Bash(sqlite3:*)",
+      "Bash(del enable-leveling.js)",
+      "Bash(grep:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

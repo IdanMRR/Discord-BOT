@@ -36,6 +36,7 @@ import { dashboardLogger, logDashboardActivity } from '../middleware/dashboardLo
 import { app as comprehensiveSettingsApp } from './comprehensive-settings';
 // Import missing API routers
 import loggingSettingsRouter from './logging-settings';
+import levelingSettingsRouter from './leveling-settings';
 import moderationCasesRouter from './moderation-cases';
 import directServersRouter from './direct-servers';
 import membersRouter from './members';
@@ -402,6 +403,7 @@ app.use('/api/servers', serversRouter);
 // Register the logging settings router under /api/servers path
 console.log('Registering logging settings router at /api/servers');
 app.use('/api/servers', loggingSettingsRouter);
+app.use('/api/settings', levelingSettingsRouter);
 
 // Register the moderation cases router under /api path
 console.log('Registering moderation cases router at /api/moderation-cases');

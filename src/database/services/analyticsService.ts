@@ -242,8 +242,6 @@ export class AnalyticsService {
   // Get server overview stats
   static async getServerOverview(guildId: string, days: number = 7): Promise<any> {
     try {
-      console.log(`[DEBUG] Getting overview for guild ${guildId}, days ${days}`);
-      
       const stmt = db.prepare(`
         SELECT 
           SUM(total_messages) as total_messages,
@@ -259,7 +257,6 @@ export class AnalyticsService {
       `);
       
       const overview = stmt.get(guildId, days) as any;
-      console.log(`[DEBUG] Raw overview result:`, overview);
       
       // Get current online count
       const healthStmt = db.prepare(`

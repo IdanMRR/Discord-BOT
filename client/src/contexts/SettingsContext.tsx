@@ -46,22 +46,22 @@ interface SettingsProviderProps {
 }
 
 export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) => {
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const autoRefreshCallbacks = useRef<Map<string, () => void>>(new Map());
-  const autoRefreshInterval = useRef<NodeJS.Timeout | null>(null);
-
-  // Load settings from localStorage on mount
-  useEffect(() => {
+  // Initialize settings with saved values immediately
+  const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const savedSettings = localStorage.getItem('dashboard_settings');
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        setSettings({ ...defaultSettings, ...parsed });
+        return { ...defaultSettings, ...parsed };
       }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
-  }, []);
+    return defaultSettings;
+  });
+  
+  const autoRefreshCallbacks = useRef<Map<string, () => void>>(new Map());
+  const autoRefreshInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Set up auto-refresh interval with proper cleanup
   useEffect(() => {

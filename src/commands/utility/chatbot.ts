@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, EmbedBuilder, Message, MessageFlags } from 'discord.js';
-import { Command, ExecuteProps } from '../../types/command';
+import { Command, ExecuteProps } from '../../types/Command';
 
 // This is a simple AI-powered chatbot command that uses an external API to generate responses
 // You'll need to set up the API_KEY in your .env file

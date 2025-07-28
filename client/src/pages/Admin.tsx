@@ -292,7 +292,8 @@ const AdminContent: React.FC = () => {
       const response = await apiService.updateUserPermissions(userId, {
         role: updates.role,
         dashboardAccess: updates.dashboardAccess,
-        permissions: updates.permissions
+        permissions: updates.permissions,
+        guildId: selectedServer // Include the current selected server
       });
       
       console.log('🔄 API Response:', response);

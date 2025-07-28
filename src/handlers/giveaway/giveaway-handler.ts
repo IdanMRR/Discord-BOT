@@ -404,12 +404,38 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<v
   }
 }
 
+let lastGiveawayCheck = 0;
+let giveawayCheckInterval: NodeJS.Timeout | null = null;
+
+// Cache for the next giveaway end time to avoid unnecessary queries
+let nextGiveawayEndTime: number | null = null;
+
 export async function startGiveawayChecker(client: Client): Promise<void> {
-  logInfo('Giveaway Checker', 'Starting giveaway checker...');
+  logInfo('Giveaway Checker', 'Starting optimized giveaway checker (10 min intervals)...');
   
-  // Check every 1 minute for ended giveaways
-  setInterval(async () => {
+  // Clear any existing interval to prevent multiple checkers
+  if (giveawayCheckInterval) {
+    logInfo('Giveaway Checker', 'Clearing existing giveaway interval to prevent duplicates');
+    clearInterval(giveawayCheckInterval);
+    giveawayCheckInterval = null;
+  }
+  
+  // Check every 10 minutes for ended giveaways (increased to reduce spam further)
+  giveawayCheckInterval = setInterval(async () => {
     try {
+      // Rate limiting: Don't check more than once every 8 minutes even if interval is shorter
+      const now = Date.now();
+      if (now - lastGiveawayCheck < 8 * 60 * 1000) {
+        return; // Skip check if we checked recently
+      }
+      
+      // Additional optimization: Skip check if we know there are no giveaways ending soon
+      if (nextGiveawayEndTime && now < nextGiveawayEndTime - (5 * 60 * 1000)) {
+        return; // Skip if next giveaway doesn't end for at least 5 more minutes
+      }
+      
+      lastGiveawayCheck = now;
+
       const endedGiveawaysResult = GiveawayService.getEndedGiveaways();
       
       if (!endedGiveawaysResult.success) {
@@ -419,11 +445,21 @@ export async function startGiveawayChecker(client: Client): Promise<void> {
 
       // Only process if there are actually ended giveaways - NO LOGGING for empty checks
       if (!endedGiveawaysResult.giveaways || endedGiveawaysResult.giveaways.length === 0) {
+        // Update cache for next giveaway time to optimize future checks
+        const nextGiveawayResult = GiveawayService.getNextGiveawayEndTime();
+        if (nextGiveawayResult.success && nextGiveawayResult.endTime) {
+          nextGiveawayEndTime = new Date(nextGiveawayResult.endTime).getTime();
+        } else {
+          nextGiveawayEndTime = null;
+        }
         return; // Silent return - no logging
       }
 
       const endedGiveaways = endedGiveawaysResult.giveaways;
       logInfo('Giveaway Checker', `Processing ${endedGiveaways.length} ended giveaways`);
+      
+      // Reset cache since we found ended giveaways
+      nextGiveawayEndTime = null;
       
       for (const giveaway of endedGiveaways) {
         logInfo('Giveaway Checker', `Ending giveaway "${giveaway.title}" (ID: ${giveaway.id})`);
@@ -432,5 +468,5 @@ export async function startGiveawayChecker(client: Client): Promise<void> {
     } catch (error) {
       logError('Giveaway Checker', `Error checking for ended giveaways: ${error}`);
     }
-  }, 60000); // 1 minute
+  }, 10 * 60 * 1000); // 10 minutes (increased from 5 minutes to prevent query spam further)
 } 

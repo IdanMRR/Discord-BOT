@@ -25,7 +25,7 @@ import { AnalyticsService } from './database/services/analyticsService';
 import * as dotenv from 'dotenv';
 import { loadCommands, registerCommands } from './command-handler';
 import { setClient } from './utils/client-utils';
-import { Command } from './types/command';
+import { Command } from './types/Command';
 
 // Load environment variables
 dotenv.config();
@@ -119,7 +119,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   // Update activity every 10 minutes
   setInterval(updateBotActivity, 10 * 60 * 1000);
   
-  // Server health monitoring - every 5 minutes
+  // Server health monitoring - every 30 minutes (reduced to prevent spam)
   const updateServerHealth = async () => {
     try {
       for (const guild of client.guilds.cache.values()) {
@@ -145,9 +145,9 @@ client.once(Events.ClientReady, async (readyClient) => {
   };
   
   // Initial health check
-  setTimeout(updateServerHealth, 5000); // Wait 5 seconds after bot ready
-  // Schedule health checks every 5 minutes
-  setInterval(updateServerHealth, 5 * 60 * 1000);
+  setTimeout(updateServerHealth, 30000); // Wait 30 seconds after bot ready
+  // Schedule health checks every 30 minutes (reduced from 5 minutes to prevent spam)
+  setInterval(updateServerHealth, 30 * 60 * 1000);
   
   // Store the function globally so other events can use it
   (global as any).updateBotActivity = updateBotActivity;

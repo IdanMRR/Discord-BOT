@@ -14,7 +14,8 @@ import {
   MagnifyingGlassIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon
+  Bars3Icon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -79,6 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
         { name: 'All Servers', href: '/servers', icon: ServerIcon, permission: 'view_dashboard', emoji: '🖥️' },
         { name: 'Tickets', href: '/tickets', icon: TicketIcon, permission: 'view_tickets', emoji: '🎫' },
         { name: 'Warnings', href: '/warnings', icon: ExclamationTriangleIcon, permission: 'view_warnings', emoji: '⚠️' },
+        { name: 'Leveling', href: '/leveling', icon: ChartBarIcon, permission: 'view_dashboard', emoji: '🏆' },
       ]
     },
     {

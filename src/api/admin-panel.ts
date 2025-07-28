@@ -386,25 +386,33 @@ router.delete('/logs/cleanup', authenticateToken, async (req: Request, res: Resp
  * PUT /admin/users/:userId - Update user permissions (admin only)
  */
 router.put('/users/:userId', authenticateToken, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { permissions, role, dashboardAccess, guildId } = req.body;
+  
+  // Declare targetGuildId at function level so it's accessible in catch block
+  let targetGuildId = guildId;
+  if (!targetGuildId) {
+    const client = getClient();
+    targetGuildId = client?.guilds.cache.first()?.id || 'default';
+  }
+  
   try {
-    const { userId } = req.params;
-    const { permissions, role, dashboardAccess } = req.body;
-    
     if (!userId) {
       return res.status(400).json({
         success: false,
         error: 'User ID is required'
       });
     }
-
-    // Get guild ID (using first guild for now)
-    const client = getClient();
-    const guildId = client?.guilds.cache.first()?.id || 'default';
+    
+    console.log(`🏘️ Admin panel using guild ID: ${targetGuildId} (from request: ${!!guildId})`);
     
     logInfo('AdminPanel', `Admin ${req.user?.userId} updating permissions for user ${userId}`);
 
     // Import the permissions functions
     const { saveDashboardPermissions, getDashboardPermissions } = await import('../database/migrations/add-dashboard-permissions');
+    
+    // Get current permissions before updating (for logging)
+    const oldPermissions = getDashboardPermissions(userId, targetGuildId) || [];
     
     // Convert role and permissions to dashboard permissions
     let dashboardPermissions: string[] = [];
@@ -433,12 +441,57 @@ router.put('/users/:userId', authenticateToken, async (req: Request, res: Respon
     }
 
     // Save permissions to database
-    saveDashboardPermissions(userId, guildId, dashboardPermissions);
+    saveDashboardPermissions(userId, targetGuildId, dashboardPermissions);
     
     // Verify the save
-    const savedPermissions = getDashboardPermissions(userId, guildId);
+    const savedPermissions = getDashboardPermissions(userId, targetGuildId);
     
     logInfo('AdminPanel', `Successfully updated permissions for user ${userId}: ${savedPermissions.join(', ')}`);
+
+    // Get admin user info for better logging
+    let adminUsername = 'Unknown Admin';
+    try {
+      const client = getClient();
+      if (client && isClientReady() && req.user?.userId) {
+        const adminUser = await client.users.fetch(req.user.userId).catch(() => null);
+        if (adminUser) {
+          adminUsername = adminUser.username;
+        }
+      }
+    } catch (error) {
+      // Use fallback if Discord API fails
+      adminUsername = req.user?.username || `Admin ${req.user?.userId?.slice(-4) || 'Unknown'}`;
+    }
+
+    // Get target user info for better logging
+    let targetUsername = 'Unknown User';
+    try {
+      const client = getClient();
+      if (client && isClientReady()) {
+        const targetUser = await client.users.fetch(userId).catch(() => null);
+        if (targetUser) {
+          targetUsername = targetUser.username;
+        }
+      }
+    } catch (error) {
+      // Use fallback if Discord API fails
+      targetUsername = `User ${userId.slice(-4)}`;
+    }
+
+    // Log the admin action to dashboard logs with enhanced details
+    await DashboardLogsService.logActivity({
+      user_id: req.user?.userId || 'unknown',
+      username: adminUsername,
+      action_type: 'dashboard_permission_update',
+      page: 'admin_panel',
+      target_type: 'user',
+      target_id: userId,
+      old_value: JSON.stringify(oldPermissions),
+      new_value: JSON.stringify(savedPermissions),
+      details: `🔐 Dashboard Permission Update: ${adminUsername} updated permissions for ${targetUsername} (${userId}).\n📝 Changes: Role=${role || 'custom'} | Dashboard Access=${dashboardAccess ? 'GRANTED' : 'DENIED'}\n🛡️ New Permissions: [${savedPermissions.join(', ')}]\n🏷️ Previous Permissions: [${oldPermissions.join(', ')}]`,
+      success: true,
+      guild_id: targetGuildId
+    });
 
     res.json({
       success: true,
@@ -453,6 +506,39 @@ router.put('/users/:userId', authenticateToken, async (req: Request, res: Respon
 
   } catch (error: any) {
     logError('AdminPanel', `Error updating user permissions: ${error.message}`);
+    
+    // Get admin username for error logging
+    let adminUsername = 'Unknown Admin';
+    try {
+      const client = getClient();
+      if (client && isClientReady() && req.user?.userId) {
+        const adminUser = await client.users.fetch(req.user.userId).catch(() => null);
+        if (adminUser) {
+          adminUsername = adminUser.username;
+        }
+      }
+    } catch (fetchError) {
+      adminUsername = req.user?.username || `Admin ${req.user?.userId?.slice(-4) || 'Unknown'}`;
+    }
+
+    // Log the failed admin action
+    try {
+      await DashboardLogsService.logActivity({
+        user_id: req.user?.userId || 'unknown',
+        username: adminUsername,
+        action_type: 'dashboard_permission_update_failed',
+        page: 'admin_panel',
+        target_type: 'user',
+        target_id: userId,
+        details: `❌ Dashboard Permission Update Failed: ${adminUsername} attempted to update permissions for user ${userId} but failed.\n🚨 Error: ${error.message}`,
+        success: false,
+        error_message: error.message,
+        guild_id: targetGuildId || 'default'
+      });
+    } catch (loggingError) {
+      // Ignore logging errors to prevent cascading failures
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to update user permissions'

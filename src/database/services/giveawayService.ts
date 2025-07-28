@@ -184,6 +184,28 @@ export class GiveawayService {
   }
   
   /**
+   * Get the next giveaway end time for optimization
+   */
+  static getNextGiveawayEndTime(): { success: boolean; endTime?: string; error?: string } {
+    try {
+      const now = new Date().toISOString();
+      
+      const stmt = db.prepare(`
+        SELECT end_time FROM giveaways 
+        WHERE status = 'active' AND end_time > ?
+        ORDER BY end_time ASC
+        LIMIT 1
+      `);
+      const result = stmt.get(now) as { end_time: string } | undefined;
+      
+      return { success: true, endTime: result?.end_time };
+    } catch (error) {
+      logError('Giveaway Service', `Error getting next giveaway end time: ${error}`);
+      return { success: false, error: String(error) };
+    }
+  }
+  
+  /**
    * Update giveaway message ID
    */
   static updateMessageId(giveawayId: number, messageId: string): { success: boolean; error?: string } {

@@ -20,4 +20,4 @@ type Command = {
 export type { Command };
 
 // Export all command types from types
-export * from '../types/command';
+export * from '../types/Command';

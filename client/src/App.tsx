@@ -33,6 +33,7 @@ import WelcomeSettings from './pages/settings/WelcomeSettings';
 import RoleSettings from './pages/settings/RoleSettings';
 import EconomySettings from './pages/settings/EconomySettings';
 import LevelingSettings from './pages/settings/LevelingSettings';
+import Leveling from './pages/Leveling';
 // Fix import for Settings component
 const Settings = React.lazy(() => import('./pages/Settings'));
 
@@ -105,6 +106,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/servers/:serverId/settings/leveling" element={<LevelingSettings />} />
                 <Route path="/tickets" element={<Tickets />} />
                 <Route path="/warnings" element={<Warnings />} />
+                <Route path="/leveling" element={<Leveling />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/servers/:serverId/analytics" element={<Analytics />} />
@@ -126,6 +128,50 @@ const AppRoutes: React.FC = () => {
 const SettingsApplier: React.FC = () => {
   const { settings } = useSettings();
   const { darkMode } = useTheme();
+
+  // Apply settings immediately on load
+  React.useEffect(() => {
+    // Apply font size scaling immediately
+    const root = document.documentElement;
+    const fontSizeMap = {
+      small: '0.9',
+      medium: '1.0', 
+      large: '1.1'
+    };
+    
+    const scale = fontSizeMap[settings.fontSize] || '1.0';
+    root.style.setProperty('--font-scale', scale);
+    
+    // Apply primary color immediately
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+    
+    const rgb = hexToRgb(settings.primaryColor);
+    if (rgb) {
+      root.style.setProperty('--primary-color', settings.primaryColor);
+      root.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
+    
+    // Apply other settings
+    const body = document.body;
+    if (settings.animationsEnabled) {
+      body.classList.remove('no-animations');
+    } else {
+      body.classList.add('no-animations');
+    }
+    
+    if (settings.compactMode) {
+      body.classList.add('compact-mode');
+    } else {
+      body.classList.remove('compact-mode');
+    }
+  }, [settings.animationsEnabled, settings.compactMode, settings.fontSize, settings.primaryColor]);
 
   React.useEffect(() => {
     // Apply dark mode classes to all necessary elements

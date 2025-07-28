@@ -16,7 +16,7 @@ if (!fs.existsSync(dataDir)) {
 // Initialize SQLite database with optimizations
 const dbPath = path.join(dataDir, 'discord-bot.db');
 const db = new Database(dbPath, { 
-  verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
+  verbose: undefined, // Explicitly disable SQL query logging to prevent console spam
   fileMustExist: false,
   timeout: 5000 // 5 second timeout
 });

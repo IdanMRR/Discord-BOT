@@ -13,6 +13,7 @@ import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useTheme } from '../contexts/ThemeContext';
 import { useActivityLogs } from '../hooks/useActivityLogs';
+import { formatDashboardLogDate } from '../utils/dateUtils';
 
 
 // Utility function for conditional class names
@@ -109,43 +110,9 @@ const DashboardLogs: React.FC = () => {
     return 'Other';
   };
 
+  // Use the proper Israeli date formatting utility
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      
-      // Check if the date string is already in Israeli timezone format
-      const isIsraeliFormat = dateString.includes('+03:00') || dateString.includes('Asia/Jerusalem');
-      
-      let targetDate = date;
-      if (!isIsraeliFormat) {
-        // Only convert if it's not already in Israeli timezone
-        targetDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-      }
-      
-      const now = new Date();
-      const israeliNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
-      
-      const diffInMinutes = Math.floor((israeliNow.getTime() - targetDate.getTime()) / (1000 * 60));
-      
-      // For very recent activities, show relative time
-      if (diffInMinutes < 1) return 'Just now';
-      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-      
-      // For anything over 24 hours, show full date and time in Jerusalem timezone
-      return new Intl.DateTimeFormat('en-GB', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Jerusalem'
-      }).format(date);
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return dateString; // Return original if formatting fails
-    }
+    return formatDashboardLogDate(dateString);
   };
 
   const totalPages = Math.ceil((pagination?.total || 0) / rowsPerPage);

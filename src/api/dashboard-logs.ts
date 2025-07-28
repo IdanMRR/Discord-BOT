@@ -207,6 +207,17 @@ router.delete('/cleanup', cleanOldLogs);
 // Test endpoint to create a test log entry (no auth required for testing)
 router.post('/test', async (req: Request, res: Response) => {
   try {
+    // Get various time representations for debugging
+    const now = new Date();
+    const utcTime = now.toISOString();
+    const israeliTimeFormatted = now.toLocaleString('sv-SE', { 
+      timeZone: 'Asia/Jerusalem'
+    }).replace(' ', 'T') + '+03:00';
+    const israeliTimeSimple = now.toLocaleString('en-US', { 
+      timeZone: 'Asia/Jerusalem',
+      hour12: false
+    });
+
     const testLogEntry = {
       user_id: 'test_user_123',
       username: 'Test User',
@@ -214,7 +225,7 @@ router.post('/test', async (req: Request, res: Response) => {
       page: 'test_page',
       target_type: 'test',
       target_id: 'test_123',
-      details: 'Test log entry created via API',
+      details: `Test log entry created at Israeli time: ${israeliTimeSimple}`,
       success: true,
       ip_address: req.ip || req.connection?.remoteAddress || 'unknown',
       user_agent: req.get('User-Agent') || 'test-agent',
@@ -228,7 +239,13 @@ router.post('/test', async (req: Request, res: Response) => {
       res.json({
         success: true,
         message: 'Test log entry created successfully',
-        data: testLogEntry
+        data: testLogEntry,
+        debug: {
+          utcTime,
+          israeliTimeFormatted,
+          israeliTimeSimple,
+          storedAs: israeliTimeFormatted
+        }
       });
     } else {
       res.status(500).json({

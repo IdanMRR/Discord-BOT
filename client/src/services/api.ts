@@ -720,6 +720,7 @@ class ApiService {
     permissions?: string[];
     role?: string;
     dashboardAccess?: boolean;
+    guildId?: string;
   }): Promise<ApiResponse<{
     userId: string;
     permissions: string[];

@@ -8,6 +8,8 @@ import { TicketTranscriptService } from '../database/services/ticketTranscriptSe
 import { storeTicketTranscript, createTextTranscript } from '../utils/transcript-utils';
 import { regenerateMissingTranscripts, getTranscriptStats } from '../utils/transcript-management';
 import { logDashboardActivity } from '../middleware/dashboardLogger';
+import { DashboardLogsService } from '../database/services/dashboardLogsService';
+import { getClient as getDiscordClient, isClientReady } from '../utils/client-utils';
 
 // Helper function to extract user info from request
 function extractUserInfo(req: Request): { userId: string; username?: string } | null {
@@ -32,7 +34,7 @@ function extractUserInfo(req: Request): { userId: string; username?: string } | 
   }
 }
 const { getUserName } = require('./user-helper');
-const { getClient } = require('../utils/client-utils');
+// Removed duplicate import - using getDiscordClient from import above
 
 const router = express.Router();
 
@@ -118,7 +120,7 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
 
       // Fetch usernames and server names for tickets
       const ticketsWithUsernames = await Promise.all(filteredTickets.map(async (ticket) => {
-        const client = await getClient();
+        const client = await getDiscordClient();
         const username = await getUserName(client, ticket.user_id);
         
         // Get server name
@@ -198,7 +200,7 @@ const getTicketById: express.RequestHandler = async (req, res, next) => {
       }
       
       // Fetch username for ticket
-      const client = await getClient();
+      const client = await getDiscordClient();
       const username = await getUserName(client, ticket.user_id);
       const ticketWithUsername = { ...ticket, username };
 
@@ -257,24 +259,38 @@ const closeTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         logInfo('API', `Closed ticket #${ticket.ticket_number} via API request`);
         
-        // Log the dashboard activity
+        // Enhanced dashboard activity logging with Discord usernames
         try {
-          const userInfo = extractUserInfo(req);
-          if (userInfo?.userId) {
-            await logDashboardActivity(
-              userInfo.userId,
-              'close_ticket',
-              'tickets',
-              `Closed ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
-              {
-                target_type: 'ticket',
-                target_id: ticketId.toString(),
-                guild_id: ticket.guild_id,
-                username: userInfo.username,
-                success: 1
+          // Get admin username from Discord
+          let adminUsername = 'Unknown Admin';
+          const adminUserId = req.user?.userId;
+          if (adminUserId) {
+            try {
+              const client = getDiscordClient();
+              if (client && isClientReady()) {
+                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+                if (adminUser) {
+                  adminUsername = adminUser.username;
+                }
               }
-            );
+            } catch (fetchError) {
+              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
+            }
           }
+
+          await DashboardLogsService.logActivity({
+            user_id: adminUserId || 'unknown',
+            username: adminUsername,
+            action_type: 'ticket_close',
+            page: 'tickets',
+            target_type: 'ticket',
+            target_id: ticketId.toString(),
+            old_value: JSON.stringify({ status: 'open' }),
+            new_value: JSON.stringify({ status: 'closed', reason: reason }),
+            details: `🎫 Ticket Closed: ${adminUsername} closed ticket #${ticket.ticket_number}.\n📝 Reason: ${reason || 'No reason provided'}\n🏷️ Ticket ID: ${ticketId}`,
+            success: true,
+            guild_id: ticket.guild_id
+          });
         } catch (logErr) {
           logError('API', `Error logging ticket close activity: ${logErr}`);
         }
@@ -332,24 +348,38 @@ const reopenTicket: express.RequestHandler = async (req, res, next) => {
         // Log the action
         logInfo('API', `Ticket #${ticket.ticket_number} reopened via API. Reason: ${reason || 'Not specified'}`);
         
-        // Log the dashboard activity
+        // Enhanced dashboard activity logging with Discord usernames
         try {
-          const userInfo = extractUserInfo(req);
-          if (userInfo?.userId) {
-            await logDashboardActivity(
-              userInfo.userId,
-              'reopen_ticket',
-              'tickets',
-              `Reopened ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
-              {
-                target_type: 'ticket',
-                target_id: ticketId.toString(),
-                guild_id: ticket.guild_id,
-                username: userInfo.username,
-                success: 1
+          // Get admin username from Discord
+          let adminUsername = 'Unknown Admin';
+          const adminUserId = req.user?.userId;
+          if (adminUserId) {
+            try {
+              const client = getDiscordClient();
+              if (client && isClientReady()) {
+                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+                if (adminUser) {
+                  adminUsername = adminUser.username;
+                }
               }
-            );
+            } catch (fetchError) {
+              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
+            }
           }
+
+          await DashboardLogsService.logActivity({
+            user_id: adminUserId || 'unknown',
+            username: adminUsername,
+            action_type: 'ticket_reopen',
+            page: 'tickets',
+            target_type: 'ticket',
+            target_id: ticketId.toString(),
+            old_value: JSON.stringify({ status: 'closed' }),
+            new_value: JSON.stringify({ status: 'open', reason: reason }),
+            details: `🎫 Ticket Reopened: ${adminUsername} reopened ticket #${ticket.ticket_number}.\n📝 Reason: ${reason || 'No reason provided'}\n🏷️ Ticket ID: ${ticketId}`,
+            success: true,
+            guild_id: ticket.guild_id
+          });
         } catch (logErr) {
           logError('API', `Error logging ticket reopen activity: ${logErr}`);
         }
@@ -404,7 +434,7 @@ const deleteTicket: express.RequestHandler = async (req, res, next) => {
       
       // First, try to delete the Discord channel if it exists
       try {
-        const client = getClient();
+        const client = getDiscordClient();
         if (client && ticket.channel_id) {
           try {
             const channel = await client.channels.fetch(ticket.channel_id);
@@ -439,24 +469,38 @@ const deleteTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         logInfo('API', `Deleted ticket #${ticket.ticket_number} via API request`);
         
-        // Log the dashboard activity
+        // Enhanced dashboard activity logging with Discord usernames
         try {
-          const userInfo = extractUserInfo(req);
-          if (userInfo?.userId) {
-            await logDashboardActivity(
-              userInfo.userId,
-              'delete_ticket',
-              'tickets',
-              `Deleted ticket #${ticket.ticket_number} - Reason: ${reason || 'No reason provided'}`,
-              {
-                target_type: 'ticket',
-                target_id: ticketId.toString(),
-                guild_id: ticket.guild_id,
-                username: userInfo.username,
-                success: 1
+          // Get admin username from Discord
+          let adminUsername = 'Unknown Admin';
+          const adminUserId = req.user?.userId;
+          if (adminUserId) {
+            try {
+              const client = getDiscordClient();
+              if (client && isClientReady()) {
+                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+                if (adminUser) {
+                  adminUsername = adminUser.username;
+                }
               }
-            );
+            } catch (fetchError) {
+              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
+            }
           }
+
+          await DashboardLogsService.logActivity({
+            user_id: adminUserId || 'unknown',
+            username: adminUsername,
+            action_type: 'ticket_delete',
+            page: 'tickets',
+            target_type: 'ticket',
+            target_id: ticketId.toString(),
+            old_value: JSON.stringify({ status: ticket.status, deleted: false }),
+            new_value: JSON.stringify({ status: ticket.status, deleted: true, reason: reason }),
+            details: `🗑️ Ticket Deleted: ${adminUsername} deleted ticket #${ticket.ticket_number}.\n📝 Reason: ${reason || 'No reason provided'}\n🏷️ Ticket ID: ${ticketId}\n⚠️ This action is permanent and cannot be undone`,
+            success: true,
+            guild_id: ticket.guild_id
+          });
         } catch (logErr) {
           logError('API', `Error logging ticket delete activity: ${logErr}`);
         }

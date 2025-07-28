@@ -85,61 +85,68 @@ export const formatIsraeliDate = (
 
 /**
  * Format date for dashboard logs with relative time for recent entries
+ * Uses the same Israeli timezone handling as Warnings and Tickets pages
  */
 export const formatDashboardLogDate = (dateString: string): string => {
   try {
-    // Handle different date formats more robustly
-    let date: Date;
-    
     if (!dateString) {
       return 'Invalid date';
     }
     
-    // Convert to ISO format if needed
-    if (dateString.includes('T') || dateString.includes('Z')) {
-      // Already in ISO format
-      date = new Date(dateString);
-    } else if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-      // SQLite format (YYYY-MM-DD HH:MM:SS) - treat as UTC
-      date = new Date(dateString + 'Z');
-    } else {
-      // Try to parse as-is
-      date = new Date(dateString);
-    }
+    // Create a date object from the input string (same as Warnings/Tickets)
+    const date = new Date(dateString);
     
     // Check if date is valid
     if (isNaN(date.getTime())) {
       return 'Invalid date';
     }
     
-    // Calculate time difference using UTC timestamps (much simpler and accurate)
+    // Force the date to be interpreted as UTC (same as Warnings/Tickets)
+    const utcYear = date.getUTCFullYear();
+    const utcMonth = date.getUTCMonth();
+    const utcDay = date.getUTCDate();
+    const utcHours = date.getUTCHours();
+    const utcMinutes = date.getUTCMinutes();
+    const utcSeconds = date.getUTCSeconds();
+    
+    // Create a new date object with the UTC values
+    const utcDate = new Date(Date.UTC(utcYear, utcMonth, utcDay, utcHours, utcMinutes, utcSeconds));
+    
+    // Add 3 hours for Israeli time (UTC+3) - same as Warnings/Tickets
+    const israeliTime = new Date(utcDate.getTime() + (3 * 60 * 60 * 1000));
+    
+    // Get current Israeli time for comparison
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const currentIsraeliTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+    
+    // Calculate time difference using Israeli timestamps
+    const diffMs = currentIsraeliTime.getTime() - israeliTime.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    // Show relative time for recent entries (within 24 hours)
+    // Show relative time for recent entries
     if (diffMinutes < 1 && diffMs >= 0) {
       return 'Just now';
     } else if (diffMinutes < 60 && diffMs >= 0) {
       return `${diffMinutes} min ago`;
     } else if (diffHours < 24 && diffMs >= 0) {
       return `${diffHours}h ago`;
+    } else if (diffDays < 7 && diffMs >= 0) {
+      return `${diffDays}d ago`;
     } else {
-      // For older entries, show full date in Israeli timezone
-      return date.toLocaleString('en-GB', {
-        timeZone: 'Asia/Jerusalem',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
+      // For older entries, format same as Warnings/Tickets (DD.MM.YYYY, HH:MM)
+      const day = israeliTime.getDate().toString().padStart(2, '0');
+      const month = (israeliTime.getMonth() + 1).toString().padStart(2, '0');
+      const year = israeliTime.getFullYear();
+      const hours = israeliTime.getHours().toString().padStart(2, '0');
+      const minutes = israeliTime.getMinutes().toString().padStart(2, '0');
+      
+      return `${day}.${month}.${year}, ${hours}:${minutes}`;
     }
     
   } catch (error) {
+    console.error('Error formatting date:', error, 'for dateString:', dateString);
     return 'Invalid date';
   }
 };
