@@ -13,22 +13,13 @@ import {
   BellIcon,
   EyeIcon,
   Cog6ToothIcon,
-  CommandLineIcon,
-  SpeakerWaveIcon,
-  DevicePhoneMobileIcon,
-  ExclamationTriangleIcon,
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
-  TrashIcon,
-  ClipboardDocumentIcon,
-  ShieldCheckIcon,
-  CpuChipIcon,
-  ChartBarIcon
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import SettingsCard from '../components/common/SettingsCard';
 import ActionButton from '../components/common/ActionButton';
 import ToggleSwitch from '../components/common/ToggleSwitch';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -43,7 +34,7 @@ interface SettingCategory {
 }
 
 const Settings: React.FC = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleTheme } = useTheme();
   const { settings, updateSetting } = useSettings();
   
   // Track if this is the initial load to prevent infinite loops
@@ -74,7 +65,7 @@ const Settings: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
   const [toastPosition, setToastPosition] = useState<'top' | 'bottom' | 'top-right' | 'bottom-right'>('top');
-  const [notificationTypes, setNotificationTypes] = useState({
+  const [notificationTypes, _setNotificationTypes] = useState({
     success: true,
     error: true,
     warning: true,
@@ -85,7 +76,7 @@ const Settings: React.FC = () => {
   const [debugMode, setDebugMode] = useState(false);
   const [performanceMonitoring, setPerformanceMonitoring] = useState(false);
   const [cacheEnabled, setCacheEnabled] = useState(true);
-  const [apiEndpoint, setApiEndpoint] = useState('');
+  const [_apiEndpoint, _setApiEndpoint] = useState('');
   
   // Loading states
   const [saving, setSaving] = useState(false);
@@ -263,12 +254,12 @@ const Settings: React.FC = () => {
     if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (prefersDark !== darkMode) {
-        toggleDarkMode();
+        toggleTheme();
       }
     } else {
       const shouldBeDark = newTheme === 'dark';
       if (shouldBeDark !== darkMode) {
-        toggleDarkMode();
+        toggleTheme();
       }
     }
   };

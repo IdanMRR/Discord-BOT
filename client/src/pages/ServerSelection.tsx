@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+
 // import { useAuth } from '../contexts/AuthContext'; // Currently unused
 import { Server } from '../types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -13,16 +13,10 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
-// Utility function for conditional class names
-function classNames(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
 const ServerSelection: React.FC = () => {
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { darkMode } = useTheme();
   // const { permissions } = useAuth(); // Not currently used but may be needed for future permission checks
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -71,7 +65,7 @@ const ServerSelection: React.FC = () => {
       <div className="page-container min-h-screen p-6">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
-            <LoadingSpinner size="lg" style={{ color: 'var(--primary)' }} />
+            <LoadingSpinner size="lg" className="text-primary-600" />
             <p className="mt-4 text-lg font-medium" 
                style={{ color: 'var(--muted-foreground)' }}>
               Loading your accessible servers...
@@ -157,7 +151,6 @@ const ServerSelection: React.FC = () => {
                   className="content-area group relative rounded-lg p-6 text-left border-2 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2"
                   style={{
                     borderColor: 'var(--border)',
-                    '--hover-border-color': 'var(--primary)',
                     boxShadow: 'var(--shadow-sm)'
                   }}
                 >
