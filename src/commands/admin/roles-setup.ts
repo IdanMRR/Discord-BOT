@@ -15,8 +15,8 @@ import {
   Message
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
+import { logCommandUsage } from '../../utils/command-logger';
 
 
 // Define role types and their descriptions
@@ -60,17 +60,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'roles-setup',
-      options: {},
-      channel: interaction.channel,
-      success: true
-    });
-
-    // Check if guild is available
+        // Check if guild is available
     if (!interaction.guild) {
       await interaction.reply({
         content: "This command can only be used in a server.",

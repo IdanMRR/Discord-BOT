@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "outDir": "dist/mcp",
+    "rootDir": "src/mcp",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src/mcp/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/**/*.tsx",
+    "src/**/*.jsx",
+    "src/**/*.js",
+    "src/components/**/*",
+    "src/pages/**/*",
+    "src/contexts/**/*",
+    "src/hooks/**/*",
+    "src/services/**/*",
+    "src/utils/**/*",
+    "src/types/**/*",
+    "src/config/**/*",
+    "src/styles/**/*",
+    "src/setupTests.ts",
+    "src/reportWebVitals.ts",
+    "src/index.tsx",
+    "src/App.tsx"
+  ]
+}

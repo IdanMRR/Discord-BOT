@@ -5,10 +5,10 @@ import {
   MessageFlags,
   ButtonBuilder,
   ButtonStyle,
-  ActionRowBuilder
+  ActionRowBuilder,
+  AttachmentBuilder
 } from 'discord.js';
 import { createInfoEmbed, Colors } from '../../utils/embeds';
-import { logCommandUsage } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('avatar')
@@ -217,18 +217,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [embed], 
       components: components
     });
-    
-    // Log command usage
-    if (guild) {
-      await logCommandUsage({
-        guild: guild,
-        user: interaction.user,
-        command: 'avatar',
-        options: { target: targetUser.tag, format, size },
-        channel: interaction.channel,
-        success: true
-      });
-    }
     
   } catch (error) {
     console.error('Error in avatar command:', error);

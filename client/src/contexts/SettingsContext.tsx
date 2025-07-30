@@ -8,6 +8,17 @@ export interface UserSettings {
   compactMode: boolean;
   autoRefresh: boolean;
   refreshInterval: number;
+  highContrast: boolean;
+  reducedMotion: boolean;
+  soundEnabled: boolean;
+  debugMode: boolean;
+  desktopNotifications: boolean;
+  toastPosition: string;
+  focusIndicators: boolean;
+  keyboardNavigation: boolean;
+  screenReader: boolean;
+  performanceMonitoring: boolean;
+  cacheEnabled: boolean;
 }
 
 interface SettingsContextType {
@@ -28,7 +39,18 @@ const defaultSettings: UserSettings = {
   animationsEnabled: true,
   compactMode: false,
   autoRefresh: true,
-  refreshInterval: 30
+  refreshInterval: 30,
+  highContrast: false,
+  reducedMotion: false,
+  soundEnabled: true,
+  debugMode: false,
+  desktopNotifications: false,
+  toastPosition: 'top-right',
+  focusIndicators: true,
+  keyboardNavigation: true,
+  screenReader: false,
+  performanceMonitoring: false,
+  cacheEnabled: true
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

@@ -689,4 +689,353 @@ router.put('/:serverId/ticket-categories', async (req, res) => {
   }
 });
 
+// Dashboard Action Logging endpoint
+router.post('/:serverId/dashboard-actions', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    const { action, details, userId, username } = req.body;
+    
+    if (!serverId || !action) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID and action are required'
+      });
+    }
+    
+    logInfo('API', `Dashboard action logged for server ${serverId}: ${action} by ${username || 'unknown'}`);
+    
+    // Get the Discord client and server
+    const client = getClient();
+    if (client && client.isReady() && client.guilds) {
+      const guild = client.guilds.cache.get(serverId);
+      if (guild) {
+        try {
+          // Get server settings to find the log channel
+          const settings = await ServerSettingsService.getServerSettings(serverId);
+          const logChannelId = settings?.log_channel_id;
+          
+          if (logChannelId) {
+            const logChannel = guild.channels.cache.get(logChannelId);
+            if (logChannel && logChannel.isTextBased()) {
+              // Create embed for dashboard action
+              const embed = {
+                title: '📋 Dashboard Action',
+                description: `**${action}**`,
+                fields: [
+                  {
+                    name: 'User',
+                    value: username || 'Unknown User',
+                    inline: true
+                  },
+                  {
+                    name: 'Time',
+                    value: new Date().toLocaleString(),
+                    inline: true
+                  }
+                ],
+                color: 0x3B82F6,
+                timestamp: new Date().toISOString()
+              };
+              
+              if (details) {
+                embed.fields.push({
+                  name: 'Details',
+                  value: details.substring(0, 1024), // Discord field limit
+                  inline: false
+                });
+              }
+              
+              await logChannel.send({ embeds: [embed] });
+              logInfo('API', `Dashboard action logged to Discord channel ${logChannelId}`);
+            }
+          }
+        } catch (discordError: any) {
+          logError('API', `Failed to log dashboard action to Discord: ${discordError.message}`);
+        }
+      }
+    }
+    
+    sendJsonResponse(res, 200, {
+      success: true,
+      message: 'Dashboard action logged successfully'
+    });
+    
+  } catch (error: any) {
+    logError('API', `Error logging dashboard action: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// DM Settings endpoints - PDR requirement for server-level DM toggles
+router.get('/:serverId/dm-settings', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    
+    if (!serverId) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID is required'
+      });
+    }
+    
+    const dmSettings = await ServerSettingsService.getDMSettings(serverId);
+    
+    sendJsonResponse(res, 200, {
+      success: true,
+      data: dmSettings
+    });
+    
+  } catch (error: any) {
+    logError('API', `Error getting DM settings: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+router.put('/:serverId/dm-settings', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    const dmSettings = req.body;
+    
+    if (!serverId) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID is required'
+      });
+    }
+    
+    logInfo('API', `Updating DM settings for server ${serverId}`);
+    
+    const success = await ServerSettingsService.updateDMSettings(serverId, dmSettings);
+    
+    if (success) {
+      // Log the settings change to Discord
+      if (req.user?.username) {
+        const changes = Object.entries(dmSettings)
+          .map(([key, value]) => `${key}: ${value ? 'enabled' : 'disabled'}`)
+          .join(', ');
+        
+        // Use the dashboard action logging endpoint
+        await fetch(`${req.protocol}://${req.get('host')}/api/servers/${serverId}/dashboard-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': req.headers.authorization || ''
+          },
+          body: JSON.stringify({
+            action: 'DM Settings Updated',
+            details: `Changed: ${changes}`,
+            username: req.user.username
+          })
+        }).catch(err => {
+          logError('API', `Failed to log DM settings change: ${err.message}`);
+        });
+      }
+      
+      sendJsonResponse(res, 200, {
+        success: true,
+        message: 'DM settings updated successfully'
+      });
+    } else {
+      sendJsonResponse(res, 500, {
+        success: false,
+        error: 'Failed to update DM settings'
+      });
+    }
+    
+  } catch (error: any) {
+    logError('API', `Error updating DM settings: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Server Settings endpoints
+router.get('/:serverId/settings', authenticateToken as RequestHandler, async (req: Request, res: Response) => {
+  try {
+    const { serverId } = req.params;
+    
+    if (!serverId) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID is required'
+      });
+    }
+
+    logInfo('API', `Getting server settings for server ${serverId}`);
+    
+    const settings = await ServerSettingsService.getServerSettings(serverId);
+    
+    if (settings) {
+      sendJsonResponse(res, 200, {
+        success: true,
+        data: settings
+      });
+    } else {
+      // Return default settings if none exist
+      sendJsonResponse(res, 200, {
+        success: true,
+        data: {
+          guild_id: serverId,
+          name: 'Unknown Server'
+        }
+      });
+    }
+    
+  } catch (error: any) {
+    logError('API', `Error getting server settings: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+router.post('/:serverId/settings', authenticateToken as RequestHandler, async (req: Request, res: Response) => {
+  try {
+    const { serverId } = req.params;
+    const settings = req.body;
+    
+    if (!serverId) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID is required'
+      });
+    }
+
+    logInfo('API', `Updating server settings for server ${serverId}`);
+    
+    const success = await ServerSettingsService.updateSettings(serverId, settings);
+    
+    if (success) {
+      // Log the settings change to Discord
+      if (req.user?.username) {
+        const changes = Object.keys(settings).join(', ');
+        
+        // Use the dashboard action logging endpoint
+        await fetch(`${req.protocol}://${req.get('host')}/api/servers/${serverId}/dashboard-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': req.headers.authorization || ''
+          },
+          body: JSON.stringify({
+            action: 'Server Settings Updated',
+            details: `Changed: ${changes}`,
+            username: req.user.username
+          })
+        }).catch(err => {
+          logError('API', `Failed to log server settings change: ${err.message}`);
+        });
+      }
+      
+      sendJsonResponse(res, 200, {
+        success: true,
+        message: 'Server settings updated successfully'
+      });
+    } else {
+      sendJsonResponse(res, 500, {
+        success: false,
+        error: 'Failed to update server settings'
+      });
+    }
+    
+  } catch (error: any) {
+    logError('API', `Error updating server settings: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Create ticket panel endpoint
+router.post('/:serverId/tickets/create-panel', authenticateToken as RequestHandler, async (req: Request, res: Response) => {
+  try {
+    const { serverId } = req.params;
+    const { channel_id, panel_type } = req.body;
+    
+    if (!serverId || !channel_id) {
+      return sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Server ID and channel ID are required'
+      });
+    }
+
+    logInfo('API', `Creating ticket panel for server ${serverId} in channel ${channel_id}`);
+    
+    const client = getClient();
+    if (!client || !client.isReady()) {
+      return sendJsonResponse(res, 503, {
+        success: false,
+        error: 'Discord client not ready'
+      });
+    }
+
+    const guild = client.guilds.cache.get(serverId);
+    if (!guild) {
+      return sendJsonResponse(res, 404, {
+        success: false,
+        error: 'Server not found'
+      });
+    }
+
+    const channel = guild.channels.cache.get(channel_id);
+    if (!channel || !channel.isTextBased()) {
+      return sendJsonResponse(res, 404, {
+        success: false,
+        error: 'Channel not found or not a text channel'
+      });
+    }
+
+    // Create default ticket panel embed and buttons
+    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
+    
+    const embed = new EmbedBuilder()
+      .setTitle('🎫 Create Ticket Panel')
+      .setDescription('Click the button below to create a support ticket.\n\nOur staff team will assist you as soon as possible.')
+      .setColor('#7C3AED')
+      .setFooter({ text: 'Ticket System • Support' })
+      .setTimestamp();
+
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('create_ticket')
+          .setLabel('🎫 Create Ticket')
+          .setStyle(ButtonStyle.Primary)
+      );
+
+    const message = await channel.send({
+      embeds: [embed],
+      components: [row as any]
+    });
+
+    // Update server settings with panel info
+    await ServerSettingsService.updateSettings(serverId, {
+      ticket_panel_channel_id: channel_id,
+      ticket_panel_message_id: message.id
+    });
+
+    sendJsonResponse(res, 200, {
+      success: true,
+      data: { messageId: message.id }
+    });
+    
+  } catch (error: any) {
+    logError('API', `Error creating ticket panel: ${error.message}`);
+    sendJsonResponse(res, 500, {
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 export default router;

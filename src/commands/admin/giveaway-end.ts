@@ -6,9 +6,9 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { GiveawayService } from '../../database/services/giveawayService';
 import { endGiveaway } from '../../handlers/giveaway/giveaway-handler';
+import { logError } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('giveaway-end')
@@ -77,35 +77,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
-
-    logInfo('Giveaway', `Giveaway "${giveaway.title}" (ID: ${giveawayId}) manually ended by ${interaction.user.tag} (${interaction.user.id})`);
     
-    // Log command usage for dashboard activity
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'giveaway-end',
-      options: { id: giveawayId, title: giveaway.title },
-      channel: interaction.channel,
-      success: true
-    });
   } catch (error) {
     logError('Giveaway End', error);
-    
-    // Log failed command usage
-    try {
-      const giveawayId = interaction.options.getInteger('id', true);
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: 'giveaway-end',
-        options: { id: giveawayId, error: error instanceof Error ? error.message : String(error) },
-        channel: interaction.channel,
-        success: false
-      });
-    } catch (logError) {
-      // Silent fail for logging
-    }
     
     try {
       if (interaction.deferred) {

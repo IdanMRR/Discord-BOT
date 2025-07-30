@@ -274,6 +274,94 @@ export const ServerSettingsService = {
       logError('ServerSettingsService', `Error in getOrCreate: ${error}`);
       return null;
     }
+  },
+
+  // DM Settings Management - PDR requirement
+  async getDMSettings(guildId: string): Promise<{
+    dm_warnings_enabled: boolean;
+    dm_tickets_enabled: boolean;
+    dm_level_notifications: boolean;
+    dm_general_notifications: boolean;
+  }> {
+    try {
+      const settings = await this.getServerSettings(guildId);
+      
+      // PDR requirement: Default ON, allow server override
+      return {
+        dm_warnings_enabled: settings?.dm_warnings_enabled ?? true,
+        dm_tickets_enabled: settings?.dm_tickets_enabled ?? true,
+        dm_level_notifications: settings?.dm_level_notifications ?? true,
+        dm_general_notifications: settings?.dm_general_notifications ?? true
+      };
+    } catch (error) {
+      logError('ServerSettingsService', `Error getting DM settings: ${error}`);
+      // Return defaults if error
+      return {
+        dm_warnings_enabled: true,
+        dm_tickets_enabled: true,
+        dm_level_notifications: true,
+        dm_general_notifications: true
+      };
+    }
+  },
+
+  async updateDMSettings(guildId: string, dmSettings: {
+    dm_warnings_enabled?: boolean;
+    dm_tickets_enabled?: boolean;
+    dm_level_notifications?: boolean;
+    dm_general_notifications?: boolean;
+  }): Promise<boolean> {
+    try {
+      const currentSettings = await this.getServerSettings(guildId);
+      
+      if (!currentSettings) {
+        // Create default settings first
+        await this.getOrCreate(guildId, 'Unknown Server');
+      }
+
+      const updateFields = [];
+      const values = [];
+      
+      if (dmSettings.dm_warnings_enabled !== undefined) {
+        updateFields.push('dm_warnings_enabled = ?');
+        values.push(dmSettings.dm_warnings_enabled ? 1 : 0);
+      }
+      
+      if (dmSettings.dm_tickets_enabled !== undefined) {
+        updateFields.push('dm_tickets_enabled = ?');
+        values.push(dmSettings.dm_tickets_enabled ? 1 : 0);
+      }
+      
+      if (dmSettings.dm_level_notifications !== undefined) {
+        updateFields.push('dm_level_notifications = ?');
+        values.push(dmSettings.dm_level_notifications ? 1 : 0);
+      }
+      
+      if (dmSettings.dm_general_notifications !== undefined) {
+        updateFields.push('dm_general_notifications = ?');
+        values.push(dmSettings.dm_general_notifications ? 1 : 0);
+      }
+
+      if (updateFields.length === 0) {
+        return true; // No changes to make
+      }
+
+      values.push(guildId);
+      
+      const stmt = db.prepare(`
+        UPDATE server_settings 
+        SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+        WHERE guild_id = ?
+      `);
+      
+      const result = stmt.run(...values);
+      
+      logInfo('ServerSettingsService', `Updated DM settings for guild ${guildId}`);
+      return result.changes > 0;
+    } catch (error) {
+      logError('ServerSettingsService', `Error updating DM settings: ${error}`);
+      return false;
+    }
   }
 };
 
@@ -318,6 +406,11 @@ export interface ServerSettings {
   templates?: Record<string, any[]>;
   active_templates?: Record<string, string>;
   red_alert_channels?: string[];
+  // DM Settings - PDR requirement for default ON with server override capability
+  dm_warnings_enabled?: boolean;
+  dm_tickets_enabled?: boolean;
+  dm_level_notifications?: boolean;
+  dm_general_notifications?: boolean;
   created_at?: string;
   updated_at?: string;
 }

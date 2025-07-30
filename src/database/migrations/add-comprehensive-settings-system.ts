@@ -535,8 +535,22 @@ export async function addComprehensiveSettingsSystem(): Promise<void> {
     
     // Ticket system indexes
     db.exec('CREATE INDEX IF NOT EXISTS idx_enhanced_ticket_settings_guild_id ON enhanced_ticket_settings(guild_id)');
-    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_categories_guild_id ON ticket_categories(guild_id)');
-    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_categories_enabled ON ticket_categories(enabled)');
+    
+    // Check if ticket_categories table has enabled column before creating index
+    try {
+      const tableInfo = db.prepare("PRAGMA table_info(ticket_categories)").all() as any[];
+      const hasEnabledColumn = tableInfo.some(col => col.name === 'enabled');
+      
+      db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_categories_guild_id ON ticket_categories(guild_id)');
+      
+      if (hasEnabledColumn) {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_categories_enabled ON ticket_categories(enabled)');
+      } else {
+        logInfo('Migration', 'Skipping ticket_categories enabled index - column does not exist');
+      }
+    } catch (e) {
+      logInfo('Migration', 'ticket_categories table does not exist yet, skipping enabled index');
+    }
     
     // Custom commands indexes
     db.exec('CREATE INDEX IF NOT EXISTS idx_custom_commands_guild_id ON custom_commands(guild_id)');
@@ -557,8 +571,10 @@ export async function addComprehensiveSettingsSystem(): Promise<void> {
     db.exec('CREATE INDEX IF NOT EXISTS idx_settings_templates_public ON settings_templates(is_public)');
     
     // Analytics indexes
-    db.exec('CREATE INDEX IF NOT EXISTS idx_server_analytics_guild_date ON server_analytics(guild_id, date)');
-    db.exec('CREATE INDEX IF NOT EXISTS idx_server_analytics_date ON server_analytics(date)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_analytics_guild_metric ON server_analytics(guild_id, metric_type)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_server_analytics_created ON server_analytics(created_at)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_daily_server_stats_guild_date ON daily_server_stats(guild_id, date)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_daily_server_stats_date ON daily_server_stats(date)');
 
     logInfo('Migration', 'Comprehensive settings system migration completed successfully');
   } catch (error) {

@@ -8,7 +8,6 @@ import {
   PermissionsBitField
 } from 'discord.js';
 import { createInfoEmbed, Colors } from '../../utils/embeds';
-import { logCommandUsage } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('userinfo')
@@ -224,16 +223,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
     
     await interaction.editReply({ embeds: [embed] });
-    
-    // Log command usage
-    await logCommandUsage({
-      guild: guild,
-      user: interaction.user,
-      command: 'userinfo',
-      options: { target: targetUser.tag, detailed: showDetailed },
-      channel: interaction.channel,
-      success: true
-    });
     
   } catch (error) {
     console.error('Error in userinfo command:', error);

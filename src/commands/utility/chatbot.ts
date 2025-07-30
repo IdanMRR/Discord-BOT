@@ -8,12 +8,7 @@ import { Command, ExecuteProps } from '../../types/Command';
 const API_URL = process.env.AI_API_URL || 'https://api.openai.com/v1/chat/completions';
 const API_KEY = process.env.AI_API_KEY;
 
-/**
- * Log command usage to console (simplified version)
- */
-function logCommandUsage(userId: string, username: string, guildId: string, command: string, options: any = {}) {
-  console.log(`Command used: ${command} by ${username} (${userId}) in guild ${guildId}`, options);
-}
+// Command usage is automatically logged by index.ts - no need for additional logging
 
 // Create the command data using SlashCommandBuilder and convert to JSON to match the Command type
 const slashCommand = new SlashCommandBuilder()
@@ -48,14 +43,7 @@ const command: Command = {
       // Show typing indicator
       await chatInteraction.deferReply({ ephemeral: isPrivate });
 
-      // Log the command usage (simplified)
-      logCommandUsage(
-        chatInteraction.user.id,
-        chatInteraction.user.username,
-        chatInteraction.guildId || 'DM',
-        'chatbot',
-        { question }
-      );
+      // Command usage is automatically logged by index.ts
 
       if (!API_KEY) {
         await chatInteraction.editReply(

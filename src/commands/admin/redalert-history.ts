@@ -173,11 +173,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 .slice(0, 10) // Show only the 10 most recent
                 .map((alert, index) => {
                     const timeAgo = Math.floor((Date.now() - alert.timestamp.getTime()) / (1000 * 60 * 60));
-                    const timeString = alert.timestamp.toLocaleString('he-IL', {
+                    const timeString = alert.timestamp.toLocaleString('en-GB', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
+                        hour12: false,
                         timeZone: 'Asia/Jerusalem'
                     });
                     
@@ -235,7 +236,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Add footer with data source information
         embed.setTimestamp()
             .setFooter({ 
-                text: `Alert History Dashboard • Data source: Bot monitoring system • Queried ${new Date().toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem' })}` 
+                text: `Alert History Dashboard • Data source: Bot monitoring system • Queried ${new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour12: false })}` 
             });
 
         await interaction.editReply({ embeds: [embed] });

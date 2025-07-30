@@ -13,8 +13,22 @@ import {
   BellIcon,
   EyeIcon,
   Cog6ToothIcon,
-  CommandLineIcon
+  CommandLineIcon,
+  SpeakerWaveIcon,
+  DevicePhoneMobileIcon,
+  ExclamationTriangleIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+  TrashIcon,
+  ClipboardDocumentIcon,
+  ShieldCheckIcon,
+  CpuChipIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
+import SettingsCard from '../components/common/SettingsCard';
+import ActionButton from '../components/common/ActionButton';
+import ToggleSwitch from '../components/common/ToggleSwitch';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -48,6 +62,36 @@ const Settings: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Accessibility settings
+  const [highContrast, setHighContrast] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [screenReader, setScreenReader] = useState(false);
+  const [keyboardNavigation, setKeyboardNavigation] = useState(true);
+  const [focusIndicators, setFocusIndicators] = useState(true);
+  
+  // Notification settings
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [desktopNotifications, setDesktopNotifications] = useState(false);
+  const [toastPosition, setToastPosition] = useState<'top' | 'bottom' | 'top-right' | 'bottom-right'>('top');
+  const [notificationTypes, setNotificationTypes] = useState({
+    success: true,
+    error: true,
+    warning: true,
+    info: true
+  });
+  
+  // Advanced settings
+  const [debugMode, setDebugMode] = useState(false);
+  const [performanceMonitoring, setPerformanceMonitoring] = useState(false);
+  const [cacheEnabled, setCacheEnabled] = useState(true);
+  const [apiEndpoint, setApiEndpoint] = useState('');
+  
+  // Loading states
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // Setting categories
   const categories: SettingCategory[] = [
@@ -64,22 +108,22 @@ const Settings: React.FC = () => {
       description: 'Layout, scaling, and UI preferences'
     },
     {
-      id: 'notifications',
-      name: 'Notifications',
-      icon: BellIcon,
-      description: 'Auto-refresh and alert settings'
-    },
-    {
       id: 'accessibility',
       name: 'Accessibility',
       icon: EyeIcon,
-      description: 'Accessibility and usability options'
+      description: 'Screen reader, keyboard, and visual accessibility'
+    },
+    {
+      id: 'notifications',
+      name: 'Notifications',
+      icon: BellIcon,
+      description: 'Alerts, sounds, and refresh settings'
     },
     {
       id: 'advanced',
       name: 'Advanced',
       icon: Cog6ToothIcon,
-      description: 'Developer and debug options'
+      description: 'Debug, performance, and developer options'
     }
   ];
 
@@ -94,14 +138,39 @@ const Settings: React.FC = () => {
     { name: 'Purple', value: '#8b5cf6' },
     { name: 'Emerald', value: '#10b981' },
     { name: 'Rose', value: '#f43f5e' },
-    { name: 'Orange', value: '#f97316' }
+    { name: 'Orange', value: '#f97316' },
+    { name: 'Teal', value: '#14b8a6' },
+    { name: 'Cyan', value: '#06b6d4' },
+    { name: 'Pink', value: '#ec4899' },
+    { name: 'Amber', value: '#f59e0b' },
+    { name: 'Lime', value: '#84cc16' }
+  ];
+  
+  // Toast position options
+  const toastPositions = [
+    { label: 'Top Center', value: 'top' as const },
+    { label: 'Bottom Center', value: 'bottom' as const },
+    { label: 'Top Right', value: 'top-right' as const },
+    { label: 'Bottom Right', value: 'bottom-right' as const }
+  ];
+  
+  // Refresh interval options
+  const refreshIntervals = [
+    { label: '5 seconds', value: 5 },
+    { label: '10 seconds', value: 10 },
+    { label: '15 seconds', value: 15 },
+    { label: '30 seconds', value: 30 },
+    { label: '1 minute', value: 60 },
+    { label: '2 minutes', value: 120 },
+    { label: '5 minutes', value: 300 }
   ];
 
   // Font size presets
   const fontSizePresets = [
-    { label: 'Small', value: 'small' as const },
-    { label: 'Medium', value: 'medium' as const },
-    { label: 'Large', value: 'large' as const }
+    { label: 'Small (90%)', value: 'small' as const, preview: 'text-sm' },
+    { label: 'Medium (100%)', value: 'medium' as const, preview: 'text-base' },
+    { label: 'Large (110%)', value: 'large' as const, preview: 'text-lg' },
+    { label: 'Extra Large (125%)', value: 'xl' as const, preview: 'text-xl' }
   ];
 
 
@@ -158,9 +227,31 @@ const Settings: React.FC = () => {
       animationsEnabled !== (settings?.animationsEnabled ?? true) ||
       compactMode !== (settings?.compactMode ?? false) ||
       autoRefresh !== (settings?.autoRefresh ?? true) ||
-      refreshInterval !== (settings?.refreshInterval || 30);
+      refreshInterval !== (settings?.refreshInterval || 30) ||
+      highContrast !== (settings?.highContrast ?? false) ||
+      reducedMotion !== (settings?.reducedMotion ?? false) ||
+      soundEnabled !== (settings?.soundEnabled ?? true) ||
+      debugMode !== (settings?.debugMode ?? false);
     setHasChanges(changed);
-  }, [theme, primaryColor, fontSize, animationsEnabled, compactMode, autoRefresh, refreshInterval, settings]);
+  }, [theme, primaryColor, fontSize, animationsEnabled, compactMode, autoRefresh, refreshInterval, 
+      highContrast, reducedMotion, soundEnabled, debugMode, settings]);
+  
+  // Initialize accessibility settings from browser preferences
+  useEffect(() => {
+    // Check for prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion && !settings?.reducedMotion) {
+      setReducedMotion(true);
+      updateSetting('reducedMotion', true);
+    }
+    
+    // Check for prefers-contrast
+    const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
+    if (prefersHighContrast && !settings?.highContrast) {
+      setHighContrast(true);
+      updateSetting('highContrast', true);
+    }
+  }, [settings, updateSetting]);
 
   // Apply theme changes
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
@@ -234,8 +325,8 @@ const Settings: React.FC = () => {
   };
 
   // Apply font size
-  const handleFontSizeChange = (size: 'small' | 'medium' | 'large') => {
-    setFontSize(size);
+  const handleFontSizeChange = (size: 'small' | 'medium' | 'large' | 'xl') => {
+    setFontSize(size as any);
     
     // Update the context immediately for instant effect and persistence
     updateSetting('fontSize', size);
@@ -244,18 +335,176 @@ const Settings: React.FC = () => {
     const fontSizeMap = {
       small: '0.9',
       medium: '1.0', 
-      large: '1.1'
+      large: '1.1',
+      xl: '1.25'
     };
     
     const scale = fontSizeMap[size] || '1.0';
     document.documentElement.style.setProperty('--font-scale', scale);
   };
+  
+  // Accessibility handlers
+  const handleHighContrastToggle = () => {
+    const newValue = !highContrast;
+    setHighContrast(newValue);
+    updateSetting('highContrast', newValue);
+    
+    if (newValue) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+  };
+  
+  const handleReducedMotionToggle = () => {
+    const newValue = !reducedMotion;
+    setReducedMotion(newValue);
+    updateSetting('reducedMotion', newValue);
+    
+    if (newValue) {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
+    }
+  };
+  
+  // Notification handlers
+  const handleDesktopNotificationToggle = async () => {
+    if (!desktopNotifications) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setDesktopNotifications(true);
+        updateSetting('desktopNotifications', true);
+        toast.success('Desktop notifications enabled!');
+      } else {
+        toast.error('Desktop notification permission denied');
+      }
+    } else {
+      setDesktopNotifications(false);
+      updateSetting('desktopNotifications', false);
+    }
+  };
+  
+  // Advanced settings handlers
+  const handleClearCache = async () => {
+    setClearing(true);
+    try {
+      // Clear localStorage
+      const keysToKeep = ['auth-token', 'user-settings'];
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !keysToKeep.includes(key)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      toast.success('Cache cleared successfully!');
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      toast.error('Failed to clear cache');
+    } finally {
+      setClearing(false);
+    }
+  };
+  
+  // Export settings
+  const handleExportSettings = async () => {
+    setExporting(true);
+    try {
+      const settingsData = {
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        settings: {
+          theme,
+          primaryColor,
+          fontSize,
+          animationsEnabled,
+          compactMode,
+          autoRefresh,
+          refreshInterval,
+          highContrast,
+          reducedMotion,
+          screenReader,
+          keyboardNavigation,
+          focusIndicators,
+          soundEnabled,
+          desktopNotifications,
+          toastPosition,
+          notificationTypes,
+          debugMode,
+          performanceMonitoring,
+          cacheEnabled
+        }
+      };
+      
+      const blob = new Blob([JSON.stringify(settingsData, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `panelops-settings-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Settings exported successfully!');
+    } catch (error) {
+      console.error('Failed to export settings:', error);
+      toast.error('Failed to export settings');
+    } finally {
+      setExporting(false);
+    }
+  };
+  
+  // Import settings
+  const handleImportSettings = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (data.settings) {
+        const imported = data.settings;
+        
+        // Apply imported settings
+        if (imported.theme) handleThemeChange(imported.theme);
+        if (imported.primaryColor) handleColorChange(imported.primaryColor);
+        if (imported.fontSize) handleFontSizeChange(imported.fontSize);
+        if (typeof imported.animationsEnabled === 'boolean') {
+          setAnimationsEnabled(imported.animationsEnabled);
+          updateSetting('animationsEnabled', imported.animationsEnabled);
+        }
+        
+        toast.success('Settings imported successfully!');
+      } else {
+        toast.error('Invalid settings file format');
+      }
+    } catch (error) {
+      console.error('Failed to import settings:', error);
+      toast.error('Failed to import settings file');
+    } finally {
+      setImporting(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
 
 
   // Save all settings
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!hasChanges) return;
     
+    setSaving(true);
     try {
       updateSetting('theme', theme);
       updateSetting('primaryColor', primaryColor);
@@ -264,12 +513,21 @@ const Settings: React.FC = () => {
       updateSetting('compactMode', compactMode);
       updateSetting('autoRefresh', autoRefresh);
       updateSetting('refreshInterval', refreshInterval);
+      updateSetting('highContrast', highContrast);
+      updateSetting('reducedMotion', reducedMotion);
+      updateSetting('soundEnabled', soundEnabled);
+      updateSetting('debugMode', debugMode);
+      
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       setHasChanges(false);
       toast.success('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -306,351 +564,584 @@ const Settings: React.FC = () => {
       case 'appearance':
         return (
           <div className="space-y-8">
-            {/* Theme Selection */}
-            <div className="space-y-4">
-              <h3 className={classNames(
-                'text-lg font-semibold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>
-                🎨 Theme
-              </h3>
-              
+            <SettingsCard 
+              title="Theme" 
+              icon="🎨" 
+              description="Choose your preferred color scheme"
+              variant="default"
+            >
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { id: 'light', name: 'Light', icon: SunIcon },
-                  { id: 'dark', name: 'Dark', icon: MoonIcon },
-                  { id: 'auto', name: 'Auto', icon: ComputerDesktopIcon }
-                ].map(({ id, name, icon: Icon }) => (
+                  { id: 'light', name: 'Light', icon: SunIcon, desc: 'Clean & bright' },
+                  { id: 'dark', name: 'Dark', icon: MoonIcon, desc: 'Easy on the eyes' },
+                  { id: 'auto', name: 'Auto', icon: ComputerDesktopIcon, desc: 'Matches system' }
+                ].map(({ id, name, icon: Icon, desc }) => (
                   <button
                     key={id}
                     onClick={() => handleThemeChange(id as any)}
                     className={classNames(
-                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern group hover:-translate-y-1 hover:shadow-lg',
+                      'relative p-4 rounded-xl border-2 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg text-left',
                       theme === id
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md scale-105'
                         : darkMode
-                          ? 'border-gray-600 bg-gray-700 hover:border-primary-500 hover:bg-gray-600'
-                          : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
+                          ? 'border-gray-600 bg-gray-700/50 hover:border-primary-500 hover:bg-gray-600/50'
+                          : 'border-gray-200 bg-gray-50/50 hover:border-primary-400 hover:bg-white'
                     )}
                   >
                     <Icon className={classNames(
-                      'w-6 h-6 mx-auto mb-2 transition-all duration-300 group-hover:scale-110',
+                      'w-8 h-8 mb-3 transition-all duration-300 group-hover:scale-110',
                       theme === id
                         ? 'text-primary-600'
                         : darkMode ? 'text-gray-400 group-hover:text-primary-400' : 'text-gray-500 group-hover:text-primary-600'
                     )} />
-                    <span className={classNames(
-                      'text-sm font-medium',
-                      theme === id
-                        ? 'text-primary-700 dark:text-primary-300'
-                        : darkMode ? 'text-gray-300' : 'text-gray-700'
-                    )}>{name}</span>
+                    <div>
+                      <div className={classNames(
+                        'text-sm font-semibold mb-1',
+                        theme === id
+                          ? 'text-primary-700 dark:text-primary-300'
+                          : darkMode ? 'text-gray-200' : 'text-gray-900'
+                      )}>{name}</div>
+                      <div className={classNames(
+                        'text-xs',
+                        theme === id
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : darkMode ? 'text-gray-400' : 'text-gray-600'
+                      )}>{desc}</div>
+                    </div>
                     {theme === id && (
-                      <CheckIcon className="absolute top-2 right-2 w-5 h-5 text-primary-600" />
+                      <CheckIcon className="absolute top-3 right-3 w-5 h-5 text-primary-600" />
                     )}
                   </button>
                 ))}
               </div>
-            </div>
+            </SettingsCard>
 
-            {/* Primary Color */}
-            <div className="space-y-4">
-              <h3 className={classNames(
-                'text-lg font-semibold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>
-                🌈 Primary Color
-              </h3>
-              
-              <div className="grid grid-cols-5 gap-3">
-                {colorPresets.map((preset) => (
-                  <button
-                    key={preset.value}
-                    onClick={() => handleColorChange(preset.value)}
-                    className={classNames(
-                      'relative h-12 rounded-lg border-2 transition-all duration-300 hover:shadow-lg',
-                      primaryColor === preset.value
-                        ? 'border-gray-900 dark:border-white scale-110 shadow-lg'
-                        : 'border-gray-300 dark:border-gray-600 hover:scale-110 hover:border-gray-400 dark:hover:border-gray-500'
-                    )}
-                    style={{ backgroundColor: preset.value }}
-                    title={preset.name}
-                  >
-                    {primaryColor === preset.value && (
-                      <CheckIcon className="absolute inset-0 m-auto w-6 h-6 text-white drop-shadow-lg" />
-                    )}
-                  </button>
-                ))}
+            <SettingsCard 
+              title="Primary Color" 
+              icon="🌈" 
+              description="Customize your brand color throughout the interface"
+            >
+              <div className="space-y-6">
+                <div className="grid grid-cols-5 gap-3">
+                  {colorPresets.map((preset) => (
+                    <button
+                      key={preset.value}
+                      onClick={() => handleColorChange(preset.value)}
+                      className={classNames(
+                        'relative h-12 rounded-xl border-2 transition-all duration-300 hover:shadow-lg group',
+                        primaryColor === preset.value
+                          ? 'border-gray-900 dark:border-white scale-110 shadow-lg ring-2 ring-offset-2 ring-primary-500'
+                          : 'border-gray-300 dark:border-gray-600 hover:scale-110 hover:border-gray-400 dark:hover:border-gray-500'
+                      )}
+                      style={{ backgroundColor: preset.value }}
+                      title={preset.name}
+                    >
+                      {primaryColor === preset.value && (
+                        <CheckIcon className="absolute inset-0 m-auto w-6 h-6 text-white drop-shadow-lg" />
+                      )}
+                      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                        {preset.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <label className={classNames(
+                      'block text-sm font-medium mb-2',
+                      darkMode ? 'text-gray-300' : 'text-gray-700'
+                    )}>Custom Color</label>
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                      className="h-12 w-20 rounded-xl cursor-pointer border-2 border-gray-300 dark:border-gray-600 hover:border-primary-500 transition-colors"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className={classNames(
+                      'block text-sm font-medium mb-2',
+                      darkMode ? 'text-gray-300' : 'text-gray-700'
+                    )}>Hex Value</label>
+                    <input
+                      type="text"
+                      value={primaryColor}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                      placeholder="#64748b"
+                      className={classNames(
+                        'w-full px-4 py-3 rounded-xl border-2 transition-all duration-200',
+                        darkMode
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500'
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
+                        'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex items-center space-x-4 pt-2">
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => handleColorChange(e.target.value)}
-                  className="h-12 w-20 rounded-lg cursor-pointer border border-gray-300 dark:border-gray-600"
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => handleColorChange(e.target.value)}
-                  placeholder="#64748b"
-                  className={classNames(
-                    'flex-1 px-4 py-3 rounded-lg border transition-colors',
-                    darkMode
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500'
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
-                    'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
-                  )}
-                />
-              </div>
-            </div>
+            </SettingsCard>
           </div>
         );
 
       case 'interface':
         return (
           <div className="space-y-8">
-            {/* Font Size */}
-            <div className="space-y-4">
-              <h3 className={classNames(
-                'text-lg font-semibold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>
-                📏 Font Size
-              </h3>
-              
-              <div className="grid grid-cols-3 gap-4">
+            <SettingsCard 
+              title="Font Size" 
+              icon="📏" 
+              description="Adjust text size throughout the interface"
+            >
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {fontSizePresets.map((preset) => (
                   <button
                     key={preset.value}
-                    onClick={() => handleFontSizeChange(preset.value)}
+                    onClick={() => handleFontSizeChange(preset.value as any)}
                     className={classNames(
-                      'relative p-4 rounded-lg border-2 transition-all duration-300 btn-modern group hover:-translate-y-1 hover:shadow-lg',
+                      'relative p-4 rounded-xl border-2 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg text-center',
                       fontSize === preset.value
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md scale-105'
                         : darkMode
-                          ? 'border-gray-600 bg-gray-700 hover:border-primary-500 hover:bg-gray-600'
-                          : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
+                          ? 'border-gray-600 bg-gray-700/50 hover:border-primary-500 hover:bg-gray-600/50'
+                          : 'border-gray-200 bg-gray-50/50 hover:border-primary-400 hover:bg-white'
                     )}
                   >
-                    <span className={classNames(
-                      'font-medium',
-                      preset.value === 'small' ? 'text-sm' : preset.value === 'large' ? 'text-lg' : 'text-base',
+                    <div className={classNames(
+                      'font-semibold mb-2 transition-all duration-300',
+                      preset.preview,
                       fontSize === preset.value
                         ? 'text-primary-700 dark:text-primary-300'
-                        : darkMode ? 'text-gray-300' : 'text-gray-700'
-                    )}>{preset.label}</span>
+                        : darkMode ? 'text-gray-200' : 'text-gray-900'
+                    )}>Aa</div>
+                    <div className={classNames(
+                      'text-xs font-medium',
+                      fontSize === preset.value
+                        ? 'text-primary-600 dark:text-primary-400'
+                        : darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>{preset.label}</div>
                     {fontSize === preset.value && (
-                      <CheckIcon className="absolute top-2 right-2 w-5 h-5 text-primary-600" />
+                      <CheckIcon className="absolute top-2 right-2 w-4 h-4 text-primary-600" />
                     )}
                   </button>
                 ))}
               </div>
-            </div>
+            </SettingsCard>
 
-
-            {/* Interface Options */}
-            <div className="space-y-6">
-              <h3 className={classNames(
-                'text-lg font-semibold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>
-                🎛️ Interface Options
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className={classNames(
-                      'text-sm font-medium',
-                      darkMode ? 'text-gray-200' : 'text-gray-800'
-                    )}>
-                      Enable Animations
-                    </label>
-                    <p className={classNames(
-                      'text-sm',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>
-                      Show smooth transitions and animations
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleAnimationsToggle}
-                    className={classNames(
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
-                      animationsEnabled ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
-                    )}
-                  >
-                    <span
-                      className={classNames(
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        animationsEnabled ? 'translate-x-6' : 'translate-x-1'
-                      )}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className={classNames(
-                      'text-sm font-medium',
-                      darkMode ? 'text-gray-200' : 'text-gray-800'
-                    )}>
-                      Compact Mode
-                    </label>
-                    <p className={classNames(
-                      'text-sm',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>
-                      Reduce spacing for more content
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleCompactModeToggle}
-                    className={classNames(
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
-                      compactMode ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
-                    )}
-                  >
-                    <span
-                      className={classNames(
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        compactMode ? 'translate-x-6' : 'translate-x-1'
-                      )}
-                    />
-                  </button>
-                </div>
+            <SettingsCard 
+              title="Interface Options" 
+              icon="🎛️" 
+              description="Customize layout and interaction preferences"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="animations"
+                  enabled={animationsEnabled}
+                  onChange={handleAnimationsToggle}
+                  label="Enable Animations"
+                  description="Show smooth transitions and hover effects throughout the interface"
+                  variant="default"
+                />
+                
+                <ToggleSwitch
+                  id="compact-mode"
+                  enabled={compactMode}
+                  onChange={handleCompactModeToggle}
+                  label="Compact Mode"
+                  description="Reduce spacing and padding to fit more content on screen"
+                  variant="default"
+                />
               </div>
-            </div>
+            </SettingsCard>
           </div>
         );
 
       case 'notifications':
         return (
           <div className="space-y-8">
-            <div className="space-y-6">
-              <h3 className={classNames(
-                'text-lg font-semibold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>Auto Refresh</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className={classNames(
-                      'text-sm font-medium',
-                      darkMode ? 'text-gray-200' : 'text-gray-800'
-                    )}>
-                      Enable Auto Refresh
-                    </label>
-                    <p className={classNames(
-                      'text-sm',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>
-                      Automatically refresh data at set intervals
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleAutoRefreshToggle}
-                    className={classNames(
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105',
-                      autoRefresh ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
-                    )}
-                  >
-                    <span
-                      className={classNames(
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        autoRefresh ? 'translate-x-6' : 'translate-x-1'
-                      )}
-                    />
-                  </button>
-                </div>
-
+            <SettingsCard 
+              title="Auto Refresh" 
+              icon="🔄" 
+              description="Configure automatic data refresh settings"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="auto-refresh"
+                  enabled={autoRefresh}
+                  onChange={handleAutoRefreshToggle}
+                  label="Enable Auto Refresh"
+                  description="Automatically refresh dashboard data at regular intervals"
+                  variant="success"
+                />
+                
                 {autoRefresh && (
-                  <div>
-                    <label className={classNames(
-                      'block text-sm font-medium mb-2',
-                      darkMode ? 'text-gray-200' : 'text-gray-800'
-                    )}>
-                      Refresh Interval (seconds)
-                    </label>
-                    <input
-                      type="number"
-                      min="5"
-                      max="300"
-                      value={refreshInterval}
-                      onChange={(e) => handleRefreshIntervalChange(parseInt(e.target.value))}
-                      className={classNames(
-                        'w-32 px-3 py-2 rounded-lg border transition-colors',
-                        darkMode
-                          ? 'bg-gray-700 border-gray-600 text-white focus:border-primary-500'
-                          : 'bg-white border-gray-300 text-gray-900 focus:border-primary-500',
-                        'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
-                      )}
-                    />
+                  <div className="space-y-4 pl-4 border-l-2 border-primary-500/30">
+                    <div>
+                      <label className={classNames(
+                        'block text-sm font-medium mb-3',
+                        darkMode ? 'text-gray-200' : 'text-gray-800'
+                      )}>
+                        Refresh Interval
+                      </label>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        {refreshIntervals.map((interval) => (
+                          <button
+                            key={interval.value}
+                            onClick={() => handleRefreshIntervalChange(interval.value)}
+                            className={classNames(
+                              'p-3 text-sm rounded-lg border-2 transition-all duration-200 hover:scale-105',
+                              refreshInterval === interval.value
+                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                : darkMode
+                                  ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-primary-500'
+                                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400'
+                            )}
+                          >
+                            {interval.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
+            </SettingsCard>
+            
+            <SettingsCard 
+              title="Sound & Alerts" 
+              icon="🔔" 
+              description="Configure notification sounds and desktop alerts"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="sound-enabled"
+                  enabled={soundEnabled}
+                  onChange={() => {
+                    setSoundEnabled(!soundEnabled);
+                    updateSetting('soundEnabled', !soundEnabled);
+                  }}
+                  label="Notification Sounds"
+                  description="Play sounds for important notifications and alerts"
+                  variant="default"
+                />
+                
+                <ToggleSwitch
+                  id="desktop-notifications"
+                  enabled={desktopNotifications}
+                  onChange={handleDesktopNotificationToggle}
+                  label="Desktop Notifications"
+                  description="Show browser notifications for critical events (requires permission)"
+                  variant="warning"
+                />
+                
+                <div>
+                  <label className={classNames(
+                    'block text-sm font-medium mb-3',
+                    darkMode ? 'text-gray-200' : 'text-gray-800'
+                  )}>
+                    Toast Position
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {toastPositions.map((position) => (
+                      <button
+                        key={position.value}
+                        onClick={() => {
+                          setToastPosition(position.value);
+                          updateSetting('toastPosition', position.value);
+                        }}
+                        className={classNames(
+                          'p-3 text-sm rounded-lg border-2 transition-all duration-200 hover:scale-105',
+                          toastPosition === position.value
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                            : darkMode
+                              ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-primary-500'
+                              : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400'
+                        )}
+                      >
+                        {position.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SettingsCard>
           </div>
         );
 
       case 'accessibility':
         return (
           <div className="space-y-8">
-            <div className={classNames(
-              'p-6 rounded-lg border-2 border-dashed',
-              darkMode ? 'border-gray-600' : 'border-gray-300'
-            )}>
-              <div className="text-center">
-                <EyeIcon className={classNames(
-                  'mx-auto h-12 w-12 mb-4',
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                )} />
-                <h3 className={classNames(
-                  'text-lg font-semibold mb-2',
-                  darkMode ? 'text-white' : 'text-gray-900'
-                )}>
-                  Accessibility Features
-                </h3>
-                <p className={classNames(
-                  'text-sm',
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
-                )}>
-                  Accessibility options will be available in a future update
-                </p>
+            <SettingsCard 
+              title="Visual Accessibility" 
+              icon="👁️" 
+              description="Enhance visibility and contrast for better readability"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="high-contrast"
+                  enabled={highContrast}
+                  onChange={handleHighContrastToggle}
+                  label="High Contrast Mode"
+                  description="Increase color contrast for better visibility and readability"
+                  variant="default"
+                />
+                
+                <ToggleSwitch
+                  id="reduced-motion"
+                  enabled={reducedMotion}
+                  onChange={handleReducedMotionToggle}
+                  label="Reduce Motion"
+                  description="Minimize animations and transitions to reduce motion sensitivity"
+                  variant="warning"
+                />
+                
+                <ToggleSwitch
+                  id="focus-indicators"
+                  enabled={focusIndicators}
+                  onChange={() => {
+                    setFocusIndicators(!focusIndicators);
+                    updateSetting('focusIndicators', !focusIndicators);
+                  }}
+                  label="Enhanced Focus Indicators"
+                  description="Show prominent visual indicators when navigating with keyboard"
+                  variant="success"
+                />
               </div>
-            </div>
+            </SettingsCard>
+            
+            <SettingsCard 
+              title="Navigation & Interaction" 
+              icon="⌨️" 
+              description="Configure keyboard navigation and interaction methods"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="keyboard-navigation"
+                  enabled={keyboardNavigation}
+                  onChange={() => {
+                    setKeyboardNavigation(!keyboardNavigation);
+                    updateSetting('keyboardNavigation', !keyboardNavigation);
+                  }}
+                  label="Full Keyboard Navigation"
+                  description="Enable complete keyboard navigation throughout the interface"
+                  variant="default"
+                />
+                
+                <ToggleSwitch
+                  id="screen-reader"
+                  enabled={screenReader}
+                  onChange={() => {
+                    setScreenReader(!screenReader);
+                    updateSetting('screenReader', !screenReader);
+                  }}
+                  label="Screen Reader Optimizations"
+                  description="Enhance compatibility with screen reading software"
+                  variant="success"
+                />
+              </div>
+            </SettingsCard>
+            
+            <SettingsCard 
+              title="Accessibility Information" 
+              icon="ℹ️" 
+              description="Learn about available accessibility features"
+              variant="highlighted"
+            >
+              <div className="space-y-4">
+                <div className={classNames(
+                  'p-4 rounded-lg',
+                  darkMode ? 'bg-blue-900/20 border border-blue-700/30' : 'bg-blue-50 border border-blue-200'
+                )}>
+                  <h4 className={classNames(
+                    'font-semibold mb-2',
+                    darkMode ? 'text-blue-300' : 'text-blue-900'
+                  )}>Keyboard Shortcuts</h4>
+                  <ul className={classNames(
+                    'text-sm space-y-1',
+                    darkMode ? 'text-blue-200' : 'text-blue-800'
+                  )}>
+                    <li>• <kbd className="px-2 py-1 bg-black/10 rounded">Tab</kbd> - Navigate between elements</li>
+                    <li>• <kbd className="px-2 py-1 bg-black/10 rounded">Space/Enter</kbd> - Activate buttons and toggles</li>
+                    <li>• <kbd className="px-2 py-1 bg-black/10 rounded">Esc</kbd> - Close modals and dialogs</li>
+                    <li>• <kbd className="px-2 py-1 bg-black/10 rounded">Alt + S</kbd> - Focus search</li>
+                  </ul>
+                </div>
+                
+                <div className={classNames(
+                  'p-4 rounded-lg',
+                  darkMode ? 'bg-green-900/20 border border-green-700/30' : 'bg-green-50 border border-green-200'
+                )}>
+                  <h4 className={classNames(
+                    'font-semibold mb-2',
+                    darkMode ? 'text-green-300' : 'text-green-900'
+                  )}>Screen Reader Support</h4>
+                  <p className={classNames(
+                    'text-sm',
+                    darkMode ? 'text-green-200' : 'text-green-800'
+                  )}>
+                    This interface includes ARIA labels, landmarks, and semantic markup for compatibility with screen readers like NVDA, JAWS, and VoiceOver.
+                  </p>
+                </div>
+              </div>
+            </SettingsCard>
           </div>
         );
 
       case 'advanced':
         return (
           <div className="space-y-8">
-            <div className={classNames(
-              'p-6 rounded-lg border-2 border-dashed',
-              darkMode ? 'border-gray-600' : 'border-gray-300'
-            )}>
-              <div className="text-center">
-                <CommandLineIcon className={classNames(
-                  'mx-auto h-12 w-12 mb-4',
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                )} />
-                <h3 className={classNames(
-                  'text-lg font-semibold mb-2',
-                  darkMode ? 'text-white' : 'text-gray-900'
-                )}>
-                  Advanced Settings
-                </h3>
-                <p className={classNames(
-                  'text-sm',
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
-                )}>
-                  Developer and debug options will be available in a future update
-                </p>
+            <SettingsCard 
+              title="Developer Options" 
+              icon="🛠️" 
+              description="Debug and development tools for troubleshooting"
+            >
+              <div className="space-y-6">
+                <ToggleSwitch
+                  id="debug-mode"
+                  enabled={debugMode}
+                  onChange={() => {
+                    setDebugMode(!debugMode);
+                    updateSetting('debugMode', !debugMode);
+                    if (!debugMode) {
+                      console.log('Debug mode enabled - Check console for detailed logs');
+                    }
+                  }}
+                  label="Debug Mode"
+                  description="Enable detailed console logging and error reporting"
+                  variant="warning"
+                />
+                
+                <ToggleSwitch
+                  id="performance-monitoring"
+                  enabled={performanceMonitoring}
+                  onChange={() => {
+                    setPerformanceMonitoring(!performanceMonitoring);
+                    updateSetting('performanceMonitoring', !performanceMonitoring);
+                  }}
+                  label="Performance Monitoring"
+                  description="Track and log performance metrics and render times"
+                  variant="info"
+                />
+                
+                <ToggleSwitch
+                  id="cache-enabled"
+                  enabled={cacheEnabled}
+                  onChange={() => {
+                    setCacheEnabled(!cacheEnabled);
+                    updateSetting('cacheEnabled', !cacheEnabled);
+                  }}
+                  label="Enable Caching"
+                  description="Cache API responses and static resources for better performance"
+                  variant="success"
+                />
               </div>
-            </div>
+            </SettingsCard>
+            
+            <SettingsCard 
+              title="Cache Management" 
+              icon="🗄️" 
+              description="Manage stored data and temporary files"
+            >
+              <div className="space-y-4">
+                <div className={classNames(
+                  'flex items-center justify-between p-4 rounded-lg border',
+                  darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
+                )}>
+                  <div className="flex-1">
+                    <h4 className={classNames(
+                      'font-medium',
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    )}>Clear Application Cache</h4>
+                    <p className={classNames(
+                      'text-sm mt-1',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>Remove temporary files, cached responses, and stored data</p>
+                  </div>
+                  <ActionButton
+                    onClick={handleClearCache}
+                    loading={clearing}
+                    variant="outline"
+                    size="sm"
+                    icon={TrashIcon}
+                  >
+                    {clearing ? 'Clearing...' : 'Clear Cache'}
+                  </ActionButton>
+                </div>
+              </div>
+            </SettingsCard>
+            
+            <SettingsCard 
+              title="Settings Management" 
+              icon="💾" 
+              description="Backup, restore, and manage your settings"
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={classNames(
+                    'p-4 rounded-lg border text-center',
+                    darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  )}>
+                    <ArrowDownTrayIcon className={classNames(
+                      'w-8 h-8 mx-auto mb-2',
+                      darkMode ? 'text-gray-400' : 'text-gray-500'
+                    )} />
+                    <h4 className={classNames(
+                      'font-medium mb-2',
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    )}>Export Settings</h4>
+                    <p className={classNames(
+                      'text-sm mb-4',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>Download your current settings as a backup file</p>
+                    <ActionButton
+                      onClick={handleExportSettings}
+                      loading={exporting}
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      icon={ArrowDownTrayIcon}
+                    >
+                      {exporting ? 'Exporting...' : 'Export'}
+                    </ActionButton>
+                  </div>
+                  
+                  <div className={classNames(
+                    'p-4 rounded-lg border text-center',
+                    darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  )}>
+                    <ArrowUpTrayIcon className={classNames(
+                      'w-8 h-8 mx-auto mb-2',
+                      darkMode ? 'text-gray-400' : 'text-gray-500'
+                    )} />
+                    <h4 className={classNames(
+                      'font-medium mb-2',
+                      darkMode ? 'text-white' : 'text-gray-900'
+                    )}>Import Settings</h4>
+                    <p className={classNames(
+                      'text-sm mb-4',
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
+                    )}>Restore settings from a previously exported file</p>
+                    <label className="block">
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportSettings}
+                        className="hidden"
+                      />
+                      <ActionButton
+                        variant="secondary"
+                        size="sm"
+                        fullWidth
+                        icon={ArrowUpTrayIcon}
+                        loading={importing}
+                        onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
+                      >
+                        {importing ? 'Importing...' : 'Import'}
+                      </ActionButton>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </SettingsCard>
           </div>
         );
 
@@ -780,23 +1271,22 @@ const Settings: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  <button
+                  <ActionButton
                     onClick={handleReset}
-                    className={classNames(
-                      'px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-md',
-                      darkMode
-                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                    )}
+                    variant="outline"
+                    size="sm"
                   >
                     Reset
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     onClick={handleSave}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-all duration-300 btn-modern hover:-translate-y-1 hover:shadow-lg"
+                    loading={saving}
+                    variant="primary"
+                    size="sm"
+                    icon={saving ? undefined : CheckIcon}
                   >
-                    Save Changes
-                  </button>
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </ActionButton>
                 </div>
               </div>
             )}

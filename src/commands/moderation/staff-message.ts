@@ -12,9 +12,9 @@ import {
   ChannelType
 } from 'discord.js';
 import { createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { sendStaffOnlyMessage } from '../../utils/ticket-utils';
 import { db } from '../../database/sqlite';
+import { logError, logInfo } from '../../utils/logger';
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -8,8 +8,8 @@ import {
   ChannelType
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
+import { logCommandUsage } from '../../utils/command-logger';
 
 interface LoggingSettings {
   id: number;
@@ -295,17 +295,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       }
     }
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'logging-config',
-      options: { subcommand },
-      channel: interaction.channel,
-      success: true
-    });
-    
-  } catch (error) {
+      } catch (error) {
     logError('Logging Config', error);
     
     try {

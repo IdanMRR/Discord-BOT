@@ -6,8 +6,8 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logError, logCommandUsage } from '../../utils/logger';
 import { GiveawayService } from '../../database/services/giveawayService';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('giveaway-list')
@@ -151,21 +151,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     logError('Giveaway List', error);
     
-    // Log failed command usage
-    try {
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: 'giveaway-list',
-        options: { status: status || 'all', error: error instanceof Error ? error.message : String(error) },
-        channel: interaction.channel,
-        success: false
-      });
-    } catch (logError) {
-      // Silent fail for logging
-    }
-    
-    try {
+        try {
       if (interaction.deferred) {
         await interaction.editReply('An error occurred while listing giveaways.');
       } else {

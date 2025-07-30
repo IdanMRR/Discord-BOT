@@ -39,11 +39,13 @@ import loggingSettingsRouter from './logging-settings';
 import levelingSettingsRouter from './leveling-settings';
 import moderationCasesRouter from './moderation-cases';
 import directServersRouter from './direct-servers';
+import systemMetricsRouter from './system-metrics';
 import membersRouter from './members';
 import automodEscalationRouter from './automod-escalation';
 import analyticsRouter from './analytics';
 import comprehensiveLogsRouter from './comprehensive-logs';
 import usersRouter from './users';
+import xpManagementRouter from './xp-management';
 
 // Helper function to extract user info from request
 function extractUserInfo(req: Request): { userId: string; username?: string } | null {
@@ -405,6 +407,10 @@ console.log('Registering logging settings router at /api/servers');
 app.use('/api/servers', loggingSettingsRouter);
 app.use('/api/settings', levelingSettingsRouter);
 
+// Register system metrics router
+console.log('Registering system metrics router at /api/system');
+app.use('/api/system', systemMetricsRouter);
+
 // Register the moderation cases router under /api path
 console.log('Registering moderation cases router at /api/moderation-cases');
 app.use('/api/moderation-cases', moderationCasesRouter);
@@ -426,6 +432,10 @@ app.use('/api/logs', comprehensiveLogsRouter);
     
 // Mount activity router BEFORE authentication middleware to make it public
 app.use('/api/activity', activityRouter);
+
+// Add XP management API routes (requires authentication)
+console.log('Registering XP management router at /api/xp-management');
+app.use('/api/xp-management', xpManagementRouter);
 
 // Add a direct endpoint for the specific server the client is calling
 app.get('/api/direct-server/:serverId', 
@@ -665,7 +675,7 @@ app.use(dashboardLogger);
 app.use('/api/dashboard-logs', dashboardLogsRouter);
 
 // Add comprehensive settings API routes (this should be last to avoid conflicts)
-app.use('/', comprehensiveSettingsApp);
+app.use('/api/settings', comprehensiveSettingsApp);
 
 // Serve dashboard static files first (no authentication needed)
 const dashboardPath = path.join(__dirname, 'dashboard');
@@ -683,6 +693,7 @@ app.get('/dashboard', (req, res) => {
 
 // Import and use our simplified dashboard routes
 const simpleDashboard = require('./simple-dashboard.js');
+// const simpleDashboard = require('./test-minimal-router.js');
 
 // Mount the simple-dashboard router at /api/simple-dashboard
 app.use('/api/simple-dashboard', simpleDashboard);
@@ -950,62 +961,7 @@ app.put('/tickets/:id/reopen', async (req: Request, res: Response) => {
 });
 
 // Mock data endpoints - guaranteed to work for the dashboard
-// Mock warnings endpoint
-app.get('/api/warnings', (req, res) => {
-  const { guildId } = req.query;
-  
-  // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-api-key, x-user-id, x-request-id');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-  if (!guildId || guildId === 'undefined') {
-    return res.status(400).json({
-      success: false,
-      error: 'Guild ID is required'
-    });
-  }
-  
-  // Return mock warning data
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 1,
-        guild_id: guildId,
-        user_id: '9876543210',
-        moderator_id: '1234567890',
-        reason: 'Spamming in general chat',
-        created_at: new Date().toISOString(),
-        active: true,
-        case_number: 1
-      },
-      {
-        id: 2,
-        guild_id: guildId,
-        user_id: '9876543211',
-        moderator_id: '1234567890',
-        reason: 'Inappropriate language',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        active: true,
-        case_number: 2
-      },
-      {
-        id: 3,
-        guild_id: guildId,
-        user_id: '9876543212',
-        moderator_id: '1234567890',
-        reason: 'Advertising other servers',
-        created_at: new Date(Date.now() - 172800000).toISOString(),
-        active: false,
-        removed_by: '1234567890',
-        removed_at: new Date(Date.now() - 86400000).toISOString(),
-        removal_reason: 'Warning expired',
-        case_number: 3
-      }
-    ]
-  });
-});
+// Mock warnings endpoint removed - using real warningsRouter
 
 // Test endpoint removed - using main status endpoint defined earlier
 

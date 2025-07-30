@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, Fragment } from 'react';
+import { useParams } from 'react-router-dom';
 import { Warning } from '../types';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Pagination from '../components/common/Pagination';
-import ServerSelector from '../components/common/ServerSelector';
 import PermissionGuard from '../components/common/PermissionGuard';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -79,7 +79,7 @@ const WarningsContent: React.FC = () => {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isBulkRemoveConfirmOpen, setIsBulkRemoveConfirmOpen] = useState(false);
   const [selectedWarnings, setSelectedWarnings] = useState<Set<number>>(new Set());
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+  const { serverId } = useParams<{ serverId: string }>();
   const itemsPerPage = 20;
 
   // Automod state
@@ -109,18 +109,20 @@ const WarningsContent: React.FC = () => {
   });
 
   const fetchWarnings = useCallback(async (page: number = 1) => {
+    if (!serverId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       // Don't send status in the API request - we'll filter client-side
       // This ensures we get all warnings and can count them correctly
       const options: any = {
         page: page,
-        limit: itemsPerPage
+        limit: itemsPerPage,
+        guildId: serverId
       };
-      
-      if (selectedServerId) {
-        options.guildId = selectedServerId;
-      }
 
       const response = await apiService.getWarnings(options);
       
@@ -181,18 +183,18 @@ const WarningsContent: React.FC = () => {
       // Clear selections when changing pages
       setSelectedWarnings(new Set());
     }
-  }, [statusFilter, itemsPerPage, selectedServerId]);
+  }, [statusFilter, itemsPerPage, serverId]);
 
   // Fetch automod data
   const fetchAutomodData = useCallback(async () => {
-    if (!selectedServerId) return;
+    if (!serverId) return;
     
     try {
       setAutomodLoading(true);
       const [settingsRes, rulesRes, statsRes] = await Promise.all([
-        apiService.getAutomodSettings(selectedServerId),
-        apiService.getAutomodRules(selectedServerId),
-        apiService.getAutomodStats(selectedServerId)
+        apiService.getAutomodSettings(serverId),
+        apiService.getAutomodRules(serverId),
+        apiService.getAutomodStats(serverId)
       ]);
 
       setAutomodSettings(settingsRes.data);
@@ -204,7 +206,7 @@ const WarningsContent: React.FC = () => {
     } finally {
       setAutomodLoading(false);
     }
-  }, [selectedServerId]);
+  }, [serverId]);
 
   useEffect(() => {
     fetchWarnings(1);
@@ -294,12 +296,12 @@ const WarningsContent: React.FC = () => {
 
   // Automod management functions
   const updateAutomodSettings = async (updatedSettings: Partial<AutomodSettings>) => {
-    if (!selectedServerId) return;
+    if (!serverId) return;
     try {
       // Update local state immediately for better UX
       setAutomodSettings(prev => prev ? { ...prev, ...updatedSettings } : null);
       
-      const response = await apiService.updateAutomodSettings(selectedServerId, updatedSettings);
+      const response = await apiService.updateAutomodSettings(serverId, updatedSettings);
       
       // Only update with response if it contains complete data
       if (response.success && response.data && typeof response.data === 'object') {
@@ -317,10 +319,10 @@ const WarningsContent: React.FC = () => {
   };
 
   const createAutomodRule = async () => {
-    if (!selectedServerId) return;
+    if (!serverId) return;
     
     try {
-      const response = await apiService.createAutomodRule(selectedServerId, newRule);
+      const response = await apiService.createAutomodRule(serverId, newRule);
       setAutomodRules([...automodRules, response.data]);
       setShowAddRule(false);
       setNewRule({
@@ -339,10 +341,10 @@ const WarningsContent: React.FC = () => {
   };
 
   const deleteAutomodRule = async (ruleId: number) => {
-    if (!selectedServerId || !window.confirm('Are you sure you want to delete this automod rule?')) return;
+    if (!serverId || !window.confirm('Are you sure you want to delete this automod rule?')) return;
     
     try {
-      await apiService.deleteAutomodRule(selectedServerId, ruleId);
+      await apiService.deleteAutomodRule(serverId, ruleId);
       setAutomodRules(automodRules.filter(rule => rule.id !== ruleId));
       fetchAutomodData();
       toast.success('Automod rule deleted successfully');
@@ -497,31 +499,6 @@ const WarningsContent: React.FC = () => {
                     Review and manage user moderation actions
                   </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <ExclamationTriangleIcon className={classNames(
-                  "h-5 w-5",
-                  darkMode ? "text-gray-400" : "text-gray-500"
-                )} />
-                <label className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Filter by Server:
-                </label>
-              </div>
-              <div className="w-64">
-                <ServerSelector
-                  selectedServerId={selectedServerId}
-                  onServerSelect={(serverId) => {
-                    setSelectedServerId(serverId);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Select a server"
-                  showAllOption={false}
-                />
-              </div>
-            </div>
           </div>
           <div className="flex items-center justify-end space-x-4">
             <button
@@ -556,34 +533,6 @@ const WarningsContent: React.FC = () => {
       </div>
 
 
-      {!selectedServerId ? (
-        <Card className={classNames(
-          "shadow-xl border-0 rounded-xl overflow-hidden",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-        )}>
-          <div className={classNames(
-            "p-6",
-            darkMode ? "bg-gray-900" : "bg-white"
-          )}>
-            <div className="text-center py-8">
-              <svg className={classNames(
-                "w-12 h-12 mx-auto mb-4",
-                darkMode ? "text-gray-600" : "text-gray-400"
-              )} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              <h4 className={classNames(
-                "text-lg font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-900"
-              )}>Select a Server</h4>
-              <p className={classNames(
-                "text-sm",
-                darkMode ? "text-gray-400" : "text-gray-500"
-              )}>Choose a server above to view and manage warnings</p>
-            </div>
-          </div>
-        </Card>
-      ) : (
         <Card className={classNames(
           "shadow-xl border-0 rounded-xl overflow-hidden",
           darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
@@ -848,7 +797,6 @@ const WarningsContent: React.FC = () => {
         )}
         </div>
       </Card>
-      )}
 
       {/* Automod Escalation Section */}
       <Card className={classNames(
@@ -884,22 +832,7 @@ const WarningsContent: React.FC = () => {
           "p-6",
           darkMode ? "bg-gray-900" : "bg-white"
         )}>
-          {!selectedServerId ? (
-            <div className="text-center py-8">
-              <Shield className={classNames(
-                "w-12 h-12 mx-auto mb-4",
-                darkMode ? "text-gray-600" : "text-gray-400"
-              )} />
-              <h4 className={classNames(
-                "text-lg font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-900"
-              )}>Select a Server</h4>
-              <p className={classNames(
-                "text-sm",
-                darkMode ? "text-gray-400" : "text-gray-500"
-              )}>Choose a server above to configure automod escalation rules</p>
-            </div>
-          ) : automodLoading ? (
+          {automodLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner className="text-blue-500" size="lg" />
               <span className={classNames(

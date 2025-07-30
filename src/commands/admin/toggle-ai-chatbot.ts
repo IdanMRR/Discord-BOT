@@ -5,8 +5,8 @@ import {
   MessageFlags
 } from 'discord.js';
 import { createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('toggle-ai-chatbot')
@@ -23,17 +23,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'toggle-ai-chatbot',
-      options: interaction.options.data,
-      channel: interaction.channel,
-      success: true
-    });
-    
-    // Get the enabled option
+        // Get the enabled option
     const enabled = interaction.options.getBoolean('enabled')!;
     
     // Update the AI chatbot setting using the correct method

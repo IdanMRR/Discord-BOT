@@ -1,8 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, MessageFlags, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 'discord.js';
 import { Colors, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { formatIsraeliDate, formatIsraeliTime } from '../../utils/time-formatter';
+import { logCommandUsage } from '../../utils/command-logger';
 
 /**
  * Command to view ticket action logs

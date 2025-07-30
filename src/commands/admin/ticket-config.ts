@@ -7,8 +7,7 @@ import {
   MessageFlags
 } from 'discord.js';
 import { settingsManager } from '../../utils/settings';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
-
+import { logInfo, logError } from '../../utils/logger';
 export const data = new SlashCommandBuilder()
   .setName('ticket-config')
   .setDescription('Configure the ticket system')
@@ -32,17 +31,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   try {
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'ticket-config',
-      options: interaction.options.data,
-      channel: interaction.channel,
-      success: true
-    });
-
-    const subcommand = interaction.options.getSubcommand();
+        const subcommand = interaction.options.getSubcommand();
     
     // Get current settings
     const settings = await settingsManager.getSettings(interaction.guildId!);

@@ -93,8 +93,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       />
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-h-0 transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-20' : 'ml-64'
+      <div className={`flex-1 flex flex-col min-h-0 transition-all duration-500 ease-in-out ${
+        sidebarCollapsed ? 'ml-20' : 'ml-80'
       }`}>
         {/* Modern Header */}
         <Header

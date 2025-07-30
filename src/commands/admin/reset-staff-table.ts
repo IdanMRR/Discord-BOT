@@ -6,8 +6,8 @@ import {
   EmbedBuilder,
   Colors 
 } from 'discord.js';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
+import { logInfo, logError } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('reset-staff-table')
@@ -21,17 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     
     const guildId = interaction.guildId;
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'reset-staff-table',
-      options: interaction.options.data,
-      channel: interaction.channel,
-      success: true
-    });
-    
-    // Check if table exists first
+        // Check if table exists first
     const tableExists = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name='ticket_staff_activity'
     `).get();

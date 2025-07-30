@@ -7,8 +7,7 @@ import {
   TextChannel,
   MessageFlags
 } from 'discord.js';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
-
+import { logCommandUsage } from '../../utils/command-logger';
 export const data = new SlashCommandBuilder()
   .setName('test-chatbot')
   .setDescription('Test the ticket chatbot directly (admin only)')

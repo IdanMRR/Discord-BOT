@@ -8,11 +8,11 @@ import {
   Colors,
   MessageFlags
 } from 'discord.js';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { replyEphemeral } from '../../utils/interaction-utils';
 import { getPriorityInfo } from '../../handlers/tickets/ticket-categories';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('ticket-priority')
@@ -165,16 +165,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     
     logInfo('Ticket', `User ${interaction.user.tag} set priority to ${priorityInfo.label} for ticket #${ticket.ticket_number}`);
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'ticket-priority',
-      options: { priority: priorityInfo.label },
-      channel: interaction.channel,
-      success: true
-    });
-  } catch (error) {
+      } catch (error) {
     logError('Set Priority', `Error setting ticket priority: ${error}`);
     
     try {

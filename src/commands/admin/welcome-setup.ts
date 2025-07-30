@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
-import { logCommandUsage } from '../../utils/logger';
 import { getGuildSettings } from '../../database/sqlite';
 import { setupMemberEvents } from '../../handlers/members/member-events';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('welcome-setup')

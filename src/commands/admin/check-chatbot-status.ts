@@ -5,8 +5,8 @@ import {
   EmbedBuilder 
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
+import { logInfo, logError } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('check-chatbot-status')
@@ -17,17 +17,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await interaction.deferReply();
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'check-chatbot-status',
-      options: interaction.options.data,
-      channel: interaction.channel,
-      success: true
-    });
-    
-    // Get current settings
+        // Get current settings
     const settings = await settingsManager.getSettings(interaction.guildId!);
     
     // Create status embed

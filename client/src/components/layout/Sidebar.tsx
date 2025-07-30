@@ -1,45 +1,24 @@
-import React, { useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, NavLink, useLocation } from 'react-router-dom';
 import {
-  HomeIcon,
-  TicketIcon,
-  ExclamationTriangleIcon,
   CogIcon,
-  ServerIcon,
   XMarkIcon,
-  ClipboardDocumentListIcon,
-  ShieldCheckIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
-  UserCircleIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  ChartBarIcon
+  HomeIcon,
+  UserCircleIcon,
+  ShieldCheckIcon,
+  ClipboardDocumentListIcon,
+  ServerIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { wsService } from '../../services/websocket';
-import Logo from '../common/Logo';
+import SidebarServerList from '../common/SidebarServerList';
 
 // Utility function for conditional class names
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
-}
-
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<any>;
-  permission?: string;
-  badge?: number;
-  emoji?: string;
-  children?: NavigationItem[];
-}
-
-interface NavigationSection {
-  title: string;
-  items: NavigationItem[];
 }
 
 interface SidebarProps {
@@ -49,13 +28,11 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false }) => {
-  const { user, permissions, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { darkMode } = useTheme();
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [connectionStatus, setConnectionStatus] = React.useState(wsService.isConnected());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard']));
 
   React.useEffect(() => {
     const checkConnection = () => {
@@ -66,66 +43,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
     return () => clearInterval(interval);
   }, []);
 
-  const navigationSections: NavigationSection[] = [
-    {
-      title: 'Dashboard',
-      items: [
-        { name: 'Overview', href: '/', icon: HomeIcon, permission: 'view_dashboard', emoji: '📊' },
-        { name: 'Analytics', href: '/analytics', icon: ClipboardDocumentListIcon, permission: 'view_analytics', emoji: '📈' },
-      ]
-    },
-    {
-      title: 'Server Management',
-      items: [
-        { name: 'All Servers', href: '/servers', icon: ServerIcon, permission: 'view_dashboard', emoji: '🖥️' },
-        { name: 'Tickets', href: '/tickets', icon: TicketIcon, permission: 'view_tickets', emoji: '🎫' },
-        { name: 'Warnings', href: '/warnings', icon: ExclamationTriangleIcon, permission: 'view_warnings', emoji: '⚠️' },
-        { name: 'Leveling', href: '/leveling', icon: ChartBarIcon, permission: 'view_dashboard', emoji: '🏆' },
-      ]
-    },
-    {
-      title: 'Administration',
-      items: [
-        { name: 'Admin Panel', href: '/admin', icon: ShieldCheckIcon, permission: 'admin', emoji: '👑' },
-        { name: 'Dashboard Logs', href: '/dashboard-logs', icon: ClipboardDocumentListIcon, permission: 'view_logs', emoji: '📋' },
-      ]
-    },
-    {
-      title: 'Personal',
-      items: [
-        { name: 'Settings', href: '/settings', icon: CogIcon, emoji: '⚙️' },
-        { name: 'Profile', href: '/profile', icon: UserCircleIcon, emoji: '👤' },
-      ]
-    },
-  ];
-
-  const hasPermission = (permission?: string): boolean => {
-    if (!permission) return true;
-    return permissions.includes(permission);
-  };
-
-  const toggleSection = (sectionTitle: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(sectionTitle)) {
-      newExpanded.delete(sectionTitle);
-    } else {
-      newExpanded.add(sectionTitle);
-    }
-    setExpandedSections(newExpanded);
-  };
-
-  const filteredSections = navigationSections.map(section => ({
-    ...section,
-    items: section.items.filter(item => hasPermission(item.permission))
-  })).filter(section => section.items.length > 0);
-
-  const allItems = filteredSections.flatMap(section => section.items);
-  const filteredItems = searchQuery 
-    ? allItems.filter(item => 
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : null;
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -134,6 +51,49 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
       console.error('Logout failed:', error);
     }
   };
+
+  // Navigation items - reorganized as requested
+  const mainNavigationItems = [
+    {
+      name: 'Home',
+      href: '/',
+      icon: HomeIcon,
+      emoji: '🏠'
+    },
+    {
+      name: 'Server Selection',
+      href: '/servers',
+      icon: ServerIcon,
+      emoji: '🖥️'
+    },
+    {
+      name: 'Admin Panel',
+      href: '/admin',
+      icon: ShieldCheckIcon,
+      emoji: '🛡️'
+    },
+    {
+      name: 'Logs',
+      href: '/logs',
+      icon: ClipboardDocumentListIcon,
+      emoji: '📋'
+    }
+  ];
+
+  const settingsNavigationItems = [
+    {
+      name: 'Profile',
+      href: '/profile',
+      icon: UserCircleIcon,
+      emoji: '👤'
+    },
+    {
+      name: 'Settings',
+      href: '/settings',
+      icon: CogIcon,
+      emoji: '⚙️'
+    }
+  ];
 
   return (
     <>
@@ -146,18 +106,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
       )}
       
       <div className={classNames(
-        'fixed left-0 top-0 h-full z-50 flex flex-col border-r transition-all duration-300 shadow-xl',
-        collapsed ? 'w-16' : 'w-72',
+        'fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-500 ease-in-out',
+        collapsed ? 'w-20' : 'w-72',
         isMobile && collapsed ? '-translate-x-full' : 'translate-x-0',
         darkMode 
-          ? 'bg-gray-900 border-gray-700' 
-          : 'bg-white border-gray-200'
+          ? 'bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-r border-slate-700/50' 
+          : 'bg-gradient-to-b from-white/95 via-slate-50/95 to-white/95 backdrop-blur-xl border-r border-slate-200/50',
+        'shadow-2xl shadow-black/10'
       )}>
         {/* Header */}
         <div className={classNames(
-          'relative h-16 flex items-center border-b',
-          collapsed ? 'justify-center px-2' : 'justify-between px-4',
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+          'relative h-20 flex items-center border-b backdrop-blur-sm',
+          collapsed ? 'justify-center px-3' : 'justify-between px-6',
+          darkMode 
+            ? 'bg-slate-800/50 border-slate-600/30' 
+            : 'bg-white/50 border-slate-300/30'
         )}>
           <div className="flex items-center">
             {isMobile && (
@@ -175,14 +138,64 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
             )}
             
             {collapsed ? (
-              <div className={classNames(
-                "w-8 h-8 rounded-lg flex items-center justify-center",
-                darkMode ? "bg-primary-600" : "bg-primary-600"
-              )}>
-                <span className="font-bold text-sm text-white">D</span>
+              <div className="relative group">
+                <div className={classNames(
+                  "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
+                  "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
+                  "shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40",
+                  "border border-blue-400/30 group-hover:border-blue-400/50",
+                  "transform group-hover:scale-105"
+                )}>
+                  <svg className="w-7 h-7 text-white" viewBox="0 0 100 100" fill="none">
+                    <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(45 50 50)"/>
+                    <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(-45 50 50)"/>
+                    <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(0 50 50)"/>
+                    <circle cx="50" cy="50" r="3" fill="currentColor"/>
+                    <rect x="38" y="38" width="24" height="24" rx="6" stroke="currentColor" strokeWidth="2.5" fill="none"/>
+                    <circle cx="45" cy="46" r="2" fill="currentColor"/>
+                    <circle cx="55" cy="46" r="2" fill="currentColor"/>
+                    <path d="M 44 54 Q 50 58 56 54" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
               </div>
             ) : (
-              <Logo size="sm" />
+              <div className="flex items-center space-x-3">
+                <div className="relative group">
+                  <div className={classNames(
+                    "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
+                    "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
+                    "shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40",
+                    "border border-blue-400/30 group-hover:border-blue-400/50"
+                  )}>
+                    <svg className="w-7 h-7 text-white" viewBox="0 0 100 100" fill="none">
+                      <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(45 50 50)"/>
+                      <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(-45 50 50)"/>
+                      <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(0 50 50)"/>
+                      <circle cx="50" cy="50" r="3" fill="currentColor"/>
+                      <rect x="38" y="38" width="24" height="24" rx="6" stroke="currentColor" strokeWidth="2.5" fill="none"/>
+                      <circle cx="45" cy="46" r="2" fill="currentColor"/>
+                      <circle cx="55" cy="46" r="2" fill="currentColor"/>
+                      <path d="M 44 54 Q 50 58 56 54" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                </div>
+                <div>
+                  <h1 className={classNames(
+                    "text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent",
+                    "tracking-tight"
+                  )}>
+                    PanelOps
+                  </h1>
+                  <p className={classNames(
+                    "text-xs font-medium",
+                    darkMode ? "text-slate-400" : "text-slate-500"
+                  )}>
+                    Admin Suite
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -202,285 +215,321 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
           )}
         </div>
 
-        {/* Search Bar */}
-        {!collapsed && (
+        {/* Connection Status */}
+        <div className={classNames(
+          'border-b backdrop-blur-sm',
+          collapsed ? 'px-3 py-4' : 'px-6 py-4',
+          darkMode ? 'bg-slate-800/30 border-slate-600/30' : 'bg-white/30 border-slate-300/30'
+        )}>
           <div className={classNames(
-            'px-4 py-3 border-b',
-            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+            'flex items-center',
+            collapsed ? 'justify-center' : 'space-x-3'
           )}>
             <div className="relative">
-              <MagnifyingGlassIcon className={classNames(
-                'absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4',
-                darkMode ? 'text-gray-400' : 'text-gray-500'
-              )} />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={classNames(
-                  'w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors',
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
-                )}
-              />
+              <div className={classNames(
+                'w-3 h-3 rounded-full transition-all duration-300',
+                connectionStatus 
+                  ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' 
+                  : 'bg-red-500 shadow-lg shadow-red-500/50'
+              )}></div>
+              {connectionStatus && (
+                <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+              )}
             </div>
-            
-            {/* Connection Status */}
-            <div className="flex items-center justify-between mt-3 text-xs">
-              <div className="flex items-center">
-                <div className={classNames(
-                  'w-2 h-2 rounded-full mr-2',
-                  connectionStatus 
-                    ? 'bg-green-500' 
-                    : 'bg-red-500'
-                )}></div>
+            {!collapsed && (
+              <div className="flex flex-col">
                 <span className={classNames(
-                  'font-medium',
+                  'text-xs font-semibold tracking-wide',
                   connectionStatus 
-                    ? darkMode ? 'text-green-400' : 'text-green-600'
+                    ? darkMode ? 'text-emerald-400' : 'text-emerald-600'
                     : darkMode ? 'text-red-400' : 'text-red-600'
                 )}>
-                  {connectionStatus ? 'Online' : 'Offline'}
+                  {connectionStatus ? 'ONLINE' : 'OFFLINE'}
                 </span>
+                <span className={classNames(
+                  'text-xs opacity-75',
+                  darkMode ? 'text-slate-400' : 'text-slate-500'
+                )}>
+                  {connectionStatus ? 'All systems operational' : 'Connection lost'}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className={classNames(
+          'flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent',
+          collapsed ? 'px-3 py-4' : 'px-6 py-4'
+        )}>
+          <div className="space-y-6">
+            {/* Main Navigation Items */}
+            <div>
+              {!collapsed && (
+                <div className={classNames(
+                  'px-3 py-2 text-xs font-bold uppercase tracking-widest mb-2',
+                  darkMode ? 'text-slate-400' : 'text-slate-500'
+                )}>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-blue-500 to-blue-600"></div>
+                    <span>Navigation</span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                {mainNavigationItems.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      className={classNames(
+                        'group flex items-center text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden',
+                        collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5',
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                          : darkMode 
+                            ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md hover:shadow-slate-900/20'
+                            : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 hover:shadow-md hover:shadow-slate-900/10'
+                      )}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      {/* Active state background gradient */}
+                      {isActive && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-blue-500/20 to-blue-600/20 rounded-lg blur-sm"></div>
+                      )}
+                      
+                      <div className={classNames(
+                        'flex items-center justify-center rounded-md transition-all duration-300 relative z-10',
+                        collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
+                        isActive 
+                          ? 'text-white bg-white/10' 
+                          : darkMode 
+                            ? 'text-slate-400 group-hover:text-slate-200'
+                            : 'text-slate-500 group-hover:text-slate-700'
+                      )}>
+                        <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
+                      </div>
+                      
+                      {!collapsed && (
+                        <div className="flex-1 relative z-10">
+                          <span className="font-medium tracking-wide text-sm">{item.name}</span>
+                          {item.emoji && (
+                            <span className="ml-2 text-xs opacity-60">{item.emoji}</span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Hover effect overlay */}
+                      <div className={classNames(
+                        'absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300',
+                        !isActive ? 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5' : ''
+                      )}></div>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Gap/Divider */}
+            <div className={classNames(
+              'border-t',
+              darkMode ? 'border-slate-600/30' : 'border-slate-300/30'
+            )}></div>
+
+            {/* Settings Section */}
+            <div>
+              <div className="space-y-1">
+                {settingsNavigationItems.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      className={classNames(
+                        'group flex items-center text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden',
+                        collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5',
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                          : darkMode 
+                            ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md hover:shadow-slate-900/20'
+                            : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 hover:shadow-md hover:shadow-slate-900/10'
+                      )}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      {/* Active state background gradient */}
+                      {isActive && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-blue-500/20 to-blue-600/20 rounded-lg blur-sm"></div>
+                      )}
+                      
+                      <div className={classNames(
+                        'flex items-center justify-center rounded-md transition-all duration-300 relative z-10',
+                        collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
+                        isActive 
+                          ? 'text-white bg-white/10' 
+                          : darkMode 
+                            ? 'text-slate-400 group-hover:text-slate-200'
+                            : 'text-slate-500 group-hover:text-slate-700'
+                      )}>
+                        <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
+                      </div>
+                      
+                      {!collapsed && (
+                        <div className="flex-1 relative z-10">
+                          <span className="font-medium tracking-wide text-sm">{item.name}</span>
+                          {item.emoji && (
+                            <span className="ml-2 text-xs opacity-60">{item.emoji}</span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Hover effect overlay */}
+                      <div className={classNames(
+                        'absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300',
+                        !isActive ? 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5' : ''
+                      )}></div>
+                    </NavLink>
+                  );
+                })}
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Collapsed Connection Indicator */}
-        {collapsed && (
-          <div className={classNames(
-            'px-2 py-3 border-b flex justify-center',
-            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-          )}>
-            <div className={classNames(
-              'w-2 h-2 rounded-full',
-              connectionStatus 
-                ? 'bg-green-500' 
-                : 'bg-red-500'
-            )}></div>
-          </div>
-        )}
-
-        {/* Navigation */}
-        <nav className={classNames(
-          'flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent',
-          collapsed ? 'px-2 py-4' : 'px-3 py-4'
-        )}>
-          {searchQuery ? (
-            /* Search Results */
-            <div className="space-y-1">
-              {filteredItems?.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    className={classNames(
-                      'group flex items-center text-sm font-medium rounded-lg transition-all duration-200',
-                      collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5',
-                      isActive
-                        ? darkMode 
-                          ? 'bg-primary-600 text-white shadow-lg' 
-                          : 'bg-primary-600 text-white shadow-lg'
-                        : darkMode 
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    )}
-                    title={collapsed ? item.name : undefined}
-                    onClick={() => setSearchQuery('')}
-                  >
-                    <div className={classNames(
-                      'flex items-center justify-center rounded-md transition-colors',
-                      collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
-                      isActive 
-                        ? 'text-white' 
-                        : darkMode 
-                          ? 'text-gray-400 group-hover:text-gray-300'
-                          : 'text-gray-500 group-hover:text-gray-600'
-                    )}>
-                      <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
-                    </div>
-                    
-                    {!collapsed && (
-                      <span className="flex-1">{item.name}</span>
-                    )}
-                  </NavLink>
-                );
-              })}
-              {filteredItems?.length === 0 && (
-                <div className={classNames(
-                  'px-3 py-6 text-center text-sm',
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                )}>
-                  No results found
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Grouped Navigation */
-            <div className="space-y-6">
-              {filteredSections.map((section) => (
-                <div key={section.title}>
-                  {!collapsed && (
-                    <button
-                      onClick={() => toggleSection(section.title)}
-                      className={classNames(
-                        'w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
-                        darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'
-                      )}
-                    >
-                      <span>{section.title}</span>
-                      {expandedSections.has(section.title) ? (
-                        <ChevronDownIcon className="h-3 w-3" />
-                      ) : (
-                        <ChevronRightIcon className="h-3 w-3" />
-                      )}
-                    </button>
-                  )}
-                  
-                  <div className={classNames(
-                    'space-y-1 transition-all duration-200',
-                    !collapsed && !expandedSections.has(section.title) ? 'h-0 overflow-hidden opacity-0' : 'h-auto opacity-100'
-                  )}>
-                    {section.items.map((item) => {
-                      const isActive = location.pathname === item.href;
-                      return (
-                        <NavLink
-                          key={item.name}
-                          to={item.href}
-                          className={classNames(
-                            'group flex items-center text-sm font-medium rounded-lg transition-all duration-200',
-                            collapsed ? 'px-2 py-3 justify-center mb-2' : 'px-3 py-2.5 ml-2',
-                            isActive
-                              ? darkMode 
-                                ? 'bg-primary-600 text-white shadow-lg' 
-                                : 'bg-primary-600 text-white shadow-lg'
-                              : darkMode 
-                                ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                          )}
-                          title={collapsed ? item.name : undefined}
-                        >
-                          <div className={classNames(
-                            'flex items-center justify-center rounded-md transition-colors',
-                            collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
-                            isActive 
-                              ? 'text-white' 
-                              : darkMode 
-                                ? 'text-gray-400 group-hover:text-gray-300'
-                                : 'text-gray-500 group-hover:text-gray-600'
-                          )}>
-                            <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
-                          </div>
-                          
-                          {!collapsed && (
-                            <>
-                              <span className="flex-1">{item.name}</span>
-                              {item.badge && (
-                                <span className={classNames(
-                                  "ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full",
-                                  isActive
-                                    ? "bg-white/20 text-white"
-                                    : darkMode 
-                                      ? "bg-red-600 text-white" 
-                                      : "bg-red-500 text-white"
-                                )}>
-                                  {item.badge}
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </nav>
-
-        {/* User Profile */}
+        {/* Enhanced User Profile */}
         <div className={classNames(
-          'flex-shrink-0 border-t',
-          collapsed ? 'px-2 py-3' : 'px-4 py-4',
-          darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+          'flex-shrink-0 border-t backdrop-blur-sm relative',
+          collapsed ? 'px-3 py-4' : 'px-6 py-5',
+          darkMode ? 'border-slate-600/30 bg-slate-800/30' : 'border-slate-300/30 bg-white/30'
         )}>
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-transparent to-transparent opacity-50"></div>
+          
           <div className={classNames(
-            'flex items-center rounded-lg transition-colors group cursor-pointer',
-            collapsed ? 'justify-center p-2' : 'p-3',
-            darkMode 
-              ? 'hover:bg-gray-700' 
-              : 'hover:bg-gray-100'
+            'flex items-center rounded-xl transition-all duration-300 group cursor-pointer relative z-10',
+            collapsed ? 'justify-center p-3' : 'p-4',
+            'hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-purple-500/10 hover:to-blue-500/10',
+            'hover:backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/10'
           )}
           onClick={() => navigate('/profile')}
           >
             <div className="flex-shrink-0 relative">
-              <img
-                className={classNames(
-                  'rounded-full border-2 transition-colors',
-                  collapsed ? 'h-8 w-8' : 'h-10 w-10',
-                  darkMode 
-                    ? 'border-primary-600 group-hover:border-primary-500' 
-                    : 'border-primary-600 group-hover:border-primary-500'
-                )}
-                src={
-                  user?.avatar
-                    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
-                    : `https://cdn.discordapp.com/embed/avatars/${(parseInt(user?.discriminator || '0') % 5)}.png`
-                }
-                alt={user?.username || 'User'}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = `https://cdn.discordapp.com/embed/avatars/${(parseInt(user?.discriminator || '0') % 5)}.png`;
-                }}
-              />
-              {/* Online indicator */}
-              <div className={classNames(
-                'absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full border-2',
-                collapsed ? 'w-3 h-3' : 'w-3 h-3',
-                darkMode ? 'border-gray-800' : 'border-gray-50'
-              )}></div>
+              <div className="relative">
+                <img
+                  className={classNames(
+                    'rounded-full border-3 transition-all duration-300',
+                    collapsed ? 'h-12 w-12' : 'h-14 w-14',
+                    'border-gradient-to-r from-blue-400 via-purple-400 to-blue-400',
+                    'group-hover:shadow-lg group-hover:shadow-blue-500/25 group-hover:scale-105'
+                  )}
+                  style={{
+                    border: '3px solid',
+                    borderImage: collapsed 
+                      ? 'linear-gradient(45deg, #60a5fa, #a855f7, #60a5fa) 1'
+                      : 'linear-gradient(45deg, #60a5fa, #a855f7, #60a5fa) 1'
+                  }}
+                  src={
+                    user?.avatar
+                      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
+                      : `https://cdn.discordapp.com/embed/avatars/${(parseInt(user?.discriminator || '0') % 5)}.png`
+                  }
+                  alt={user?.username || 'User'}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://cdn.discordapp.com/embed/avatars/${(parseInt(user?.discriminator || '0') % 5)}.png`;
+                  }}
+                />
+                {/* Enhanced online indicator with pulse */}
+                <div className={classNames(
+                  'absolute -bottom-1 -right-1 rounded-full border-3 transition-all duration-300',
+                  collapsed ? 'w-4 h-4' : 'w-5 h-5',
+                  'bg-emerald-500 shadow-lg shadow-emerald-500/50',
+                  darkMode ? 'border-slate-800' : 'border-white'
+                )}>
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+                </div>
+              </div>
             </div>
             
             {!collapsed && (
-              <div className="ml-3 flex-1 min-w-0">
-                <p className={classNames(
-                  'text-sm font-semibold transition-colors truncate',
-                  darkMode ? 'text-white group-hover:text-primary-400' : 'text-gray-900 group-hover:text-primary-600'
-                )}>
-                  {user?.username || 'Unknown User'}
-                </p>
-                <p className={classNames(
-                  'text-xs transition-colors',
-                  darkMode ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-400'
-                )}>
-                  #{user?.discriminator || '0000'}
-                </p>
-              </div>
+              <>
+                <div className="ml-4 flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <p className={classNames(
+                      'text-base font-bold transition-colors truncate',
+                      darkMode ? 'text-white group-hover:text-blue-400' : 'text-slate-900 group-hover:text-blue-600'
+                    )}>
+                      {user?.username || 'Unknown User'}
+                    </p>
+                    <div className={classNames(
+                      'px-2 py-0.5 rounded-full text-xs font-semibold',
+                      'bg-gradient-to-r from-blue-500/20 to-purple-500/20',
+                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                    )}>
+                      ADMIN
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <p className={classNames(
+                      'text-xs transition-colors',
+                      darkMode ? 'text-slate-400 group-hover:text-slate-300' : 'text-slate-500 group-hover:text-slate-400'
+                    )}>
+                      #{user?.discriminator || '0000'}
+                    </p>
+                    <span className={classNames(
+                      'w-1 h-1 rounded-full',
+                      darkMode ? 'bg-slate-600' : 'bg-slate-400'
+                    )}></span>
+                    <p className={classNames(
+                      'text-xs font-medium transition-colors',
+                      darkMode ? 'text-emerald-400' : 'text-emerald-600'
+                    )}>
+                      Online
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/settings');
+                    }}
+                    className={classNames(
+                      'p-2.5 rounded-lg transition-all duration-200 group/btn',
+                      darkMode 
+                        ? 'hover:bg-slate-600/50 text-slate-400 hover:text-blue-400' 
+                        : 'hover:bg-slate-200/50 text-slate-500 hover:text-blue-500',
+                      'hover:shadow-lg hover:scale-105'
+                    )}
+                    title="Settings"
+                  >
+                    <CogIcon className="h-4 w-4 transition-transform duration-200 group-hover/btn:rotate-90" />
+                  </button>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogout();
+                    }}
+                    className={classNames(
+                      'p-2.5 rounded-lg transition-all duration-200 group/btn',
+                      darkMode 
+                        ? 'hover:bg-red-500/20 text-slate-400 hover:text-red-400' 
+                        : 'hover:bg-red-50 text-slate-500 hover:text-red-500',
+                      'hover:shadow-lg hover:scale-105'
+                    )}
+                    title="Logout"
+                  >
+                    <ArrowRightOnRectangleIcon className="h-4 w-4 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
+                  </button>
+                </div>
+              </>
             )}
             
-            {!collapsed && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLogout();
-                }}
-                className={classNames(
-                  'p-2 rounded-lg transition-colors',
-                  darkMode 
-                    ? 'hover:bg-gray-600 text-gray-400 hover:text-red-400' 
-                    : 'hover:bg-gray-200 text-gray-500 hover:text-red-500'
-                )}
-                title="Logout"
-              >
-                <ArrowRightOnRectangleIcon className="h-4 w-4" />
-              </button>
-            )}
+            {/* Hover glow effect */}
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
           </div>
         </div>
       </div>

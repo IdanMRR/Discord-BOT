@@ -7,8 +7,7 @@ import {
   MessageFlags
 } from 'discord.js';
 import { db } from '../../database/sqlite';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
-
+import { logCommandUsage } from '../../utils/command-logger';
 // Define interface for ticket type
 interface TicketData {
   id: number;

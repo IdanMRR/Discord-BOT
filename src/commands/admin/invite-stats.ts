@@ -6,8 +6,6 @@ import {
   MessageFlags
 } from 'discord.js';
 import { getInviteStats } from '../../handlers/invites/invite-tracker';
-import { logCommandUsage } from '../../utils/logger';
-
 export const data = new SlashCommandBuilder()
   .setName('invite-stats')
   .setDescription('View invite statistics for the server')
@@ -32,17 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
     
-    // Log command usage
-    await logCommandUsage({
-      guild,
-      user: interaction.user,
-      command: 'invite-stats',
-      options: targetUser ? { user: targetUser.tag } : {},
-      channel: interaction.channel,
-      success: true
-    });
-    
-    if (targetUser) {
+        if (targetUser) {
       // Get stats for specific user
       const userStats = await getUserInviteStats(guild.id, targetUser.id);
       

@@ -7,8 +7,8 @@ import {
   User
 } from 'discord.js';
 import { Colors, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
+import { logError, logInfo } from '../../utils/logger';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -67,17 +67,7 @@ module.exports = {
       // Ensure the table exists
       await ensureTableExists();
       
-      // Log command usage
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: interaction.commandName,
-        options: interaction.options.data,
-        channel: interaction.channel,
-        success: true
-      });
-      
-      const subcommand = interaction.options.getSubcommand();
+            const subcommand = interaction.options.getSubcommand();
       
       if (subcommand === 'individual') {
         // Get user option

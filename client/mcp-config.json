@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "client-dashboard": {
+      "command": "node",
+      "args": ["dist/mcp/simple-client-mcp-server.js"],
+      "env": {
+        "REACT_APP_API_URL": "http://localhost:3001",
+        "NODE_ENV": "development"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "--root", "."]
+    }
+  }
+}

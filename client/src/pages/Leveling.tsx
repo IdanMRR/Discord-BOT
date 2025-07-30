@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ServerSelector from '../components/common/ServerSelector';
 import toast from 'react-hot-toast';
 import {
   ChartBarIcon,
@@ -12,7 +11,11 @@ import {
   TrashIcon,
   ArrowPathIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  PlusIcon,
+  MinusIcon,
+  XMarkIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 
 // Utility function for conditional class names
@@ -67,21 +70,20 @@ interface LevelingSettings {
 }
 
 const LevelingPage: React.FC = () => {
-  const { serverId: urlServerId } = useParams<{ serverId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { serverId } = useParams<{ serverId: string }>();
   const { darkMode } = useTheme();
-  
-  // State management
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(urlServerId || null);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<LevelingSettings | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserLevel | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [xpAmount, setXpAmount] = useState(0);
+  const [actionReason, setActionReason] = useState('');
 
   const loadData = useCallback(async () => {
-    if (!selectedServerId) {
+    if (!serverId) {
       setLoading(false);
       return;
     }
@@ -91,8 +93,18 @@ const LevelingPage: React.FC = () => {
 
       // Load settings and leaderboard in parallel
       const [settingsResponse, leaderboardResponse] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/api/settings/${selectedServerId}/leveling`),
-        fetch(`${process.env.REACT_APP_API_URL}/api/settings/${selectedServerId}/leveling/leaderboard?limit=10&offset=${(currentPage - 1) * 10}`)
+        fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`, {
+          headers: {
+            'x-api-key': process.env.REACT_APP_API_KEY || '',
+            'x-user-id': 'dashboard-user'
+          }
+        }),
+        fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling/leaderboard?limit=10&offset=${(currentPage - 1) * 10}`, {
+          headers: {
+            'x-api-key': process.env.REACT_APP_API_KEY || '',
+            'x-user-id': 'dashboard-user'
+          }
+        })
       ]);
 
       if (settingsResponse.ok) {
@@ -114,15 +126,15 @@ const LevelingPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedServerId, currentPage]);
+  }, [serverId, currentPage]);
 
   // Load data when server selection or page changes
   useEffect(() => {
-    if (!selectedServerId) {
+    if (!serverId) {
       return;
     }
     loadData();
-  }, [selectedServerId, currentPage, loadData]);
+  }, [serverId, currentPage, loadData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -132,17 +144,18 @@ const LevelingPage: React.FC = () => {
   };
 
   const handleToggleSystem = async () => {
-    if (!selectedServerId || !settings) {
+    if (!serverId || !settings) {
       toast.error('No server selected');
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${selectedServerId}/leveling`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.REACT_APP_API_KEY}`
+          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-user-id': 'dashboard-user'
         },
         body: JSON.stringify({
           enabled: !settings.enabled
@@ -163,33 +176,23 @@ const LevelingPage: React.FC = () => {
     }
   };
 
-  const handleServerChange = (serverId: string | null) => {
-    setSelectedServerId(serverId);
-    setSettings(null);
-    setLeaderboard(null);
-    setCurrentPage(1);
-    
-    // Update URL if we're in a route that expects a serverId and serverId is not null
-    if (serverId && location.pathname.includes('/servers/')) {
-      navigate(`/servers/${serverId}/leveling`);
-    }
-  };
 
   const handleResetUser = async (userId: string, username: string) => {
     if (!window.confirm(`Are you sure you want to reset ${username}'s level progress? This action cannot be undone.`)) {
       return;
     }
 
-    if (!selectedServerId) {
+    if (!serverId) {
       toast.error('No server selected');
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${selectedServerId}/leveling/user/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling/user/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${process.env.REACT_APP_API_KEY}`
+          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-user-id': 'dashboard-user'
         }
       });
 
@@ -208,16 +211,101 @@ const LevelingPage: React.FC = () => {
   };
 
   const navigateToSettings = () => {
-    if (!selectedServerId) {
+    if (!serverId) {
       toast.error('No server selected');
       return;
     }
-    window.location.href = `/servers/${selectedServerId}/settings/leveling`;
+    // Navigate to the server settings page
+    window.location.href = `/server/${serverId}/settings`;
+  };
+
+  const handleOpenUserModal = (user: UserLevel) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+    setXpAmount(0);
+    setActionReason('');
+  };
+
+  const handleCloseUserModal = () => {
+    setShowUserModal(false);
+    setSelectedUser(null);
+    setXpAmount(0);
+    setActionReason('');
+  };
+
+  const handleAddXP = async () => {
+    if (!serverId || !selectedUser || xpAmount === 0) {
+      toast.error('Invalid request');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${selectedUser.user_id}/add-xp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-user-id': 'dashboard-user'
+        },
+        body: JSON.stringify({
+          xp: xpAmount,
+          reason: actionReason || undefined
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Successfully ${xpAmount > 0 ? 'added' : 'removed'} ${Math.abs(xpAmount)} XP`);
+        handleCloseUserModal();
+        await loadData(); // Refresh data
+      } else {
+        toast.error(result.error || 'Failed to update XP');
+      }
+    } catch (error) {
+      console.error('Error updating XP:', error);
+      toast.error('Failed to update XP');
+    }
+  };
+
+  const handleSetLevel = async (newLevel: number) => {
+    if (!serverId || !selectedUser) {
+      toast.error('Invalid request');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${selectedUser.user_id}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-user-id': 'dashboard-user'
+        },
+        body: JSON.stringify({
+          level: newLevel,
+          reason: actionReason || undefined
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Successfully set level to ${newLevel}`);
+        handleCloseUserModal();
+        await loadData(); // Refresh data
+      } else {
+        toast.error(result.error || 'Failed to update level');
+      }
+    } catch (error) {
+      console.error('Error updating level:', error);
+      toast.error('Failed to update level');
+    }
   };
 
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -249,23 +337,14 @@ const LevelingPage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* Server Selector */}
-            <div className="min-w-48">
-              <ServerSelector
-                selectedServerId={selectedServerId}
-                onServerSelect={handleServerChange}
-                placeholder="Select a server..."
-                showAllOption={false}
-              />
-            </div>
 
             <button
               onClick={handleRefresh}
-              disabled={refreshing || !selectedServerId}
+              disabled={refreshing || !serverId}
               className={classNames(
                 "flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors",
                 darkMode ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100",
-                (!selectedServerId || refreshing) ? "opacity-50 cursor-not-allowed" : ""
+                (!serverId || refreshing) ? "opacity-50 cursor-not-allowed" : ""
               )}
             >
               <ArrowPathIcon className={classNames("h-4 w-4", refreshing ? "animate-spin" : "")} />
@@ -273,7 +352,7 @@ const LevelingPage: React.FC = () => {
             </button>
 
             {/* Toggle Switch */}
-            {selectedServerId && settings && (
+            {serverId && settings && (
               <div className="flex items-center space-x-3">
                 <span className={classNames(
                   "text-sm font-medium",
@@ -302,10 +381,10 @@ const LevelingPage: React.FC = () => {
 
             <button
               onClick={navigateToSettings}
-              disabled={!selectedServerId}
+              disabled={!serverId}
               className={classNames(
                 "flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors",
-                !selectedServerId ? "opacity-50 cursor-not-allowed" : ""
+                !serverId ? "opacity-50 cursor-not-allowed" : ""
               )}
             >
               <span>Settings</span>
@@ -313,20 +392,9 @@ const LevelingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Server Selection Notice */}
-        {!selectedServerId && (
-          <div className={classNames(
-            "p-4 rounded-lg border mb-6",
-            darkMode ? "bg-yellow-900/20 border-yellow-800 text-yellow-300" : "bg-yellow-50 border-yellow-200 text-yellow-800"
-          )}>
-            <p className="text-sm">
-              Please select a server from the dropdown above to view leveling data.
-            </p>
-          </div>
-        )}
 
         {/* Loading State */}
-        {loading && selectedServerId && (
+        {loading && serverId && (
           <div className="flex justify-center py-12">
             <LoadingSpinner />
           </div>
@@ -334,7 +402,7 @@ const LevelingPage: React.FC = () => {
       </div>
 
       {/* Content - only show when server is selected and not loading */}
-      {selectedServerId && !loading && (
+      {serverId && !loading && (
         <>
           {/* Status Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -469,6 +537,108 @@ const LevelingPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Additional Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className={classNames(
+          "rounded-lg border p-6",
+          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        )}>
+          <div className="flex items-center">
+            <div className={classNames(
+              "p-3 rounded-lg mr-4",
+              darkMode ? "bg-orange-900/20" : "bg-orange-100"
+            )}>
+              <ChartBarIcon className={classNames(
+                "h-6 w-6",  
+                darkMode ? "text-orange-400" : "text-orange-600"
+              )} />
+            </div>
+            <div>
+              <p className={classNames(
+                "text-sm font-medium",
+                darkMode ? "text-gray-400" : "text-gray-600"
+              )}>
+                XP Cooldown
+              </p>
+              <p className={classNames(
+                "text-2xl font-bold",
+                darkMode ? "text-white" : "text-gray-900"
+              )}>
+                {settings?.xp_cooldown ? `${settings.xp_cooldown}s` : '60s'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className={classNames(
+          "rounded-lg border p-6",
+          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        )}>
+          <div className="flex items-center">
+            <div className={classNames(
+              "p-3 rounded-lg mr-4",
+              darkMode ? "bg-indigo-900/20" : "bg-indigo-100"
+            )}>
+              <StarIcon className={classNames(
+                "h-6 w-6",
+                darkMode ? "text-indigo-400" : "text-indigo-600"
+              )} />
+            </div>
+            <div>
+              <p className={classNames(
+                "text-sm font-medium",
+                darkMode ? "text-gray-400" : "text-gray-600"
+              )}>
+                XP Multiplier
+              </p>
+              <p className={classNames(
+                "text-2xl font-bold",
+                darkMode ? "text-white" : "text-gray-900"
+              )}>
+                {settings?.xp_multiplier ? `${settings.xp_multiplier}x` : '1.0x'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className={classNames(
+          "rounded-lg border p-6",
+          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"  
+        )}>
+          <div className="flex items-center">
+            <div className={classNames(
+              "p-3 rounded-lg mr-4",
+              settings?.voice_xp_enabled
+                ? darkMode ? "bg-green-900/20" : "bg-green-100"
+                : darkMode ? "bg-red-900/20" : "bg-red-100"
+            )}>
+              <TrophyIcon className={classNames(
+                "h-6 w-6",
+                settings?.voice_xp_enabled
+                  ? darkMode ? "text-green-400" : "text-green-600"
+                  : darkMode ? "text-red-400" : "text-red-600"
+              )} />
+            </div>
+            <div>
+              <p className={classNames(
+                "text-sm font-medium",
+                darkMode ? "text-gray-400" : "text-gray-600"
+              )}>
+                Voice XP
+              </p>
+              <p className={classNames(
+                "text-2xl font-bold",
+                settings?.voice_xp_enabled
+                  ? darkMode ? "text-green-400" : "text-green-600"
+                  : darkMode ? "text-red-400" : "text-red-600"
+              )}>
+                {settings?.voice_xp_enabled ? 'Enabled' : 'Disabled'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Leaderboard */}
       <div className={classNames(
         "rounded-lg border",
@@ -560,9 +730,10 @@ const LevelingPage: React.FC = () => {
                   <div
                     key={user.user_id}
                     className={classNames(
-                      "flex items-center justify-between p-4 rounded-lg border",
-                      darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
+                      "flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-opacity-80 transition-colors",
+                      darkMode ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                     )}
+                    onClick={() => handleOpenUserModal(user)}
                   >
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center justify-center w-8 h-8">
@@ -595,7 +766,10 @@ const LevelingPage: React.FC = () => {
                     </div>
 
                     <button
-                      onClick={() => handleResetUser(user.user_id, user.userData.displayName)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResetUser(user.user_id, user.userData.displayName);
+                      }}
                       className={classNames(
                         "p-2 rounded-lg transition-colors",
                         darkMode ? "text-red-400 hover:bg-red-900/20" : "text-red-600 hover:bg-red-100"
@@ -612,6 +786,195 @@ const LevelingPage: React.FC = () => {
         </div>
       </div>
         </>
+      )}
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={classNames(
+            "bg-white rounded-lg shadow-xl max-w-md w-full mx-4",
+            darkMode ? "bg-gray-800" : "bg-white"
+          )}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className={classNames(
+                  "p-2 rounded-lg",
+                  darkMode ? "bg-blue-900/20" : "bg-blue-100"
+                )}>
+                  <UserIcon className={classNames(
+                    "h-6 w-6",
+                    darkMode ? "text-blue-400" : "text-blue-600"
+                  )} />
+                </div>
+                <div>
+                  <h3 className={classNames(
+                    "text-lg font-semibold",
+                    darkMode ? "text-white" : "text-gray-900"
+                  )}>
+                    {selectedUser.userData.displayName}
+                  </h3>
+                  <p className={classNames(
+                    "text-sm",
+                    darkMode ? "text-gray-400" : "text-gray-600"
+                  )}>
+                    Rank #{selectedUser.rank}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseUserModal}
+                className={classNames(
+                  "p-2 rounded-lg transition-colors",
+                  darkMode ? "text-gray-400 hover:bg-gray-700" : "text-gray-600 hover:bg-gray-100"
+                )}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* User Stats */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className={classNames(
+                  "text-center p-4 rounded-lg",
+                  darkMode ? "bg-gray-700" : "bg-gray-50"
+                )}>
+                  <p className={classNames(
+                    "text-2xl font-bold",
+                    darkMode ? "text-white" : "text-gray-900"
+                  )}>
+                    {selectedUser.level}
+                  </p>
+                  <p className={classNames(
+                    "text-sm",
+                    darkMode ? "text-gray-400" : "text-gray-600"
+                  )}>
+                    Level
+                  </p>
+                </div>
+                <div className={classNames(
+                  "text-center p-4 rounded-lg",
+                  darkMode ? "bg-gray-700" : "bg-gray-50"
+                )}>
+                  <p className={classNames(
+                    "text-2xl font-bold",
+                    darkMode ? "text-white" : "text-gray-900"
+                  )}>
+                    {selectedUser.xp.toLocaleString()}
+                  </p>
+                  <p className={classNames(
+                    "text-sm",
+                    darkMode ? "text-gray-400" : "text-gray-600"
+                  )}>
+                    Total XP
+                  </p>
+                </div>
+              </div>
+
+              {/* XP Management */}
+              <div className="space-y-4">
+                <div>
+                  <label className={classNames(
+                    "block text-sm font-medium mb-2",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}>
+                    XP Amount (positive to add, negative to remove)
+                  </label>
+                  <input
+                    type="number"
+                    value={xpAmount}
+                    onChange={(e) => setXpAmount(parseInt(e.target.value) || 0)}
+                    className={classNames(
+                      "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      darkMode 
+                        ? "bg-gray-700 border-gray-600 text-white" 
+                        : "bg-white border-gray-300 text-gray-900"
+                    )}
+                    placeholder="Enter XP amount..."
+                  />
+                </div>
+
+                <div>
+                  <label className={classNames(
+                    "block text-sm font-medium mb-2",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}>
+                    Reason (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={actionReason}
+                    onChange={(e) => setActionReason(e.target.value)}
+                    className={classNames(
+                      "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      darkMode 
+                        ? "bg-gray-700 border-gray-600 text-white" 
+                        : "bg-white border-gray-300 text-gray-900"
+                    )}
+                    placeholder="Reason for change..."
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleAddXP}
+                    disabled={xpAmount === 0}
+                    className={classNames(
+                      "flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                      xpAmount === 0
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-opacity-90",
+                      darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
+                    )}
+                  >
+                    {xpAmount > 0 ? <PlusIcon className="h-4 w-4" /> : <MinusIcon className="h-4 w-4" />}
+                    <span>{xpAmount > 0 ? 'Add' : 'Remove'} XP</span>
+                  </button>
+                </div>
+
+                {/* Quick Level Actions */}
+                <div className="border-t pt-4 dark:border-gray-700">
+                  <p className={classNames(
+                    "text-sm font-medium mb-3",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}>
+                    Quick Level Actions
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => handleSetLevel(selectedUser.level + 1)}
+                      className={classNames(
+                        "px-3 py-2 text-sm rounded-lg transition-colors",
+                        darkMode ? "bg-green-600 text-white hover:bg-green-700" : "bg-green-500 text-white hover:bg-green-600"
+                      )}
+                    >
+                      +1 Level
+                    </button>
+                    <button
+                      onClick={() => handleSetLevel(Math.max(0, selectedUser.level - 1))}
+                      className={classNames(
+                        "px-3 py-2 text-sm rounded-lg transition-colors",
+                        darkMode ? "bg-red-600 text-white hover:bg-red-700" : "bg-red-500 text-white hover:bg-red-600"
+                      )}
+                    >
+                      -1 Level
+                    </button>
+                    <button
+                      onClick={() => handleSetLevel(0)}
+                      className={classNames(
+                        "px-3 py-2 text-sm rounded-lg transition-colors",
+                        darkMode ? "bg-gray-600 text-white hover:bg-gray-700" : "bg-gray-500 text-white hover:bg-gray-600"
+                      )}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

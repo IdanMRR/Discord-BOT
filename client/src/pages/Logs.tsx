@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiService } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PermissionGuard from '../components/common/PermissionGuard';
 import toast from 'react-hot-toast';
-import { formatDashboardLogDate } from '../utils/dateUtils';
+
 import {
   EyeIcon,
   FunnelIcon,
@@ -68,8 +69,13 @@ const LOG_TYPES = [
   { value: 'command', label: 'Commands', icon: CommandLineIcon },
   { value: 'message', label: 'Messages', icon: ChatBubbleLeftEllipsisIcon },
   { value: 'moderation', label: 'Moderation', icon: ShieldCheckIcon },
+  { value: 'member', label: 'Member Events', icon: UserIcon },
+  { value: 'verification', label: 'Verification', icon: CheckIcon },
+  { value: 'warning', label: 'Warnings', icon: XCircleIcon },
+  { value: 'giveaway', label: 'Giveaways', icon: TicketIcon },
+  { value: 'levelup', label: 'Level Ups', icon: UserPlusIcon },
+  { value: 'automod', label: 'AutoMod', icon: ShieldCheckIcon },
   { value: 'server', label: 'Server Events', icon: ShieldCheckIcon },
-  { value: 'user', label: 'User Activity', icon: UserIcon },
   { value: 'ticket', label: 'Tickets', icon: TicketIcon },
 ];
 
@@ -78,6 +84,7 @@ const logsCache = new Map<string, { data: LogEntry[]; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 seconds
 
 const LogsContent: React.FC = () => {
+  const { serverId } = useParams<{ serverId: string }>();
   const { darkMode } = useTheme();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,51 +172,159 @@ const LogsContent: React.FC = () => {
       let allLogs: LogEntry[] = [];
 
       try {
-        // Batch API calls efficiently
-        const apiCalls: Promise<any>[] = [];
-
-        if (filter.type === 'all' || filter.type === 'command') {
-          apiCalls.push(apiService.getCommandLogs().then(result => ({ type: 'command', result })));
-        }
-        if (filter.type === 'all' || filter.type === 'message') {
-          apiCalls.push(apiService.getMessageLogs().then(result => ({ type: 'message', result })));
-        }
-        if (filter.type === 'all' || filter.type === 'moderation') {
-          apiCalls.push(apiService.getModerationLogs().then(result => ({ type: 'moderation', result })));
-        }
-        if (filter.type === 'all' || filter.type === 'server') {
-          apiCalls.push(apiService.getServerActivityLogs().then(result => ({ type: 'server', result })));
-        }
-        if (filter.type === 'all' || filter.type === 'user') {
-          apiCalls.push(apiService.getUserActivityLogs().then(result => ({ type: 'user', result })));
-        }
-        if (filter.type === 'all' || filter.type === 'ticket') {
-          apiCalls.push(apiService.getTicketLogs().then(result => ({ type: 'ticket', result })));
+        // Get server-specific logs
+        if (!serverId) {
+          throw new Error('No server ID provided');
         }
 
-        // Execute all API calls in parallel
-        const results = await Promise.allSettled(apiCalls);
-
-        // Process results
-        results.forEach((result, index) => {
-          if (result.status === 'fulfilled') {
-            const { type, result: apiResult } = result.value;
-            if (apiResult.success && apiResult.data) {
-              const formattedLogs = apiResult.data.map((log: any) => ({
-                ...log,
-                log_type: type,
-                action: log.action || log.command || `${type} action`,
-                action_type: log.action_type || log.action || type
-              }));
-              allLogs.push(...formattedLogs);
-            }
-          }
+        console.log('Fetching server logs for serverId:', serverId);
+        
+        const response = await apiService.getServerLogs({
+          guildId: serverId,
+          page: 1,
+          limit: 1000,
+          userId: filter.userId || undefined
         });
 
-        // Sort logs by timestamp (newest first)
+        console.log('Server logs response:', response);
+
+        if (response.success && response.data) {
+          allLogs = response.data.map((log: any) => {
+            // Determine proper log type based on action/command
+            let logType = log.log_type || 'server';
+            
+            // Comprehensive categorization system
+            if (log.command) {
+              const cmd = log.command.toLowerCase();
+              
+              // Warning Commands
+              if (cmd === 'warn' || cmd === 'warning' || cmd === 'removewarn') {
+                logType = 'warning';
+              }
+              // Moderation Commands  
+              else if (['ban', 'kick', 'timeout', 'mute', 'unmute', 'unban', 'tempban'].includes(cmd)) {
+                logType = 'moderation';
+              }
+              // Ticket Commands
+              else if (['ticket', 'close', 'add', 'remove', 'claim', 'unclaim'].includes(cmd)) {
+                logType = 'ticket';
+              }
+              // Giveaway Commands
+              else if (['giveaway', 'gstart', 'gend', 'greroll', 'gcancel'].includes(cmd)) {
+                logType = 'giveaway';
+              }
+              // Level/XP Commands
+              else if (['rank', 'leaderboard', 'setlevel', 'addxp', 'removexp'].includes(cmd)) {
+                logType = 'levelup';
+              }
+              // General Commands
+              else if (['help', 'ping', 'info', 'serverinfo', 'userinfo', 'avatar', 'invite'].includes(cmd)) {
+                logType = 'command';
+              }
+              // Verification Commands
+              else if (['verify', 'verification'].includes(cmd)) {
+                logType = 'verification';
+              }
+            } 
+            // Categorize by action/event type
+            else if (log.action) {
+              const action = log.action.toLowerCase();
+              
+              // Warning Events
+              if (action.includes('warn')) {
+                logType = 'warning';
+              }
+              // Moderation Events
+              else if (action.includes('ban') || action.includes('kick') || action.includes('timeout') || action.includes('mute')) {
+                logType = 'moderation';
+              }
+              // Member Events
+              else if (action.includes('join') || action.includes('leave') || action.includes('member')) {
+                logType = 'member';
+              }
+              // Verification Events
+              else if (action.includes('verify') || action.includes('verification')) {
+                logType = 'verification';
+              }
+              // Message Events
+              else if (action.includes('message') || action.includes('edit') || action.includes('delete')) {
+                logType = 'message';
+              }
+              // Ticket Events
+              else if (action.includes('ticket') || action.includes('close') || action.includes('create')) {
+                logType = 'ticket';
+              }
+              // Giveaway Events
+              else if (action.includes('giveaway') || action.includes('raffle')) {
+                logType = 'giveaway';
+              }
+              // Level Events
+              else if (action.includes('level') || action.includes('xp') || action.includes('rank')) {
+                logType = 'levelup';
+              }
+              // AutoMod Events
+              else if (action.includes('automod') || action.includes('auto') || action.includes('filter')) {
+                logType = 'automod';
+              }
+            }
+            // Categorize by log details/metadata
+            else if (log.details) {
+              const details = (typeof log.details === 'string' ? log.details : JSON.stringify(log.details)).toLowerCase();
+              
+              if (details.includes('warn')) {
+                logType = 'warning';
+              } else if (details.includes('ticket')) {
+                logType = 'ticket';
+              } else if (details.includes('giveaway')) {
+                logType = 'giveaway';
+              } else if (details.includes('level') || details.includes('xp')) {
+                logType = 'levelup';
+              }
+            }
+            
+            return {
+              ...log,
+              log_type: logType,
+              action: log.action || log.action_type || 'action',
+              action_type: log.action_type || log.action || logType
+            };
+          });
+          
+          // Debug: Log first few entries to see timestamps
+          console.log('Sample log timestamps:', allLogs.slice(0, 5).map(log => ({
+            id: log.id,
+            action: log.action,
+            created_at: log.created_at,
+            timestamp: log.timestamp,
+            dateValid: !isNaN(new Date(log.created_at || log.timestamp || '').getTime())
+          })));
+        } else {
+          console.error('Failed to fetch logs:', response.error);
+          throw new Error(response.error || 'Failed to fetch logs');
+        }
+
+        // Don't filter out logs - show all logs even if they have date issues
+        console.log('Total logs fetched:', allLogs.length);
+        
+        // Sort logs by timestamp (newest first) - put logs with invalid dates at the end
         allLogs.sort((a, b) => {
-          const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
-          const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
+          const getValidTimestamp = (log: any) => {
+            const dateStr = log.created_at || log.timestamp;
+            if (!dateStr) return -1; // Put entries without dates at the end
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? -1 : date.getTime(); // Put invalid dates at the end
+          };
+          
+          const dateA = getValidTimestamp(a);
+          const dateB = getValidTimestamp(b);
+          
+          // If both have invalid dates, maintain original order
+          if (dateA === -1 && dateB === -1) return 0;
+          // If only A is invalid, put B first
+          if (dateA === -1) return 1;
+          // If only B is invalid, put A first  
+          if (dateB === -1) return -1;
+          // Both are valid, sort by newest first
           return dateB - dateA;
         });
 
@@ -228,11 +343,16 @@ const LogsContent: React.FC = () => {
           allLogs = allLogs.filter(log => log.user_id === filter.userId);
         }
 
-        // Apply date filter
+        // Apply date filter with proper date validation - but don't exclude logs with no dates
         const now = new Date();
         if (filter.dateRange !== 'all') {
           allLogs = allLogs.filter(log => {
-            const logDate = new Date(log.created_at || log.timestamp || 0);
+            const dateStr = log.created_at || log.timestamp;
+            if (!dateStr) return true; // Include entries without dates when filtering
+            
+            const logDate = new Date(dateStr);
+            if (isNaN(logDate.getTime())) return true; // Include invalid dates when filtering
+            
             const diffTime = now.getTime() - logDate.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
@@ -273,7 +393,7 @@ const LogsContent: React.FC = () => {
       setRefreshing(false);
       requestInProgress.current = false;
     }
-  }, [filter, pagination.limit, getCacheKey, getCachedLogs, setCachedLogs]);
+  }, [filter, pagination.limit, getCacheKey, getCachedLogs, setCachedLogs, serverId]);
 
   
   // Debounced fetch function for search and filter changes
@@ -319,7 +439,32 @@ const LogsContent: React.FC = () => {
         }
         return <DocumentTextIcon className="h-5 w-5 text-yellow-500" />;
       case 'moderation':
+        if (actionType?.includes('Ban')) {
+          return <XCircleIcon className="h-5 w-5 text-red-600" />;
+        } else if (actionType?.includes('Kick')) {
+          return <UserMinusIcon className="h-5 w-5 text-orange-500" />;
+        } else if (actionType?.includes('Timeout')) {
+          return <ClockIcon className="h-5 w-5 text-yellow-500" />;
+        }
         return <ShieldCheckIcon className="h-5 w-5 text-orange-500" />;
+      case 'member':
+        if (actionType?.includes('joined')) {
+          return <UserPlusIcon className="h-5 w-5 text-green-500" />;
+        }
+        return <UserMinusIcon className="h-5 w-5 text-red-500" />;
+      case 'verification':
+        if (actionType?.includes('Success')) {
+          return <CheckIcon className="h-5 w-5 text-green-500" />;
+        }
+        return <XCircleIcon className="h-5 w-5 text-red-500" />;
+      case 'warning':
+        return <XCircleIcon className="h-5 w-5 text-amber-500" />;
+      case 'giveaway':
+        return <TicketIcon className="h-5 w-5 text-pink-500" />;
+      case 'levelup':
+        return <UserIcon className="h-5 w-5 text-green-400" />;
+      case 'automod':
+        return <ShieldCheckIcon className="h-5 w-5 text-purple-500" />;
       case 'server':
         return <ShieldCheckIcon className="h-5 w-5 text-purple-500" />;
       case 'user':
@@ -346,7 +491,19 @@ const LogsContent: React.FC = () => {
       case 'message':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'moderation':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      case 'member':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'verification':
+        return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300';
+      case 'warning':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'giveaway':
+        return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
+      case 'levelup':
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
+      case 'automod':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'server':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'user':
@@ -712,14 +869,21 @@ const LogsContent: React.FC = () => {
                               </div>
                             )}
 
-                            {(log.moderatorName || log.moderatorId) && (
+                            {((log.moderatorName || log.moderatorId) || 
+                              (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick')))) && (
                               <div className="flex items-center space-x-2">
                                 <ShieldCheckIcon className="h-4 w-4 text-primary-400" />
                                 <span className={classNames(
                                   "text-sm",
                                   darkMode ? "text-gray-300" : "text-gray-600"
                                 )}>
-                                  Moderator: {log.moderatorName || log.moderatorId}
+                                  Moderator: {log.moderatorId === 'dashboard' || log.moderatorId === 'system' || log.moderatorId === 'automod' || 
+                                             log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
+                                             (log.moderatorName && log.moderatorName.startsWith('User_')) ||
+                                             (log.moderatorId && log.moderatorId.startsWith('User_')) ||
+                                             (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick')) && (!log.moderatorName || log.moderatorName.startsWith('User_') || !log.moderatorId || log.moderatorId.startsWith('User_'))) ||
+                                             (log.details && log.details.toLowerCase().includes('automatic'))
+                                             ? 'AutoMod System' : (log.moderatorName || log.moderatorId || 'Unknown')}
                                 </span>
                               </div>
                             )}
@@ -856,13 +1020,138 @@ const LogsContent: React.FC = () => {
                               "text-sm font-medium",
                               darkMode ? "text-gray-300" : "text-gray-600"
                             )}>
-                              {formatDashboardLogDate(log.created_at || log.timestamp || '')}
+                              {(() => {
+                                const dateStr = log.created_at || log.timestamp;
+                                if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
+                                  return 'Unknown time';
+                                }
+                                
+                                try {
+                                  // More robust date parsing
+                                  let date: Date;
+                                  
+                                  // Handle timestamp as number (milliseconds)
+                                  if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000000) {
+                                    date = new Date(Number(dateStr));
+                                  }
+                                  // Handle timestamp as number (seconds)
+                                  else if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000) {
+                                    date = new Date(Number(dateStr) * 1000);
+                                  }
+                                  // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss)
+                                  else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+                                    const [datePart, timePart] = dateStr.split(', ');
+                                    const [day, month, year] = datePart.split(/[/.]/);
+                                    date = new Date(`${year}-${month}-${day}T${timePart}.000Z`);
+                                  }
+                                  // Handle ISO format
+                                  else if (dateStr.includes('T') || dateStr.includes('Z')) {
+                                    date = new Date(dateStr);
+                                  }
+                                  // Handle SQLite format (YYYY-MM-DD HH:MM:SS)
+                                  else if (dateStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                                    date = new Date(dateStr + 'Z');
+                                  }
+                                  // Generic fallback
+                                  else {
+                                    date = new Date(dateStr);
+                                  }
+                                  
+                                  // Check if date is valid
+                                  if (isNaN(date.getTime())) {
+                                    return `Invalid: ${dateStr}`;
+                                  }
+                                  
+                                  // Calculate relative time
+                                  const now = new Date();
+                                  const diffTime = now.getTime() - date.getTime();
+                                  const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                                  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                  
+                                  // Show relative time for recent entries
+                                  if (diffMinutes < 1 && diffTime >= 0) {
+                                    return 'Just now';
+                                  } else if (diffMinutes < 60 && diffTime >= 0) {
+                                    return `${diffMinutes} min ago`;
+                                  } else if (diffHours < 24 && diffTime >= 0) {
+                                    return `${diffHours}h ago`;
+                                  } else if (diffDays < 7 && diffTime >= 0) {
+                                    return `${diffDays}d ago`;
+                                  } else {
+                                    // For older entries, show formatted date
+                                    return date.toLocaleDateString('en-GB', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('Date parsing error:', error, 'for:', dateStr);
+                                  return `Raw: ${dateStr}`;
+                                }
+                              })()}
                             </p>
                             <p className={classNames(
                               "text-xs",
                               darkMode ? "text-gray-500" : "text-gray-400"
                             )}>
-                              {new Date(log.created_at || log.timestamp || '').toLocaleString()}
+                              {(() => {
+                                const dateStr = log.created_at || log.timestamp;
+                                if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
+                                  return 'No timestamp available';
+                                }
+                                
+                                try {
+                                  // More robust date parsing for full timestamp
+                                  let date: Date;
+                                  
+                                  // Handle timestamp as number (milliseconds)
+                                  if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000000) {
+                                    date = new Date(Number(dateStr));
+                                  }
+                                  // Handle timestamp as number (seconds)
+                                  else if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000) {
+                                    date = new Date(Number(dateStr) * 1000);
+                                  }
+                                  // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss) - already in Israeli timezone
+                                  else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+                                    return dateStr.replace(/\./g, '/'); // Normalize dots to slashes for display
+                                  }
+                                  // Handle ISO format
+                                  else if (dateStr.includes('T') || dateStr.includes('Z')) {
+                                    date = new Date(dateStr);
+                                  }
+                                  // Handle SQLite format (YYYY-MM-DD HH:MM:SS)
+                                  else if (dateStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                                    date = new Date(dateStr + 'Z');
+                                  }
+                                  // Generic fallback
+                                  else {
+                                    date = new Date(dateStr);
+                                  }
+                                  
+                                  // Check if date is valid
+                                  if (isNaN(date.getTime())) {
+                                    return `Invalid timestamp: ${dateStr}`;
+                                  }
+                                  
+                                  // Return formatted timestamp in Israeli timezone
+                                  return date.toLocaleString('en-GB', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: false,
+                                    timeZone: 'Asia/Jerusalem'
+                                  });
+                                } catch (error) {
+                                  console.error('Full timestamp parsing error:', error, 'for:', dateStr);
+                                  return `Raw timestamp: ${dateStr}`;
+                                }
+                              })()}
                             </p>
                           </div>
                         </div>

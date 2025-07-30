@@ -6,34 +6,23 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
+// Stagewise imports (only in development)
+import { StagewiseToolbar } from '@stagewise/toolbar-react';
+import ReactPlugin from '@stagewise-plugins/react';
+
 // Import global settings CSS
 import './styles/global-settings.css';
 import { wsService } from './services/websocket';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Warnings from './pages/Warnings';
-import Tickets from './pages/Tickets';
-import Servers from './pages/Servers';
-import ServerDetail from './pages/ServerDetail';
-import Members from './pages/Members';
 import LoadingSpinner from './components/common/LoadingSpinner';
-import Logs from './pages/Logs';
 import Profile from './pages/Profile';
 import DashboardLogs from './pages/DashboardLogs';
-import ServerLogs from './pages/ServerLogs';
 import Admin from './pages/Admin';
 import NoPermissions from './pages/NoPermissions';
-import { Analytics } from './pages/Analytics';
-import ServerSettings from './pages/ServerSettings';
-import AdvancedServerSettings from './pages/AdvancedServerSettings';
-import GeneralSettings from './pages/settings/GeneralSettings';
-import ModerationSettings from './pages/settings/ModerationSettings';
-import WelcomeSettings from './pages/settings/WelcomeSettings';
-import RoleSettings from './pages/settings/RoleSettings';
-import EconomySettings from './pages/settings/EconomySettings';
-import LevelingSettings from './pages/settings/LevelingSettings';
-import Leveling from './pages/Leveling';
+import ServerDashboardLayout from './components/layout/ServerDashboardLayout';
+import ServerSelection from './pages/ServerSelection';
 // Fix import for Settings component
 const Settings = React.lazy(() => import('./pages/Settings'));
 
@@ -91,29 +80,28 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <Routes>
+                {/* Root dashboard - will redirect based on server access */}
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/servers" element={<Servers />} />
-                <Route path="/servers/:serverId" element={<ServerDetail />} />
-                <Route path="/servers/:serverId/members" element={<Members />} />
-                <Route path="/servers/:serverId/logs" element={<ServerLogs />} />
-                <Route path="/servers/:serverId/settings" element={<ServerSettings />} />
-                <Route path="/servers/:serverId/settings/advanced" element={<AdvancedServerSettings />} />
-                <Route path="/servers/:serverId/settings/general" element={<GeneralSettings />} />
-                <Route path="/servers/:serverId/settings/moderation" element={<ModerationSettings />} />
-                <Route path="/servers/:serverId/settings/welcome" element={<WelcomeSettings />} />
-                <Route path="/servers/:serverId/settings/roles" element={<RoleSettings />} />
-                <Route path="/servers/:serverId/settings/economy" element={<EconomySettings />} />
-                <Route path="/servers/:serverId/settings/leveling" element={<LevelingSettings />} />
-                <Route path="/tickets" element={<Tickets />} />
-                <Route path="/warnings" element={<Warnings />} />
-                <Route path="/leveling" element={<Leveling />} />
-                <Route path="/logs" element={<Logs />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/servers/:serverId/analytics" element={<Analytics />} />
-                <Route path="/settings" element={<Settings />} />
+                
+                {/* Server selection page for multi-server users */}
+                <Route path="/servers" element={<ServerSelection />} />
+                <Route path="/select-server" element={<Navigate to="/servers" replace />} />
+                
+                {/* Unified server dashboard with all features */}
+                <Route path="/server/:serverId/*" element={<ServerDashboardLayout />} />
+                
+                {/* Legacy routes - redirect to server-scoped equivalents */}
+                <Route path="/servers/:serverId" element={<Navigate to="/server/:serverId" replace />} />
+                <Route path="/servers/:serverId/*" element={<Navigate to="/server/:serverId" replace />} />
+                
+                {/* Global pages (not server-specific) */}
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/dashboard-logs" element={<DashboardLogs />} />
+                <Route path="/logs" element={<DashboardLogs />} />
+                <Route path="/dashboard-logs" element={<Navigate to="/logs" replace />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/settings" element={<Settings />} />
+                
+                {/* Catch-all redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
@@ -341,6 +329,13 @@ function App() {
           </SettingsProvider>
         </AuthProvider>
       </ThemeProvider>
+      
+      {/* Stagewise Toolbar - only in development */}
+      <StagewiseToolbar 
+        config={{
+          plugins: [ReactPlugin]
+        }}
+      />
     </ErrorBoundary>
   );
 }

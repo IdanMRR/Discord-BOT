@@ -9,9 +9,8 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
-
+import { logInfo, logError } from '../../utils/logger';
 import { getContextLanguage, getTranslation as t } from '../../utils/language';
 
 export const data = new SlashCommandBuilder()
@@ -59,23 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const deleteAll = interaction.options.getBoolean('delete_all') ?? false;
     const resetSettings = interaction.options.getBoolean('reset_settings') ?? false;
 
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'server-cleanup',
-      options: { 
-        deleteTickets,
-        deleteLogs,
-        deleteWelcome,
-        deleteAll,
-        resetSettings
-      },
-      channel: interaction.channel,
-      success: true
-    });
-
-    // Get server settings
+        // Get server settings
     const settings = await settingsManager.getSettings(interaction.guildId!);
     
     // Track what was deleted

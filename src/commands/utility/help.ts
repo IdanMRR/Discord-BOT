@@ -10,7 +10,6 @@ import {
   MessageFlags
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logCommandUsage } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('help')
@@ -114,16 +113,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.editReply({ 
         embeds: [helpEmbed], 
         components: [row]
-      });
-      
-      // Log the command usage after successful execution
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: 'help',
-        options: { category },
-        channel: interaction.channel,
-        success: true
       });
       
       return;
@@ -447,16 +436,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.editReply({ 
       embeds: [helpEmbed], 
       components: [row, row2]
-    });
-    
-    // Log the command usage after successful execution
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'help',
-      options: { category },
-      channel: interaction.channel,
-      success: true
     });
     
   } catch (error: any) {

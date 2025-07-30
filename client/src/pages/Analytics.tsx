@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import PermissionGuard from '../components/common/PermissionGuard';
-import ServerSelector from '../components/common/ServerSelector';
-import { enhancedApiService as apiService } from '../services/apiService';
+import { apiService } from '../services/api';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -90,7 +89,6 @@ interface ServerHealth {
 
 export const Analytics: React.FC = () => {
   const { serverId: routeServerId } = useParams<{ serverId: string }>();
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(routeServerId || null);
   const [selectedPeriod, setSelectedPeriod] = useState<number>(7);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -103,45 +101,77 @@ export const Analytics: React.FC = () => {
   const [serverHealth, setServerHealth] = useState<ServerHealth[]>([]);
 
   const fetchAnalytics = useCallback(async () => {
-    const serverId = selectedServerId || routeServerId;
+    const serverId = routeServerId;
     if (!serverId) return;
     
     setIsLoading(true);
     try {
-      const [
-        overviewRes,
-        hourlyRes,
-        channelsRes,
-        commandsRes,
-        engagementRes,
-        healthRes
-      ] = await Promise.all([
-        apiService.get(`/api/analytics/${serverId}/overview?days=${selectedPeriod}`),
-        apiService.get(`/api/analytics/${serverId}/hourly-activity?days=${selectedPeriod}`),
-        apiService.get(`/api/analytics/${serverId}/top-channels?days=${selectedPeriod}&limit=10`),
-        apiService.get(`/api/analytics/${serverId}/command-stats?days=${selectedPeriod}`),
-        apiService.get(`/api/analytics/${serverId}/member-engagement?days=${selectedPeriod}`),
-        apiService.get(`/api/analytics/${serverId}/server-health?hours=${selectedPeriod * 24}`)
+      // Fetch real analytics data
+      const [overviewRes, hourlyRes, channelsRes, commandsRes, engagementRes, healthRes] = await Promise.all([
+        apiService.getAnalyticsOverview(serverId, selectedPeriod),
+        apiService.getAnalyticsHourlyActivity(serverId, selectedPeriod),
+        apiService.getAnalyticsTopChannels(serverId, selectedPeriod, 10),
+        apiService.getAnalyticsCommandStats(serverId, selectedPeriod),
+        apiService.getAnalyticsMemberEngagement(serverId, selectedPeriod),
+        apiService.getAnalyticsServerHealth(serverId, 24)
       ]);
-
-      setOverview((overviewRes.data as any)?.data);
-      setHourlyActivity((hourlyRes.data as any)?.data || []);
-      setTopChannels((channelsRes.data as any)?.data || []);
-      setCommandStats((commandsRes.data as any)?.data || []);
-      setMemberEngagement((engagementRes.data as any)?.data);
-      setServerHealth((healthRes.data as any)?.data || []);
+      
+      if (overviewRes.success && overviewRes.data) {
+        setOverview(overviewRes.data);
+      } else {
+        setOverview(null);
+      }
+      
+      if (hourlyRes.success && hourlyRes.data) {
+        setHourlyActivity(hourlyRes.data);
+      } else {
+        setHourlyActivity([]);
+      }
+      
+      if (channelsRes.success && channelsRes.data) {
+        setTopChannels(channelsRes.data);
+      } else {
+        setTopChannels([]);
+      }
+      
+      if (commandsRes.success && commandsRes.data) {
+        setCommandStats(commandsRes.data);
+      } else {
+        setCommandStats([]);
+      }
+      
+      if (engagementRes.success && engagementRes.data) {
+        setMemberEngagement(engagementRes.data);
+      } else {
+        setMemberEngagement(null);
+      }
+      
+      if (healthRes.success && healthRes.data) {
+        setServerHealth(healthRes.data);
+      } else {
+        setServerHealth([]);
+      }
+      
+      console.log(`Analytics loaded for server ${serverId} (${selectedPeriod} days)`);
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      // Set empty states
+      setOverview(null);
+      setHourlyActivity([]);
+      setTopChannels([]);
+      setCommandStats([]);
+      setMemberEngagement(null);
+      setServerHealth([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedServerId, routeServerId, selectedPeriod]);
+  }, [routeServerId, selectedPeriod]);
 
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  const currentServerId = selectedServerId || routeServerId;
+  const currentServerId = routeServerId;
 
   // Hourly Activity Chart
   const hourlyActivityChart = {
@@ -244,16 +274,6 @@ export const Analytics: React.FC = () => {
           </div>
           
           <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-4">
-            {/* Server Selector */}
-            <div className="min-w-[200px]">
-              <ServerSelector
-                selectedServerId={selectedServerId}
-                onServerSelect={setSelectedServerId}
-                placeholder="Select a server"
-                showAllOption={false}
-              />
-            </div>
-            
             {/* Period Selector */}
             <select
               value={selectedPeriod}
@@ -493,17 +513,22 @@ export const Analytics: React.FC = () => {
                   onClick={async () => {
                     if (!currentServerId) return;
                     try {
-                      const response = await apiService.get(`/api/analytics/${currentServerId}/export?days=${selectedPeriod}`);
-                      const exportData = (response.data as any)?.data || {};
-                      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `analytics-${currentServerId}-${selectedPeriod}days.json`;
-                      a.click();
-                      URL.revokeObjectURL(url);
+                      const exportRes = await apiService.exportAnalytics(currentServerId, selectedPeriod);
+                      if (exportRes.success && exportRes.data) {
+                        const blob = new Blob([JSON.stringify(exportRes.data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `analytics-${currentServerId}-${selectedPeriod}days.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } else {
+                        console.error('Failed to export analytics:', exportRes.error);
+                        alert('Failed to export analytics data. Please try again.');
+                      }
                     } catch (error) {
                       console.error('Error exporting analytics:', error);
+                      alert('Error exporting analytics data. Please check your connection and try again.');
                     }
                   }}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

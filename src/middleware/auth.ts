@@ -69,7 +69,27 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
   try {
     const jwtSecret = process.env.JWT_SECRET || 'discord-dashboard-jwt-secret-2024-secure-key';
     console.log('🔐 Middleware using JWT_SECRET:', jwtSecret.substring(0, 20) + '...');
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    
+    // Add more specific error handling for JWT verification
+    let decoded: JwtPayload;
+    try {
+      decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    } catch (jwtError: any) {
+      // Only log JWT errors in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth] JWT validation failed:', jwtError.name, jwtError.message);
+      }
+      
+      // Clear the invalid token by responding with specific error
+      if (jwtError.name === 'JsonWebTokenError') {
+        res.status(401).json({ error: 'Invalid token format', shouldClearToken: true });
+      } else if (jwtError.name === 'TokenExpiredError') {
+        res.status(401).json({ error: 'Token expired', shouldClearToken: true });
+      } else {
+        res.status(401).json({ error: 'Token verification failed', shouldClearToken: true });
+      }
+      return;
+    }
     
     // Get server-specific permissions for this user
     const permissions = getAllUserDashboardPermissions(decoded.userId);
@@ -82,8 +102,8 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     
     next();
   } catch (error) {
-    console.error('Token verification failed:', error);
-    res.status(403).json({ error: 'Invalid or expired token' });
+    console.error('Unexpected error in auth middleware:', error);
+    res.status(500).json({ error: 'Internal server error' });
     return;
   }
 };

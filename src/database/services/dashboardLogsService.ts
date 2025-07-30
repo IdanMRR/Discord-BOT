@@ -39,18 +39,25 @@ export const DashboardLogsService = {
    */
   async logActivity(entry: DashboardLogEntry): Promise<boolean> {
     try {
-      // Check for recent duplicate entries (within last 10 seconds)
+      // Check for recent duplicate entries (within last 30 seconds) with more specific matching
       const duplicateCheck = db.prepare(`
         SELECT id FROM dashboard_logs 
         WHERE user_id = ? AND action_type = ? AND page = ? 
-        AND datetime(created_at) > datetime('now', '-10 seconds')
+        AND datetime(created_at) > datetime('now', '-30 seconds')
+        AND target_type = ? AND target_id = ?
         LIMIT 1
       `);
       
-      const existingEntry = duplicateCheck.get(entry.user_id, entry.action_type, entry.page);
+      const existingEntry = duplicateCheck.get(
+        entry.user_id, 
+        entry.action_type, 
+        entry.page, 
+        entry.target_type || null, 
+        entry.target_id || null
+      );
       
       if (existingEntry) {
-        logInfo('DashboardLogs', `Skipping duplicate log entry for ${entry.action_type} by ${entry.user_id}`);
+        // Only log this message in debug mode or reduce frequency
         return false; // Don't log duplicates
       }
 

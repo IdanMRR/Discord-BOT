@@ -5,8 +5,8 @@ import {
   User
 } from 'discord.js';
 import { db } from '../../database/sqlite';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { Colors } from '../../utils/embeds';
+import { logError, logInfo } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('invites')
@@ -30,16 +30,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
       return;
     }
-
-    // Log command usage
-    await logCommandUsage({
-      guild,
-      user: interaction.user,
-      command: 'invites',
-      options: targetUser !== interaction.user ? { user: targetUser.tag } : {},
-      channel: interaction.channel,
-      success: true
-    });
 
     // Get invites for the user
     const inviteStats = await getUserInvites(guild.id, targetUser.id);

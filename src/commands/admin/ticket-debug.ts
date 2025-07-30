@@ -7,9 +7,9 @@ import {
   MessageFlags
 } from 'discord.js';
 import { settingsManager } from '../../utils/settings';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { staffActiveTickets } from '../../handlers/tickets/ticket-chatbot';
+import { logError, logInfo } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('ticket-debug')
@@ -54,17 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Get the guild ID
     const guildId = interaction.guildId;
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'ticket-debug',
-      options: interaction.options.data,
-      channel: interaction.channel,
-      success: true
-    });
-    
-    const subcommand = interaction.options.getSubcommand();
+        const subcommand = interaction.options.getSubcommand();
     
     if (subcommand === 'update-activity') {
       const ticketNumber = interaction.options.getInteger('ticket_number')!;

@@ -97,14 +97,19 @@ export interface ServerSettings {
 export const WarningService = {
   async getWarnings(guildId: string | null, userId?: string, active?: boolean): Promise<{data: Warning[], error: any}> {
     try {
+      console.log(`🔍 WarningService.getWarnings called with: guildId=${guildId}, userId=${userId}, active=${active}`);
+      
       // Check if users table exists
       const usersTableExists = db.prepare(`
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='users'
       `).get();
       
+      console.log(`📋 Users table exists: ${!!usersTableExists}`);
+      
       if (!usersTableExists) {
         // If users table doesn't exist, run the migration
+        console.log('🔧 Creating missing users table...');
         const { migrateAddUsersTable } = require('../migrations/add_users_table');
         await migrateAddUsersTable();
         logInfo('WarningService', 'Created missing users table');
@@ -139,16 +144,23 @@ export const WarningService = {
       
       query += ' ORDER BY created_at DESC';
       
+      console.log(`🔍 Executing query: ${query}`);
+      console.log(`📋 With params: ${JSON.stringify(params)}`);
+      
       const stmt = db.prepare(query);
       const warnings = stmt.all(...params) as Warning[];
+      
+      console.log(`📊 Query returned ${warnings.length} warnings`);
       
       // Convert SQLite integers to booleans
       warnings.forEach(warning => {
         warning.active = !!warning.active;
       });
       
+      console.log(`✅ WarningService returning ${warnings.length} warnings`);
       return { data: warnings, error: null };
     } catch (error) {
+      console.error('❌ WarningService.getWarnings ERROR:', error);
       logError('WarningService', error);
       return { data: [], error };
     }

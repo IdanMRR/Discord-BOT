@@ -11,9 +11,8 @@ import {
   Client
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { settingsManager } from '../../utils/settings';
-
+import { logInfo, logError } from '../../utils/logger';
 import { getContextLanguage, getTranslation as t, Language } from '../../utils/language';
 import { db } from '../../database/sqlite';
 
@@ -136,17 +135,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Get the subcommand
     const subcommand = interaction.options.getSubcommand();
 
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'faq-manager',
-      options: { subcommand },
-      channel: interaction.channel,
-      success: true
-    });
-
-    // Handle different subcommands
+        // Handle different subcommands
     switch (subcommand) {
       case 'add':
         await handleAddFaq(interaction, language);

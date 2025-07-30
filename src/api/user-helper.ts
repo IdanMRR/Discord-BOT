@@ -218,7 +218,7 @@ function clearUsernameCache() {
   // console.log('[getUserName] Username cache cleared');
 }
 
-module.exports = {
+export {
   getUserName,
   formatWarning,
   formatWarningRemoval,

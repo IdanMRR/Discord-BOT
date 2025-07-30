@@ -9,9 +9,9 @@ import {
   Role
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { ServerSettingsService } from '../../database/services/serverSettingsService';
 import { getTranslation as t, getContextLanguage } from '../../utils/language';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('ticket-setup-logs')

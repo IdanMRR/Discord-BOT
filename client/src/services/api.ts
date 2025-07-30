@@ -64,7 +64,7 @@ class ApiService {
         // Add user ID for server-specific permissions
         // We'll get this from the token payload or user data stored in localStorage
         try {
-          if (token) {
+          if (token && typeof token === 'string' && token.split('.').length === 3) {
             // Decode the JWT token to get user ID
             const payload = JSON.parse(atob(token.split('.')[1]));
             if (payload.userId) {
@@ -72,7 +72,12 @@ class ApiService {
             }
           }
         } catch (error) {
-          console.warn('Could not extract user ID from token:', error);
+          // Only log JWT errors in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[API] JWT token validation failed:', error);
+          }
+          // Clear invalid token
+          localStorage.removeItem('auth_token');
         }
         
         return config;
@@ -99,9 +104,14 @@ class ApiService {
         return response;
       },
       (error) => {
+        // Check if the server is telling us to clear the token
         if (error.response?.status === 401) {
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          const responseData = error.response.data;
+          if (responseData?.shouldClearToken || responseData?.error?.includes('Invalid token') || responseData?.error?.includes('expired')) {
+            console.warn('[DashboardLogger] Clearing invalid/expired token');
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
@@ -318,9 +328,6 @@ class ApiService {
     }
   }
 
-  async getServerSettings(guildId: string): Promise<ApiResponse<ServerSettings>> {
-    return this.makeRequest<ServerSettings>('GET', `/api/servers/${guildId}/settings`);
-  }
 
   // Ticket Management
   async getTickets(options?: FilterOptions & PaginationOptions): Promise<ApiResponse<{
@@ -453,7 +460,7 @@ class ApiService {
   async updateLoggingSettings(serverId: string, settings: any): Promise<ApiResponse<any>> {
     try {
       logger.info('ApiService', `Updating logging settings for server ${serverId}`, settings);
-      const response = await this.makeRequest('PUT', `/api/servers/${serverId}/logging-settings`, settings);
+      const response = await this.makeRequest('POST', `/api/servers/${serverId}/logging-settings`, settings);
       return response;
     } catch (error: any) {
       logger.error('ApiService', `Error updating logging settings for server ${serverId}:`, error);
@@ -470,37 +477,6 @@ class ApiService {
     return this.getServerById(serverId);
   }
 
-  async updateServerSettings(serverId: string, settings: Partial<ServerSettings>): Promise<ApiResponse<ServerSettings>> {
-    try {
-      logger.info('ApiService', `Updating settings for server ${serverId}`, settings);
-      
-      // Try direct-servers endpoint first (it has the PUT /settings route)
-      const response = await this.api.put(`/api/direct-servers/${serverId}/settings`, settings, {
-        timeout: 10000
-      });
-      
-      logger.debug('ApiService', 'Server settings update result', response.data);
-      
-      // Handle the response
-      const responseData = response.data;
-      if (responseData && typeof responseData === 'object' && 'success' in responseData) {
-        return responseData as ApiResponse<ServerSettings>;
-      } else {
-        // Handle direct data response
-        return {
-          success: true,
-          data: responseData as ServerSettings
-        };
-      }
-      
-    } catch (error: any) {
-      logger.error('ApiService', 'Error updating server settings', error);
-      return {
-        success: false,
-        error: this.getErrorMessage(error)
-      };
-    }
-  }
 
   async getServerById(serverId: string): Promise<ApiResponse<Server & { settings: ServerSettings }>> {
     try {
@@ -560,8 +536,8 @@ class ApiService {
 
   // Logs
   async getServerLogs(options?: FilterOptions & PaginationOptions): Promise<ApiResponse<ServerLog[]>> {
-    // Get actual server logs (commands, events, etc.) for server-specific pages
-    return this.makeRequest<ServerLog[]>('GET', '/api/simple-dashboard/logs', undefined, {
+    // Get comprehensive logs (commands, moderation, etc.) for server-specific pages
+    return this.makeRequest<ServerLog[]>('GET', '/api/simple-dashboard/all-logs', undefined, {
       guild_id: options?.guildId,
       page: options?.page || 1,
       limit: options?.limit || 1000,
@@ -1152,6 +1128,7 @@ class ApiService {
     }>('POST', `/api/simple-dashboard/server/${serverId}/member-events/reset-goodbye-config`);
   }
 
+
   async saveInviteJoinMessageConfig(serverId: string, customMessage: {
     title: string;
     description: string;
@@ -1245,6 +1222,8 @@ class ApiService {
       message: string;
     }>('POST', `/api/simple-dashboard/server/${serverId}/invite-tracker/reset-leave-config`);
   }
+
+
 
   // Verification Panel Methods
   async saveVerificationConfig(serverId: string, config: {
@@ -1535,6 +1514,319 @@ class ApiService {
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     
     return this.makeRequest<any[]>('GET', `/api/automod-escalation/${guildId}/logs?${queryParams}`);
+  }
+
+  // Dashboard Action Logging
+  async logDashboardAction(serverId: string, data: {
+    action: string;
+    details?: string;
+    userId?: string;
+    username?: string;
+  }): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('POST', `/api/servers/${serverId}/dashboard-actions`, data);
+  }
+
+  // Generic POST method for dashboard logger
+  async post(url: string, data?: any): Promise<ApiResponse<any>> {
+    // Remove leading slash if present to work with makeRequest
+    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+    return this.makeRequest<any>('POST', `/api/${cleanUrl}`, data);
+  }
+
+  // DM Settings - PDR requirement for server-level DM toggles
+  async getDMSettings(serverId: string): Promise<ApiResponse<{
+    dm_warnings_enabled: boolean;
+    dm_tickets_enabled: boolean;
+    dm_level_notifications: boolean;
+    dm_general_notifications: boolean;
+  }>> {
+    return this.makeRequest<{
+      dm_warnings_enabled: boolean;
+      dm_tickets_enabled: boolean;
+      dm_level_notifications: boolean;
+      dm_general_notifications: boolean;
+    }>('GET', `/api/servers/${serverId}/dm-settings`);
+  }
+
+  async updateDMSettings(serverId: string, settings: {
+    dm_warnings_enabled?: boolean;
+    dm_tickets_enabled?: boolean;
+    dm_level_notifications?: boolean;
+    dm_general_notifications?: boolean;
+  }): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('PUT', `/api/servers/${serverId}/dm-settings`, settings);
+  }
+
+  // Analytics Methods
+  async getAnalyticsOverview(serverId: string, days: number = 7): Promise<ApiResponse<any>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/overview`, undefined, { days });
+  }
+
+  async getAnalyticsHourlyActivity(serverId: string, days: number = 7): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/hourly-activity`, undefined, { days });
+  }
+
+  async getAnalyticsTopChannels(serverId: string, days: number = 7, limit: number = 10): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/top-channels`, undefined, { days, limit });
+  }
+
+  async getAnalyticsCommandStats(serverId: string, days: number = 7): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/command-stats`, undefined, { days });
+  }
+
+  async getAnalyticsMemberEngagement(serverId: string, days: number = 7): Promise<ApiResponse<any>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/member-engagement`, undefined, { days });
+  }
+
+  async getAnalyticsServerHealth(serverId: string, hours: number = 24): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/server-health`, undefined, { hours });
+  }
+
+  async exportAnalytics(serverId: string, days: number = 30, format: string = 'json'): Promise<ApiResponse<any>> {
+    return this.makeRequest('GET', `/api/analytics/${serverId}/export`, undefined, { days, format });
+  }
+
+  // System Metrics
+  async getSystemMetrics(): Promise<ApiResponse<{
+    uptime: string;
+    memoryUsage: {
+      used: string;
+      total: string;
+      percentage: number;
+    };
+    apiLatency: string;
+    databaseSize: string;
+    guildCount: number;
+    totalUsers: number;
+    commandsExecuted: number;
+    messagesProcessed: number;
+    systemLoad: {
+      cpu: number;
+      memory: number;
+    };
+    lastRestart: string;
+    nodeVersion: string;
+    discordJsVersion: string;
+  }>> {
+    return this.makeRequest('GET', '/api/system/metrics');
+  }
+
+  async getSystemHealth(): Promise<ApiResponse<{
+    status: string;
+    database: string;
+    discord: string;
+    responseTime: string;
+    timestamp: string;
+  }>> {
+    return this.makeRequest('GET', '/api/system/health');
+  }
+
+  // Server Settings
+  async getServerSettings(serverId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest('GET', `/api/servers/${serverId}/settings`);
+  }
+
+  async updateServerSettings(serverId: string, settings: any): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/settings`, settings);
+  }
+
+  async createTicketPanel(serverId: string, data: {
+    channel_id: string;
+    panel_type: string;
+  }): Promise<ApiResponse<{ messageId: string }>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/tickets/create-panel`, data);
+  }
+
+
+  // Leveling System
+  async getLevelingSettings(serverId: string): Promise<ApiResponse<{
+    enabled: boolean;
+    xp_per_message: number;
+    xp_cooldown: number;
+    level_up_channel_id?: string;
+    level_roles: Array<{
+      level: number;
+      role_id: string;
+      role_name: string;
+    }>;
+    rewards: Array<{
+      level: number;
+      reward_type: 'role' | 'currency' | 'badge';
+      reward_value: string;
+      reward_amount?: number;
+    }>;
+  }>> {
+    return this.makeRequest('GET', `/api/servers/${serverId}/leveling-settings`);
+  }
+
+  async updateLevelingSettings(serverId: string, settings: {
+    enabled?: boolean;
+    xp_per_message?: number;
+    xp_cooldown?: number;
+    level_up_channel_id?: string;
+    level_roles?: Array<{
+      level: number;
+      role_id: string;
+    }>;
+    rewards?: Array<{
+      level: number;
+      reward_type: 'role' | 'currency' | 'badge';
+      reward_value: string;
+      reward_amount?: number;
+    }>;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/leveling-settings`, settings);
+  }
+
+  // Economy System
+  async getEconomySettings(serverId: string): Promise<ApiResponse<{
+    enabled: boolean;
+    currency_name: string;
+    currency_symbol: string;
+    daily_reward: number;
+    work_reward_min: number;
+    work_reward_max: number;
+    shop_items: Array<{
+      id: string;
+      name: string;
+      description: string;
+      price: number;
+      role_id?: string;
+      type: 'role' | 'item' | 'badge';
+    }>;
+  }>> {
+    return this.makeRequest('GET', `/api/servers/${serverId}/economy-settings`);
+  }
+
+  async updateEconomySettings(serverId: string, settings: {
+    enabled?: boolean;
+    currency_name?: string;
+    currency_symbol?: string;
+    daily_reward?: number;
+    work_reward_min?: number;
+    work_reward_max?: number;
+    shop_items?: Array<{
+      id: string;
+      name: string;
+      description: string;
+      price: number;
+      role_id?: string;
+      type: 'role' | 'item' | 'badge';
+    }>;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/economy-settings`, settings);
+  }
+
+  // Auto-Role Management
+  async getAutoRoleSettings(serverId: string): Promise<ApiResponse<{
+    join_roles: string[];
+    verification_roles: string[];
+    level_roles: Array<{
+      level: number;
+      role_id: string;
+    }>;
+    reaction_roles: Array<{
+      message_id: string;
+      channel_id: string;
+      emoji: string;
+      role_id: string;
+    }>;
+  }>> {
+    return this.makeRequest('GET', `/api/servers/${serverId}/auto-roles`);
+  }
+
+  async updateAutoRoleSettings(serverId: string, settings: {
+    join_roles?: string[];
+    verification_roles?: string[];
+    level_roles?: Array<{
+      level: number;
+      role_id: string;
+    }>;
+    reaction_roles?: Array<{
+      message_id: string;
+      channel_id: string;
+      emoji: string;
+      role_id: string;
+    }>;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/auto-roles`, settings);
+  }
+
+  // General Server Configuration
+  async getGeneralSettings(serverId: string): Promise<ApiResponse<{
+    language: string;
+    timezone: string;
+    prefix: string;
+    delete_commands: boolean;
+    dm_notifications: boolean;
+    announcement_channel_id?: string;
+    audit_log_channel_id?: string;
+  }>> {
+    return this.makeRequest('GET', `/api/servers/${serverId}/general-settings`);
+  }
+
+  async updateGeneralSettings(serverId: string, settings: {
+    language?: string;
+    timezone?: string;
+    prefix?: string;
+    delete_commands?: boolean;
+    dm_notifications?: boolean;
+    announcement_channel_id?: string;
+    audit_log_channel_id?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('POST', `/api/servers/${serverId}/general-settings`, settings);
+  }
+
+  // Auto-Roles Methods
+  async getAutoRolesConfig(serverId: string): Promise<ApiResponse<{
+    enabled: boolean;
+    autoRoles: Array<{
+      roleId: string;
+      roleName: string;
+      level?: number;
+      condition: 'join' | 'level' | 'reaction' | 'time';
+      description: string;
+    }>;
+    joinRole: string;
+    mutedRole: string;
+    modRole: string;
+    adminRole: string;
+  }>> {
+    return this.makeRequest<{
+      enabled: boolean;
+      autoRoles: Array<{
+        roleId: string;
+        roleName: string;
+        level?: number;
+        condition: 'join' | 'level' | 'reaction' | 'time';
+        description: string;
+      }>;
+      joinRole: string;
+      mutedRole: string;
+      modRole: string;
+      adminRole: string;
+    }>('GET', `/api/simple-dashboard/server/${serverId}/auto-roles/config`);
+  }
+
+  async saveAutoRolesConfig(serverId: string, config: {
+    enabled: boolean;
+    autoRoles: Array<{
+      roleId: string;
+      roleName: string;
+      level?: number;
+      condition: 'join' | 'level' | 'reaction' | 'time';
+      description: string;
+    }>;
+    joinRole: string;
+    mutedRole: string;
+    modRole: string;
+    adminRole: string;
+  }): Promise<ApiResponse<{
+    message: string;
+  }>> {
+    return this.makeRequest<{
+      message: string;
+    }>('POST', `/api/simple-dashboard/server/${serverId}/auto-roles/save-config`, config);
   }
 }
 

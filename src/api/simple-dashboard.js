@@ -12,7 +12,7 @@ let logger;
 try {
   db = require('../../dist/database/sqlite').db;
   const clientUtils = require('../../dist/utils/client-utils');
-  const { formatWarningRemoval } = require('./user-helper');
+  const { formatWarningRemoval } = require('../../dist/api/user-helper');
   getClient = clientUtils.getClient;
   isClientReady = clientUtils.isClientReady;
   getDiscordUsernameSync = clientUtils.getDiscordUsernameSync;
@@ -55,6 +55,16 @@ try {
 router.use((req, res, next) => {
   // Removed excessive request logging - only log errors now
   next();
+});
+
+// Simple test route to check if router is working
+router.get('/test', (req, res) => {
+  console.log('[DASHBOARD] Test route called');
+  res.json({
+    success: true,
+    message: 'Test route working!',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API key middleware - make it optional for development
@@ -401,9 +411,18 @@ router.get('/warnings', async (req, res) => {
         // Get real usernames
         warning.userName = await getUserNameAsync(warning.user_id);
         if (warning.moderator_id) {
-          warning.moderatorName = await getUserNameAsync(warning.moderator_id);
+          let moderatorName = await getUserNameAsync(warning.moderator_id);
+          // Handle automated system actions for warnings
+          if (!warning.moderator_id || 
+              warning.moderator_id === 'system' || 
+              warning.moderator_id === 'automod' ||
+              (moderatorName && moderatorName.startsWith('User_')) ||
+              (warning.reason && warning.reason.toLowerCase().includes('automatic'))) {
+            moderatorName = 'AutoMod System';
+          }
+          warning.moderatorName = moderatorName;
         } else {
-          warning.moderatorName = 'System';
+          warning.moderatorName = 'AutoMod System';
         }
         
         // Get total warning count for this user
@@ -512,9 +531,22 @@ router.get('/warnings', async (req, res) => {
   }
 });
 
+// Cache to track failed user lookups to avoid spam
+const failedUserLookups = new Set();
+
 // Helper function to get username from user ID (async version) - optimized for speed but with real names
 async function getUserNameAsync(userId) {
   if (!userId) return 'Unknown User';
+  
+  // Handle system users that aren't real Discord users
+  if (userId === 'AUTOMOD_SYSTEM' || userId === 'SYSTEM' || userId === 'UNKNOWN') {
+    return userId;
+  }
+  
+  // Validate that userId is a valid Discord snowflake (should be numeric)
+  if (!/^\d{17,19}$/.test(userId)) {
+    return userId; // Return as-is for non-Discord IDs like AUTOMOD_SYSTEM
+  }
   
   // Create a more friendly fallback username based on user ID
   const createFallbackUsername = (id) => {
@@ -537,7 +569,6 @@ async function getUserNameAsync(userId) {
           !syncUsername.startsWith('User_') && 
           !syncUsername.includes('Unknown User') &&
           syncUsername.length > 5) {
-        console.log(`[DASHBOARD] Found sync username for ${userId}: ${syncUsername}`);
         return syncUsername;
       }
     } catch (e) {
@@ -546,7 +577,6 @@ async function getUserNameAsync(userId) {
     
     const client = getClient();
     if (!client) {
-      console.log(`[DASHBOARD] No Discord client available, using fallback for ${userId}`);
       return createFallbackUsername(userId);
     }
     
@@ -554,7 +584,6 @@ async function getUserNameAsync(userId) {
     try {
       const user = client.users.cache.get(userId);
       if (user && user.username) {
-        console.log(`[DASHBOARD] Found cached user for ${userId}: ${user.username}`);
         return user.displayName || user.username || user.tag;
       }
     } catch (e) {
@@ -563,7 +592,11 @@ async function getUserNameAsync(userId) {
     
     // Check if client is ready for API calls
     if (!isClientReady()) {
-      console.log(`[DASHBOARD] Discord client not ready, using fallback for ${userId}`);
+      return createFallbackUsername(userId);
+    }
+    
+    // Skip API fetch if we've already failed for this user recently
+    if (failedUserLookups.has(userId)) {
       return createFallbackUsername(userId);
     }
     
@@ -574,11 +607,17 @@ async function getUserNameAsync(userId) {
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
       ]);
       if (user && user.username) {
-        console.log(`[DASHBOARD] Fetched user for ${userId}: ${user.username}`);
+        // Remove from failed set if we succeed
+        failedUserLookups.delete(userId);
         return user.displayName || user.username || user.tag;
       }
     } catch (fetchError) {
-      console.log(`[DASHBOARD] Failed to fetch user ${userId}: ${fetchError.message}`);
+      // Add to failed set and only log if it's a new failure
+      if (!failedUserLookups.has(userId)) {
+        failedUserLookups.add(userId);
+        // Auto-remove from failed set after 5 minutes to allow retry
+        setTimeout(() => failedUserLookups.delete(userId), 5 * 60 * 1000);
+      }
     }
     
     // Last attempt: try sync version again in case it got cached
@@ -591,10 +630,8 @@ async function getUserNameAsync(userId) {
       // Silent fail
     }
     
-    console.log(`[DASHBOARD] Using fallback username for ${userId}`);
     return createFallbackUsername(userId);
   } catch (error) {
-    console.log(`[DASHBOARD] Error in getUserNameAsync for ${userId}: ${error.message}`);
     return createFallbackUsername(userId);
   }
 }
@@ -880,7 +917,16 @@ router.get('/recent-activity', async (req, res) => {
       
       for (const warning of warnings) {
         const userName = await getUserNameAsync(warning.user_id);
-        const moderatorName = warning.moderator_id ? await getUserNameAsync(warning.moderator_id) : 'System';
+        let moderatorName = warning.moderator_id ? await getUserNameAsync(warning.moderator_id) : 'AutoMod System';
+        
+        // Handle automated system actions
+        if (!warning.moderator_id || 
+            warning.moderator_id === 'system' || 
+            warning.moderator_id === 'automod' ||
+            (moderatorName && moderatorName.startsWith('User_')) ||
+            (warning.reason && warning.reason.toLowerCase().includes('automatic'))) {
+          moderatorName = 'AutoMod System';
+        }
         
         // Get the current warning count for this user
         let warningCount = 1; // Default to 1 if we can't get count
@@ -1190,9 +1236,18 @@ router.get('/command-logs', async (req, res) => {
           log.channelDisplay = `#${channelName}`;
         }
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         // Format the command for better display
         log.commandDisplay = `/${log.command}`;
@@ -1485,9 +1540,18 @@ router.get('/mod-logs', async (req, res) => {
           log.details = `${log.action} | Target: ${log.userName} | Moderator: ${log.moderatorName} | Reason: ${log.reason || 'No reason provided'}`;
         }
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allModerationLogs.push(log);
       }
@@ -1531,9 +1595,18 @@ router.get('/mod-logs', async (req, res) => {
         const caseDisplay = warning.case_number ? `Case #${String(warning.case_number).padStart(4, '0')}` : 'Case #Unknown';
         warning.details = `⚠️ ${caseDisplay}: ${warning.moderatorName} warned ${warning.userName} | Reason: ${warning.reason || 'No reason provided'}`;
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(warning.created_at).getTime() + (3 * 60 * 60 * 1000));
-        warning.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        warning.created_at = formattedTime;
         
         allModerationLogs.push(warning);
       }
@@ -1589,9 +1662,18 @@ router.get('/mod-logs', async (req, res) => {
         // Enhanced details for verification
         log.details = `${emoji} ${log.action} | User: ${log.userName}`;
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allModerationLogs.push(log);
       }
@@ -1656,9 +1738,18 @@ router.get('/server-logs', async (req, res) => {
       for (const log of serverLogs) {
         log.userName = await getUserNameAsync(log.user_id);
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         activities.push(log);
       }
@@ -1716,9 +1807,18 @@ router.get('/user-logs', async (req, res) => {
       for (let i = 0; i < logs.length; i++) {
         logs[i].userName = await getUserNameAsync(logs[i].user_id);
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(logs[i].created_at).getTime() + (3 * 60 * 60 * 1000));
-        logs[i].created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        logs[i].created_at = formattedTime;
       }
     } catch (dbError) {
       console.log('[DASHBOARD] User logs table not found');
@@ -1973,9 +2073,18 @@ router.get('/ticket-logs', async (req, res) => {
         processedLog.details = `Ticket #${processedLog.display_ticket_id}: ${processedLog.details || 'Activity'}`;
       }
       
-      // Convert to Israeli time (+3 hours)
+      // Convert to Israeli time (+3 hours) and format as 24-hour
       const israeliTime = new Date(new Date(processedLog.created_at).getTime() + (3 * 60 * 60 * 1000));
-      processedLog.created_at = israeliTime.toISOString();
+      const formattedTime = israeliTime.toLocaleString('he-IL', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      processedLog.created_at = formattedTime;
       
       logs[logs.indexOf(log)] = processedLog;
     }
@@ -2060,9 +2169,18 @@ router.get('/dashboard-logs', async (req, res) => {
           log.userName = 'Anonymous';
         }
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         // Format action type for better display
         log.actionDisplay = log.action_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -2143,13 +2261,17 @@ router.get('/test-command-log', async (req, res) => {
 
 // General logs endpoint - ultra-fast loading (no async username resolution)
 router.get('/logs', async (req, res) => {
+  console.log('[DASHBOARD] /logs endpoint called');
   try {
     const { guild_id } = req.query;
+    console.log('[DASHBOARD] guild_id:', guild_id);
     
     if (!db || typeof db.prepare !== 'function') {
+      console.log('[DASHBOARD] Database not available');
       return res.json({ success: true, data: [] });
     }
 
+    console.log('[DASHBOARD] Database available, proceeding...');
     let simpleLogs = [];
 
     // Ultra-fast username resolution (sync only) - same as /logs endpoint
@@ -2201,6 +2323,7 @@ router.get('/logs', async (req, res) => {
 
     // Get recent command logs (ultra-fast query)
     try {
+      console.log('[DASHBOARD] Querying command logs...');
       let commandQuery = `
         SELECT 
           id,
@@ -2221,19 +2344,34 @@ router.get('/logs', async (req, res) => {
       commandQuery += ' ORDER BY created_at DESC LIMIT 10'; // Further reduced for speed
       
       const commandLogs = db.prepare(commandQuery).all(...commandParams);
+      console.log('[DASHBOARD] Found', commandLogs.length, 'command logs');
       
       // Process logs with proper async username resolution
       for (const log of commandLogs) {
-        const userName = await getUserNameAsync(log.user_id);
-        log.userName = userName;
-        log.user_name = userName; // Add this field for frontend compatibility
-        log.details = `🤖 /${log.action} | ${userName} | ${log.success ? '✅' : '❌'}`;
-        
-        // Convert to Israeli time (+3 hours)
-        const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
-        
-        simpleLogs.push(log);
+        try {
+          const userName = await getUserNameAsync(log.user_id);
+          log.userName = userName;
+          log.user_name = userName; // Add this field for frontend compatibility
+          log.details = `🤖 /${log.action} | ${userName} | ${log.success ? '✅' : '❌'}`;
+          
+          // Convert to Israeli time (+3 hours) and format as 24-hour
+          const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
+          const formattedTime = israeliTime.toLocaleString('he-IL', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          log.created_at = formattedTime;
+          
+          simpleLogs.push(log);
+        } catch (userError) {
+          console.log('[DASHBOARD] Error processing user:', userError);
+          // Continue with other logs
+        }
       }
     } catch (dbError) {
       console.log('[DASHBOARD] Error querying command logs:', dbError);
@@ -2241,102 +2379,162 @@ router.get('/logs', async (req, res) => {
 
     // Get recent moderation logs (ultra-fast)
     try {
-      let modQuery = `
+      console.log('[DASHBOARD] Querying moderation logs...');
+      let moderationQuery = `
         SELECT 
           id,
           'moderation' as type,
-          user_id as moderator_id,
-          target_id as user_id,
-          action_type as action,
+          user_id,
+          moderator_id,
+          action as action,
           reason,
           created_at,
           guild_id
-        FROM server_logs
-        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'warningRemoved')
+        FROM moderation_logs
       `;
       
-      const modParams = [];
+      const moderationParams = [];
       if (guild_id) {
-        modQuery += ' AND guild_id = ?';
-        modParams.push(guild_id);
+        moderationQuery += ' WHERE guild_id = ?';
+        moderationParams.push(guild_id);
       }
       
-      modQuery += ' ORDER BY created_at DESC LIMIT 8'; // Slightly increased to accommodate verification logs
+      moderationQuery += ' ORDER BY created_at DESC LIMIT 10';
       
-      const modLogs = db.prepare(modQuery).all(...modParams);
+      const moderationLogs = db.prepare(moderationQuery).all(...moderationParams);
+      console.log('[DASHBOARD] Found', moderationLogs.length, 'moderation logs');
       
-      // Process moderation logs with proper async username resolution
-      for (const log of modLogs) {
-        const userName = await getUserNameAsync(log.user_id);
-        const moderatorName = await getUserNameAsync(log.moderator_id);
-        log.userName = userName;
-        log.moderatorName = moderatorName;
-        log.user_name = userName; // Add this field for frontend compatibility
-        
-        // Format action for display and get case numbers for ALL moderation actions
-        let actionDisplay = log.action;
-        let emoji = '⚖️';
-        let moderationCaseType = '';
-        
-        switch(log.action) {
-          case 'memberBan': 
-            actionDisplay = 'Ban'; 
-            emoji = '🔨'; 
-            moderationCaseType = 'Ban';
-            break;
-          case 'memberKick': 
-            actionDisplay = 'Kick'; 
-            emoji = '👢'; 
-            moderationCaseType = 'Kick';
-            break;
-          case 'memberTimeout': 
-            actionDisplay = 'Timeout'; 
-            emoji = '⏰'; 
-            moderationCaseType = 'Timeout';
-            break;
-          case 'warningRemoved': 
-            actionDisplay = 'Warning Removed'; 
-            emoji = '🚫'; 
-            moderationCaseType = 'Warning Removal';  // This matches the moderation_cases table
-            break;
-        }
-        
-        // Get case number and format for ALL moderation actions
-        if (moderationCaseType) {
-          try {
-            const caseStmt = db.prepare(`
-              SELECT case_number FROM moderation_cases 
-              WHERE guild_id = ? AND user_id = ? AND action_type = ? 
-              ORDER BY created_at DESC LIMIT 1
-            `);
-            const caseResult = caseStmt.get(log.guild_id, log.user_id, moderationCaseType);
-            const caseNumber = caseResult ? caseResult.case_number : null;
-            const caseDisplay = caseNumber ? `Case #${String(caseNumber).padStart(4, '0')}` : 'Case #Unknown';
-            
-            // Format exactly like warnings for ALL moderation actions
-            if (log.action === 'warningRemoved') {
-              // Update the action title to include case number for consistency with warnings
-              log.action = caseNumber ? `Warning Removed Case #${caseNumber}` : 'Warning Removed Case #Unknown';
-              log.details = `${emoji} ${caseDisplay}: ${moderatorName} removed warning from ${userName} | Reason: ${log.reason || 'No reason provided'}`;
-            } else {
-              log.details = `${emoji} ${caseDisplay}: ${moderatorName} ${actionDisplay.toLowerCase()}ed ${userName} | Reason: ${log.reason || 'No reason provided'}`;
+      for (const log of moderationLogs) {
+        try {
+          const userName = await getUserNameAsync(log.user_id);
+          let moderatorName = await getUserNameAsync(log.moderator_id);
+          
+          // Handle automated system actions
+          if (!log.moderator_id || 
+              log.moderator_id === 'system' || 
+              log.moderator_id === 'automod' ||
+              (moderatorName && moderatorName.startsWith('User_')) ||
+              (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
+              (log.reason && log.reason.toLowerCase().includes('automatic'))) {
+            moderatorName = 'AutoMod System';
+          }
+          
+          log.userName = userName;
+          log.moderatorName = moderatorName;
+          
+          // Map action to display name
+          let actionDisplay = log.action;
+          let emoji = '🛡️';
+          
+          switch (log.action) {
+            case 'ban':
+              actionDisplay = 'Ban';
+              emoji = '🔨';
+              break;
+            case 'unban':
+              actionDisplay = 'Unban';
+              emoji = '🔓';
+              break;
+            case 'kick':
+              actionDisplay = 'Kick';
+              emoji = '👢';
+              break;
+            case 'timeout':
+              actionDisplay = 'Timeout';
+              emoji = '⏰';
+              break;
+            case 'warning':
+              actionDisplay = 'Warning';
+              emoji = '⚠️';
+              break;
+            case 'warningRemoved':
+              actionDisplay = 'Warning Removed';
+              emoji = '✅';
+              break;
+            case 'memberVerificationSuccess':
+              actionDisplay = 'Verification Success';
+              emoji = '✅';
+              break;
+            case 'memberVerificationFailed':
+              actionDisplay = 'Verification Failed';
+              emoji = '❌';
+              break;
+            default:
+              actionDisplay = log.action;
+          }
+          
+          // Get case number for moderation actions
+          let moderationCaseType = null;
+          switch (log.action) {
+            case 'ban':
+              moderationCaseType = 'Ban';
+              break;
+            case 'unban':
+              moderationCaseType = 'Unban';
+              break;
+            case 'kick':
+              moderationCaseType = 'Kick';
+              break;
+            case 'timeout':
+              moderationCaseType = 'Timeout';
+              break;
+            case 'warning':
+              moderationCaseType = 'Warning';
+              break;
+            case 'warningRemoved':
+              moderationCaseType = 'Warning Removal';  // This matches the moderation_cases table
+              break;
+          }
+          
+          // Get case number and format for ALL moderation actions
+          if (moderationCaseType) {
+            try {
+              const caseStmt = db.prepare(`
+                SELECT case_number FROM moderation_cases 
+                WHERE guild_id = ? AND user_id = ? AND action_type = ? 
+                ORDER BY created_at DESC LIMIT 1
+              `);
+              const caseResult = caseStmt.get(log.guild_id, log.user_id, moderationCaseType);
+              const caseNumber = caseResult ? caseResult.case_number : null;
+              const caseDisplay = caseNumber ? `Case #${String(caseNumber).padStart(4, '0')}` : 'Case #Unknown';
+              
+              // Format exactly like warnings for ALL moderation actions
+              if (log.action === 'warningRemoved') {
+                // Update the action title to include case number for consistency with warnings
+                log.action = caseNumber ? `Warning Removed Case #${caseNumber}` : 'Warning Removed Case #Unknown';
+                log.details = `${emoji} ${caseDisplay}: ${moderatorName} removed warning from ${userName} | Reason: ${log.reason || 'No reason provided'}`;
+              } else {
+                log.details = `${emoji} ${caseDisplay}: ${moderatorName} ${actionDisplay.toLowerCase()}ed ${userName} | Reason: ${log.reason || 'No reason provided'}`;
+              }
+            } catch (e) {
+              log.details = `${emoji} ${actionDisplay} | Target: ${userName} | Moderator: ${moderatorName}`;
             }
-          } catch (e) {
+          }
+          // For verification logs, the user verified themselves
+          else if (log.action === 'memberVerificationSuccess' || log.action === 'memberVerificationFailed') {
+            log.details = `${emoji} ${actionDisplay} | User: ${userName}`;
+          } else {
             log.details = `${emoji} ${actionDisplay} | Target: ${userName} | Moderator: ${moderatorName}`;
           }
+          
+          // Convert to Israeli time (+3 hours) and format as 24-hour
+          const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
+          const formattedTime = israeliTime.toLocaleString('he-IL', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          log.created_at = formattedTime;
+          
+          simpleLogs.push(log);
+        } catch (userError) {
+          console.log('[DASHBOARD] Error processing moderation log:', userError);
+          // Continue with other logs
         }
-        // For verification logs, the user verified themselves
-        else if (log.action === 'memberVerificationSuccess' || log.action === 'memberVerificationFailed') {
-          log.details = `${emoji} ${actionDisplay} | User: ${userName}`;
-        } else {
-          log.details = `${emoji} ${actionDisplay} | Target: ${userName} | Moderator: ${moderatorName}`;
-        }
-        
-        // Convert to Israeli time (+3 hours)
-        const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
-        
-        simpleLogs.push(log);
       }
     } catch (dbError) {
       console.log('[DASHBOARD] Error querying moderation logs:', dbError);
@@ -2346,6 +2544,7 @@ router.get('/logs', async (req, res) => {
     simpleLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     simpleLogs = simpleLogs.slice(0, 15); // Reduced to 15 for ultra-fast loading
     
+    console.log('[DASHBOARD] Returning', simpleLogs.length, 'logs');
     res.json({
       success: true,
       data: simpleLogs
@@ -2398,9 +2597,18 @@ router.get('/all-logs', async (req, res) => {
         log.userName = await getUserNameAsync(log.user_id);
         log.details = `🤖 Command: /${log.action} | User: ${log.userName} | ${log.success ? 'Success' : 'Failed'}`;
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allLogs.push(log);
       }
@@ -2436,7 +2644,19 @@ router.get('/all-logs', async (req, res) => {
       
       for (const log of modLogs) {
         log.userName = await getUserNameAsync(log.user_id);
-        log.moderatorName = await getUserNameAsync(log.moderator_id);
+        let moderatorName = await getUserNameAsync(log.moderator_id);
+        
+        // Handle automated system actions
+        if (!log.moderator_id || 
+            log.moderator_id === 'system' || 
+            log.moderator_id === 'automod' ||
+            (moderatorName && moderatorName.startsWith('User_')) ||
+            (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
+            (log.reason && log.reason.toLowerCase().includes('automatic'))) {
+          moderatorName = 'AutoMod System';
+        }
+        
+        log.moderatorName = moderatorName;
         
         // Format action for display
         let actionDisplay = log.action;
@@ -2502,9 +2722,18 @@ router.get('/all-logs', async (req, res) => {
           log.details = `${emoji} ${actionDisplay} | Target: ${log.userName} | Moderator: ${log.moderatorName}`;
         }
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allLogs.push(log);
       }
@@ -2512,7 +2741,62 @@ router.get('/all-logs', async (req, res) => {
       console.log('[DASHBOARD] Error querying moderation logs:', dbError);
     }
 
-    // 3. Get general server logs
+    // 3. Get warnings from warnings table
+    try {
+      let warningQuery = `
+        SELECT 
+          id,
+          guild_id,
+          user_id,
+          moderator_id,
+          'Warning' as action,
+          reason,
+          case_number,
+          created_at,
+          'moderation' as log_type
+        FROM warnings
+        WHERE active = 1
+      `;
+      
+      const warningParams = [];
+      if (guild_id) {
+        warningQuery += ' AND guild_id = ?';
+        warningParams.push(guild_id);
+      }
+      
+      warningQuery += ' ORDER BY created_at DESC LIMIT 25';
+      
+      const warnings = db.prepare(warningQuery).all(...warningParams);
+      
+      // Process warnings instantly (no async calls)
+      for (const warning of warnings) {
+        warning.userName = await getUserNameAsync(warning.user_id);
+        warning.moderatorName = await getUserNameAsync(warning.moderator_id);
+        
+        // Enhanced warning details with properly formatted case number - same style as other moderation actions
+        const caseDisplay = warning.case_number ? `Case #${String(warning.case_number).padStart(4, '0')}` : 'Case #Unknown';
+        warning.details = `⚠️ ${caseDisplay}: ${warning.moderatorName} warned ${warning.userName} | Reason: ${warning.reason || 'No reason provided'}`;
+        
+        // Convert to Israeli time (+3 hours) and format as 24-hour
+        const israeliTime = new Date(new Date(warning.created_at).getTime() + (3 * 60 * 60 * 1000));
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        warning.created_at = formattedTime;
+        
+        allLogs.push(warning);
+      }
+    } catch (dbError) {
+      console.log('[DASHBOARD] Error querying warnings:', dbError);
+    }
+
+    // 4. Get general server logs
     try {
       let serverLogQuery = `
         SELECT 
@@ -2543,7 +2827,16 @@ router.get('/all-logs', async (req, res) => {
         
         // Convert timestamp from milliseconds to ISO string
         const israeliTime = new Date(log.created_at + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allLogs.push(log);
       }
@@ -2551,7 +2844,7 @@ router.get('/all-logs', async (req, res) => {
       console.log('[DASHBOARD] Error querying server logs:', dbError);
     }
 
-    // 4. Get DM logs
+    // 5. Get DM logs
     try {
       let dmQuery = `
         SELECT 
@@ -2583,9 +2876,18 @@ router.get('/all-logs', async (req, res) => {
         
         log.details = `💬 DM ${log.success ? 'sent' : 'failed'} | From: ${log.userName} | To: ${recipientName} | Command: ${log.command || 'Manual'}${log.error ? ` | Error: ${log.error}` : ''}`;
         
-        // Convert to Israeli time (+3 hours)
+        // Convert to Israeli time (+3 hours) and format as 24-hour
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        log.created_at = israeliTime.toISOString();
+        const formattedTime = israeliTime.toLocaleString('he-IL', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        log.created_at = formattedTime;
         
         allLogs.push(log);
       }

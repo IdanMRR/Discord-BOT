@@ -53,7 +53,18 @@ export class LevelingService {
   static getLevelingSettings(guildId: string): LevelingSettings | null {
     try {
       const stmt = db.prepare('SELECT * FROM leveling_settings WHERE guild_id = ?');
-      return stmt.get(guildId) as LevelingSettings | undefined || null;
+      const result = stmt.get(guildId) as any;
+      
+      if (!result) return null;
+      
+      // Convert SQLite integers to booleans
+      return {
+        ...result,
+        enabled: Boolean(result.enabled),
+        level_up_message_enabled: Boolean(result.level_up_message_enabled),
+        voice_xp_enabled: Boolean(result.voice_xp_enabled),
+        leaderboard_enabled: Boolean(result.leaderboard_enabled)
+      } as LevelingSettings;
     } catch (error) {
       logError('Leveling Service', `Error getting leveling settings: ${error}`);
       return null;
@@ -413,7 +424,13 @@ export class LevelingService {
         ORDER BY level DESC, xp DESC 
         LIMIT ?
       `);
-      return stmt.all(guildId, limit) as UserLevel[];
+      const results = stmt.all(guildId, limit) as UserLevel[];
+      
+      // Add rank to each user
+      return results.map((user, index) => ({
+        ...user,
+        rank: index + 1
+      }));
     } catch (error) {
       logError('Leveling Service', `Error getting leaderboard: ${error}`);
       return [];
@@ -482,8 +499,8 @@ export class LevelingService {
       const calculatedLevel = level ?? this.calculateLevelFromXP(xp, settings);
 
       const stmt = db.prepare(`
-        INSERT OR REPLACE INTO user_levels (guild_id, user_id, xp, level, total_messages, last_xp_gain)
-        VALUES (?, ?, ?, ?, COALESCE((SELECT total_messages FROM user_levels WHERE guild_id = ? AND user_id = ?), 0), CURRENT_TIMESTAMP)
+        INSERT OR REPLACE INTO user_levels (guild_id, user_id, xp, level, message_count, last_xp_gain)
+        VALUES (?, ?, ?, ?, COALESCE((SELECT message_count FROM user_levels WHERE guild_id = ? AND user_id = ?), 0), CURRENT_TIMESTAMP)
       `);
       
       stmt.run(guildId, userId, xp, calculatedLevel, guildId, userId);

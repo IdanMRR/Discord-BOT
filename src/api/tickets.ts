@@ -558,7 +558,7 @@ const getTicketTranscript: express.RequestHandler = async (req, res, next) => {
       }
       
       // If no stored transcript, try to fetch from Discord
-      const client = getClient();
+      const client = getDiscordClient();
       if (!client) {
         sendJsonResponse(res, 503, { success: false, error: 'Discord client not available' });
         return;

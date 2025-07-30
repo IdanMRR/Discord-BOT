@@ -5,6 +5,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
+    "@modelcontextprotocol/sdk": "^1.17.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -30,7 +31,11 @@
     "start": "set PORT=3002 && react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "mcp:build": "tsc --project tsconfig.mcp.json",
+    "mcp:start": "node scripts/start-client-mcp.js",
+    "mcp:dev": "ts-node src/mcp/simple-client-mcp-server.ts",
+    "mcp:test": "node scripts/test-client-mcp.js"
   },
   "eslintConfig": {
     "extends": [
@@ -51,6 +56,8 @@
     ]
   },
   "devDependencies": {
+    "@stagewise-plugins/react": "^0.6.2",
+    "@stagewise/toolbar-react": "^0.6.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "@types/aria-query": "^5.0.4",

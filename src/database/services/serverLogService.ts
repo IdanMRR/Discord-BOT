@@ -117,6 +117,14 @@ class ServerLogService {
       const stmt = db.prepare(query) as unknown as Statement;
       const logs = stmt.all(...params) as LogEntry[];
 
+      // Debug: Log first few entries to see what we're getting from DB
+      console.log('Raw logs from database:', logs.slice(0, 3).map(log => ({
+        id: log.id,
+        action_type: log.action_type,
+        created_at: log.created_at,
+        typeof_created_at: typeof log.created_at
+      })));
+
       // Parse JSON details if they exist
       const parsedLogs = logs.map(log => {
         let parsedDetails: any = null;

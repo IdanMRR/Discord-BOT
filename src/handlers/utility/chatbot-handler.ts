@@ -1,7 +1,6 @@
 import { Message } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import axios from 'axios';
-import { logCommandUsage } from '../../database/services/log-service';
 
 // Get API URL and key from environment variables
 const API_URL = process.env.AI_API_URL || 'https://api.openai.com/v1/chat/completions';
@@ -25,14 +24,7 @@ export async function handleDM(message: Message): Promise<void> {
       // Continue with the message processing even if typing fails
     }
 
-    // Log the DM as a command usage
-    logCommandUsage(
-      message.author.id,
-      message.author.username,
-      'DM',
-      'chatbot-dm',
-      { question: message.content }
-    );
+    // DM chatbot interactions are not logged to avoid confusion with slash commands
 
     if (!API_KEY) {
       await message.reply(

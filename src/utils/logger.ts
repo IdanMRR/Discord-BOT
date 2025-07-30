@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import { ServerSettingsService } from '../database/services/serverSettingsService';
 import { formatIsraeliTime } from './time-formatter';
 
+
 // Dashboard API configuration - use environment variable or detect the actual port
 const DASHBOARD_API_BASE_URL = process.env.API_URL || `http://localhost:${process.env.API_PORT || 3001}`;
 const DASHBOARD_API_URL = `${DASHBOARD_API_BASE_URL}/api`;

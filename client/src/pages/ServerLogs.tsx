@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Card from '../components/common/Card';
 import PermissionGuard from '../components/common/PermissionGuard';
+import { formatDashboardLogDate } from '../utils/dateUtils';
 import {
   EyeIcon,
   FunnelIcon,
@@ -443,37 +444,9 @@ const ServerLogsContent: React.FC = () => {
     }
   };
 
+  // Use the same date formatting as the working GitHub version
   const formatDate = (dateString: string) => {
-    try {
-      // Parse the date string and add 3 hours for Jerusalem timezone (UTC+3)
-      const date = new Date(dateString);
-      const israeliDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-      const now = new Date();
-      const israeliNow = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-      
-      const diffMs = israeliNow.getTime() - israeliDate.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      
-      // For anything over 24 hours, show full date and time in Jerusalem timezone
-      const options: Intl.DateTimeFormatOptions = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Jerusalem'
-      };
-      
-      return new Intl.DateTimeFormat('en-GB', options).format(date);
-    } catch {
-      return 'Unknown';
-    }
+    return formatDashboardLogDate(dateString);
   };
 
   const handleRefresh = () => {
@@ -1060,7 +1033,13 @@ const ServerLogsContent: React.FC = () => {
                                 "text-sm font-semibold",
                                 darkMode ? "text-white" : "text-gray-900"
                               )}>
-                                {safeRender(log.moderatorName)}
+                                {safeRender(
+                                  log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
+                                  (log.moderatorName && log.moderatorName.startsWith('User_')) ||
+                                  (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
+                                  (log.details && log.details.toLowerCase().includes('automatic'))
+                                  ? 'AutoMod System' : log.moderatorName
+                                )}
                               </p>
                             </div>
                           </div>

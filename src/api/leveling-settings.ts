@@ -57,8 +57,78 @@ router.get('/:guildId/leveling', async (req: Request, res: Response) => {
   }
 });
 
-// Update leveling settings
+// Update leveling settings (PUT)
 router.put('/:guildId/leveling', async (req: Request, res: Response) => {
+  try {
+    const { guildId } = req.params;
+    const settings = req.body;
+
+    // Get Discord usernames for logging
+    let adminUsername = 'Unknown Admin';
+    try {
+      const client = getClient();
+      if (client && isClientReady() && req.user?.userId) {
+        const adminUser = await client.users.fetch(req.user.userId).catch(() => null);
+        if (adminUser) {
+          adminUsername = adminUser.username;
+        }
+      }
+    } catch (fetchError) {
+      adminUsername = req.user?.username || `Admin ${req.user?.userId?.slice(-4) || 'Unknown'}`;
+    }
+
+    const success = LevelingService.updateLevelingSettings(guildId, settings);
+
+    if (success) {
+      // Log the settings update
+      const changes = [];
+      if (settings.enabled !== undefined) {
+        changes.push(`${settings.enabled ? '✅ Enabled' : '❌ Disabled'} leveling system`);
+      }
+      if (settings.xp_per_message !== undefined) {
+        changes.push(`📊 XP per message: ${settings.xp_per_message}`);
+      }
+      if (settings.xp_cooldown !== undefined) {
+        changes.push(`⏱️ XP cooldown: ${settings.xp_cooldown}s`);
+      }
+      if (settings.level_formula !== undefined) {
+        changes.push(`📈 Level formula: ${settings.level_formula}`);
+      }
+      if (settings.level_up_message_enabled !== undefined) {
+        changes.push(`💬 Level up messages: ${settings.level_up_message_enabled ? 'enabled' : 'disabled'}`);
+      }
+
+      await DashboardLogsService.logActivity({
+        guild_id: guildId,
+        user_id: req.user?.userId || 'unknown',
+        action_type: 'update_leveling_settings',
+        target_type: 'settings',
+        target_id: 'leveling_settings',
+        page: 'leveling_settings',
+        details: `🎮 **Leveling Settings Updated** by ${adminUsername}\n${changes.join('\n')}`
+      });
+
+      res.json({
+        success: true,
+        message: 'Leveling settings updated successfully'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update leveling settings'
+      });
+    }
+  } catch (error) {
+    console.error('Error updating leveling settings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update leveling settings'
+    });
+  }
+});
+
+// Update leveling settings (POST - for client compatibility)
+router.post('/:guildId/leveling', async (req: Request, res: Response) => {
   try {
     const { guildId } = req.params;
     const settings = req.body;

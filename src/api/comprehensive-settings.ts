@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { settingsManager } from '../services/settingsManager';
+import { LevelingService } from '../database/services/levelingService';
 import { logInfo, logError } from '../utils/logger';
 import { authenticateToken } from '../middleware/auth';
 
@@ -240,8 +241,11 @@ app.put('/api/settings/:guildId/economy', validateGuildId, async (req, res) => {
 
 // === LEVELING SETTINGS ===
 
-// GET /api/settings/:guildId/leveling
-app.get('/api/settings/:guildId/leveling', validateGuildId, async (req, res) => {
+// GET /api/settings/:guildId/leveling (disabled - handled by leveling-settings.ts)
+/*
+// LEVELING ENDPOINTS DISABLED - All handled by leveling-settings.ts to avoid conflicts
+
+// app.get('/api/settings/:guildId/leveling', validateGuildId, async (req, res) => {
   try {
     const { guildId } = req.params;
     const settings = settingsManager.getLevelingSettings(guildId);
@@ -274,6 +278,54 @@ app.put('/api/settings/:guildId/leveling', validateGuildId, async (req, res) => 
     sendResponse(res, false, null, 'Failed to update leveling settings');
   }
 });
+
+// POST /api/settings/:guildId/leveling (for client compatibility)
+app.post('/api/settings/:guildId/leveling', validateGuildId, async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const settings = req.body;
+    
+    const success = await settingsManager.updateLevelingSettings(guildId, settings);
+    
+    if (success) {
+      const updatedSettings = settingsManager.getLevelingSettings(guildId);
+      sendResponse(res, true, updatedSettings);
+      logInfo('SettingsAPI', `Created/Updated leveling settings for guild ${guildId}`);
+    } else {
+      sendResponse(res, false, null, 'Failed to save leveling settings');
+    }
+  } catch (error) {
+    logError('SettingsAPI', `Error saving leveling settings: ${error}`);
+    sendResponse(res, false, null, 'Failed to save leveling settings');
+  }
+});
+
+// GET /api/settings/:guildId/leveling/leaderboard
+app.get('/api/settings/:guildId/leveling/leaderboard', validateGuildId, async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const leaderboard = LevelingService.getLeaderboard(guildId, limit + offset);
+    const totalMembers = LevelingService.getTotalRankedMembers(guildId);
+    
+    // Get users for this page
+    const pageUsers = leaderboard.slice(offset, offset + limit);
+    
+    sendResponse(res, true, {
+      users: pageUsers || [],
+      totalMembers: totalMembers || 0,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil((totalMembers || 0) / limit)
+    });
+    logInfo('SettingsAPI', `Retrieved leveling leaderboard for guild ${guildId}`);
+  } catch (error) {
+    logError('SettingsAPI', `Error retrieving leveling leaderboard: ${error}`);
+    sendResponse(res, false, null, 'Failed to retrieve leveling leaderboard');
+  }
+});
+*/
 
 // === ENHANCED TICKET SETTINGS ===
 

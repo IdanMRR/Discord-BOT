@@ -21,13 +21,23 @@ try {
 const resolveUsername = async (userId: string): Promise<string> => {
   if (!userId) return 'Unknown User';
   
+  // Handle special system users that aren't Discord snowflakes
+  if (userId === 'AUTOMOD_SYSTEM' || userId === 'automod') return 'Automated System';
+  if (userId === 'dashboard') return 'Dashboard User';
+  if (userId === 'system') return 'System';
+  if (userId === 'bot') return 'Bot';
+  
   // Try to access the Discord client for username resolution
   try {
-    // This is a simplified version - in production we'd import from simple-dashboard.js
-    // For now, let's create a fallback that at least provides better names
-    if (userId === 'dashboard') return 'Dashboard User';
-    if (userId.length > 10) return `DiscordUser_${userId.slice(-4)}`;
-    return `User_${userId.slice(-4)}`;
+    // Check if it's a valid Discord snowflake (18-19 digit number)
+    if (/^\d{17,19}$/.test(userId)) {
+      // This is a simplified version - in production we'd import from simple-dashboard.js
+      // For now, let's create a fallback that at least provides better names
+      return `DiscordUser_${userId.slice(-4)}`;
+    } else {
+      // Not a valid Discord ID, return as-is or with prefix
+      return userId.includes('_') ? userId : `User_${userId}`;
+    }
   } catch (error) {
     return 'Unknown User';
   }
@@ -147,6 +157,14 @@ const getServerLogs: RequestHandler = async (req, res, next) => {
         };
       })
     );
+
+    // Debug: Log what we're sending to frontend
+    console.log('API sending logs to frontend:', logsWithUsernames.slice(0, 3).map(log => ({
+      id: log.id,
+      action_type: log.action_type,
+      created_at: log.created_at,
+      typeof_created_at: typeof log.created_at
+    })));
 
     sendJsonResponse(res, 200, {
       success: true,

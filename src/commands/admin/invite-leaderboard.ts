@@ -9,8 +9,6 @@ import {
   MessageFlags
 } from 'discord.js';
 import { getInviteStats } from '../../handlers/invites/invite-tracker';
-import { logCommandUsage } from '../../utils/logger';
-
 export const data = new SlashCommandBuilder()
   .setName('invite-leaderboard')
   .setDescription('View the invite leaderboard for the server')
@@ -36,17 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
     
-    // Log command usage
-    await logCommandUsage({
-      guild,
-      user: interaction.user,
-      command: 'invite-leaderboard',
-      options: { page },
-      channel: interaction.channel,
-      success: true
-    });
-    
-    // Get server-wide stats
+        // Get server-wide stats
     const serverStats = await getInviteStats(guild.id);
     
     // Calculate pagination

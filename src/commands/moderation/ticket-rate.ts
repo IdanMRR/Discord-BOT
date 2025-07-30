@@ -5,9 +5,9 @@ import {
   EmbedBuilder 
 } from 'discord.js';
 import { Colors, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { showRatingModal } from '../../handlers/tickets/ticket-rating';
+import { logError, logInfo } from '../../utils/logger';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -59,17 +59,7 @@ module.exports = {
         return;
       }
       
-      // Log command usage
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: 'ticket-rate',
-        options: { ticket_number: ticketNumber },
-        channel: interaction.channel,
-        success: true
-      });
-      
-      // Check if rating and feedback were provided directly
+            // Check if rating and feedback were provided directly
       const rating = interaction.options.getInteger('rating');
       const feedback = interaction.options.getString('feedback');
       

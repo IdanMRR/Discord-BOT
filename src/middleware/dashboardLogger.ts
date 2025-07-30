@@ -206,7 +206,7 @@ function extractUserInfo(req: Request): { userId: string; username?: string } {
       if (authHeader.startsWith('Bearer ')) {
         try {
           const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-          const JWT_SECRET = 'discord-bot-dashboard-secret-key-2024'; // Same secret as in auth.ts
+          const JWT_SECRET = process.env.JWT_SECRET || 'discord-dashboard-jwt-secret-2024-secure-key';
           const decoded = jwt.verify(token, JWT_SECRET) as any;
           
           if (decoded && decoded.userId && typeof decoded.userId === 'string') {
@@ -216,7 +216,11 @@ function extractUserInfo(req: Request): { userId: string; username?: string } {
             };
           }
         } catch (jwtError) {
-          logInfo('DashboardLogger', `Failed to decode JWT token: ${jwtError}`);
+          // Only log JWT errors in debug mode or for specific error types
+          if (process.env.NODE_ENV === 'development') {
+            const errorMessage = jwtError instanceof Error ? jwtError.message : String(jwtError);
+            logInfo('DashboardLogger', `JWT token validation failed: ${errorMessage}`);
+          }
         }
       }
     }

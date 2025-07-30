@@ -8,7 +8,6 @@ import {
   ActionRowBuilder
 } from 'discord.js';
 import { createInfoEmbed, Colors } from '../../utils/embeds';
-import { logCommandUsage } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
   .setName('quote')
@@ -174,18 +173,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [embed], 
       components: [row]
     });
-    
-    // Log command usage
-    if (guild) {
-      await logCommandUsage({
-        guild: guild,
-        user: interaction.user,
-        command: 'quote',
-        options: { category: selectedQuote.category },
-        channel: interaction.channel,
-        success: true
-      });
-    }
     
   } catch (error) {
     console.error('Error in quote command:', error);

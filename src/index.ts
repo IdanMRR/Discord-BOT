@@ -20,15 +20,19 @@ import { replyEphemeral } from './utils/interaction-utils';
 import { startApiServer } from './api/server';
 import { connectToDatabase } from './database/connection';
 import { createSuccessEmbed, createErrorEmbed } from './utils/embeds';
-import { logInfo, logError } from './utils/logger';
+import { logInfo, logError, logCommandUsage } from './utils/logger';
 import { AnalyticsService } from './database/services/analyticsService';
 import * as dotenv from 'dotenv';
 import { loadCommands, registerCommands } from './command-handler';
 import { setClient } from './utils/client-utils';
 import { Command } from './types/Command';
+import { setupGlobalErrorHandlers } from './middleware/errorHandler';
 
 // Load environment variables
 dotenv.config();
+
+// Set up global error handlers
+setupGlobalErrorHandlers();
 
 // Create a new client instance
 const client = new Client({
@@ -288,6 +292,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
           success: true,
           execution_time: executionTime
         }).catch(error => logError('Analytics', `Failed to track command: ${error}`));
+
+        // Log command usage for dashboard activity logs
+        await logCommandUsage({
+          guild: interaction.guild,
+          user: interaction.user,
+          command: interaction.commandName,
+          options: interaction.options.data.reduce((acc, option) => {
+            acc[option.name] = option.value;
+            return acc;
+          }, {} as Record<string, any>),
+          channel: interaction.channel,
+          success: true
+        }).catch(error => logError('Command Logging', `Failed to log command usage: ${error}`));
       }
     } catch (error) {
       logError('Bot', `Error executing command ${interaction.commandName}: ${error}`);
@@ -302,6 +319,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
           success: false,
           error_message: error instanceof Error ? error.message : String(error)
         }).catch(analyticsError => logError('Analytics', `Failed to track failed command: ${analyticsError}`));
+
+        // Log failed command usage for dashboard activity logs
+        await logCommandUsage({
+          guild: interaction.guild,
+          user: interaction.user,
+          command: interaction.commandName,
+          options: interaction.options.data.reduce((acc, option) => {
+            acc[option.name] = option.value;
+            return acc;
+          }, {} as Record<string, any>),
+          channel: interaction.channel,
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        }).catch(logErr => logError('Command Logging', `Failed to log failed command: ${logErr}`));
       }
       
       const errorEmbed = createErrorEmbed('Error executing command', 'There was an error while executing this command!');

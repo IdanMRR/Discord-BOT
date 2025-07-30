@@ -8,10 +8,10 @@ import {
   ChannelType
 } from 'discord.js';
 import { Colors, createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { updateTicketEmbed } from '../../handlers/tickets/ticket-handler';
+import { logError, logInfo } from '../../utils/logger';
 
 const statusOptions = [
   {
@@ -70,17 +70,7 @@ module.exports = {
   
   async execute(interaction: ChatInputCommandInteraction) {
     try {
-      // Log command usage
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: interaction.commandName,
-        options: interaction.options.data,
-        channel: interaction.channel,
-        success: true
-      });
-      
-      // Check if user has permission
+            // Check if user has permission
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageMessages)) {
         const errorEmbed = createErrorEmbed(
           'Missing Permissions', 

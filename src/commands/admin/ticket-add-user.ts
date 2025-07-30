@@ -10,10 +10,10 @@ import {
   Colors
 } from 'discord.js';
 import { createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { settingsManager } from '../../utils/settings';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('ticket-add-user')
@@ -114,16 +114,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
     
-    // Log command usage
-    await logCommandUsage({
-      guild: interaction.guild!,
-      user: interaction.user,
-      command: 'ticket-add-user',
-      options: { user: user.username, reason },
-      channel: interaction.channel,
-      success: true
-    });
-  } catch (error) {
+      } catch (error) {
     logError('Add User', `Error adding user to ticket: ${error}`);
     
     const errorEmbed = createErrorEmbed(

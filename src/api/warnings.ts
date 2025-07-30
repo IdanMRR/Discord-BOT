@@ -32,7 +32,7 @@ function extractUserInfo(req: Request): { userId: string; username?: string } | 
     return null;
   }
 }
-const { getUserName } = require('./user-helper');
+import { getUserName } from './user-helper';
 // Removed duplicate import - using getDiscordClient from import above
 
 const router = express.Router();
@@ -83,6 +83,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 // Get warnings for a guild or all guilds
 const getWarnings: express.RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('🔥 WARNINGS ENDPOINT HIT!!! Query:', req.query);
     // Use guildId if provided, otherwise get warnings from all guilds
     const targetGuildId = req.query.guildId ? req.query.guildId as string : null;
 
@@ -100,42 +101,52 @@ const getWarnings: express.RequestHandler = async (req: Request, res: Response, 
       }
       // If no status specified, get all warnings (both active and removed)
       
+      console.log(`🔍 Getting warnings with params: guildId=${targetGuildId}, userId=${req.query.userId}, active=${activeParam}`);
+      
       const warnings = await WarningService.getWarnings(
         targetGuildId,
         req.query.userId as string,
         activeParam
       );
+      
+      console.log(`📊 WarningService returned: ${warnings.data.length} warnings, error: ${warnings.error}`);
 
-      // Fetch usernames, admin usernames, and server names for warnings
-      const warningsWithUsernames = await Promise.all(warnings.data.map(async (warning) => {
-        const client = getClient();
-        const username = await getUserName(client, warning.user_id);
-        
-        // Get admin username if moderator_id exists
-        let adminUsername = 'Unknown Admin';
-        if (warning.moderator_id) {
-          adminUsername = await getUserName(client, warning.moderator_id);
-        }
-        
-        // Get server name
-        let serverName = 'Unknown Server';
-        try {
-          const guild = client?.guilds?.cache?.get(warning.guild_id);
-          if (guild) {
-            serverName = guild.name;
+      console.log(`📋 Processing ${warnings.data.length} warnings for usernames...`);
+      
+      // Fetch real usernames for all warnings
+      const client = getDiscordClient();
+      const warningsWithUsernames = await Promise.all(
+        warnings.data.map(async (warning) => {
+          // Fetch username for the warned user
+          const username = await getUserName(client, warning.user_id);
+          
+          // Fetch username for the admin/moderator
+          const adminUsername = await getUserName(client, warning.moderator_id);
+          
+          // Get server name if available
+          let serverName = 'Unknown Server';
+          if (warning.guild_id) {
+            try {
+              const guild = client?.guilds.cache.get(warning.guild_id);
+              if (guild) {
+                serverName = guild.name;
+              }
+            } catch (error) {
+              console.log(`Could not fetch guild name for ${warning.guild_id}`);
+            }
           }
-        } catch (error) {
-          logError('API', `Error getting guild name for ${warning.guild_id}: ${error}`);
-        }
-        
-        return { 
-          ...warning, 
-          username,
-          adminUsername,
-          server_name: serverName,
-          guild_name: serverName
-        };
-      }));
+          
+          return {
+            ...warning,
+            username,
+            adminUsername,
+            server_name: serverName,
+            guild_name: serverName
+          };
+        })
+      );
+      
+      console.log(`✅ Processed warnings: ${warningsWithUsernames.length}`);
 
       // Return warnings with pagination info
       sendJsonResponse(res, 200, {
@@ -149,6 +160,7 @@ const getWarnings: express.RequestHandler = async (req: Request, res: Response, 
         }
       });
     } catch (dbError) {
+      console.error('❌ Database error getting warnings:', dbError);
       logError('API', `Database error getting warnings: ${dbError}`);
       
       // Return empty data with success to prevent dashboard from breaking
@@ -197,7 +209,7 @@ const getWarningById: express.RequestHandler = async (req: Request, res: Respons
       }
 
       // Fetch username for warning
-      const client = getClient();
+      const client = getDiscordClient();
       const username = await getUserName(client, warning.user_id);
       const warningWithUsername = { ...warning, username };
 
@@ -421,6 +433,12 @@ const removeWarning: express.RequestHandler = async (req: Request, res: Response
     next(error);
   }
 };
+
+// TEST ROUTE - to verify router is working
+router.get('/test', (req, res) => {
+  console.log('🔥 TEST ROUTE HIT - warnings router is working!');
+  res.json({ message: 'Warnings router test successful!' });
+});
 
 // Register route handlers - removing authentication for dashboard access
 router.get('/', getWarnings);

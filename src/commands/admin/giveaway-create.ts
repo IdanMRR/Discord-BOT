@@ -11,8 +11,8 @@ import {
   ComponentType
 } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logInfo, logError, logCommandUsage } from '../../utils/logger';
 import { GiveawayService, CreateGiveawayData } from '../../database/services/giveawayService';
+import { logCommandUsage } from '../../utils/command-logger';
 
 export const data = new SlashCommandBuilder()
   .setName('giveaway-create')
@@ -276,21 +276,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     logError('Giveaway Create', error);
     
-    // Log failed command usage
-    try {
-      await logCommandUsage({
-        guild: interaction.guild!,
-        user: interaction.user,
-        command: 'giveaway-create',
-        options: { error: error instanceof Error ? error.message : String(error) },
-        channel: interaction.channel,
-        success: false
-      });
-    } catch (logError) {
-      // Silent fail for logging
-    }
-    
-    try {
+        try {
       if (interaction.deferred) {
         await interaction.editReply('An error occurred while creating the giveaway.');
       } else {

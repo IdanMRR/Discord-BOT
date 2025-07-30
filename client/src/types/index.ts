@@ -109,6 +109,7 @@ export interface ServerSettings {
   verification_channel_id?: string;
   verified_role_id?: string;
   verification_type?: 'button' | 'captcha' | 'custom_question' | 'age_verification';
+  verification_panel_message_id?: string;
   language: string;
   welcome_message?: string;
   member_events_config?: string;
@@ -116,6 +117,7 @@ export interface ServerSettings {
   ticket_panel_channel_id?: string;
   ticket_panel_message_id?: string;
   ticket_logs_channel_id?: string;
+  rules_channel_id?: string;
   staff_role_ids?: string;
   auto_mod_enabled?: number;
   auto_mod_settings?: string;
