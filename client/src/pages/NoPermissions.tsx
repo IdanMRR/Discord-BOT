@@ -18,20 +18,15 @@ const NoPermissions: React.FC = () => {
   const { user, logout } = useAuth();
 
   return (
-    <div className={classNames(
-      "min-h-screen overflow-y-scroll",
-      darkMode ? "bg-gray-900" : "bg-gray-50"
-    )} style={{ height: '100vh' }}>
+    <div className="page-container min-h-screen overflow-y-scroll" style={{ height: '100vh' }}>
       <div className="py-12 px-6">
-        <div className={classNames(
-          "max-w-2xl mx-auto rounded-2xl shadow-2xl border-0",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-        )}>
+        <div className="card max-w-2xl mx-auto rounded-2xl shadow-2xl border-0">
           {/* Header Section */}
-          <div className={classNames(
-            "px-8 py-12 text-center border-b",
-            darkMode ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="card-header px-8 py-12 text-center"
+               style={{
+                 backgroundColor: 'var(--muted)',
+                 borderColor: 'var(--border)'
+               }}>
             <div className={classNames(
               "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6",
               darkMode ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-600"
@@ -39,24 +34,15 @@ const NoPermissions: React.FC = () => {
               <ShieldExclamationIcon className="w-10 h-10" />
             </div>
             
-            <h1 className={classNames(
-              "text-3xl font-bold mb-4",
-              darkMode ? "text-red-400" : "text-red-600"
-            )}>
+            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--destructive)' }}>
               🚫 Access Denied
             </h1>
             
-            <p className={classNames(
-              "text-xl mb-2",
-              darkMode ? "text-gray-300" : "text-gray-600"
-            )}>
-              Welcome, <span className="font-semibold text-blue-500">{user?.username}</span>!
+            <p className="text-xl mb-2" style={{ color: 'var(--foreground)' }}>
+              Welcome, <span className="font-semibold" style={{ color: 'var(--primary)' }}>{user?.username}</span>!
             </p>
             
-            <p className={classNames(
-              "text-lg",
-              darkMode ? "text-gray-400" : "text-gray-500"
-            )}>
+            <p className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
               You don't have permission to access this dashboard.
             </p>
           </div>
@@ -65,21 +51,12 @@ const NoPermissions: React.FC = () => {
           <div className="px-8 py-8">
             <div className="space-y-6">
               {/* Permission Info */}
-              <div className={classNames(
-                "p-6 rounded-xl border-2",
-                darkMode ? "bg-gray-700/30 border-gray-600" : "bg-gray-50 border-gray-200"
-              )}>
-                <h3 className={classNames(
-                  "text-lg font-semibold mb-3 flex items-center",
-                  darkMode ? "text-gray-200" : "text-gray-800"
-                )}>
+              <div className="content-area p-6 rounded-xl border-2">
+                <h3 className="card-title text-lg font-semibold mb-3 flex items-center">
                   <UserGroupIcon className="w-5 h-5 mr-2" />
                   Required Permissions
                 </h3>
-                <p className={classNames(
-                  "text-sm mb-4",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="card-description text-sm mb-4">
                   To access this dashboard, you need one of the following permissions:
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -97,10 +74,11 @@ const NoPermissions: React.FC = () => {
                     'moderate_users',
                     'manage_roles'
                   ].map((permission) => (
-                  <div key={permission} className={classNames(
-                    "px-3 py-2 rounded-lg text-sm font-mono",
-                    darkMode ? "bg-gray-600 text-gray-300" : "bg-gray-200 text-gray-700"
-                  )}>
+                  <div key={permission} className="px-3 py-2 rounded-lg text-sm font-mono"
+                       style={{
+                         backgroundColor: 'var(--secondary)',
+                         color: 'var(--secondary-foreground)'
+                       }}>
                     {permission}
                   </div>
                 ))}
@@ -108,27 +86,23 @@ const NoPermissions: React.FC = () => {
               </div>
 
               {/* How to Get Access */}
-              <div className={classNames(
-                "p-6 rounded-xl border-2",
-                darkMode ? "bg-blue-900/20 border-blue-700" : "bg-blue-50 border-blue-200"
-              )}>
-                <h3 className={classNames(
-                  "text-lg font-semibold mb-3 flex items-center",
-                  darkMode ? "text-blue-400" : "text-blue-800"
-                )}>
+              <div className="content-area p-6 rounded-xl border-2"
+                   style={{
+                     backgroundColor: 'var(--accent)',
+                     borderColor: 'var(--border)'
+                   }}>
+                <h3 className="card-title text-lg font-semibold mb-3 flex items-center">
                   <CommandLineIcon className="w-5 h-5 mr-2" />
                   How to Get Access
                 </h3>
-                <p className={classNames(
-                  "text-sm mb-4",
-                  darkMode ? "text-blue-300" : "text-blue-700"
-                )}>
+                <p className="card-description text-sm mb-4">
                   Contact a server administrator and ask them to grant you permissions using this Discord command:
                 </p>
-                <div className={classNames(
-                  "p-4 rounded-lg font-mono text-sm",
-                  darkMode ? "bg-gray-800 text-green-400" : "bg-gray-100 text-gray-800"
-                )}>
+                <div className="p-4 rounded-lg font-mono text-sm"
+                     style={{
+                       backgroundColor: 'var(--muted)',
+                       color: 'var(--muted-foreground)'
+                     }}>
                   <div className="space-y-2">
                     <div>/dashboard-perms grant user:@{user?.username} level:viewer</div>
                     <div className={classNames(
@@ -252,23 +226,13 @@ const NoPermissions: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <button
                   onClick={() => window.location.reload()}
-                  className={classNames(
-                    "flex-1 px-6 py-3 rounded-lg font-medium transition-colors",
-                    darkMode 
-                      ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                      : "bg-blue-500 hover:bg-blue-600 text-white"
-                  )}
+                  className="btn-primary flex-1 px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   🔄 Refresh Page
                 </button>
                 <button
                   onClick={logout}
-                  className={classNames(
-                    "flex-1 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center",
-                    darkMode 
-                      ? "bg-gray-600 hover:bg-gray-700 text-gray-200" 
-                      : "bg-gray-500 hover:bg-gray-600 text-white"
-                  )}
+                  className="btn-secondary flex-1 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
                 >
                   <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" />
                   Logout

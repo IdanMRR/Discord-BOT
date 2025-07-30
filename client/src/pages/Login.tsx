@@ -196,10 +196,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className={classNames(
-      "min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden",
-      darkMode ? "bg-gray-900" : "bg-gray-50"
-    )}>
+    <div className="page-container min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className={classNames(
@@ -226,30 +223,23 @@ const Login: React.FC = () => {
             </div>
           </div>
           
-          <h2 className={classNames(
-            "text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-3 transition-all duration-300 hover:scale-105",
-            darkMode 
-              ? "from-white to-gray-300" 
-              : "from-gray-900 to-gray-700"
-          )}>
+          <h2 className="text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-3 transition-all duration-300 hover:scale-105"
+              style={{
+                background: 'linear-gradient(to right, var(--foreground), var(--muted-foreground))',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text'
+              }}>
             PanelOps
           </h2>
           
-          <p className={classNames(
-            "text-lg font-medium transition-colors duration-300",
-            darkMode ? "text-gray-400" : "text-gray-600"
-          )}>
+          <p className="text-lg font-medium transition-colors duration-300" 
+             style={{ color: 'var(--muted-foreground)' }}>
             🚀 Sign in with Discord to manage your bot
           </p>
         </div>
         
         {/* Login Card */}
-        <div className={classNames(
-          "p-8 rounded-2xl backdrop-blur-xl transition-all duration-300 transform hover:scale-105 shadow-2xl ring-1",
-          darkMode 
-            ? "bg-gray-800/80 ring-gray-700/50 shadow-black/25" 
-            : "bg-white/80 ring-gray-200/50 shadow-gray-500/25"
-        )}>
+        <div className="card p-8 rounded-2xl backdrop-blur-xl transition-all duration-300 transform hover:scale-105 shadow-2xl ring-1">
           <div className="space-y-6">
             
             {/* Development Mode Button - Show first in development */}
@@ -257,12 +247,11 @@ const Login: React.FC = () => {
               <button
                 onClick={handleDevLogin}
                 disabled={isLoggingIn}
-                className={classNames(
-                  "w-full py-4 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl",
-                  "text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
-                  "focus:outline-none focus:ring-4 focus:ring-green-400",
-                  darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white"
-                )}
+                className="btn-primary w-full py-4 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+                style={{
+                  background: 'linear-gradient(to right, #10b981, #059669)',
+                  color: 'white'
+                }}
               >
                 <div className="flex items-center justify-center">
                   {isLoggingIn ? (
@@ -284,12 +273,11 @@ const Login: React.FC = () => {
             <button
               onClick={handleDiscordLogin}
               disabled={isLoggingIn}
-              className={classNames(
-                "w-full py-4 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl",
-                "text-white bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700",
-                "focus:outline-none focus:ring-4 focus:ring-purple-400",
-                darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white"
-              )}
+              className="btn-primary w-full py-4 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+              style={{
+                background: 'linear-gradient(to right, var(--primary), var(--primary))',
+                color: 'var(--primary-foreground)'
+              }}
             >
               <div className="flex items-center justify-center">
                 {isLoggingIn ? (
@@ -311,20 +299,12 @@ const Login: React.FC = () => {
             </button>
 
             {/* Information Text */}
-            <div className={classNames(
-              "text-center p-4 rounded-lg",
-              darkMode ? "bg-gray-700/50" : "bg-gray-100/50"
-            )}>
-              <p className={classNames(
-                "text-sm",
-                darkMode ? "text-gray-300" : "text-gray-600"
-              )}>
+            <div className="text-center p-4 rounded-lg" 
+                 style={{ backgroundColor: 'var(--muted)' }}>
+              <p className="text-sm" style={{ color: 'var(--foreground)' }}>
                 🔐 Secure authentication via Discord OAuth2
               </p>
-              <p className={classNames(
-                "text-xs mt-2",
-                darkMode ? "text-gray-400" : "text-gray-500"
-              )}>
+              <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
                 {process.env.NODE_ENV === 'development' 
                   ? 'Use dev login for quick access or Discord OAuth for full testing'
                   : 'You\'ll be redirected to Discord to authorize access'
@@ -334,45 +314,21 @@ const Login: React.FC = () => {
 
             {/* Features Preview */}
             <div className="grid grid-cols-2 gap-4 mt-8">
-              <div className={classNames(
-                "p-4 rounded-xl text-center transition-all duration-300 hover:scale-105",
-                darkMode ? "bg-gray-700/50" : "bg-gray-100/50"
-              )}>
+              <div className="content-area p-4 rounded-xl text-center transition-all duration-300 hover:scale-105">
                 <div className="text-2xl mb-2">🎫</div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>Ticket System</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Ticket System</p>
               </div>
-              <div className={classNames(
-                "p-4 rounded-xl text-center transition-all duration-300 hover:scale-105",
-                darkMode ? "bg-gray-700/50" : "bg-gray-100/50"
-              )}>
+              <div className="content-area p-4 rounded-xl text-center transition-all duration-300 hover:scale-105">
                 <div className="text-2xl mb-2">⚠️</div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>Warnings</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Warnings</p>
               </div>
-              <div className={classNames(
-                "p-4 rounded-xl text-center transition-all duration-300 hover:scale-105",
-                darkMode ? "bg-gray-700/50" : "bg-gray-100/50"
-              )}>
+              <div className="content-area p-4 rounded-xl text-center transition-all duration-300 hover:scale-105">
                 <div className="text-2xl mb-2">📊</div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>Analytics</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Analytics</p>
               </div>
-              <div className={classNames(
-                "p-4 rounded-xl text-center transition-all duration-300 hover:scale-105",
-                darkMode ? "bg-gray-700/50" : "bg-gray-100/50"
-              )}>
+              <div className="content-area p-4 rounded-xl text-center transition-all duration-300 hover:scale-105">
                 <div className="text-2xl mb-2">⚙️</div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>Settings</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--card-foreground)' }}>Settings</p>
               </div>
             </div>
           </div>
@@ -380,22 +336,16 @@ const Login: React.FC = () => {
         
         {/* Footer */}
         <div className="text-center">
-          <p className={classNames(
-            "text-sm transition-colors duration-300",
-            darkMode ? "text-gray-500" : "text-gray-500"
-          )}>
+          <p className="text-sm transition-colors duration-300" 
+             style={{ color: 'var(--muted-foreground)' }}>
             🔒 By signing in, you agree to our{' '}
-            <span className={classNames(
-              "font-medium hover:underline cursor-pointer transition-colors duration-200",
-              darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-500"
-            )}>
+            <span className="font-medium hover:underline cursor-pointer transition-colors duration-200"
+                  style={{ color: 'var(--primary)' }}>
               Terms of Service
             </span>
             {' '}and{' '}
-            <span className={classNames(
-              "font-medium hover:underline cursor-pointer transition-colors duration-200",
-              darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-500"
-            )}>
+            <span className="font-medium hover:underline cursor-pointer transition-colors duration-200"
+                  style={{ color: 'var(--primary)' }}>
               Privacy Policy
             </span>
           </p>

@@ -1,47 +1,45 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type ThemeContextType = {
+const ThemeContext = createContext<{
+  theme: string;
   darkMode: boolean;
-  toggleDarkMode: () => void;
-};
+  toggleTheme: () => void;
+} | undefined>(undefined);
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Check if user previously set dark mode preference
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('darkMode');
-    // Also check system preference if no saved preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return savedTheme ? savedTheme === 'true' : prefersDark;
-  });
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(prev => !prev);
-  };
-
-  // Update localStorage and apply class to html element when darkMode changes
-  useEffect(() => {
-    localStorage.setItem('darkMode', darkMode.toString());
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  return (
-    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
-
-export const useTheme = (): ThemeContextType => {
+export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
+};
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return saved || (prefersDark ? 'dark' : 'light');
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const darkMode = theme === 'dark';
+
+  return (
+    <ThemeContext.Provider value={{ theme, darkMode, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };
