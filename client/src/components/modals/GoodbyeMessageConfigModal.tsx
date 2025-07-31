@@ -151,7 +151,16 @@ const GoodbyeMessageConfigModal: React.FC<GoodbyeMessageConfigModalProps> = ({
   if (!isOpen) return null;
 
   return (
-          <div className="fixed inset-0 bg-black bg-opacity-75 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4 text-center">
+        {/* Backdrop */}
+        <div className={classNames(
+          "fixed inset-0 backdrop-blur-sm",
+          darkMode ? "bg-gray-900/90" : "bg-black/75"
+        )} />
+        
+        {/* Modal Content */}
+        <div className="relative">
       <div className={classNames(
         "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl",
         darkMode ? "bg-gray-800" : "bg-white"
@@ -504,6 +513,8 @@ const GoodbyeMessageConfigModal: React.FC<GoodbyeMessageConfigModalProps> = ({
             </div>
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );
