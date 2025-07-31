@@ -54,11 +54,11 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
   // Variant colors
   const variantColors = {
-    default: enabled ? 'bg-primary-600 hover:bg-primary-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300',
+    default: enabled ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80',
     success: enabled ? 'bg-green-600 hover:bg-green-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300',
     warning: enabled ? 'bg-yellow-600 hover:bg-yellow-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300',
     danger: enabled ? 'bg-red-600 hover:bg-red-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300',
-    info: enabled ? 'bg-blue-600 hover:bg-blue-700' : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
+    info: enabled ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'
   };
 
   const handleToggle = () => {
@@ -94,8 +94,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           variantColors[variant],
           (disabled || loading) && 'opacity-50 cursor-not-allowed',
           !disabled && !loading && 'cursor-pointer hover:shadow-lg hover:scale-105',
-          darkMode ? 'focus:ring-offset-gray-800' : 'focus:ring-offset-white',
-          enabled ? 'focus:ring-primary-500' : 'focus:ring-gray-500'
+          'focus:ring-offset-background',
+          enabled ? 'focus:ring-primary' : 'focus:ring-muted-foreground'
         )}
       >
         <span className="sr-only">{label || 'Toggle setting'}</span>
@@ -122,7 +122,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         <span 
           className={classNames(
             'absolute inset-0 rounded-full opacity-20 transition-opacity duration-300',
-            enabled ? 'bg-gradient-to-r from-blue-400 to-purple-500' : 'bg-transparent'
+            enabled ? 'bg-gradient-to-r from-primary/40 to-primary/60' : 'bg-transparent'
           )}
         />
       </button>
@@ -135,7 +135,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
               htmlFor={id}
               className={classNames(
                 'block text-sm font-medium cursor-pointer',
-                darkMode ? 'text-gray-200' : 'text-gray-800',
+                'text-foreground',
                 disabled && 'opacity-50'
               )}
             >
@@ -147,7 +147,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
               id={description ? `${id}-description` : undefined}
               className={classNames(
                 'mt-1 text-sm',
-                darkMode ? 'text-gray-400' : 'text-gray-600',
+                'text-muted-foreground',
                 disabled && 'opacity-50'
               )}
             >

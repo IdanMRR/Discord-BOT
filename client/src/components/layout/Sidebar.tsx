@@ -204,11 +204,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
               <div className={classNames(
                 'w-3 h-3 rounded-full transition-all duration-300',
                 connectionStatus 
-                  ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' 
-                  : 'bg-red-500 shadow-lg shadow-red-500/50'
+                  ? 'bg-success shadow-lg shadow-success/50' 
+                  : 'bg-destructive shadow-lg shadow-destructive/50'
               )}></div>
               {connectionStatus && (
-                <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+                <div className="absolute inset-0 w-3 h-3 rounded-full bg-success animate-ping opacity-20"></div>
               )}
             </div>
             {!collapsed && (

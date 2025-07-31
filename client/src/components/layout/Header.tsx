@@ -157,7 +157,7 @@ const Header: React.FC<HeaderProps> = ({
                 onClick={markNotificationsAsRead}
               >
                 {/* Glowing background effect */}
-                <div className="absolute inset-0 bg-blue-400 transition-opacity duration-300 opacity-0 group-hover:opacity-30 blur-xl"></div>
+                <div className="absolute inset-0 bg-primary transition-opacity duration-300 opacity-0 group-hover:opacity-30 blur-xl"></div>
                 <div className="relative">
                   <BellIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" aria-hidden="true" />
                   {unreadCount > 0 && (

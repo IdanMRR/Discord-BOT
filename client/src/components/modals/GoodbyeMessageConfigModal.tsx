@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { apiService } from '../../services/api';
 import {
@@ -148,28 +149,39 @@ const GoodbyeMessageConfigModal: React.FC<GoodbyeMessageConfigModalProps> = ({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[99999] overflow-y-auto" onClick={onClose}>
-      <div className="flex min-h-full items-center justify-center p-4 text-center">
-        {/* Backdrop */}
-        <div 
-          className={classNames(
-            "fixed inset-0 backdrop-blur-md",
-            darkMode ? "bg-black/95" : "bg-black/90"
-          )}
-        />
-        
-        {/* Modal Content */}
-        <div className="relative">
-      <div 
-        className={classNames(
-          "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl",
-          darkMode ? "bg-gray-800" : "bg-white"
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className={classNames(
+            "fixed inset-0 bg-black/60 backdrop-blur-sm",
+            darkMode ? "bg-gray-900/80" : "bg-black/50"
+          )} />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className={classNames(
+                "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl",
+                darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+              )}>
         {/* Header */}
         <div className={classNames(
           "flex items-center justify-between p-6 border-b",
@@ -518,10 +530,12 @@ const GoodbyeMessageConfigModal: React.FC<GoodbyeMessageConfigModalProps> = ({
             </div>
           </div>
         )}
-      </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </Transition>
   );
 };
 

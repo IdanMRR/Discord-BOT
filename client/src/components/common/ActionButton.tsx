@@ -46,7 +46,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   const variantClasses = {
     primary: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary focus:ring-primary",
     secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90 border-secondary focus:ring-secondary",
-    success: "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 focus:ring-emerald-500",
+    success: "bg-success text-success-foreground hover:bg-success/90 border-success focus:ring-success",
     danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive focus:ring-destructive",
     warning: darkMode
       ? "bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600 focus:ring-yellow-500"
@@ -59,7 +59,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   const buttonClasses = classNames(
     "inline-flex items-center justify-center border rounded-lg font-medium transition-all duration-200",
     "focus:outline-none focus:ring-2 focus:ring-offset-2",
-    darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
+    "focus:ring-offset-background",
     sizeClasses[size],
     variantClasses[variant],
     (disabled || loading) && "opacity-50 cursor-not-allowed",

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import ActionButton from './ActionButton';
 
-// Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ');
 }
@@ -46,103 +46,120 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
     '4xl': 'max-w-4xl'
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[99999] overflow-y-auto" onClick={onClose}>
-      <div className="flex min-h-full items-center justify-center p-4 text-center">
-        {/* Backdrop */}
-        <div 
-          className={classNames(
-            "fixed inset-0 backdrop-blur-md",
-            darkMode ? "bg-black/95" : "bg-black/90"
-          )}
-        />
-        
-        {/* Modal Content */}
-        <div className="relative">
-          <div 
-            className={classNames(
-              "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
-              maxWidthClasses[maxWidth],
-              darkMode ? "bg-gray-800" : "bg-white",
-              className
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className={classNames(
-              "flex items-start justify-between p-6 border-b",
-              darkMode ? "border-gray-700" : "border-gray-200"
-            )}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center">
-                  {icon && (
-                    <span className="text-2xl mr-3 flex-shrink-0">{icon}</span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h2 className={classNames(
-                      "text-2xl font-bold truncate",
-                      darkMode ? "text-white" : "text-gray-900"
-                    )}>
-                      {title}
-                    </h2>
-                    {description && (
-                      <p className={classNames(
-                        "text-sm mt-1",
-                        darkMode ? "text-gray-400" : "text-gray-600"
-                      )}>
-                        {description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className={classNames(
-                  "ml-4 p-2 rounded-lg transition-colors flex-shrink-0",
-                  darkMode 
-                    ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-                )}
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className={classNames(
+            "fixed inset-0 bg-black/60 backdrop-blur-sm",
+            darkMode ? "bg-gray-900/80" : "bg-black/50"
+          )} />
+        </Transition.Child>
 
-            {/* Content */}
-            <div className="p-6">
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
-                  <span className={classNames(
-                    "text-lg",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
-                    {loadingText}
-                  </span>
-                </div>
-              ) : (
-                children
-              )}
-            </div>
-
-            {/* Actions */}
-            {actions && !loading && (
-              <div className={classNames(
-                "flex items-center justify-end space-x-3 px-6 py-4 border-t",
-                darkMode ? "border-gray-700 bg-gray-750" : "border-gray-200 bg-gray-50"
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className={classNames(
+                "w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl transition-all",
+                maxWidthClasses[maxWidth],
+                darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200",
+                className
               )}>
-                {actions}
-              </div>
-            )}
+                {/* Header */}
+                <div className={classNames(
+                  "flex items-start justify-between p-6 border-b",
+                  darkMode ? "border-gray-700" : "border-gray-200"
+                )}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center">
+                      {icon && (
+                        <span className="text-2xl mr-3 flex-shrink-0">{icon}</span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <Dialog.Title className={classNames(
+                          "text-2xl font-bold",
+                          darkMode ? "text-white" : "text-gray-900"
+                        )}>
+                          {title}
+                        </Dialog.Title>
+                        {description && (
+                          <p className={classNames(
+                            "text-sm mt-1",
+                            darkMode ? "text-gray-400" : "text-gray-600"
+                          )}>
+                            {description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className={classNames(
+                      "p-2 rounded-lg transition-colors",
+                      darkMode 
+                        ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
+                        : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+                    )}
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
+                    <span className={classNames(
+                      "text-lg",
+                      darkMode ? "text-gray-400" : "text-gray-600"
+                    )}>
+                      {loadingText}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {/* Body */}
+                    <div className="p-6">
+                      {children}
+                    </div>
+
+                    {/* Actions */}
+                    {actions && (
+                      <div className={classNames(
+                        "flex justify-end p-6 border-t space-x-3",
+                        darkMode ? "border-gray-700" : "border-gray-200"
+                      )}>
+                        {actions}
+                      </div>
+                    )}
+                  </>
+                )}
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </Transition>
   );
 };
+
+export default ConfigModal;
 
 // Default action buttons for common use cases
 export const ModalActions = {
@@ -150,9 +167,10 @@ export const ModalActions = {
     onSave, 
     onCancel, 
     saving = false, 
-    saveText = 'Save',
-    cancelText = 'Cancel',
-    saveIcon
+    saveText = 'Save', 
+    cancelText = 'Cancel', 
+    saveIcon,
+    testing = false
   }: {
     onSave: () => void;
     onCancel: () => void;
@@ -160,12 +178,13 @@ export const ModalActions = {
     saveText?: string;
     cancelText?: string;
     saveIcon?: React.ComponentType<any>;
+    testing?: boolean;
   }) => (
     <>
       <ActionButton
         variant="outline"
         onClick={onCancel}
-        disabled={saving}
+        disabled={saving || testing}
       >
         {cancelText}
       </ActionButton>
@@ -174,6 +193,7 @@ export const ModalActions = {
         onClick={onSave}
         loading={saving}
         icon={saveIcon}
+        disabled={testing}
       >
         {saving ? 'Saving...' : saveText}
       </ActionButton>
@@ -232,7 +252,5 @@ export const ModalActions = {
         </ActionButton>
       </div>
     </>
-  )
+  ),
 };
-
-export default ConfigModal;
