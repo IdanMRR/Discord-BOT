@@ -1,9 +1,1 @@
-{
-    "mcpServers": {
-      "playwright": {
-        "command": "cmd",
-        "args": ["/c", "npx", "playwright", "test", "--headed"]
-      }
-    }
-  }
-  
+
