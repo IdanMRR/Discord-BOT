@@ -39,17 +39,11 @@ export async function createDashboardPermissionsTable(): Promise<void> {
 // Helper function to get dashboard permissions for a user
 export function getDashboardPermissions(userId: string, guildId: string): string[] {
   try {
-    // Debug logging to trace permission fetching
-    console.log(`🔍 getDashboardPermissions called for user ${userId} in guild ${guildId}`);
-    
     const stmt = db.prepare('SELECT permissions FROM dashboard_permissions WHERE user_id = ? AND guild_id = ?');
     const result = stmt.get(userId, guildId) as { permissions: string } | undefined;
     
-    console.log(`📊 Database result for user ${userId}:`, result);
-    
     if (result) {
       const permissions = JSON.parse(result.permissions || '[]');
-      console.log(`✅ Parsed permissions for user ${userId}:`, permissions);
       
       // Only log if user actually has permissions
       if (permissions.length > 0) {
@@ -58,10 +52,8 @@ export function getDashboardPermissions(userId: string, guildId: string): string
       return permissions;
     }
     
-    console.log(`❌ No permissions found for user ${userId} in guild ${guildId}`);
     return [];
   } catch (error) {
-    console.error(`💥 Error getting dashboard permissions for user ${userId}:`, error);
     logError('DashboardPermissions', `Error getting dashboard permissions for user ${userId} in guild ${guildId}: ${error}`);
     return [];
   }
