@@ -283,7 +283,7 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
 
   if (!isOpen) return null;
 
-      return (
+  return (
       <div className="fixed inset-0 z-[9999] overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4 text-center">
           {/* Backdrop */}
@@ -886,7 +886,6 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
             </div>
           </div>
         )}
-      </div>
           </div>
         </div>
       </div>
