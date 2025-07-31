@@ -17,6 +17,9 @@
         "NODE_ENV": "production"
       }
     },
+    "playwright": {
+      "url": "http://localhost:3006/mcp"
+    },
     "filesystem": {
       "command": "npx",
       "args": ["@modelcontextprotocol/server-filesystem", "--root", "."]

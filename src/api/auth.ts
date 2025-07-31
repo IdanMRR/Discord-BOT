@@ -191,72 +191,13 @@ router.post('/discord/simple', (req: Request, res: Response) => {
   }
 });
 
-// Development mode login endpoint
+// Development mode login endpoint - DISABLED for security
 router.post('/dev-login', async (req: Request, res: Response) => {
-  try {
-    // Only allow in development
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({
-        success: false,
-        error: 'Development login not available in production'
-      });
-    }
-
-    logInfo('Auth', 'Development mode login for Soggra - fetching real Discord data...');
-
-    // Try to fetch real Discord user data first
-    const realUserData = await fetchDiscordUserData('471204846855258123');
-    
-    let user;
-    if (realUserData) {
-      logInfo('Auth', `Successfully fetched real Discord data for ${realUserData.username}`);
-      user = {
-        id: realUserData.id,
-        username: realUserData.username,
-        discriminator: realUserData.discriminator,
-        avatar: realUserData.avatar,
-        email: 'soggra@example.com', // Keep email as fallback
-        isAdmin: true,
-        permissions: ['admin', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs']
-      };
-    } else {
-      logInfo('Auth', 'Could not fetch real Discord data, using fallback user data');
-      // Fallback to mock data if Discord client unavailable
-      user = {
-        id: '471204846855258123',
-        username: 'Soggra',
-        discriminator: '0',
-        avatar: '71d55b3c1aa02b6dcd3d3e1bd58bc850', // Fallback avatar hash
-        email: 'soggra@example.com',
-        isAdmin: true,
-        permissions: ['admin', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs']
-      };
-    }
-
-    // Generate JWT token
-    const jwtToken = jwt.sign(
-      { userId: user.id, isAdmin: user.isAdmin, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    logInfo('Auth', `Successfully authenticated ${user.username} in development mode`);
-    
-    res.json({
-      success: true,
-      data: {
-        token: jwtToken,
-        user: user
-      }
-    });
-  } catch (error: any) {
-    logError('Auth', `Error in development login: ${error.message}`);
-    
-    res.status(500).json({
-      success: false,
-      error: 'Failed to authenticate'
-    });
-  }
+  // Development login is now disabled for security reasons
+  return res.status(403).json({
+    success: false,
+    error: 'Development login has been disabled. Please use Discord OAuth authentication.'
+  });
 });
 
 // Handle Discord OAuth callback (real implementation)

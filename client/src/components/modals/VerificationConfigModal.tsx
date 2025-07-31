@@ -122,20 +122,21 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
       const response = await apiService.getVerificationConfig(serverId);
       
       if (response.success && response.data) {
-        setConfig({
-          title: response.data.title || config.title,
-          description: response.data.description || config.description,
-          color: response.data.color || config.color,
-          buttonText: response.data.buttonText || config.buttonText,
-          fields: response.data.fields || config.fields
-        });
+        const data = response.data;
+        setConfig(prevConfig => ({
+          title: data.title || prevConfig.title,
+          description: data.description || prevConfig.description,
+          color: data.color || prevConfig.color,
+          buttonText: data.buttonText || prevConfig.buttonText,
+          fields: data.fields || prevConfig.fields
+        }));
       }
     } catch (error) {
       console.error('Error loading verification config:', error);
     } finally {
       setLoading(false);
     }
-  }, [serverId, config.title, config.description, config.color, config.buttonText, config.fields]);
+  }, [serverId]);
 
   const loadChannelsAndRoles = useCallback(async () => {
     try {

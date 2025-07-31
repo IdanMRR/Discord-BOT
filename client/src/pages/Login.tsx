@@ -169,31 +169,7 @@ const Login: React.FC = () => {
     }, 100);
   };
 
-  // Handle development mode login
-  const handleDevLogin = async () => {
-    if (isLoggingIn) return;
-    
-    try {
-      setIsLoggingIn(true);
-      console.log('Development mode login - using dev endpoint');
-      
-      const response = await apiService.devLogin();
-      if (response.success && response.data) {
-        await login(response.data.token);
-        toast.success(`Welcome ${response.data.user.username}! 🎉 (Dev Mode)`, { 
-          id: 'dev-login-success',
-          duration: 3000 
-        });
-      } else {
-        throw new Error(response.error || 'Dev login failed');
-      }
-    } catch (error: any) {
-      console.error('Dev login error:', error);
-      toast.error('Development login failed: ' + error.message, { id: 'dev-login-error' });
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
+
 
   return (
     <div className="page-container min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -242,32 +218,7 @@ const Login: React.FC = () => {
         <div className="card p-8 rounded-2xl backdrop-blur-xl transition-all duration-300 transform hover:scale-105 shadow-2xl ring-1">
           <div className="space-y-6">
             
-            {/* Development Mode Button - Show first in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={handleDevLogin}
-                disabled={isLoggingIn}
-                className="btn-primary w-full py-4 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
-                style={{
-                  background: 'linear-gradient(to right, #10b981, #059669)',
-                  color: 'white'
-                }}
-              >
-                <div className="flex items-center justify-center">
-                  {isLoggingIn ? (
-                    <>
-                      <LoadingSpinner size="sm" className="mr-3 text-white" />
-                      <span>🔄 Logging in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="mr-3 text-2xl">🧪</div>
-                      <span>Quick Dev Login (Bypass OAuth)</span>
-                    </>
-                  )}
-                </div>
-              </button>
-            )}
+
 
             {/* Discord Login Button */}
             <button
@@ -305,10 +256,7 @@ const Login: React.FC = () => {
                 🔐 Secure authentication via Discord OAuth2
               </p>
               <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
-                {process.env.NODE_ENV === 'development' 
-                  ? 'Use dev login for quick access or Discord OAuth for full testing'
-                  : 'You\'ll be redirected to Discord to authorize access'
-                }
+                You'll be redirected to Discord to authorize access
               </p>
             </div>
 
