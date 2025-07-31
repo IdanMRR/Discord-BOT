@@ -49,22 +49,27 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto">
+    <div className="fixed inset-0 z-[99999] overflow-y-auto" onClick={onClose}>
       <div className="flex min-h-full items-center justify-center p-4 text-center">
         {/* Backdrop */}
-        <div className={classNames(
-          "fixed inset-0 backdrop-blur-sm",
-          darkMode ? "bg-gray-900/90" : "bg-black/75"
-        )} />
+        <div 
+          className={classNames(
+            "fixed inset-0 backdrop-blur-md",
+            darkMode ? "bg-black/95" : "bg-black/90"
+          )}
+        />
         
         {/* Modal Content */}
         <div className="relative">
-          <div className={classNames(
-            "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
-            maxWidthClasses[maxWidth],
-            darkMode ? "bg-gray-800" : "bg-white",
-            className
-          )}>
+          <div 
+            className={classNames(
+              "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
+              maxWidthClasses[maxWidth],
+              darkMode ? "bg-gray-800" : "bg-white",
+              className
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className={classNames(
               "flex items-start justify-between p-6 border-b",
@@ -110,7 +115,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             <div className="p-6">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-4"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
                   <span className={classNames(
                     "text-lg",
                     darkMode ? "text-gray-300" : "text-gray-700"

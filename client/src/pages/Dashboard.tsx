@@ -124,27 +124,21 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="page-container flex justify-center items-center min-h-screen">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="page-container p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className={classNames(
-            "text-4xl font-bold",
-            darkMode ? "text-white" : "text-gray-900"
-          )}>
+          <h1 className="text-4xl font-bold text-foreground">
             Dashboard Overview
           </h1>
-          <p className={classNames(
-            "text-lg mt-2",
-            darkMode ? "text-gray-400" : "text-gray-600"
-          )}>
+          <p className="text-lg mt-2 text-muted-foreground">
             System metrics, performance data, and real-time statistics
           </p>
         </div>
@@ -152,11 +146,7 @@ const Dashboard: React.FC = () => {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className={classNames(
-            "flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors",
-            darkMode ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100",
-            refreshing ? "opacity-50 cursor-not-allowed" : ""
-          )}
+          className={`btn-secondary ${refreshing ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           <ArrowPathIcon className={classNames("h-4 w-4", refreshing ? "animate-spin" : "")} />
           <span>Refresh</span>
@@ -169,24 +159,22 @@ const Dashboard: React.FC = () => {
           <Card>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className={classNames(
-                  "p-3 rounded-lg",
+                <div className={`p-3 rounded-lg ${
                   systemHealth.status === 'healthy' 
-                    ? (darkMode ? "bg-green-900/20" : "bg-green-100")
-                    : (darkMode ? "bg-red-900/20" : "bg-red-100")
-                )}>
-                  <SignalIcon className={classNames(
-                    "h-6 w-6",
+                    ? "bg-success/20" 
+                    : "bg-destructive/20"
+                }`}>
+                  <SignalIcon className={`h-6 w-6 ${
                     systemHealth.status === 'healthy'
-                      ? (darkMode ? "text-green-400" : "text-green-600")
-                      : (darkMode ? "text-red-400" : "text-red-600")
-                  )} />
+                      ? "text-success"
+                      : "text-destructive"
+                  }`} />
                 </div>
                 <div>
-                  <h3 className={classNames("text-lg font-semibold", darkMode ? "text-white" : "text-gray-900")}>
+                  <h3 className="text-lg font-semibold text-foreground">
                     System Status: {systemHealth.status === 'healthy' ? '🟢 Healthy' : '🔴 Unhealthy'}
                   </h3>
-                  <p className={classNames("text-sm", darkMode ? "text-gray-400" : "text-gray-600")}>
+                  <p className="text-sm text-muted-foreground">
                     Database: {systemHealth.database} • Discord: {systemHealth.discord} • Response: {systemHealth.responseTime}
                   </p>
                 </div>
@@ -212,16 +200,10 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Bot Uptime
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {systemMetrics.uptime}
                 </p>
               </div>
@@ -241,22 +223,13 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Memory Usage
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {systemMetrics.memoryUsage.percentage}%
                 </p>
-                <p className={classNames(
-                  "text-xs",
-                  darkMode ? "text-gray-500" : "text-gray-500"
-                )}>
+                <p className="text-xs text-muted-foreground">
                   {systemMetrics.memoryUsage.used} / {systemMetrics.memoryUsage.total}
                 </p>
               </div>
@@ -276,16 +249,10 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   API Response Time
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {systemMetrics.apiLatency}
                 </p>
               </div>
@@ -305,16 +272,10 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Database Size
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {systemMetrics.databaseSize}
                 </p>
               </div>
@@ -457,16 +418,10 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Active Tickets
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {dashboardStats.activeTickets}
                 </p>
               </div>
@@ -485,16 +440,10 @@ const Dashboard: React.FC = () => {
                 )} />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Total Warnings
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-2xl font-bold text-foreground">
                   {dashboardStats.totalWarnings}
                 </p>
               </div>
@@ -507,39 +456,39 @@ const Dashboard: React.FC = () => {
       {systemMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <h3 className={classNames("text-lg font-semibold mb-4", darkMode ? "text-white" : "text-gray-900")}>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">
               System Information
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className={classNames("text-sm", darkMode ? "text-gray-400" : "text-gray-600")}>
+                <span className="text-sm text-muted-foreground">
                   Node.js Version:
                 </span>
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   {systemMetrics.nodeVersion}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className={classNames("text-sm", darkMode ? "text-gray-400" : "text-gray-600")}>
+                <span className="text-sm text-muted-foreground">
                   Discord.js Version:
                 </span>
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   {systemMetrics.discordJsVersion}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className={classNames("text-sm", darkMode ? "text-gray-400" : "text-gray-600")}>
+                <span className="text-sm text-muted-foreground">
                   Last Restart:
                 </span>
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   {new Date(systemMetrics.lastRestart).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className={classNames("text-sm", darkMode ? "text-gray-400" : "text-gray-600")}>
+                <span className="text-sm text-muted-foreground">
                   CPU Usage:
                 </span>
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   {systemMetrics.systemLoad.cpu}%
                 </span>
               </div>
@@ -547,30 +496,24 @@ const Dashboard: React.FC = () => {
           </Card>
 
           <Card>
-            <h3 className={classNames("text-lg font-semibold mb-4", darkMode ? "text-white" : "text-gray-900")}>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">
               Quick Actions
             </h3>
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/servers')}
-                className={classNames(
-                  "w-full flex items-center justify-between p-3 rounded-lg border transition-colors",
-                  darkMode ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-50"
-                )}
+                className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
               >
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   Manage Servers
                 </span>
                 <ServerIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate('/dashboard-logs')}
-                className={classNames(
-                  "w-full flex items-center justify-between p-3 rounded-lg border transition-colors",
-                  darkMode ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-50"
-                )}
+                className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
               >
-                <span className={classNames("text-sm font-medium", darkMode ? "text-white" : "text-gray-900")}>
+                <span className="text-sm font-medium text-foreground">
                   View Activity Logs
                 </span>
                 <ChartBarIcon className="h-4 w-4" />

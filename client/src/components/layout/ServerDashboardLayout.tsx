@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useParams, useNavigate, NavLink, Navigate } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Server } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -33,7 +32,6 @@ function classNames(...classes: (string | boolean | undefined)[]) {
 
 const ServerDashboardLayout: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
-  const { darkMode } = useTheme();
   const { permissions } = useAuth();
   const navigate = useNavigate();
   const [server, setServer] = useState<Server | null>(null);
@@ -129,17 +127,11 @@ const ServerDashboardLayout: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={classNames(
-        "min-h-screen p-6",
-        darkMode ? "bg-gray-900" : "bg-gray-50"
-      )}>
+      <div className="page-container p-6">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
             <LoadingSpinner size="lg" className="text-primary-600" />
-            <p className={classNames(
-              "mt-4 text-lg font-medium",
-              darkMode ? "text-gray-300" : "text-gray-600"
-            )}>Loading server dashboard...</p>
+            <p className="mt-4 text-lg font-medium text-muted-foreground">Loading server dashboard...</p>
           </div>
         </div>
       </div>
@@ -148,29 +140,17 @@ const ServerDashboardLayout: React.FC = () => {
 
   if (error || !server || !hasServerAccess) {
     return (
-      <div className={classNames(
-        "min-h-screen p-6",
-        darkMode ? "bg-gray-900" : "bg-gray-50"
-      )}>
+      <div className="page-container p-6">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
-            <ServerIcon className={classNames(
-              "mx-auto h-12 w-12 mb-4",
-              darkMode ? "text-red-400" : "text-red-500"
-            )} />
-            <h3 className={classNames(
-              "text-xl font-semibold mb-2",
-              darkMode ? "text-red-400" : "text-red-500"
-            )}>Access Denied</h3>
-            <p className={classNames(
-              "text-base mb-4",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
+            <ServerIcon className="mx-auto h-12 w-12 mb-4 text-destructive" />
+            <h3 className="text-xl font-semibold mb-2 text-destructive">Access Denied</h3>
+            <p className="text-base mb-4 text-muted-foreground">
               {error || 'You do not have permission to access this server dashboard.'}
             </p>
             <button
               onClick={() => navigate('/select-server')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="btn-primary"
             >
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Select Different Server
@@ -182,26 +162,16 @@ const ServerDashboardLayout: React.FC = () => {
   }
 
   return (
-    <div className={classNames("min-h-screen", darkMode ? "bg-gray-900" : "bg-gray-50")}>
+    <div className="page-container">
       {/* Server Header */}
-      <div className={classNames(
-        "border-b sticky top-0 z-30",
-        darkMode 
-          ? "bg-gray-800 border-gray-700" 
-          : "bg-white border-gray-200"
-      )}>
+      <div className="border-b sticky top-0 z-30 bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Server Info */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/select-server')}
-                className={classNames(
-                  "p-2 rounded-lg transition-colors",
-                  darkMode 
-                    ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-                )}
+                className="p-2 rounded-lg transition-colors hover:bg-muted text-muted-foreground hover:text-foreground"
                 title="Back to server selection"
               >
                 <ArrowLeftIcon className="h-5 w-5" />
@@ -214,28 +184,17 @@ const ServerDashboardLayout: React.FC = () => {
                   className="w-10 h-10 rounded-lg"
                 />
               ) : (
-                <div className={classNames(
-                  "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold",
-                  darkMode 
-                    ? "bg-gray-700 text-gray-300" 
-                    : "bg-gray-200 text-gray-600"
-                )}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold bg-muted text-muted-foreground">
                   {server.name.substring(0, 1).toUpperCase()}
                 </div>
               )}
               
               <div>
-                <h1 className={classNames(
-                  "text-xl font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h1 className="text-xl font-semibold text-foreground">
                   {server.name}
                 </h1>
                 {server.memberCount > 0 && (
-                  <p className={classNames(
-                    "text-sm",
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  )}>
+                  <p className="text-sm text-muted-foreground">
                     {server.memberCount.toLocaleString()} members
                   </p>
                 )}
@@ -244,10 +203,7 @@ const ServerDashboardLayout: React.FC = () => {
 
             {/* Server Actions */}
             <div className="flex items-center space-x-2">
-              <div className={classNames(
-                "px-3 py-1 rounded-full text-xs font-medium",
-                darkMode ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-700"
-              )}>
+              <div className="px-3 py-1 rounded-full text-xs font-medium bg-success/20 text-success">
                 Online
               </div>
             </div>
@@ -256,12 +212,7 @@ const ServerDashboardLayout: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className={classNames(
-        "border-b sticky top-16 z-20",
-        darkMode 
-          ? "bg-gray-800 border-gray-700" 
-          : "bg-white border-gray-200"
-      )}>
+      <div className="border-b sticky top-16 z-20 bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="-mb-px flex space-x-8 overflow-x-auto">
             {navigationTabs.map((tab) => (
@@ -273,13 +224,8 @@ const ServerDashboardLayout: React.FC = () => {
                   classNames(
                     "group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors",
                     isActive
-                      ? "border-primary-500 text-primary-600"
-                      : classNames(
-                          "border-transparent hover:border-gray-300",
-                          darkMode 
-                            ? "text-gray-400 hover:text-gray-200" 
-                            : "text-gray-500 hover:text-gray-700"
-                        )
+                      ? "border-primary text-primary"
+                      : "border-transparent hover:border-border text-muted-foreground hover:text-foreground"
                   )
                 }
               >

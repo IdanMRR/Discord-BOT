@@ -148,7 +148,7 @@ const ServerSelection: React.FC = () => {
                 <button
                   key={server.id}
                   onClick={() => handleServerSelect(server.id, server.name)}
-                  className="content-area group relative rounded-lg p-6 text-left border-2 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2"
+                  className="content-area group relative rounded-lg p-4 text-left border-2 transition-all duration-200 hover:scale-[1.01] focus:outline-none focus:ring-2"
                   style={{
                     borderColor: 'var(--border)',
                     boxShadow: 'var(--shadow-sm)'
@@ -159,10 +159,10 @@ const ServerSelection: React.FC = () => {
                       <img 
                         src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`} 
                         alt={server.name} 
-                        className="w-12 h-12 rounded-lg"
+                        className="w-10 h-10 rounded-lg"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold"
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-base font-bold"
                            style={{
                              backgroundColor: 'var(--secondary)',
                              color: 'var(--secondary-foreground)'

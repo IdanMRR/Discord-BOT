@@ -450,10 +450,9 @@ const ServerSettingsContent: React.FC = () => {
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
       className={classNames(
-        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2",
-        checked ? "bg-purple-600" : (darkMode ? "bg-gray-600" : "bg-gray-300"),
-        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
-        darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white"
+        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
+        checked ? "bg-primary" : "bg-muted",
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       )}
     >
       <span
@@ -476,11 +475,7 @@ const ServerSettingsContent: React.FC = () => {
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={classNames(
-        "w-full px-3 py-2 rounded-lg border transition-colors",
-        darkMode 
-          ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-          : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
-        "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
+        "w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
         disabled ? "opacity-50 cursor-not-allowed" : ""
       )}
     >
@@ -503,11 +498,7 @@ const ServerSettingsContent: React.FC = () => {
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={classNames(
-        "w-full px-3 py-2 rounded-lg border transition-colors",
-        darkMode 
-          ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-          : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
-        "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
+        "w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
         disabled ? "opacity-50 cursor-not-allowed" : ""
       )}
     >
@@ -531,11 +522,7 @@ const ServerSettingsContent: React.FC = () => {
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={classNames(
-        "w-full px-3 py-2 rounded-lg border transition-colors",
-        darkMode 
-          ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-          : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
-        "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
+        "w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
         disabled ? "opacity-50 cursor-not-allowed" : ""
       )}
     >
@@ -554,11 +541,8 @@ const ServerSettingsContent: React.FC = () => {
 
   if (!loggingSettings) {
     return (
-      <div className="min-h-screen p-8 flex items-center justify-center">
-        <div className={classNames(
-          "text-center p-8 rounded-lg border",
-          darkMode ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600"
-        )}>
+      <div className="page-container p-8 flex items-center justify-center">
+        <div className="card text-center p-8">
           <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
           <h3 className="text-lg font-semibold mb-2">Failed to Load Settings</h3>
           <p>Unable to load server settings. Please try refreshing the page.</p>
@@ -568,31 +552,19 @@ const ServerSettingsContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="page-container p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4">
-          <div className={classNames(
-            "p-3 rounded-lg",
-            darkMode ? "bg-purple-900/20" : "bg-purple-100"
-          )}>
-            <CogIcon className={classNames(
-              "h-8 w-8",
-              darkMode ? "text-purple-400" : "text-purple-600"
-            )} />
+          <div className="p-3 rounded-lg bg-primary/10">
+            <CogIcon className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className={classNames(
-              "text-4xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+            <h1 className="text-4xl font-bold text-foreground">
               Server Settings
             </h1>
             {serverInfo && (
-              <p className={classNames(
-                "text-lg font-medium mt-2",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-lg font-medium mt-2 text-muted-foreground">
                 {serverInfo.name} • {serverInfo.memberCount} members
               </p>
             )}
@@ -625,15 +597,11 @@ const ServerSettingsContent: React.FC = () => {
       </div>
 
       {/* Server Info Section */}
-      <div className={classNames(
-        "rounded-lg border p-6 mb-8",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
+      <div className="card rounded-lg border p-6 mb-8">
         <div className="flex items-center space-x-4">
           {/* Server Icon */}
           <div className={classNames(
-            "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold",
-            darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+            "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold bg-muted text-muted-foreground"
           )}>
             {serverInfo?.icon ? (
               <img 
@@ -648,22 +616,13 @@ const ServerSettingsContent: React.FC = () => {
           
           {/* Server Details */}
           <div>
-            <h1 className={classNames(
-              "text-2xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+            <h1 className="text-2xl font-bold text-foreground">
               {serverInfo?.name || 'Server Name'}
             </h1>
-            <p className={classNames(
-              "text-sm",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
+            <p className="text-sm text-muted-foreground">
               ID: {serverId}
             </p>
-            <p className={classNames(
-              "text-sm flex items-center",
-              darkMode ? "text-blue-400" : "text-blue-600"
-            )}>
+            <p className="text-sm flex items-center text-primary">
               👥 {serverInfo?.memberCount || 0} members
             </p>
           </div>
@@ -672,14 +631,8 @@ const ServerSettingsContent: React.FC = () => {
 
 
       {/* Settings Navigation */}
-      <div className={classNames(
-        "rounded-lg border p-6 mb-8",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
-        <h2 className={classNames(
-          "text-xl font-bold mb-6 flex items-center",
-          darkMode ? "text-white" : "text-gray-900"
-        )}>
+      <div className="card rounded-lg border p-6 mb-8">
+        <h2 className="text-xl font-bold mb-6 flex items-center text-foreground">
           ⚙️ Server Configuration
         </h2>
         
@@ -690,8 +643,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
           >
             <UserPlusIcon className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Welcome Messages</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">Configure welcome & leave messages</span>
+            <span className="text-sm font-medium text-foreground">Welcome Messages</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Configure welcome & leave messages</span>
           </button>
 
           {/* Verification System */}
@@ -700,8 +653,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
           >
             <CheckBadgeIcon className="h-8 w-8 text-green-600 dark:text-green-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Verification</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">Member verification system</span>
+            <span className="text-sm font-medium text-foreground">Verification</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Member verification system</span>
           </button>
 
           {/* Leveling System */}
@@ -712,8 +665,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
           >
             <TrophyIcon className="h-8 w-8 text-purple-600 dark:text-purple-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Leveling</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">XP and ranking system</span>
+            <span className="text-sm font-medium text-foreground">Leveling</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">XP and ranking system</span>
           </button>
 
           {/* Role Management */}
@@ -722,8 +675,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors"
           >
             <UserGroupIcon className="h-8 w-8 text-orange-600 dark:text-orange-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Roles</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">Role management & auto-roles</span>
+            <span className="text-sm font-medium text-foreground">Roles</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Role management & auto-roles</span>
           </button>
 
           {/* Economy System */}
@@ -734,8 +687,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors"
           >
             <CurrencyDollarIcon className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Economy</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">Virtual currency system</span>
+            <span className="text-sm font-medium text-foreground">Economy</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Virtual currency system</span>
           </button>
 
           {/* General Settings */}
@@ -746,8 +699,8 @@ const ServerSettingsContent: React.FC = () => {
             className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700/20 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/40 transition-colors"
           >
             <InformationCircleIcon className="h-8 w-8 text-gray-600 dark:text-gray-400 mb-2" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">General</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">Basic server settings</span>
+            <span className="text-sm font-medium text-foreground">General</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Basic server settings</span>
           </button>
         </div>
       </div>
@@ -762,13 +715,10 @@ const ServerSettingsContent: React.FC = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mod Logs */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-red-600 dark:text-red-400 mr-2">🛡️</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Mod Logs
               </h4>
             </div>
@@ -788,13 +738,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* General Logs */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-blue-600 dark:text-blue-400 mr-2">📜</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 General Logs
               </h4>
             </div>
@@ -826,13 +773,10 @@ const ServerSettingsContent: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Ticket Panel Channel */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-purple-600 dark:text-purple-400 mr-2">📧</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Ticket Panel Channel
               </h4>
             </div>
@@ -852,13 +796,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Ticket Logs Channel */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-green-600 dark:text-green-400 mr-2">📄</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Ticket Logs Channel
               </h4>
             </div>
@@ -878,13 +819,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Ticket Category */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-gray-600 dark:text-gray-400 mr-2">📁</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Ticket Category
               </h4>
             </div>
@@ -909,7 +847,7 @@ const ServerSettingsContent: React.FC = () => {
           )}>
             <div className="flex items-center">
               <span className="text-indigo-600 dark:text-indigo-400 mr-2">🔧</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Create Ticket Panel
               </h4>
             </div>
@@ -968,13 +906,10 @@ const ServerSettingsContent: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Verification Channel */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-green-600 dark:text-green-400 mr-2">📝</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Verification Channel
               </h4>
             </div>
@@ -994,13 +929,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Verified Role */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-blue-600 dark:text-blue-400 mr-2">🏷️</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Verified Role
               </h4>
             </div>
@@ -1020,13 +952,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Verification Type */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-purple-600 dark:text-purple-400 mr-2">⚙️</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Verification Type
               </h4>
             </div>
@@ -1050,13 +979,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Create Verification Panel */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
             <div className="flex items-center">
               <span className="text-indigo-600 dark:text-indigo-400 mr-2">🚀</span>
-              <h4 className={classNames("font-medium", darkMode ? "text-white" : "text-gray-900")}>
+              <h4 className="font-medium text-foreground">
                 Create Verification
               </h4>
             </div>
@@ -1066,53 +992,51 @@ const ServerSettingsContent: React.FC = () => {
             )}>
               Create verification panel in selected channel.
             </p>
-            <ActionButton
-              onClick={() => {
-                if (serverSettings?.verification_channel_id) {
-                  handleCreateVerificationPanel(serverSettings.verification_channel_id);
-                } else {
-                  toast.error('Please select a verification channel first');
-                }
-              }}
-              disabled={saving || !serverSettings?.verification_channel_id}
-              loading={saving}
-              variant="primary"
-              size="sm"
-              fullWidth
-            >
-              Create Verification Panel
-            </ActionButton>
+            <div className="space-y-2">
+              <ActionButton
+                onClick={() => setVerificationModalOpen(true)}
+                variant="outline"
+                size="sm"
+                fullWidth
+              >
+                🎨 Customize Verification
+              </ActionButton>
+              <ActionButton
+                onClick={() => {
+                  if (serverSettings?.verification_channel_id) {
+                    handleCreateVerificationPanel(serverSettings.verification_channel_id);
+                  } else {
+                    toast.error('Please select a verification channel first');
+                  }
+                }}
+                disabled={saving || !serverSettings?.verification_channel_id}
+                loading={saving}
+                variant="primary"
+                size="sm"
+                fullWidth
+              >
+                Create Verification Panel
+              </ActionButton>
+            </div>
           </div>
         </div>
       </SettingsCard>
 
       {/* Welcome Messages */}
-      <div className={classNames(
-        "rounded-lg border mb-8",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
+      <div className="card rounded-lg border mb-8">
         <div className="p-6">
-          <h2 className={classNames(
-            "text-2xl font-bold mb-6 flex items-center",
-            darkMode ? "text-white" : "text-gray-900"
-          )}>
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-foreground">
             👋 Welcome Messages
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Welcome Channel */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-green-600 dark:text-green-400">👋</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Welcome Channel
                 </h3>
               </div>
@@ -1132,18 +1056,12 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Goodbye Channel */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-red-600 dark:text-red-400">👋</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Goodbye Channel
                 </h3>
               </div>
@@ -1163,18 +1081,12 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Rules Channel */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-yellow-600 dark:text-yellow-400">📜</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Rules Channel
                 </h3>
               </div>
@@ -1194,62 +1106,35 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Welcome Message Configuration */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-blue-600 dark:text-blue-400">✨</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Custom Welcome Messages
                 </h3>
               </div>
-              <p className={classNames(
-                "text-sm mb-3",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-sm mb-3 text-muted-foreground">
                 Create rich, customizable welcome messages with placeholders.
               </p>
               
               {/* Available Variables */}
-              <div className={classNames(
-                "mb-4 p-3 rounded border-l-4 border-blue-500 text-xs",
-                darkMode ? "bg-blue-900/20" : "bg-blue-50"
-              )}>
-                <div className={classNames(
-                  "font-semibold mb-2",
-                  darkMode ? "text-blue-300" : "text-blue-800"
-                )}>
+              <div className="mb-4 p-3 rounded border-l-4 border-primary text-xs bg-primary/10">
+                <div className="font-semibold mb-2 text-primary">
                   Available Variables:
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-primary">
                     {'{user}'} - User mention
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-primary">
                     {'{server}'} - Server name
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-primary">
                     {'{memberCount}'} - Member count
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-primary">
                     {'{date}'} - Current date
                   </code>
                 </div>
@@ -1286,12 +1171,7 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      darkMode 
-                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
                   >
                     🧪 Test Message
                   </button>
@@ -1312,10 +1192,7 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
                   >
                     🔄 Reset to Default
                   </button>
@@ -1324,62 +1201,35 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Goodbye/Leave Message Configuration */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-orange-600 dark:text-orange-400">👋</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Custom Goodbye Messages
                 </h3>
               </div>
-              <p className={classNames(
-                "text-sm mb-3",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-sm mb-3 text-muted-foreground">
                 Create rich, customizable goodbye messages when members leave.
               </p>
               
               {/* Available Variables */}
-              <div className={classNames(
-                "mb-4 p-3 rounded border-l-4 border-orange-500 text-xs",
-                darkMode ? "bg-orange-900/20" : "bg-orange-50"
-              )}>
-                <div className={classNames(
-                  "font-semibold mb-2",
-                  darkMode ? "text-orange-300" : "text-orange-800"
-                )}>
+              <div className="mb-4 p-3 rounded border-l-4 border-orange-500 text-xs bg-orange-500/10">
+                <div className="font-semibold mb-2 text-orange-600">
                   Available Variables:
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-orange-300" : "bg-orange-100 text-orange-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-orange-600">
                     {'{user}'} - User name
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-orange-300" : "bg-orange-100 text-orange-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-orange-600">
                     {'{server}'} - Server name
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-orange-300" : "bg-orange-100 text-orange-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-orange-600">
                     {'{memberCount}'} - Member count
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-orange-300" : "bg-orange-100 text-orange-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-orange-600">
                     {'{date}'} - Current date
                   </code>
                 </div>
@@ -1416,12 +1266,7 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      darkMode 
-                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
                   >
                     🧪 Test Message
                   </button>
@@ -1442,10 +1287,7 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
                   >
                     🔄 Reset to Default
                   </button>
@@ -1454,62 +1296,35 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Invite Tracking Join Messages */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-green-600 dark:text-green-400">📥</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Invite Join Messages
                 </h3>
               </div>
-              <p className={classNames(
-                "text-sm mb-3",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-sm mb-3 text-muted-foreground">
                 Configure messages when members join via invites with tracking.
               </p>
               
               {/* Available Variables */}
-              <div className={classNames(
-                "mb-4 p-3 rounded border-l-4 border-green-500 text-xs",
-                darkMode ? "bg-green-900/20" : "bg-green-50"
-              )}>
-                <div className={classNames(
-                  "font-semibold mb-2",
-                  darkMode ? "text-green-300" : "text-green-800"
-                )}>
+              <div className="mb-4 p-3 rounded border-l-4 border-success text-xs bg-success/10">
+                <div className="font-semibold mb-2 text-success">
                   Available Variables:
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-success">
                     {'{user}'} - User mention
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-success">
                     {'{inviter}'} - Inviter mention
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-success">
                     {'{inviteCode}'} - Invite code
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-success">
                     {'{inviteUses}'} - Total uses
                   </code>
                 </div>
@@ -1546,12 +1361,7 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      darkMode 
-                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
                   >
                     🧪 Test Message
                   </button>
@@ -1572,10 +1382,7 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
                   >
                     🔄 Reset to Default
                   </button>
@@ -1584,62 +1391,35 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Invite Tracking Leave Messages */}
-            <div className={classNames(
-              "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-            )}>
+            <div className="p-4 rounded-lg border bg-muted border-border">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-red-600 dark:text-red-400">📤</span>
                 </div>
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   Invite Leave Messages
                 </h3>
               </div>
-              <p className={classNames(
-                "text-sm mb-3",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-sm mb-3 text-muted-foreground">
                 Configure messages when members with tracked invites leave.
               </p>
               
               {/* Available Variables */}
-              <div className={classNames(
-                "mb-4 p-3 rounded border-l-4 border-red-500 text-xs",
-                darkMode ? "bg-red-900/20" : "bg-red-50"
-              )}>
-                <div className={classNames(
-                  "font-semibold mb-2",
-                  darkMode ? "text-red-300" : "text-red-800"
-                )}>
+              <div className="mb-4 p-3 rounded border-l-4 border-destructive text-xs bg-destructive/10">
+                <div className="font-semibold mb-2 text-destructive">
                   Available Variables:
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-red-300" : "bg-red-100 text-red-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-destructive">
                     {'{user}'} - User name
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-red-300" : "bg-red-100 text-red-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-destructive">
                     {'{inviter}'} - Inviter name
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-red-300" : "bg-red-100 text-red-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-destructive">
                     {'{inviteCode}'} - Invite code
                   </code>
-                  <code className={classNames(
-                    "px-2 py-1 rounded",
-                    darkMode ? "bg-gray-700 text-red-300" : "bg-red-100 text-red-800"
-                  )}>
+                  <code className="px-2 py-1 rounded bg-muted text-destructive">
                     {'{timeInServer}'} - Time spent
                   </code>
                 </div>
@@ -1676,12 +1456,7 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      darkMode 
-                        ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
                   >
                     🧪 Test Message
                   </button>
@@ -1702,10 +1477,7 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className={classNames(
-                      "px-3 py-2 rounded-lg text-sm font-medium border transition-colors",
-                      "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
-                    )}
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
                   >
                     🔄 Reset to Default
                   </button>
@@ -1730,10 +1502,7 @@ const ServerSettingsContent: React.FC = () => {
             {/* Message Delete Logging */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-6">
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   🗑️ Message Deletion Logging
                 </h3>
                 <p className={classNames(
@@ -1768,10 +1537,7 @@ const ServerSettingsContent: React.FC = () => {
             {/* Message Edit Logging */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-6">
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   ✏️ Message Edit Logging
                 </h3>
                 <p className={classNames(
@@ -1806,10 +1572,7 @@ const ServerSettingsContent: React.FC = () => {
             {/* Command Logging */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-6">
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   ⚡ Command Logging
                 </h3>
                 <p className={classNames(
@@ -1844,10 +1607,7 @@ const ServerSettingsContent: React.FC = () => {
             {/* DM Logging */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-6">
-                <h3 className={classNames(
-                  "text-lg font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <h3 className="text-lg font-semibold text-foreground">
                   💬 Direct Message Logging
                 </h3>
                 <p className={classNames(

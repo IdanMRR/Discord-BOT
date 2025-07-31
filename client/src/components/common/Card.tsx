@@ -1,17 +1,28 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface CardProps {
+  title?: string;
+  description?: string;
   children: React.ReactNode;
   className?: string;
   padding?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ children, className = '', padding = true }) => {
-  const { darkMode } = useTheme();
-  
+const Card: React.FC<CardProps> = ({ 
+  title, 
+  description, 
+  children, 
+  className = '', 
+  padding = true 
+}) => {
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-900'} rounded-lg shadow-sm border ${padding ? 'p-6' : ''} ${className}`}>
+    <div className={`card ${!padding ? 'p-0' : ''} ${className}`}>
+      {(title || description) && (
+        <div className="card-header">
+          {title && <h3 className="card-title">{title}</h3>}
+          {description && <p className="card-description">{description}</p>}
+        </div>
+      )}
       {children}
     </div>
   );

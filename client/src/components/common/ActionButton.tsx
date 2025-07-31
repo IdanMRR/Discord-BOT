@@ -44,30 +44,16 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 
   // Variant classes
   const variantClasses = {
-    primary: darkMode 
-      ? "bg-purple-600 text-white hover:bg-purple-700 border-purple-600 focus:ring-purple-500" 
-      : "bg-purple-600 text-white hover:bg-purple-700 border-purple-600 focus:ring-purple-500",
-    secondary: darkMode 
-      ? "bg-gray-600 text-white hover:bg-gray-700 border-gray-600 focus:ring-gray-500" 
-      : "bg-gray-600 text-white hover:bg-gray-700 border-gray-600 focus:ring-gray-500",
-    success: darkMode
-      ? "bg-green-600 text-white hover:bg-green-700 border-green-600 focus:ring-green-500"
-      : "bg-green-600 text-white hover:bg-green-700 border-green-600 focus:ring-green-500",
-    danger: darkMode
-      ? "bg-red-600 text-white hover:bg-red-700 border-red-600 focus:ring-red-500"
-      : "bg-red-600 text-white hover:bg-red-700 border-red-600 focus:ring-red-500",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary focus:ring-primary",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90 border-secondary focus:ring-secondary",
+    success: "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 focus:ring-emerald-500",
+    danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive focus:ring-destructive",
     warning: darkMode
       ? "bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600 focus:ring-yellow-500"
       : "bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600 focus:ring-yellow-500",
-    info: darkMode
-      ? "bg-blue-600 text-white hover:bg-blue-700 border-blue-600 focus:ring-blue-500"
-      : "bg-blue-600 text-white hover:bg-blue-700 border-blue-600 focus:ring-blue-500",
-    outline: darkMode 
-      ? "border-gray-600 text-gray-300 bg-transparent hover:bg-gray-700 focus:ring-gray-500" 
-      : "border-gray-300 text-gray-700 bg-transparent hover:bg-gray-50 focus:ring-gray-500",
-    ghost: darkMode
-      ? "border-transparent text-gray-300 bg-transparent hover:bg-gray-700 focus:ring-gray-500"
-      : "border-transparent text-gray-700 bg-transparent hover:bg-gray-100 focus:ring-gray-500"
+    info: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary focus:ring-primary",
+    outline: "border-input text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-ring",
+    ghost: "border-transparent text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-ring"
   };
 
   const buttonClasses = classNames(

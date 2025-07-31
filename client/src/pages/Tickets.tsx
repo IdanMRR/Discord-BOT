@@ -8,8 +8,9 @@ import PermissionGuard from '../components/common/PermissionGuard';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -17,6 +18,7 @@ function classNames(...classes: string[]) {
 
 const TicketsContent: React.FC = () => {
   const { darkMode } = useTheme();
+  const { settings, registerAutoRefresh } = useSettings();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,6 +102,18 @@ const TicketsContent: React.FC = () => {
   useEffect(() => {
     fetchTickets(1);
   }, [fetchTickets]);
+
+  // Register auto-refresh
+  useEffect(() => {
+    if (settings.autoRefresh) {
+      const unregister = registerAutoRefresh('tickets-page', () => {
+        console.log('Auto-refreshing tickets...');
+        fetchTickets(currentPage);
+      });
+
+      return unregister;
+    }
+  }, [settings.autoRefresh, registerAutoRefresh, fetchTickets, currentPage]);
 
   const handlePageChange = (page: number) => {
     fetchTickets(page);
@@ -370,30 +384,16 @@ const TicketsContent: React.FC = () => {
   };
 
   return (
-    <div className={classNames(
-      "min-h-screen p-6 space-y-6",
-      darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
-    )}>
+    <div className="page-container p-6 space-y-6">
       <div className="space-y-8">
         {/* Header */}
-        <div className={classNames(
-          'rounded-lg border p-6',
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        )}>
+        <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className={classNames(
-                'text-2xl font-bold',
-                darkMode ? 'text-white' : 'text-gray-900'
-              )}>
+          <h1 className="card-title text-2xl font-bold">
                 Support Tickets
               </h1>
-          <p className={classNames(
-                'text-base mt-1',
-                darkMode ? 'text-gray-400' : 'text-gray-600'
-              )}>
+          <p className="card-description text-base mt-1">
                 Manage user support requests and ticket lifecycle
               </p>
         </div>
@@ -403,14 +403,17 @@ const TicketsContent: React.FC = () => {
                 onClick={() => fetchTickets(currentPage)}
                 disabled={loading}
                 className={classNames(
-                  "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105",
-                  "text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
+                  "inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
                   darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 )}
                 title="Refresh tickets"
               >
-                🔄 Refresh
+                <ArrowPathIcon className={classNames(
+                  "h-4 w-4 mr-2",
+                  loading ? "animate-spin" : ""
+                )} />
+                Refresh
               </button>
               <div className={classNames(
                 'flex items-center px-3 py-1 rounded-lg text-sm',

@@ -33,7 +33,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="page-container flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -166,29 +166,26 @@ const SettingsApplier: React.FC = () => {
     const html = document.documentElement;
     const body = document.body;
     const root = document.getElementById('root');
+    const themeColorMeta = document.getElementById('theme-color-meta') as HTMLMetaElement;
     
     if (darkMode) {
       html.classList.add('dark');
       body.classList.add('dark');
       if (root) root.classList.add('dark');
-      // Apply dark mode CSS variables
-      html.style.setProperty('--bg-primary', 'var(--dark-bg)');
-      html.style.setProperty('--bg-secondary', 'var(--dark-surface)');
-      html.style.setProperty('--text-primary', 'var(--dark-text)');
-      html.style.setProperty('--text-secondary', 'var(--dark-text-muted)');
-      html.style.setProperty('--border-color', 'var(--dark-border)');
+      // Update browser theme color for dark mode - use the dark mode primary color
+      if (themeColorMeta) {
+        themeColorMeta.content = 'hsl(263, 70%, 70%)'; // Dark mode primary color
+      }
     } else {
       html.classList.remove('dark');
       body.classList.remove('dark');
       if (root) root.classList.remove('dark');
-      // Apply light mode CSS variables
-      html.style.setProperty('--bg-primary', 'white');
-      html.style.setProperty('--bg-secondary', 'var(--gray-50)');
-      html.style.setProperty('--text-primary', 'var(--gray-900)');
-      html.style.setProperty('--text-secondary', 'var(--gray-600)');
-      html.style.setProperty('--border-color', 'var(--gray-200)');
+      // Update browser theme color for light mode - use the primary color or user's custom color
+      if (themeColorMeta) {
+        themeColorMeta.content = settings.primaryColor || 'hsl(262, 83%, 58%)'; // Light mode primary color
+      }
     }
-  }, [darkMode]);
+  }, [darkMode, settings.primaryColor]);
 
   React.useEffect(() => {
     // Apply primary color CSS variables

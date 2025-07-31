@@ -22,7 +22,20 @@
       "Bash(sqlite3:*)",
       "Bash(del enable-leveling.js)",
       "Bash(grep:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(find:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run)",
+      "Bash(true)",
+      "Bash(npm run compile:*)",
+      "Bash(npm run lint)",
+      "Bash(sed:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run dashboard:build:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pgrep:*)",
+      "Bash(ping:*)",
+      "Bash(npm:*)"
     ],
     "deny": []
   }

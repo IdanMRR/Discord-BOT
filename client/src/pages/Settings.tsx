@@ -65,7 +65,7 @@ const Settings: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
   const [toastPosition, setToastPosition] = useState<'top' | 'bottom' | 'top-right' | 'bottom-right'>('top');
-  const [notificationTypes, _setNotificationTypes] = useState({
+  const [notificationTypes] = useState({
     success: true,
     error: true,
     warning: true,
@@ -76,7 +76,8 @@ const Settings: React.FC = () => {
   const [debugMode, setDebugMode] = useState(false);
   const [performanceMonitoring, setPerformanceMonitoring] = useState(false);
   const [cacheEnabled, setCacheEnabled] = useState(true);
-  const [_apiEndpoint, _setApiEndpoint] = useState('');
+  // API endpoint configuration (placeholder for future implementation)
+  // const [apiEndpoint, setApiEndpoint] = useState('');
   
   // Loading states
   const [saving, setSaving] = useState(false);
@@ -192,10 +193,46 @@ const Settings: React.FC = () => {
         } : null;
       };
       
+      // Convert hex to HSL for CSS variables
+      const hexToHsl = (hex: string) => {
+        const rgb = hexToRgb(hex);
+        if (!rgb) return null;
+        
+        const r = rgb.r / 255;
+        const g = rgb.g / 255;
+        const b = rgb.b / 255;
+        
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0, s = 0, l = (max + min) / 2;
+        
+        if (max !== min) {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          
+          switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+          h /= 6;
+        }
+        
+        return {
+          h: Math.round(h * 360),
+          s: Math.round(s * 100),
+          l: Math.round(l * 100)
+        };
+      };
+      
       const rgb = hexToRgb(primaryColorToApply);
       if (rgb) {
-        document.documentElement.style.setProperty('--primary-color', primaryColorToApply);
-        document.documentElement.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+        // Convert hex to HSL and update CSS variables
+        const hsl = hexToHsl(primaryColorToApply);
+        if (hsl) {
+          document.documentElement.style.setProperty('--primary', `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`);
+          document.documentElement.style.setProperty('--ring', `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`);
+        }
       }
       
       // Apply font size directly to DOM
@@ -244,12 +281,12 @@ const Settings: React.FC = () => {
     }
   }, [settings, updateSetting]);
 
-  // Apply theme changes
+  // Apply theme changes (but don't save until Save button is clicked)
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
     setTheme(newTheme);
     
-    // Update the context immediately for persistence
-    updateSetting('theme', newTheme);
+    // Don't update the context immediately - let the save button handle it
+    // updateSetting('theme', newTheme);
     
     if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -291,12 +328,12 @@ const Settings: React.FC = () => {
     updateSetting('refreshInterval', newInterval);
   };
 
-  // Apply primary color
+  // Apply primary color (but don't save until Save button is clicked)
   const handleColorChange = (color: string) => {
     setPrimaryColor(color);
     
-    // Update the context immediately for instant effect
-    updateSetting('primaryColor', color);
+    // Don't update the context immediately - let the save button handle it
+    // updateSetting('primaryColor', color);
     
     // Convert hex to RGB for CSS variables
     const hexToRgb = (hex: string) => {
@@ -308,21 +345,75 @@ const Settings: React.FC = () => {
       } : null;
     };
     
+    // Convert hex to HSL for CSS variables
+    const hexToHsl = (hex: string) => {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return null;
+      
+      const r = rgb.r / 255;
+      const g = rgb.g / 255;
+      const b = rgb.b / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      
+      return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+      };
+    };
+    
     const rgb = hexToRgb(color);
     if (rgb) {
-      document.documentElement.style.setProperty('--primary-color', color);
-      document.documentElement.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      // Convert hex to HSL and update CSS variables for immediate visual feedback
+      const hsl = hexToHsl(color);
+      if (hsl) {
+        const primaryHsl = `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
+        const primaryForegroundHsl = hsl.l > 50 ? `hsl(${hsl.h} ${hsl.s}% 10%)` : `hsl(${hsl.h} ${hsl.s}% 98%)`;
+        
+        // Update all primary color variables
+        document.documentElement.style.setProperty('--primary', primaryHsl);
+        document.documentElement.style.setProperty('--primary-foreground', primaryForegroundHsl);
+        document.documentElement.style.setProperty('--ring', primaryHsl);
+        
+        // Update sidebar colors
+        document.documentElement.style.setProperty('--sidebar-primary', primaryHsl);
+        document.documentElement.style.setProperty('--sidebar-primary-foreground', primaryForegroundHsl);
+        document.documentElement.style.setProperty('--sidebar-ring', primaryHsl);
+        
+        // Update chart colors to match primary
+        document.documentElement.style.setProperty('--chart-1', primaryHsl);
+        
+        // Update additional color variables from global-settings.css
+        document.documentElement.style.setProperty('--primary-color', color);
+        document.documentElement.style.setProperty('--primary-dark', `hsl(${hsl.h} ${hsl.s}% ${Math.max(hsl.l - 10, 10)}%)`);
+        document.documentElement.style.setProperty('--primary-light', `hsl(${hsl.h} ${hsl.s}% ${Math.min(hsl.l + 10, 90)}%)`);
+      }
     }
   };
 
-  // Apply font size
+  // Apply font size (but don't save until Save button is clicked)
   const handleFontSizeChange = (size: 'small' | 'medium' | 'large' | 'xl') => {
     setFontSize(size as any);
     
-    // Update the context immediately for instant effect and persistence
-    updateSetting('fontSize', size);
+    // Don't update the context immediately - let the save button handle it
+    // updateSetting('fontSize', size);
     
-    // Apply font size scaling using CSS custom property
+    // Apply font size scaling using CSS custom property for immediate visual feedback
     const fontSizeMap = {
       small: '0.9',
       medium: '1.0', 
@@ -1033,19 +1124,10 @@ const Settings: React.FC = () => {
               description="Manage stored data and temporary files"
             >
               <div className="space-y-4">
-                <div className={classNames(
-                  'flex items-center justify-between p-4 rounded-lg border',
-                  darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-                )}>
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted border-border">
                   <div className="flex-1">
-                    <h4 className={classNames(
-                      'font-medium',
-                      darkMode ? 'text-white' : 'text-gray-900'
-                    )}>Clear Application Cache</h4>
-                    <p className={classNames(
-                      'text-sm mt-1',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>Remove temporary files, cached responses, and stored data</p>
+                    <h4 className="font-medium text-foreground">Clear Application Cache</h4>
+                    <p className="text-sm mt-1 text-muted-foreground">Remove temporary files, cached responses, and stored data</p>
                   </div>
                   <ActionButton
                     onClick={handleClearCache}
@@ -1149,16 +1231,10 @@ const Settings: React.FC = () => {
       <div className="w-full h-full px-0 py-0">
         {/* Header */}
         <div className="mb-6">
-          <h1 className={classNames(
-            'text-2xl font-bold',
-            darkMode ? 'text-white' : 'text-gray-900'
-          )}>
+          <h1 className="text-2xl font-bold text-foreground">
             ⚙️ Settings
           </h1>
-          <p className={classNames(
-            'mt-2 text-base',
-            darkMode ? 'text-gray-400' : 'text-gray-600'
-          )}>
+          <p className="mt-2 text-base text-muted-foreground">
             Customize your dashboard experience
           </p>
         </div>
@@ -1166,10 +1242,7 @@ const Settings: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
-            <div className={classNames(
-              'rounded-lg border p-4 space-y-4 card-modern transition-all duration-300 hover:shadow-lg',
-              darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
-            )}>
+            <div className="card rounded-lg border p-4 space-y-4 transition-all duration-300 hover:shadow-lg">
               {/* Search */}
               <div className="relative">
                 <MagnifyingGlassIcon className={classNames(
@@ -1181,13 +1254,7 @@ const Settings: React.FC = () => {
                   placeholder="Search settings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={classNames(
-                    'w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors',
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500' 
-                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
-                    'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
-                  )}
+                  className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -1204,25 +1271,21 @@ const Settings: React.FC = () => {
                       className={classNames(
                         'w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 text-left group hover:shadow-md',
                         isActive
-                          ? darkMode
-                            ? 'bg-primary-600 text-white shadow-lg'
-                            : 'bg-primary-600 text-white shadow-lg'
-                          : darkMode
-                            ? 'text-gray-300 hover:bg-gray-700 hover:text-white hover:-translate-y-0.5'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-0.5'
+                          ? 'bg-primary text-primary-foreground shadow-lg'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
                       )}
                     >
                       <Icon className={classNames(
                         'h-5 w-5 mr-3 transition-all duration-300 group-hover:scale-110',
-                        isActive ? 'text-white' : darkMode ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700'
+                        isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'
                       )} />
                       <div className="flex-1 text-left">
                         <div className="text-sm font-medium">{category.name}</div>
                         <div className={classNames(
                           'text-xs mt-0.5',
                           isActive 
-                            ? 'text-white/80' 
-                            : darkMode ? 'text-gray-500' : 'text-gray-500'
+                            ? 'text-primary-foreground/80' 
+                            : 'text-muted-foreground'
                         )}>
                           {category.description}
                         </div>
@@ -1236,51 +1299,59 @@ const Settings: React.FC = () => {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            <div className={classNames(
-              'rounded-lg border p-6 card-modern transition-all duration-300 hover:shadow-lg',
-              darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
-            )}>
+            <div className="card rounded-lg border p-6 transition-all duration-300 hover:shadow-lg">
               {renderCategoryContent()}
             </div>
 
-            {/* Action Buttons */}
-            {hasChanges && (
-              <div className={classNames(
-                'mt-6 p-4 rounded-lg border flex items-center justify-between card-modern transition-all duration-300 hover:shadow-lg',
-                darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
-              )}>
-                <div className="flex items-center">
-                  <div className={classNames(
-                    'w-2 h-2 rounded-full mr-2 animate-pulse',
-                    'bg-orange-500'
-                  )}></div>
-                  <p className={classNames(
-                    'text-sm font-medium',
-                    darkMode ? 'text-gray-300' : 'text-gray-700'
-                  )}>
-                    You have unsaved changes
-                  </p>
-                </div>
-                <div className="flex space-x-3">
-                  <ActionButton
-                    onClick={handleReset}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Reset
-                  </ActionButton>
-                  <ActionButton
-                    onClick={handleSave}
-                    loading={saving}
-                    variant="primary"
-                    size="sm"
-                    icon={saving ? undefined : CheckIcon}
-                  >
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </ActionButton>
-                </div>
+            {/* Action Buttons - Always visible */}
+            <div className={classNames(
+              "card mt-6 p-4 rounded-lg border flex items-center justify-between transition-all duration-300 hover:shadow-lg",
+              hasChanges ? "ring-2 ring-orange-500/50" : ""
+            )}>
+              <div className="flex items-center">
+                {hasChanges ? (
+                  <>
+                    <div className={classNames(
+                      'w-2 h-2 rounded-full mr-2 animate-pulse',
+                      'bg-orange-500'
+                    )}></div>
+                    <p className="text-sm font-medium text-foreground">
+                      You have unsaved changes
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className={classNames(
+                      'w-2 h-2 rounded-full mr-2',
+                      'bg-green-500'
+                    )}></div>
+                    <p className="text-sm font-medium text-foreground">
+                      All changes saved
+                    </p>
+                  </>
+                )}
               </div>
-            )}
+              <div className="flex space-x-3">
+                <ActionButton
+                  onClick={handleReset}
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasChanges}
+                >
+                  Reset
+                </ActionButton>
+                <ActionButton
+                  onClick={handleSave}
+                  loading={saving}
+                  variant={hasChanges ? "primary" : "secondary"}
+                  size="sm"
+                  icon={saving ? undefined : CheckIcon}
+                  disabled={!hasChanges && !saving}
+                >
+                  {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
+                </ActionButton>
+              </div>
+            </div>
           </div>
         </div>
       </div>

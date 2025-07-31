@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import PermissionGuard from '../components/common/PermissionGuard';
 import { apiService } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -89,6 +90,7 @@ interface ServerHealth {
 
 export const Analytics: React.FC = () => {
   const { serverId: routeServerId } = useParams<{ serverId: string }>();
+  const { settings, registerAutoRefresh } = useSettings();
   const [selectedPeriod, setSelectedPeriod] = useState<number>(7);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -167,9 +169,21 @@ export const Analytics: React.FC = () => {
     }
   }, [routeServerId, selectedPeriod]);
 
-  useEffect(() => {
+useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
+
+  // Register auto-refresh
+  useEffect(() => {
+    if (settings.autoRefresh) {
+      const unregister = registerAutoRefresh('analytics-page', () => {
+        console.log('Auto-refreshing analytics...');
+        fetchAnalytics();
+      });
+
+      return unregister;
+    }
+  }, [settings.autoRefresh, registerAutoRefresh, fetchAnalytics]);
 
   const currentServerId = routeServerId;
 
@@ -261,14 +275,14 @@ export const Analytics: React.FC = () => {
 
   return (
     <PermissionGuard requiredPermission="view_analytics">
-      <div className="space-y-6">
+      <div className="page-container space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-foreground">
               📊 Server Analytics
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               Comprehensive insights into your server's activity and performance
             </p>
           </div>
@@ -278,7 +292,7 @@ export const Analytics: React.FC = () => {
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(Number(e.target.value))}
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="input-primary"
             >
               <option value={1}>Last 24 Hours</option>
               <option value={7}>Last 7 Days</option>
@@ -289,22 +303,22 @@ export const Analytics: React.FC = () => {
         </div>
 
         {!currentServerId ? (
-          <div className="flex justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="text-center text-gray-600 dark:text-gray-400">
+          <div className="card flex justify-center items-center h-64">
+            <div className="text-center text-muted-foreground">
               <p className="text-lg font-medium">Please select a server to view analytics.</p>
               <p className="text-sm mt-2">Choose a server from the dropdown above to see detailed analytics.</p>
             </div>
           </div>
         ) : isLoading ? (
-          <div className="flex justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+          <div className="card flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
           </div>
         ) : (
             <div className="space-y-8">
               {/* Overview Cards */}
               {overview && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                  <div className="card p-6">
                     <div className="flex items-center">
                       <div className="text-2xl">💬</div>
                       <div className="ml-4">

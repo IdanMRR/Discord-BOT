@@ -284,20 +284,25 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   if (!isOpen) return null;
 
   return (
-      <div className="fixed inset-0 z-[9999] overflow-y-auto">
+      <div className="fixed inset-0 z-[99999] overflow-y-auto" onClick={onClose}>
         <div className="flex min-h-full items-center justify-center p-4 text-center">
-          {/* Backdrop */}
-          <div className={classNames(
-            "fixed inset-0 backdrop-blur-sm",
-            darkMode ? "bg-gray-900/90" : "bg-black/75"
-          )} />
+                  {/* Backdrop */}
+        <div 
+          className={classNames(
+            "fixed inset-0 backdrop-blur-md",
+            darkMode ? "bg-black/95" : "bg-black/90"
+          )}
+        />
           
           {/* Modal Content */}
           <div className="relative">
-      <div className={classNames(
-        "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl",
-        darkMode ? "bg-gray-800" : "bg-white"
-      )}>
+      <div 
+        className={classNames(
+          "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl",
+          darkMode ? "bg-gray-800" : "bg-white"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className={classNames(
           "flex items-center justify-between p-6 border-b",

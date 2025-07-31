@@ -487,10 +487,7 @@ const ServerLogsContent: React.FC = () => {
   }
 
   return (
-    <div className={classNames(
-      "min-h-screen transition-colors duration-200",
-      darkMode ? "bg-gray-900" : "bg-gray-50"
-    )}>
+    <div className="page-container transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -509,24 +506,15 @@ const ServerLogsContent: React.FC = () => {
               </button>
               
               <div className="flex items-center space-x-3">
-                <div className={classNames(
-                  "w-12 h-12 rounded-full flex items-center justify-center",
-                  darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
-                )}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
                   <ServerIcon className="h-6 w-6" />
                 </div>
                 
                 <div>
-                  <h1 className={classNames(
-                    "text-3xl font-bold",
-                    darkMode ? "text-white" : "text-gray-900"
-                  )}>
+                  <h1 className="text-3xl font-bold text-foreground">
                     Server Activity Logs
                   </h1>
-                  <p className={classNames(
-                    "text-sm",
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  )}>
+                  <p className="text-sm text-muted-foreground">
                     📊 Monitor all server activity and events
                   </p>
                 </div>

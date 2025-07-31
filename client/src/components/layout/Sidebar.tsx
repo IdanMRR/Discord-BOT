@@ -128,9 +128,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
               <div className="relative group">
                 <div className={classNames(
                   "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
-                  "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
-                  "shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40",
-                  "border border-blue-400/30 group-hover:border-blue-400/50",
+                  "bg-gradient-to-br from-sidebar-primary via-primary to-sidebar-primary",
+                  "shadow-lg shadow-sidebar-primary/25 group-hover:shadow-xl group-hover:shadow-sidebar-primary/40",
+                  "border border-sidebar-primary/30 group-hover:border-sidebar-primary/50",
                   "transform group-hover:scale-105"
                 )}>
                   <svg className="w-7 h-7 text-white" viewBox="0 0 100 100" fill="none">
@@ -144,16 +144,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                     <path d="M 44 54 Q 50 58 56 54" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
                   </svg>
                 </div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-sidebar-primary to-primary rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
                 <div className="relative group">
                   <div className={classNames(
                     "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
-                    "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700",
-                    "shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40",
-                    "border border-blue-400/30 group-hover:border-blue-400/50"
+                    "bg-gradient-to-br from-sidebar-primary via-primary to-sidebar-primary",
+                    "shadow-lg shadow-sidebar-primary/25 group-hover:shadow-xl group-hover:shadow-sidebar-primary/40",
+                    "border border-sidebar-primary/30 group-hover:border-sidebar-primary/50"
                   )}>
                     <svg className="w-7 h-7 text-white" viewBox="0 0 100 100" fill="none">
                       <ellipse cx="50" cy="50" rx="35" ry="18" stroke="currentColor" strokeWidth="2.5" fill="none" transform="rotate(45 50 50)"/>
@@ -166,7 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                       <path d="M 44 54 Q 50 58 56 54" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-sidebar-primary to-primary rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold bg-gradient-to-r from-sidebar-primary to-primary bg-clip-text text-transparent tracking-tight">
@@ -240,7 +240,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
               {!collapsed && (
                 <div className="px-3 py-2 text-xs font-bold uppercase tracking-widest mb-2 text-sidebar-foreground/50">
                   <div className="flex items-center space-x-2">
-                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-blue-500 to-blue-600"></div>
+                    <div className="w-1 h-3 rounded-full bg-gradient-to-b from-sidebar-primary to-primary"></div>
                     <span>Navigation</span>
                   </div>
                 </div>
@@ -264,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                     >
                       {/* Active state background gradient */}
                       {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-blue-500/20 to-blue-600/20 rounded-lg blur-sm"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-sidebar-primary/20 via-primary/20 to-sidebar-primary/20 rounded-lg blur-sm"></div>
                       )}
                       
                       <div className={classNames(
@@ -320,7 +320,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                     >
                       {/* Active state background gradient */}
                       {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-blue-500/20 to-blue-600/20 rounded-lg blur-sm"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-sidebar-primary/20 via-primary/20 to-sidebar-primary/20 rounded-lg blur-sm"></div>
                       )}
                       
                       <div className={classNames(
@@ -377,7 +377,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                   className={classNames(
                     'rounded-full border-3 transition-all duration-300',
                     collapsed ? 'h-12 w-12' : 'h-14 w-14',
-                    'border-gradient-to-r from-blue-400 via-purple-400 to-blue-400',
+                    'border-gradient-to-r from-sidebar-primary via-primary to-sidebar-primary',
                     'group-hover:shadow-lg group-hover:shadow-sidebar-primary/25 group-hover:scale-105'
                   )}
                   style={{
