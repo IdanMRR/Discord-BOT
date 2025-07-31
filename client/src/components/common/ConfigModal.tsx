@@ -49,7 +49,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[45] flex items-center justify-center p-4">
       <div className={classNames(
         "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
         maxWidthClasses[maxWidth],

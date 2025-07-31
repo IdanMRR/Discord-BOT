@@ -472,30 +472,16 @@ const WarningsContent: React.FC = () => {
   };
 
   return (
-    <div className={classNames(
-      "min-h-screen p-6 space-y-6",
-      darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
-    )}>
+    <div className="page-container p-6 space-y-6">
       <div className="space-y-8">
         {/* Header */}
-        <div className={classNames(
-          'rounded-lg border p-6',
-          darkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-        )}>
+        <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className={classNames(
-                    'text-2xl font-bold',
-                    darkMode ? 'text-white' : 'text-gray-900'
-                  )}>
+              <h1 className="card-title text-2xl font-bold">
                     User Warnings
                   </h1>
-              <p className={classNames(
-                    'text-base mt-1',
-                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                  )}>
+              <p className="card-description text-base mt-1">
                     Review and manage user moderation actions
                   </p>
             </div>
@@ -504,12 +490,7 @@ const WarningsContent: React.FC = () => {
             <button
               onClick={() => fetchWarnings(currentPage)}
               disabled={loading}
-              className={classNames(
-                "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105",
-                "text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
-                darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              )}
+              className={`btn-primary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               title="Refresh warnings"
             >
               🔄 Refresh
@@ -1121,7 +1102,7 @@ const WarningsContent: React.FC = () => {
 
       {/* Bulk Remove Confirmation Modal */}
       <Transition appear show={isBulkRemoveConfirmOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeBulkRemoveConfirm}>
+        <Dialog as="div" className="relative z-[55]" onClose={closeBulkRemoveConfirm}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -1209,7 +1190,7 @@ const WarningsContent: React.FC = () => {
 
       {/* Remove Warning Modal */}
       <Transition appear show={showRemoveModal} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setShowRemoveModal(false)}>
+        <Dialog as="div" className="relative z-[60]" onClose={() => setShowRemoveModal(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
