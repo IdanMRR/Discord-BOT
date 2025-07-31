@@ -8,8 +8,8 @@ import PermissionGuard from '../components/common/PermissionGuard';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
-import { 
-  XMarkIcon, 
+import {
+  XMarkIcon,
   ExclamationTriangleIcon,
   ShieldCheckIcon as Shield,
   ClockIcon as Clock,
@@ -19,7 +19,8 @@ import {
   MinusIcon as UserMinus,
   PlusIcon as UserPlus,
   PlusIcon as Plus,
-  TrashIcon as Trash2
+  TrashIcon as Trash2,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -490,10 +491,18 @@ const WarningsContent: React.FC = () => {
             <button
               onClick={() => fetchWarnings(currentPage)}
               disabled={loading}
-              className={`btn-primary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={classNames(
+                "inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
+                darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              )}
               title="Refresh warnings"
             >
-              🔄 Refresh
+              <ArrowPathIcon className={classNames(
+                "h-4 w-4 mr-2",
+                loading ? "animate-spin" : ""
+              )} />
+              Refresh
             </button>
             <div className={classNames(
               'flex items-center px-3 py-1 rounded-lg text-sm',
@@ -1102,7 +1111,7 @@ const WarningsContent: React.FC = () => {
 
       {/* Bulk Remove Confirmation Modal */}
       <Transition appear show={isBulkRemoveConfirmOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-[55]" onClose={closeBulkRemoveConfirm}>
+        <Dialog as="div" className="relative z-[9999]" onClose={closeBulkRemoveConfirm}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -1190,7 +1199,7 @@ const WarningsContent: React.FC = () => {
 
       {/* Remove Warning Modal */}
       <Transition appear show={showRemoveModal} as={Fragment}>
-        <Dialog as="div" className="relative z-[60]" onClose={() => setShowRemoveModal(false)}>
+        <Dialog as="div" className="relative z-[9999]" onClose={() => setShowRemoveModal(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
