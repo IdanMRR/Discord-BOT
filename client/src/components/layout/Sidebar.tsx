@@ -12,10 +12,9 @@ import {
   ServerIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import { wsService } from '../../services/websocket';
-import SidebarServerList from '../common/SidebarServerList';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // Utility function for conditional class names
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -29,7 +28,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false }) => {
   const { user, logout } = useAuth();
-  const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [connectionStatus, setConnectionStatus] = React.useState(wsService.isConnected());
@@ -106,32 +104,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
       )}
       
       <div className={classNames(
-        'fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-500 ease-in-out',
+        'fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-500 ease-in-out shadow-2xl',
+        'bg-sidebar border-r border-sidebar-border',
         collapsed ? 'w-20' : 'w-72',
-        isMobile && collapsed ? '-translate-x-full' : 'translate-x-0',
-        darkMode 
-          ? 'bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-r border-slate-700/50' 
-          : 'bg-gradient-to-b from-white/95 via-slate-50/95 to-white/95 backdrop-blur-xl border-r border-slate-200/50',
-        'shadow-2xl shadow-black/10'
+        isMobile && collapsed ? '-translate-x-full' : 'translate-x-0'
       )}>
         {/* Header */}
         <div className={classNames(
-          'relative h-20 flex items-center border-b backdrop-blur-sm',
-          collapsed ? 'justify-center px-3' : 'justify-between px-6',
-          darkMode 
-            ? 'bg-slate-800/50 border-slate-600/30' 
-            : 'bg-white/50 border-slate-300/30'
+          'relative h-20 flex items-center backdrop-blur-sm border-b border-sidebar-border bg-sidebar',
+          collapsed ? 'justify-center px-3' : 'justify-between px-6'
         )}>
           <div className="flex items-center">
             {isMobile && (
               <button
                 onClick={onToggle}
-                className={classNames(
-                  'p-2 mr-2 rounded-lg transition-colors lg:hidden',
-                  darkMode 
-                    ? 'hover:bg-gray-700 text-gray-300' 
-                    : 'hover:bg-gray-100 text-gray-600'
-                )}
+                className="p-2 mr-2 rounded-lg transition-colors lg:hidden hover:bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-accent-foreground"
               >
                 <Bars3Icon className="h-5 w-5" />
               </button>
@@ -182,16 +169,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
                 </div>
                 <div>
-                  <h1 className={classNames(
-                    "text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent",
-                    "tracking-tight"
-                  )}>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-sidebar-primary to-primary bg-clip-text text-transparent tracking-tight">
                     PanelOps
                   </h1>
-                  <p className={classNames(
-                    "text-xs font-medium",
-                    darkMode ? "text-slate-400" : "text-slate-500"
-                  )}>
+                  <p className="text-xs font-medium text-sidebar-foreground/70">
                     Admin Suite
                   </p>
                 </div>
@@ -203,12 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
           {!collapsed && !isMobile && (
             <button
               onClick={onToggle}
-              className={classNames(
-                'p-1.5 rounded-lg transition-colors hidden lg:block',
-                darkMode 
-                  ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300' 
-                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-600'
-              )}
+              className="p-1.5 rounded-lg transition-colors hidden lg:block hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-accent-foreground"
             >
               <XMarkIcon className="h-4 w-4" />
             </button>
@@ -217,9 +193,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
 
         {/* Connection Status */}
         <div className={classNames(
-          'border-b backdrop-blur-sm',
-          collapsed ? 'px-3 py-4' : 'px-6 py-4',
-          darkMode ? 'bg-slate-800/30 border-slate-600/30' : 'bg-white/30 border-slate-300/30'
+          'border-b backdrop-blur-sm border-sidebar-border bg-sidebar/30',
+          collapsed ? 'px-3 py-4' : 'px-6 py-4'
         )}>
           <div className={classNames(
             'flex items-center',
@@ -241,15 +216,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                 <span className={classNames(
                   'text-xs font-semibold tracking-wide',
                   connectionStatus 
-                    ? darkMode ? 'text-emerald-400' : 'text-emerald-600'
-                    : darkMode ? 'text-red-400' : 'text-red-600'
+                    ? 'text-success'
+                    : 'text-destructive'
                 )}>
                   {connectionStatus ? 'ONLINE' : 'OFFLINE'}
                 </span>
-                <span className={classNames(
-                  'text-xs opacity-75',
-                  darkMode ? 'text-slate-400' : 'text-slate-500'
-                )}>
+                <span className="text-xs opacity-75 text-sidebar-foreground/70">
                   {connectionStatus ? 'All systems operational' : 'Connection lost'}
                 </span>
               </div>
@@ -266,10 +238,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
             {/* Main Navigation Items */}
             <div>
               {!collapsed && (
-                <div className={classNames(
-                  'px-3 py-2 text-xs font-bold uppercase tracking-widest mb-2',
-                  darkMode ? 'text-slate-400' : 'text-slate-500'
-                )}>
+                <div className="px-3 py-2 text-xs font-bold uppercase tracking-widest mb-2 text-sidebar-foreground/50">
                   <div className="flex items-center space-x-2">
                     <div className="w-1 h-3 rounded-full bg-gradient-to-b from-blue-500 to-blue-600"></div>
                     <span>Navigation</span>
@@ -288,10 +257,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                         'group flex items-center text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden',
                         collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5',
                         isActive
-                          ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                          : darkMode 
-                            ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md hover:shadow-slate-900/20'
-                            : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 hover:shadow-md hover:shadow-slate-900/10'
+                          ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg' 
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-md'
                       )}
                       title={collapsed ? item.name : undefined}
                     >
@@ -304,10 +271,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                         'flex items-center justify-center rounded-md transition-all duration-300 relative z-10',
                         collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
                         isActive 
-                          ? 'text-white bg-white/10' 
-                          : darkMode 
-                            ? 'text-slate-400 group-hover:text-slate-200'
-                            : 'text-slate-500 group-hover:text-slate-700'
+                          ? 'text-sidebar-primary-foreground bg-white/10' 
+                          : 'text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground'
                       )}>
                         <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
                       </div>
@@ -324,7 +289,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                       {/* Hover effect overlay */}
                       <div className={classNames(
                         'absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300',
-                        !isActive ? 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5' : ''
+                        !isActive ? 'bg-gradient-to-r from-sidebar-primary/5 via-primary/5 to-sidebar-primary/5' : ''
                       )}></div>
                     </NavLink>
                   );
@@ -333,10 +298,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
             </div>
 
             {/* Gap/Divider */}
-            <div className={classNames(
-              'border-t',
-              darkMode ? 'border-slate-600/30' : 'border-slate-300/30'
-            )}></div>
+            <div className="border-t border-sidebar-border/30"></div>
 
             {/* Settings Section */}
             <div>
@@ -351,10 +313,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                         'group flex items-center text-sm font-medium rounded-lg transition-all duration-300 relative overflow-hidden',
                         collapsed ? 'px-2 py-3 justify-center' : 'px-3 py-2.5',
                         isActive
-                          ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25' 
-                          : darkMode 
-                            ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md hover:shadow-slate-900/20'
-                            : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 hover:shadow-md hover:shadow-slate-900/10'
+                          ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg' 
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-md'
                       )}
                       title={collapsed ? item.name : undefined}
                     >
@@ -367,10 +327,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                         'flex items-center justify-center rounded-md transition-all duration-300 relative z-10',
                         collapsed ? 'w-8 h-8' : 'w-6 h-6 mr-3',
                         isActive 
-                          ? 'text-white bg-white/10' 
-                          : darkMode 
-                            ? 'text-slate-400 group-hover:text-slate-200'
-                            : 'text-slate-500 group-hover:text-slate-700'
+                          ? 'text-sidebar-primary-foreground bg-white/10' 
+                          : 'text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground'
                       )}>
                         <item.icon className={collapsed ? "h-5 w-5" : "h-4 w-4"} />
                       </div>
@@ -387,7 +345,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                       {/* Hover effect overlay */}
                       <div className={classNames(
                         'absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300',
-                        !isActive ? 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5' : ''
+                        !isActive ? 'bg-gradient-to-r from-sidebar-primary/5 via-primary/5 to-sidebar-primary/5' : ''
                       )}></div>
                     </NavLink>
                   );
@@ -399,18 +357,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
 
         {/* Enhanced User Profile */}
         <div className={classNames(
-          'flex-shrink-0 border-t backdrop-blur-sm relative',
-          collapsed ? 'px-3 py-4' : 'px-6 py-5',
-          darkMode ? 'border-slate-600/30 bg-slate-800/30' : 'border-slate-300/30 bg-white/30'
+          'flex-shrink-0 border-t backdrop-blur-sm relative border-sidebar-border/30 bg-sidebar/30',
+          collapsed ? 'px-3 py-4' : 'px-6 py-5'
         )}>
           {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-transparent to-transparent opacity-50"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-sidebar-primary/5 via-transparent to-transparent opacity-50"></div>
           
           <div className={classNames(
             'flex items-center rounded-xl transition-all duration-300 group cursor-pointer relative z-10',
             collapsed ? 'justify-center p-3' : 'p-4',
-            'hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-purple-500/10 hover:to-blue-500/10',
-            'hover:backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/10'
+            'hover:bg-gradient-to-r hover:from-sidebar-primary/10 hover:via-primary/10 hover:to-sidebar-primary/10',
+            'hover:backdrop-blur-sm hover:shadow-lg hover:shadow-sidebar-primary/10'
           )}
           onClick={() => navigate('/profile')}
           >
@@ -421,13 +378,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                     'rounded-full border-3 transition-all duration-300',
                     collapsed ? 'h-12 w-12' : 'h-14 w-14',
                     'border-gradient-to-r from-blue-400 via-purple-400 to-blue-400',
-                    'group-hover:shadow-lg group-hover:shadow-blue-500/25 group-hover:scale-105'
+                    'group-hover:shadow-lg group-hover:shadow-sidebar-primary/25 group-hover:scale-105'
                   )}
                   style={{
                     border: '3px solid',
-                    borderImage: collapsed 
-                      ? 'linear-gradient(45deg, #60a5fa, #a855f7, #60a5fa) 1'
-                      : 'linear-gradient(45deg, #60a5fa, #a855f7, #60a5fa) 1'
+                    borderImage: 'linear-gradient(45deg, var(--sidebar-primary), var(--primary), var(--sidebar-primary)) 1'
                   }}
                   src={
                     user?.avatar
@@ -444,10 +399,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                 <div className={classNames(
                   'absolute -bottom-1 -right-1 rounded-full border-3 transition-all duration-300',
                   collapsed ? 'w-4 h-4' : 'w-5 h-5',
-                  'bg-emerald-500 shadow-lg shadow-emerald-500/50',
-                  darkMode ? 'border-slate-800' : 'border-white'
+                  'bg-success shadow-lg shadow-success/50 border-sidebar'
                 )}>
-                  <div className="absolute inset-0 w-full h-full rounded-full bg-emerald-500 animate-ping opacity-20"></div>
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-success animate-ping opacity-20"></div>
                 </div>
               </div>
             </div>
@@ -456,35 +410,22 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
               <>
                 <div className="ml-4 flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
-                    <p className={classNames(
-                      'text-base font-bold transition-colors truncate',
-                      darkMode ? 'text-white group-hover:text-blue-400' : 'text-slate-900 group-hover:text-blue-600'
-                    )}>
+                    <p className="text-base font-bold transition-colors truncate text-sidebar-foreground group-hover:text-sidebar-primary">
                       {user?.username || 'Unknown User'}
                     </p>
                     <div className={classNames(
                       'px-2 py-0.5 rounded-full text-xs font-semibold',
-                      'bg-gradient-to-r from-blue-500/20 to-purple-500/20',
-                      darkMode ? 'text-blue-400' : 'text-blue-600'
+                      'bg-gradient-to-r from-sidebar-primary/20 to-primary/20 text-sidebar-primary'
                     )}>
                       ADMIN
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
-                    <p className={classNames(
-                      'text-xs transition-colors',
-                      darkMode ? 'text-slate-400 group-hover:text-slate-300' : 'text-slate-500 group-hover:text-slate-400'
-                    )}>
+                    <p className="text-xs transition-colors text-sidebar-foreground/70 group-hover:text-sidebar-foreground">
                       #{user?.discriminator || '0000'}
                     </p>
-                    <span className={classNames(
-                      'w-1 h-1 rounded-full',
-                      darkMode ? 'bg-slate-600' : 'bg-slate-400'
-                    )}></span>
-                    <p className={classNames(
-                      'text-xs font-medium transition-colors',
-                      darkMode ? 'text-emerald-400' : 'text-emerald-600'
-                    )}>
+                    <span className="w-1 h-1 rounded-full bg-sidebar-border"></span>
+                    <p className="text-xs font-medium transition-colors text-success">
                       Online
                     </p>
                   </div>
@@ -496,13 +437,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                       e.stopPropagation();
                       navigate('/settings');
                     }}
-                    className={classNames(
-                      'p-2.5 rounded-lg transition-all duration-200 group/btn',
-                      darkMode 
-                        ? 'hover:bg-slate-600/50 text-slate-400 hover:text-blue-400' 
-                        : 'hover:bg-slate-200/50 text-slate-500 hover:text-blue-500',
-                      'hover:shadow-lg hover:scale-105'
-                    )}
+                    className="p-2.5 rounded-lg transition-all duration-200 group/btn hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-primary hover:shadow-lg hover:scale-105"
                     title="Settings"
                   >
                     <CogIcon className="h-4 w-4 transition-transform duration-200 group-hover/btn:rotate-90" />
@@ -513,13 +448,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                       e.stopPropagation();
                       handleLogout();
                     }}
-                    className={classNames(
-                      'p-2.5 rounded-lg transition-all duration-200 group/btn',
-                      darkMode 
-                        ? 'hover:bg-red-500/20 text-slate-400 hover:text-red-400' 
-                        : 'hover:bg-red-50 text-slate-500 hover:text-red-500',
-                      'hover:shadow-lg hover:scale-105'
-                    )}
+                    className="p-2.5 rounded-lg transition-all duration-200 group/btn hover:bg-destructive/20 text-sidebar-foreground/70 hover:text-destructive hover:shadow-lg hover:scale-105"
                     title="Logout"
                   >
                     <ArrowRightOnRectangleIcon className="h-4 w-4 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
@@ -529,7 +458,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
             )}
             
             {/* Hover glow effect */}
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sidebar-primary/10 via-primary/10 to-sidebar-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
           </div>
         </div>
       </div>
