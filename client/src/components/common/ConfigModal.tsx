@@ -59,83 +59,81 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         
         {/* Modal Content */}
         <div className="relative">
-      <div className={classNames(
-        "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
-        maxWidthClasses[maxWidth],
-        darkMode ? "bg-gray-800" : "bg-white",
-        className
-      )}>
-        {/* Header */}
-        <div className={classNames(
-          "flex items-start justify-between p-6 border-b",
-          darkMode ? "border-gray-700" : "border-gray-200"
-        )}>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center">
-              {icon && (
-                <span className="text-2xl mr-3 flex-shrink-0">{icon}</span>
-              )}
-              <div className="min-w-0 flex-1">
-                <h2 className={classNames(
-                  "text-2xl font-bold truncate",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
-                  {title}
-                </h2>
-                {description && (
-                  <p className={classNames(
-                    "text-sm mt-1",
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  )}>
-                    {description}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <button
-            onClick={onClose}
-            className={classNames(
-              "p-2 rounded-lg transition-colors ml-4 flex-shrink-0",
-              darkMode 
-                ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            )}
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className={classNames(
-              "animate-spin rounded-full h-8 w-8 border-b-2 mx-auto",
-              darkMode ? "border-purple-400" : "border-purple-600"
-            )}></div>
-            <p className={classNames(
-              "mt-4 text-sm",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
-              {loadingText}
-            </p>
-          </div>
-        ) : (
-          <div className="p-6">
-            {children}
-          </div>
-        )}
-
-        {/* Actions */}
-        {actions && !loading && (
           <div className={classNames(
-            "px-6 py-4 border-t flex items-center justify-end space-x-3",
-            darkMode ? "border-gray-700 bg-gray-750" : "border-gray-200 bg-gray-50"
+            "w-full max-h-[90vh] overflow-y-auto rounded-lg shadow-xl transition-all duration-200",
+            maxWidthClasses[maxWidth],
+            darkMode ? "bg-gray-800" : "bg-white",
+            className
           )}>
-            {actions}
+            {/* Header */}
+            <div className={classNames(
+              "flex items-start justify-between p-6 border-b",
+              darkMode ? "border-gray-700" : "border-gray-200"
+            )}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center">
+                  {icon && (
+                    <span className="text-2xl mr-3 flex-shrink-0">{icon}</span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h2 className={classNames(
+                      "text-2xl font-bold truncate",
+                      darkMode ? "text-white" : "text-gray-900"
+                    )}>
+                      {title}
+                    </h2>
+                    {description && (
+                      <p className={classNames(
+                        "text-sm mt-1",
+                        darkMode ? "text-gray-400" : "text-gray-600"
+                      )}>
+                        {description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className={classNames(
+                  "ml-4 p-2 rounded-lg transition-colors flex-shrink-0",
+                  darkMode 
+                    ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
+                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+                )}
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-4"></div>
+                  <span className={classNames(
+                    "text-lg",
+                    darkMode ? "text-gray-300" : "text-gray-700"
+                  )}>
+                    {loadingText}
+                  </span>
+                </div>
+              ) : (
+                children
+              )}
+            </div>
+
+            {/* Actions */}
+            {actions && !loading && (
+              <div className={classNames(
+                "flex items-center justify-end space-x-3 px-6 py-4 border-t",
+                darkMode ? "border-gray-700 bg-gray-750" : "border-gray-200 bg-gray-50"
+              )}>
+                {actions}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -177,10 +175,10 @@ export const ModalActions = {
     </>
   ),
 
-  TestSaveCancel: ({ 
-    onTest, 
-    onSave, 
-    onCancel, 
+  TestSaveCancel: ({
+    onTest,
+    onSave,
+    onCancel,
     testing = false,
     saving = false,
     testText = 'Test',
@@ -228,9 +226,7 @@ export const ModalActions = {
           {saving ? 'Saving...' : saveText}
         </ActionButton>
       </div>
-        </div>
-      </div>
-    </div>
+    </>
   )
 };
 
