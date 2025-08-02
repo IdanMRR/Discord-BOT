@@ -42,7 +42,7 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
   
   const [roles, setRoles] = useState<any[]>([]);
   const [autoRoles, setAutoRoles] = useState<AutoRole[]>([]);
-  const [enableAutoRoles, setEnableAutoRoles] = useState<boolean>(true);
+  const [enableAutoRoles, setEnableAutoRoles] = useState<boolean>(false);
   const [joinRole, setJoinRole] = useState<string>('');
   const [mutedRole, setMutedRole] = useState<string>('');
   const [modRole, setModRole] = useState<string>('');
@@ -59,14 +59,25 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
       }
       
       // Load auto-roles configuration
-      const configResponse = await apiService.getAutoRolesConfig(serverId);
-      if (configResponse.success && configResponse.data) {
-        setAutoRoles(configResponse.data.autoRoles || []);
-        setEnableAutoRoles(configResponse.data.enabled || true);
-        setJoinRole(configResponse.data.joinRole || '');
-        setMutedRole(configResponse.data.mutedRole || '');
-        setModRole(configResponse.data.modRole || '');
-        setAdminRole(configResponse.data.adminRole || '');
+      try {
+        const configResponse = await apiService.getAutoRolesConfig(serverId);
+        if (configResponse.success && configResponse.data) {
+          setAutoRoles(configResponse.data.autoRoles || []);
+          setEnableAutoRoles(configResponse.data.enabled || false);
+          setJoinRole(configResponse.data.joinRole || '');
+          setMutedRole(configResponse.data.mutedRole || '');
+          setModRole(configResponse.data.modRole || '');
+          setAdminRole(configResponse.data.adminRole || '');
+        }
+      } catch (error) {
+        console.warn('Failed to load auto-roles config, using defaults:', error);
+        // Use defaults if API fails
+        setAutoRoles([]);
+        setEnableAutoRoles(false);
+        setJoinRole('');
+        setMutedRole('');
+        setModRole('');
+        setAdminRole('');
       }
     } catch (error) {
       console.error('Error loading roles config:', error);
