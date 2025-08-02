@@ -5084,15 +5084,39 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
   try {
     const { serverId } = req.params;
     
+    console.log(`[AUTO-ROLES] Getting config for server ${serverId}`);
+    
     // Get role management settings from the role_management_settings table
-    const roleSettings = db.prepare(`
-      SELECT * FROM role_management_settings WHERE guild_id = ?
-    `).get(serverId);
+    let roleSettings = null;
+    try {
+      roleSettings = db.prepare(`
+        SELECT * FROM role_management_settings WHERE guild_id = ?
+      `).get(serverId);
+      console.log(`[AUTO-ROLES] Role settings:`, roleSettings);
+    } catch (dbError) {
+      console.error(`[AUTO-ROLES] Database error getting role settings:`, dbError);
+    }
     
     // Get server settings for welcome role
-    const serverSettings = db.prepare(`
-      SELECT welcome_role_id FROM server_settings WHERE guild_id = ?
-    `).get(serverId);
+    let serverSettings = null;
+    try {
+      serverSettings = db.prepare(`
+        SELECT welcome_role_id FROM server_settings WHERE guild_id = ?
+      `).get(serverId);
+      console.log(`[AUTO-ROLES] Server settings:`, serverSettings);
+    } catch (dbError) {
+      console.error(`[AUTO-ROLES] Database error getting server settings:`, dbError);
+      // If server_settings fails, create basic entry
+      try {
+        db.prepare(`
+          INSERT OR IGNORE INTO server_settings (guild_id) VALUES (?)
+        `).run(serverId);
+        serverSettings = { welcome_role_id: null };
+      } catch (insertError) {
+        console.error(`[AUTO-ROLES] Failed to create server settings:`, insertError);
+        serverSettings = { welcome_role_id: null };
+      }
+    }
 
     // Parse auto_roles if it's a string
     let autoRoles = [];
@@ -5102,6 +5126,7 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
           ? JSON.parse(roleSettings.auto_roles) 
           : roleSettings.auto_roles;
       } catch (e) {
+        console.error(`[AUTO-ROLES] Error parsing auto_roles:`, e);
         autoRoles = [];
       }
     }
@@ -5115,12 +5140,14 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
       adminRole: '' // Will need to add this field if needed
     };
 
+    console.log(`[AUTO-ROLES] Returning config:`, config);
+
     res.json({
       success: true,
       data: config
     });
   } catch (error) {
-    console.error('Error getting auto-roles config:', error);
+    console.error('[AUTO-ROLES] Error getting auto-roles config:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get auto-roles configuration'
