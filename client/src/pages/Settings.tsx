@@ -34,7 +34,7 @@ interface SettingCategory {
   description: string;
 }
 
-const Settings: React.FC = () => {
+const Settings: React.FC = (): React.ReactElement => {
   const { darkMode, toggleTheme } = useTheme();
   const { settings, updateSetting } = useSettings();
   
@@ -121,22 +121,22 @@ const Settings: React.FC = () => {
 
   // Removed unused color presets - using ColorCustomizer component instead
   // const colorPresets = [
-    { name: 'Blue', value: '#3b82f6' },
-    { name: 'Slate', value: '#64748b' },
-    { name: 'Gray', value: '#6b7280' },
-    { name: 'Zinc', value: '#71717a' },
-    { name: 'Stone', value: '#78716c' },
-    { name: 'Indigo', value: '#6366f1' },
-    { name: 'Purple', value: '#8b5cf6' },
-    { name: 'Emerald', value: '#10b981' },
-    { name: 'Rose', value: '#f43f5e' },
-    { name: 'Orange', value: '#f97316' },
-    { name: 'Teal', value: '#14b8a6' },
-    { name: 'Cyan', value: '#06b6d4' },
-    { name: 'Pink', value: '#ec4899' },
-    { name: 'Amber', value: '#f59e0b' },
-    { name: 'Lime', value: '#84cc16' }
-  ];
+  //   { name: 'Blue', value: '#3b82f6' },
+  //   { name: 'Slate', value: '#64748b' },
+  //   { name: 'Gray', value: '#6b7280' },
+  //   { name: 'Zinc', value: '#71717a' },
+  //   { name: 'Stone', value: '#78716c' },
+  //   { name: 'Indigo', value: '#6366f1' },
+  //   { name: 'Purple', value: '#8b5cf6' },
+  //   { name: 'Emerald', value: '#10b981' },
+  //   { name: 'Rose', value: '#f43f5e' },
+  //   { name: 'Orange', value: '#f97316' },
+  //   { name: 'Teal', value: '#14b8a6' },
+  //   { name: 'Cyan', value: '#06b6d4' },
+  //   { name: 'Pink', value: '#ec4899' },
+  //   { name: 'Amber', value: '#f59e0b' },
+  //   { name: 'Lime', value: '#84cc16' }
+  // ];
   
   // Toast position options
   const toastPositions = [
