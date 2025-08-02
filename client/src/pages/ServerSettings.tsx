@@ -14,6 +14,7 @@ import InviteLeaveMessageConfigModal from '../components/modals/InviteLeaveMessa
 import RolesConfigModal from '../components/modals/RolesConfigModal';
 import toast from 'react-hot-toast';
 import { dashboardLogger } from '../services/dashboardLogger';
+import { useNavigate } from 'react-router-dom';
 import {
   UserPlusIcon,
   CheckBadgeIcon,
@@ -78,6 +79,7 @@ interface ServerInfo {
 
 const ServerSettingsContent: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
@@ -691,7 +693,9 @@ const ServerSettingsContent: React.FC = () => {
           {/* Leveling System */}
           <button
             onClick={() => {
-              toast('🏆 Leveling system configuration coming soon!', { duration: 3000 });
+              if (serverId) {
+                navigate(`/server/${serverId}/leveling`);
+              }
             }}
             className="flex flex-col items-center justify-center p-6 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors"
           >
@@ -725,13 +729,13 @@ const ServerSettingsContent: React.FC = () => {
           {/* General Settings */}
           <button
             onClick={() => {
-              toast('⚙️ General settings configuration coming soon!', { duration: 3000 });
+              toast('⚙️ Use the sections below to configure specific server features!', { duration: 3000 });
             }}
             className="flex flex-col items-center justify-center p-6 bg-muted hover:bg-muted/80 transition-colors"
           >
             <InformationCircleIcon className="h-8 w-8 text-muted-foreground mb-2" />
             <span className="text-sm font-medium text-foreground">General</span>
-            <span className="text-xs text-muted-foreground text-center mt-1">Basic server settings</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">Configure using sections below</span>
           </button>
         </div>
       </div>
