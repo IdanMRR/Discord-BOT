@@ -5079,4 +5079,104 @@ router.post('/server/:guildId/invite-tracker/test-leave-message', async (req, re
   }
 });
 
+// Auto-Roles Configuration Routes
+router.get('/server/:serverId/auto-roles/config', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    
+    // Get role management settings from the role_management_settings table
+    const roleSettings = db.prepare(`
+      SELECT * FROM role_management_settings WHERE guild_id = ?
+    `).get(serverId);
+    
+    // Get server settings for welcome role
+    const serverSettings = db.prepare(`
+      SELECT welcome_role_id FROM server_settings WHERE guild_id = ?
+    `).get(serverId);
+
+    // Parse auto_roles if it's a string
+    let autoRoles = [];
+    if (roleSettings?.auto_roles) {
+      try {
+        autoRoles = typeof roleSettings.auto_roles === 'string' 
+          ? JSON.parse(roleSettings.auto_roles) 
+          : roleSettings.auto_roles;
+      } catch (e) {
+        autoRoles = [];
+      }
+    }
+
+    const config = {
+      enabled: Boolean(roleSettings?.auto_roles_enabled),
+      autoRoles: autoRoles,
+      joinRole: serverSettings?.welcome_role_id || '',
+      mutedRole: '', // Will need to add this field if needed
+      modRole: '', // Will need to add this field if needed  
+      adminRole: '' // Will need to add this field if needed
+    };
+
+    res.json({
+      success: true,
+      data: config
+    });
+  } catch (error) {
+    console.error('Error getting auto-roles config:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get auto-roles configuration'
+    });
+  }
+});
+
+router.post('/server/:serverId/auto-roles/save-config', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    const { enabled, autoRoles, joinRole, mutedRole, modRole, adminRole } = req.body;
+    
+    // Update role management settings
+    const upsertRoleSettings = db.prepare(`
+      INSERT OR REPLACE INTO role_management_settings 
+      (guild_id, auto_roles_enabled, auto_roles) 
+      VALUES (?, ?, ?)
+    `);
+    
+    upsertRoleSettings.run(
+      serverId,
+      enabled ? 1 : 0,
+      JSON.stringify(autoRoles || [])
+    );
+
+    // Update server settings for join role if provided
+    if (joinRole) {
+      const updateServerSettings = db.prepare(`
+        UPDATE server_settings SET welcome_role_id = ? WHERE guild_id = ?
+      `);
+      
+      const result = updateServerSettings.run(joinRole, serverId);
+      
+      if (result.changes === 0) {
+        // If no rows were updated, insert a new row
+        const insertServerSettings = db.prepare(`
+          INSERT OR IGNORE INTO server_settings (guild_id, welcome_role_id) VALUES (?, ?)
+        `);
+        insertServerSettings.run(serverId, joinRole);
+      }
+    }
+
+    // Log the activity
+    console.log(`Auto-roles configuration updated for server ${serverId}: Enabled: ${enabled}, Rules: ${autoRoles?.length || 0}`);
+
+    res.json({
+      success: true,
+      message: 'Auto-roles configuration saved successfully'
+    });
+  } catch (error) {
+    console.error('Error saving auto-roles config:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save auto-roles configuration'
+    });
+  }
+});
+
 module.exports = router; 
