@@ -443,14 +443,14 @@ body {
   top: 20px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important; /* Maximum z-index value */
   pointer-events: none !important;
 }
 
 [data-sonner-toast] {
   pointer-events: auto !important;
   position: relative !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important;
 }
 
 /* React Hot Toast specific styles */
@@ -459,13 +459,13 @@ body {
   top: 20px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important; /* Maximum z-index value */
   pointer-events: none !important;
 }
 
 .react-hot-toast > div {
   pointer-events: auto !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important;
 }
 
 /* Ensure toasts are always visible above everything */
@@ -474,13 +474,13 @@ div[data-hot-toast-container] {
   top: 20px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important; /* Maximum z-index value */
   pointer-events: none !important;
 }
 
 div[data-hot-toast-container] > div {
   pointer-events: auto !important;
-  z-index: 999999 !important;
+  z-index: 2147483647 !important;
 }
 
 /* Scrollbar improvements */

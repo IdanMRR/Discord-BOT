@@ -4,22 +4,18 @@ import {
   ServerIcon,
   TicketIcon,
   ExclamationTriangleIcon,
-  CommandLineIcon,
   ChartBarIcon,
   ClockIcon,
-  CpuChipIcon,
   SignalIcon,
   UserGroupIcon,
   BoltIcon,
-  CircleStackIcon,
-  ArrowPathIcon,
-  ChatBubbleLeftRightIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiService } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
-// import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 // Utility function for conditional class names
@@ -68,7 +64,7 @@ interface SystemHealth {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { darkMode } = useTheme();
-  // const { permissions } = useAuth(); // Currently unused
+  const { user, permissions } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -136,58 +132,59 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-4xl font-bold text-foreground">
-            Dashboard Overview
+            Welcome back, {user?.username || 'User'}!
           </h1>
           <p className="text-lg mt-2 text-muted-foreground">
-            System metrics, performance data, and real-time statistics
+            Your servers, permissions, and activity overview
           </p>
         </div>
         
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className={`btn-secondary ${refreshing ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={classNames(
+            "btn-refresh",
+            refreshing ? "spinning" : ""
+          )}
         >
-          <ArrowPathIcon className={classNames("h-4 w-4", refreshing ? "animate-spin" : "")} />
-          <span>Refresh</span>
+          <ArrowPathIcon className="icon" />
+          <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
         </button>
       </div>
 
-      {/* System Health Status */}
-      {systemHealth && (
-        <div className="mb-8">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className={`p-3 rounded-lg ${
-                  systemHealth.status === 'healthy' 
-                    ? "bg-success/20" 
-                    : "bg-destructive/20"
-                }`}>
-                  <SignalIcon className={`h-6 w-6 ${
-                    systemHealth.status === 'healthy'
-                      ? "text-success"
-                      : "text-destructive"
-                  }`} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    System Status: {systemHealth.status === 'healthy' ? '🟢 Healthy' : '🔴 Unhealthy'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Database: {systemHealth.database} • Discord: {systemHealth.discord} • Response: {systemHealth.responseTime}
-                  </p>
-                </div>
+      {/* User Access Status */}
+      <div className="mb-8">
+        <Card>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className={`p-3 rounded-lg ${
+                permissions.length > 0 
+                  ? "bg-success/20" 
+                  : "bg-destructive/20"
+              }`}>
+                <SignalIcon className={`h-6 w-6 ${
+                  permissions.length > 0
+                    ? "text-success"
+                    : "text-destructive"
+                }`} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Access Status: {permissions.length > 0 ? '🟢 Active' : '🔴 Limited'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Servers: {user?.accessibleServers?.length || 0} • Permissions: {permissions.length} • {systemHealth?.responseTime ? `Response: ${systemHealth.responseTime}` : 'Ready'}
+                </p>
               </div>
             </div>
-          </Card>
-        </div>
-      )}
+          </div>
+        </Card>
+      </div>
 
-      {/* System Metrics Cards */}
+      {/* System Status (simplified) */}
       {systemMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Uptime */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+          {/* Bot Status */}
           <Card>
             <div className="flex items-center">
               <div className={classNames(
@@ -201,42 +198,19 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Bot Uptime
+                  Bot Status
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {systemMetrics.uptime}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Memory Usage */}
-          <Card>
-            <div className="flex items-center">
-              <div className={classNames(
-                "p-3 rounded-lg mr-4",
-                darkMode ? "bg-purple-900/20" : "bg-purple-100"
-              )}>
-                <CpuChipIcon className={classNames(
-                  "h-6 w-6",
-                  darkMode ? "text-purple-400" : "text-purple-600"
-                )} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Memory Usage
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  {systemMetrics.memoryUsage.percentage}%
+                  🟢 Online
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {systemMetrics.memoryUsage.used} / {systemMetrics.memoryUsage.total}
+                  Uptime: {systemMetrics.uptime}
                 </p>
               </div>
             </div>
           </Card>
 
-          {/* API Latency */}
+          {/* Connection Speed */}
           <Card>
             <div className="flex items-center">
               <div className={classNames(
@@ -250,33 +224,13 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  API Response Time
+                  Connection Speed
                 </p>
                 <p className="text-2xl font-bold text-foreground">
                   {systemMetrics.apiLatency}
                 </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Database Size */}
-          <Card>
-            <div className="flex items-center">
-              <div className={classNames(
-                "p-3 rounded-lg mr-4",
-                darkMode ? "bg-yellow-900/20" : "bg-yellow-100"
-              )}>
-                <CircleStackIcon className={classNames(
-                  "h-6 w-6",
-                  darkMode ? "text-yellow-400" : "text-yellow-600"
-                )} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Database Size
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  {systemMetrics.databaseSize}
+                <p className="text-xs text-muted-foreground">
+                  Response time
                 </p>
               </div>
             </div>
@@ -286,7 +240,7 @@ const Dashboard: React.FC = () => {
 
       {/* Bot Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Guild Count */}
+        {/* User's Accessible Servers */}
         <Card>
           <div className="flex items-center">
             <div className={classNames(
@@ -299,23 +253,17 @@ const Dashboard: React.FC = () => {
               )} />
             </div>
             <div>
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
-                Discord Servers
+              <p className="text-sm font-medium text-muted-foreground">
+                Your Servers
               </p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                {systemMetrics?.guildCount || 0}
+              <p className="text-2xl font-bold text-foreground">
+                {user?.accessibleServers?.length || 0}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Total Users */}
+        {/* User's Permissions */}
         <Card>
           <div className="flex items-center">
             <div className={classNames(
@@ -328,197 +276,180 @@ const Dashboard: React.FC = () => {
               )} />
             </div>
             <div>
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
-                Total Users
+              <p className="text-sm font-medium text-muted-foreground">
+                Your Permissions
               </p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                {systemMetrics?.totalUsers.toLocaleString() || 0}
+              <p className="text-2xl font-bold text-foreground">
+                {permissions.length || 0}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Commands Executed (24h) */}
+        {/* Active Tickets */}
         <Card>
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
               darkMode ? "bg-cyan-900/20" : "bg-cyan-100"
             )}>
-              <CommandLineIcon className={classNames(
+              <TicketIcon className={classNames(
                 "h-6 w-6",
                 darkMode ? "text-cyan-400" : "text-cyan-600"
               )} />
             </div>
             <div>
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
-                Commands (24h)
+              <p className="text-sm font-medium text-muted-foreground">
+                Active Tickets
               </p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                {systemMetrics?.commandsExecuted || 0}
+              <p className="text-2xl font-bold text-foreground">
+                {dashboardStats?.activeTickets || 0}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Messages Processed (24h) */}
+        {/* Total Warnings */}
         <Card>
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
               darkMode ? "bg-orange-900/20" : "bg-orange-100"
             )}>
-              <ChatBubbleLeftRightIcon className={classNames(
+              <ExclamationTriangleIcon className={classNames(
                 "h-6 w-6",
                 darkMode ? "text-orange-400" : "text-orange-600"
               )} />
             </div>
             <div>
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
-                Messages (24h)
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Warnings
               </p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                {systemMetrics?.messagesProcessed || 0}
+              <p className="text-2xl font-bold text-foreground">
+                {dashboardStats?.totalWarnings || 0}
               </p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Dashboard Statistics (from existing API) */}
-      {dashboardStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <div className="flex items-center">
-              <div className={classNames(
-                "p-3 rounded-lg mr-4",
-                darkMode ? "bg-red-900/20" : "bg-red-100"
-              )}>
-                <TicketIcon className={classNames(
-                  "h-6 w-6",
-                  darkMode ? "text-red-400" : "text-red-600"
-                )} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Active Tickets
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  {dashboardStats.activeTickets}
-                </p>
-              </div>
-            </div>
-          </Card>
 
-          <Card>
-            <div className="flex items-center">
-              <div className={classNames(
-                "p-3 rounded-lg mr-4",
-                darkMode ? "bg-yellow-900/20" : "bg-yellow-100"
-              )}>
-                <ExclamationTriangleIcon className={classNames(
-                  "h-6 w-6",
-                  darkMode ? "text-yellow-400" : "text-yellow-600"
-                )} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Warnings
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  {dashboardStats.totalWarnings}
-                </p>
-              </div>
+      {/* User Information & Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <h3 className="text-lg font-semibold mb-4 text-foreground">
+            Your Access
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">
+                Username:
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.username}#{user?.discriminator}
+              </span>
             </div>
-          </Card>
-        </div>
-      )}
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">
+                Accessible Servers:
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.accessibleServers?.length || 0}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">
+                Permissions:
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {permissions.length} roles
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">
+                Admin Access:
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.isAdmin ? '✅ Yes' : '❌ No'}
+              </span>
+            </div>
+          </div>
+        </Card>
 
-      {/* Technical Information */}
-      {systemMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <h3 className="text-lg font-semibold mb-4 text-foreground">
+            Quick Actions
+          </h3>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/servers')}
+              className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
+            >
+              <span className="text-sm font-medium text-foreground">
+                Manage Your Servers
+              </span>
+              <ServerIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
+            >
+              <span className="text-sm font-medium text-foreground">
+                View Profile
+              </span>
+              <UserGroupIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => navigate('/dashboard-logs')}
+              className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
+            >
+              <span className="text-sm font-medium text-foreground">
+                View Activity Logs
+              </span>
+              <ChartBarIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </Card>
+      </div>
+
+      {/* Your Servers */}
+      {user?.accessibleServers && user.accessibleServers.length > 0 && (
+        <div className="mt-8">
           <Card>
             <h3 className="text-lg font-semibold mb-4 text-foreground">
-              System Information
+              Your Servers ({user.accessibleServers.length})
             </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Node.js Version:
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {systemMetrics.nodeVersion}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Discord.js Version:
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {systemMetrics.discordJsVersion}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Last Restart:
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {new Date(systemMetrics.lastRestart).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  CPU Usage:
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {systemMetrics.systemLoad.cpu}%
-                </span>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {user.accessibleServers.slice(0, 6).map((server) => (
+                <div
+                  key={server.id}
+                  onClick={() => navigate(`/server/${server.id}`)}
+                  className="p-4 rounded-lg border border-border hover:bg-muted cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <ServerIcon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{server.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {server.permissions.length} permissions
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </Card>
-
-          <Card>
-            <h3 className="text-lg font-semibold mb-4 text-foreground">
-              Quick Actions
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate('/servers')}
-                className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  Manage Servers
-                </span>
-                <ServerIcon className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => navigate('/dashboard-logs')}
-                className="w-full flex items-center justify-between p-3 rounded-lg border transition-colors border-border hover:bg-muted"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  View Activity Logs
-                </span>
-                <ChartBarIcon className="h-4 w-4" />
-              </button>
-            </div>
+            {user.accessibleServers.length > 6 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => navigate('/servers')}
+                  className="text-sm text-primary hover:underline"
+                >
+                  View all {user.accessibleServers.length} servers →
+                </button>
+              </div>
+            )}
           </Card>
         </div>
       )}

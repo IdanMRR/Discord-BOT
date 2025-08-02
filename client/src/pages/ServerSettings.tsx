@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 import { ServerSettings as ServerSettingsType } from '../types';
 import { apiService } from '../services/api';
 import PermissionGuard from '../components/common/PermissionGuard';
@@ -29,6 +28,8 @@ import {
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
+
+
 
 interface LoggingSettings {
   id?: number;
@@ -76,7 +77,6 @@ interface ServerInfo {
 
 const ServerSettingsContent: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
-  const { darkMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
@@ -179,9 +179,34 @@ const ServerSettingsContent: React.FC = () => {
     };
 
     loadServerData();
-  }, [serverId, serverInfo?.name]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverId]); // serverInfo?.name is only used for default fallback, doesn't need to trigger re-effects
 
-  const handleSettingToggle = async (setting: keyof LoggingSettings, value: boolean) => {
+  // Memoize filtered channels and categories to prevent unnecessary recalculations
+  const textChannels = useMemo(() => 
+    channels.filter((channel: Channel) => channel.type === 0),
+    [channels]
+  );
+
+  const categoryChannels = useMemo(() => 
+    categories.filter((category: Category) => category.type === 4),
+    [categories]
+  );
+
+  // Memoize expensive lookups
+  const channelLookup = useMemo(() => {
+    const lookup = new Map();
+    channels.forEach(channel => lookup.set(channel.id, channel));
+    return lookup;
+  }, [channels]);
+
+  const categoryLookup = useMemo(() => {
+    const lookup = new Map();
+    categories.forEach(category => lookup.set(category.id, category));
+    return lookup;
+  }, [categories]);
+
+  const handleSettingToggle = useCallback(async (setting: keyof LoggingSettings, value: boolean) => {
     if (!loggingSettings || !serverId) return;
 
     setSaving(true);
@@ -205,9 +230,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [loggingSettings, serverId]);
 
-  const handleChannelChange = async (setting: keyof LoggingSettings, channelId: string) => {
+  const handleChannelChange = useCallback(async (setting: keyof LoggingSettings, channelId: string) => {
     if (!loggingSettings || !serverId) return;
 
     setSaving(true);
@@ -232,9 +257,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [loggingSettings, serverId, channels]);
 
-  const handleServerChannelChange = async (setting: keyof ServerSettingsType, channelId: string) => {
+  const handleServerChannelChange = useCallback(async (setting: keyof ServerSettingsType, channelId: string) => {
     if (!serverSettings || !serverId) return;
 
     setSaving(true);
@@ -248,7 +273,7 @@ const ServerSettingsContent: React.FC = () => {
       
       if (response.success) {
         setServerSettings(updatedSettings);
-        const channelName = channels.find(c => c.id === channelId)?.name || 'None';
+        const channelName = channelLookup.get(channelId)?.name || 'None';
         toast.success(`${getServerSettingDisplayName(setting)} set to #${channelName}`);
       } else {
         toast.error('Failed to update server setting');
@@ -259,9 +284,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [serverSettings, serverId, channelLookup]);
 
-  const handleCategoryChange = async (setting: keyof ServerSettingsType, categoryId: string) => {
+  const handleCategoryChange = useCallback(async (setting: keyof ServerSettingsType, categoryId: string) => {
     if (!serverSettings || !serverId) return;
 
     setSaving(true);
@@ -275,7 +300,7 @@ const ServerSettingsContent: React.FC = () => {
       
       if (response.success) {
         setServerSettings(updatedSettings);
-        const categoryName = categories.find(c => c.id === categoryId)?.name || 'None';
+        const categoryName = categoryLookup.get(categoryId)?.name || 'None';
         toast.success(`${getServerSettingDisplayName(setting)} set to ${categoryName}`);
       } else {
         toast.error('Failed to update server setting');
@@ -286,9 +311,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [serverSettings, serverId, categoryLookup]);
 
-  const handleCreateTicketPanel = async (channelId: string) => {
+  const handleCreateTicketPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
 
     setSaving(true);
@@ -301,13 +326,11 @@ const ServerSettingsContent: React.FC = () => {
       if (response.success) {
         toast.success('Ticket panel created successfully!');
         // Update server settings with new panel info
-        if (serverSettings) {
-          setServerSettings({
-            ...serverSettings,
-            ticket_panel_channel_id: channelId,
-            ticket_panel_message_id: response.data?.messageId
-          });
-        }
+        setServerSettings(prev => prev ? {
+          ...prev,
+          ticket_panel_channel_id: channelId,
+          ticket_panel_message_id: response.data?.messageId
+        } : prev);
       } else {
         toast.error('Failed to create ticket panel');
       }
@@ -317,9 +340,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [serverId]);
 
-  const handleCreateCustomTicketPanel = async (channelId: string) => {
+  const handleCreateCustomTicketPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
 
     setSaving(true);
@@ -348,13 +371,11 @@ const ServerSettingsContent: React.FC = () => {
       if (response.success) {
         toast.success('Custom ticket panel created successfully!');
         // Update server settings with new panel info
-        if (serverSettings) {
-          setServerSettings({
-            ...serverSettings,
-            ticket_panel_channel_id: channelId,
-            ticket_panel_message_id: response.data?.messageId
-          });
-        }
+        setServerSettings(prev => prev ? {
+          ...prev,
+          ticket_panel_channel_id: channelId,
+          ticket_panel_message_id: response.data?.messageId
+        } : prev);
       } else {
         toast.error('Failed to create custom ticket panel');
       }
@@ -364,9 +385,9 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [serverId]);
 
-  const handleCreateVerificationPanel = async (channelId: string) => {
+  const handleCreateVerificationPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
 
     setSaving(true);
@@ -399,13 +420,11 @@ const ServerSettingsContent: React.FC = () => {
       if (response.success) {
         toast.success('Verification panel created successfully!');
         // Update server settings with new panel info
-        if (serverSettings) {
-          setServerSettings({
-            ...serverSettings,
-            verification_channel_id: channelId,
-            verification_panel_message_id: response.data?.messageId
-          });
-        }
+        setServerSettings(prev => prev ? {
+          ...prev,
+          verification_channel_id: channelId,
+          verification_panel_message_id: response.data?.messageId
+        } : prev);
       } else {
         toast.error('Failed to create verification panel');
       }
@@ -415,7 +434,7 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [serverId]);
 
   const getSettingDisplayName = (setting: string): string => {
     const names: Record<string, string> = {
@@ -480,7 +499,7 @@ const ServerSettingsContent: React.FC = () => {
       )}
     >
       <option value="">{placeholder}</option>
-      {channels.map((channel) => (
+                        {textChannels.map((channel) => (
         <option key={channel.id} value={channel.id}>
           #{channel.name}
         </option>
@@ -503,7 +522,7 @@ const ServerSettingsContent: React.FC = () => {
       )}
     >
       <option value="">-- Select Category --</option>
-      {categories.map((category) => (
+                        {categoryChannels.map((category) => (
         <option key={category.id} value={category.id}>
           {category.name}
         </option>
@@ -573,23 +592,14 @@ const ServerSettingsContent: React.FC = () => {
       </div>
 
       {/* Info Banner */}
-      <div className={classNames(
-        "mb-8 p-4 rounded-lg border-l-4 border-blue-500",
-        darkMode ? "bg-blue-900/20 border-blue-400" : "bg-blue-50 border-blue-500"
-      )}>
+      <div className="mb-8 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-500/10">
         <div className="flex items-start">
           <InformationCircleIcon className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className={classNames(
-              "text-sm font-medium",
-              darkMode ? "text-blue-300" : "text-blue-800"
-            )}>
+            <h3 className="text-sm font-medium text-blue-600">
               Message Logs
             </h3>
-            <p className={classNames(
-              "text-sm mt-1",
-              darkMode ? "text-blue-200" : "text-blue-700"
-            )}>
+            <p className="text-sm mt-1 text-blue-600/80">
               Configure which Discord events are logged and where they are sent. These settings only affect logging for this server.
             </p>
           </div>
@@ -640,9 +650,9 @@ const ServerSettingsContent: React.FC = () => {
           {/* Welcome & Leave Messages */}
           <button
             onClick={() => setWelcomeModalOpen(true)}
-            className="flex flex-col items-center justify-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-colors"
           >
-            <UserPlusIcon className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" />
+            <UserPlusIcon className="h-8 w-8 text-blue-600 mb-2" />
             <span className="text-sm font-medium text-foreground">Welcome Messages</span>
             <span className="text-xs text-muted-foreground text-center mt-1">Configure welcome & leave messages</span>
           </button>
@@ -650,9 +660,9 @@ const ServerSettingsContent: React.FC = () => {
           {/* Verification System */}
           <button
             onClick={() => setVerificationModalOpen(true)}
-            className="flex flex-col items-center justify-center p-6 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors"
           >
-            <CheckBadgeIcon className="h-8 w-8 text-green-600 dark:text-green-400 mb-2" />
+            <CheckBadgeIcon className="h-8 w-8 text-green-600 mb-2" />
             <span className="text-sm font-medium text-foreground">Verification</span>
             <span className="text-xs text-muted-foreground text-center mt-1">Member verification system</span>
           </button>
@@ -662,9 +672,9 @@ const ServerSettingsContent: React.FC = () => {
             onClick={() => {
               toast('🏆 Leveling system configuration coming soon!', { duration: 3000 });
             }}
-            className="flex flex-col items-center justify-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-purple-500/10 rounded-lg hover:bg-purple-500/20 transition-colors"
           >
-            <TrophyIcon className="h-8 w-8 text-purple-600 dark:text-purple-400 mb-2" />
+            <TrophyIcon className="h-8 w-8 text-purple-600 mb-2" />
             <span className="text-sm font-medium text-foreground">Leveling</span>
             <span className="text-xs text-muted-foreground text-center mt-1">XP and ranking system</span>
           </button>
@@ -672,9 +682,9 @@ const ServerSettingsContent: React.FC = () => {
           {/* Role Management */}
           <button
             onClick={() => setRolesConfigModalOpen(true)}
-            className="flex flex-col items-center justify-center p-6 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-orange-500/10 rounded-lg hover:bg-orange-500/20 transition-colors"
           >
-            <UserGroupIcon className="h-8 w-8 text-orange-600 dark:text-orange-400 mb-2" />
+            <UserGroupIcon className="h-8 w-8 text-orange-600 mb-2" />
             <span className="text-sm font-medium text-foreground">Roles</span>
             <span className="text-xs text-muted-foreground text-center mt-1">Role management & auto-roles</span>
           </button>
@@ -684,9 +694,9 @@ const ServerSettingsContent: React.FC = () => {
             onClick={() => {
               toast('💰 Economy system configuration coming soon!', { duration: 3000 });
             }}
-            className="flex flex-col items-center justify-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-yellow-500/10 rounded-lg hover:bg-yellow-500/20 transition-colors"
           >
-            <CurrencyDollarIcon className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mb-2" />
+            <CurrencyDollarIcon className="h-8 w-8 text-yellow-600 mb-2" />
             <span className="text-sm font-medium text-foreground">Economy</span>
             <span className="text-xs text-muted-foreground text-center mt-1">Virtual currency system</span>
           </button>
@@ -696,9 +706,9 @@ const ServerSettingsContent: React.FC = () => {
             onClick={() => {
               toast('⚙️ General settings configuration coming soon!', { duration: 3000 });
             }}
-            className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700/20 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/40 transition-colors"
+            className="flex flex-col items-center justify-center p-6 bg-muted hover:bg-muted/80 transition-colors"
           >
-            <InformationCircleIcon className="h-8 w-8 text-gray-600 dark:text-gray-400 mb-2" />
+            <InformationCircleIcon className="h-8 w-8 text-muted-foreground mb-2" />
             <span className="text-sm font-medium text-foreground">General</span>
             <span className="text-xs text-muted-foreground text-center mt-1">Basic server settings</span>
           </button>
@@ -715,7 +725,7 @@ const ServerSettingsContent: React.FC = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mod Logs */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-red-600 dark:text-red-400 mr-2">🛡️</span>
               <h4 className="font-medium text-foreground">
@@ -729,7 +739,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Channel --"
             />
             <div className="flex items-center">
-              {serverSettings?.mod_log_channel_id ? (
+              {serverSettings?.mod_log_channel_id && serverSettings.mod_log_channel_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -738,7 +748,7 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* General Logs */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-blue-600 dark:text-blue-400 mr-2">📜</span>
               <h4 className="font-medium text-foreground">
@@ -752,7 +762,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Channel --"
             />
             <div className="flex items-center">
-              {serverSettings?.server_log_channel_id ? (
+              {serverSettings?.server_log_channel_id && serverSettings.server_log_channel_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -773,7 +783,7 @@ const ServerSettingsContent: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Ticket Panel Channel */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-purple-600 dark:text-purple-400 mr-2">📧</span>
               <h4 className="font-medium text-foreground">
@@ -787,7 +797,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Channel --"
             />
             <div className="flex items-center">
-              {serverSettings?.ticket_panel_channel_id ? (
+              {serverSettings?.ticket_panel_channel_id && serverSettings.ticket_panel_channel_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -796,7 +806,7 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Ticket Logs Channel */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-green-600 dark:text-green-400 mr-2">📄</span>
               <h4 className="font-medium text-foreground">
@@ -810,7 +820,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Channel --"
             />
             <div className="flex items-center">
-              {serverSettings?.ticket_logs_channel_id ? (
+              {serverSettings?.ticket_logs_channel_id && serverSettings.ticket_logs_channel_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -819,7 +829,7 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Ticket Category */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-gray-600 dark:text-gray-400 mr-2">📁</span>
               <h4 className="font-medium text-foreground">
@@ -832,7 +842,7 @@ const ServerSettingsContent: React.FC = () => {
               disabled={saving}
             />
             <div className="flex items-center">
-              {serverSettings?.ticket_category_id ? (
+              {serverSettings?.ticket_category_id && serverSettings.ticket_category_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -841,20 +851,14 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Create Ticket Panel */}
-          <div className={classNames(
-            "p-3 rounded-lg border space-y-2 md:col-span-2",
-            darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-          )}>
+          <div className="p-3 rounded-lg border space-y-2 md:col-span-2 content-area">
             <div className="flex items-center">
-              <span className="text-indigo-600 dark:text-indigo-400 mr-2">🔧</span>
+              <span className="text-indigo-600 mr-2">🔧</span>
               <h4 className="font-medium text-foreground">
                 Create Ticket Panel
               </h4>
             </div>
-            <p className={classNames(
-              "text-xs",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
+            <p className="text-xs text-muted-foreground">
               Create a ticket panel message in your selected channel.
             </p>
             <div className="flex gap-2">
@@ -906,7 +910,7 @@ const ServerSettingsContent: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Verification Channel */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-green-600 dark:text-green-400 mr-2">📝</span>
               <h4 className="font-medium text-foreground">
@@ -920,7 +924,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Channel --"
             />
             <div className="flex items-center">
-              {serverSettings?.verification_channel_id ? (
+              {serverSettings?.verification_channel_id && serverSettings.verification_channel_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -929,7 +933,7 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Verified Role */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-blue-600 dark:text-blue-400 mr-2">🏷️</span>
               <h4 className="font-medium text-foreground">
@@ -943,7 +947,7 @@ const ServerSettingsContent: React.FC = () => {
               placeholder="-- Select Role --"
             />
             <div className="flex items-center">
-              {serverSettings?.verified_role_id ? (
+              {serverSettings?.verified_role_id && serverSettings.verified_role_id !== '' ? (
                 <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
@@ -952,7 +956,7 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Verification Type */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-purple-600 dark:text-purple-400 mr-2">⚙️</span>
               <h4 className="font-medium text-foreground">
@@ -963,13 +967,7 @@ const ServerSettingsContent: React.FC = () => {
               value={serverSettings?.verification_type || 'button'}
               onChange={(e) => handleServerChannelChange('verification_type', e.target.value)}
               disabled={saving}
-              className={classNames(
-                "w-full px-3 py-2 rounded-lg border transition-colors",
-                darkMode 
-                  ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-                  : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
-                "focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-              )}
+              className="w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="button">🔘 Button Verification</option>
               <option value="captcha">🤖 Captcha Verification</option>
@@ -979,17 +977,14 @@ const ServerSettingsContent: React.FC = () => {
           </div>
 
           {/* Create Verification Panel */}
-          <div className="p-3 rounded-lg border space-y-2 bg-muted border-border">
+          <div className="p-3 rounded-lg border space-y-2 content-area">
             <div className="flex items-center">
               <span className="text-indigo-600 dark:text-indigo-400 mr-2">🚀</span>
               <h4 className="font-medium text-foreground">
                 Create Verification
               </h4>
             </div>
-            <p className={classNames(
-              "text-xs",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
+            <p className="text-xs text-muted-foreground">
               Create verification panel in selected channel.
             </p>
             <div className="space-y-2">
@@ -1031,7 +1026,7 @@ const ServerSettingsContent: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Welcome Channel */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-green-600 dark:text-green-400">👋</span>
@@ -1047,7 +1042,7 @@ const ServerSettingsContent: React.FC = () => {
                 placeholder="-- Select Channel --"
               />
               <div className="mt-2 flex items-center">
-                {serverSettings?.welcome_channel_id ? (
+                {serverSettings?.welcome_channel_id && serverSettings.welcome_channel_id !== '' ? (
                   <span className="text-green-600 dark:text-green-400 text-sm">✅ Configured</span>
                 ) : (
                   <span className="text-red-600 dark:text-red-400 text-sm">❌ Not configured</span>
@@ -1056,7 +1051,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Goodbye Channel */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-red-600 dark:text-red-400">👋</span>
@@ -1072,7 +1067,7 @@ const ServerSettingsContent: React.FC = () => {
                 placeholder="-- Select Channel --"
               />
               <div className="mt-2 flex items-center">
-                {serverSettings?.goodbye_channel_id ? (
+                {serverSettings?.goodbye_channel_id && serverSettings.goodbye_channel_id !== '' ? (
                   <span className="text-green-600 dark:text-green-400 text-sm">✅ Configured</span>
                 ) : (
                   <span className="text-red-600 dark:text-red-400 text-sm">❌ Not configured</span>
@@ -1081,7 +1076,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Rules Channel */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-yellow-600 dark:text-yellow-400">📜</span>
@@ -1097,7 +1092,7 @@ const ServerSettingsContent: React.FC = () => {
                 placeholder="-- Select Channel --"
               />
               <div className="mt-2 flex items-center">
-                {serverSettings?.rules_channel_id ? (
+                {serverSettings?.rules_channel_id && serverSettings.rules_channel_id !== '' ? (
                   <span className="text-green-600 dark:text-green-400 text-sm">✅ Configured</span>
                 ) : (
                   <span className="text-red-600 dark:text-red-400 text-sm">❌ Not configured</span>
@@ -1106,7 +1101,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Welcome Message Configuration */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-blue-600 dark:text-blue-400">✨</span>
@@ -1201,7 +1196,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Goodbye/Leave Message Configuration */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-orange-600 dark:text-orange-400">👋</span>
@@ -1296,7 +1291,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Invite Tracking Join Messages */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-green-600 dark:text-green-400">📥</span>
@@ -1391,7 +1386,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
 
             {/* Invite Tracking Leave Messages */}
-            <div className="p-4 rounded-lg border bg-muted border-border">
+            <div className="p-4 rounded-lg border content-area">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-red-600 dark:text-red-400">📤</span>
@@ -1505,17 +1500,11 @@ const ServerSettingsContent: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground">
                   🗑️ Message Deletion Logging
                 </h3>
-                <p className={classNames(
-                  "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm mt-1 text-muted-foreground">
                   Log when messages are deleted, including content and attachments
                 </p>
                 <div className="mt-3">
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Log Channel
                   </label>
                   <ChannelSelector
@@ -1532,7 +1521,7 @@ const ServerSettingsContent: React.FC = () => {
               />
             </div>
 
-            <hr className={darkMode ? "border-gray-700" : "border-gray-200"} />
+            <hr className="border-border" />
 
             {/* Message Edit Logging */}
             <div className="flex items-start justify-between">
@@ -1540,17 +1529,11 @@ const ServerSettingsContent: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground">
                   ✏️ Message Edit Logging
                 </h3>
-                <p className={classNames(
-                  "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm mt-1 text-muted-foreground">
                   Log when messages are edited, showing before and after content
                 </p>
                 <div className="mt-3">
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Log Channel (shares with delete logs if not set)
                   </label>
                   <ChannelSelector
@@ -1567,7 +1550,7 @@ const ServerSettingsContent: React.FC = () => {
               />
             </div>
 
-            <hr className={darkMode ? "border-gray-700" : "border-gray-200"} />
+            <hr className="border-border" />
 
             {/* Command Logging */}
             <div className="flex items-start justify-between">
@@ -1575,17 +1558,11 @@ const ServerSettingsContent: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground">
                   ⚡ Command Logging
                 </h3>
-                <p className={classNames(
-                  "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm mt-1 text-muted-foreground">
                   Log when bot commands are used, including success/failure status
                 </p>
                 <div className="mt-3">
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Log Channel
                   </label>
                   <ChannelSelector
@@ -1602,7 +1579,7 @@ const ServerSettingsContent: React.FC = () => {
               />
             </div>
 
-            <hr className={darkMode ? "border-gray-700" : "border-gray-200"} />
+            <hr className="border-border" />
 
             {/* DM Logging */}
             <div className="flex items-start justify-between">
@@ -1610,17 +1587,11 @@ const ServerSettingsContent: React.FC = () => {
                 <h3 className="text-lg font-semibold text-foreground">
                   💬 Direct Message Logging
                 </h3>
-                <p className={classNames(
-                  "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm mt-1 text-muted-foreground">
                   Log DMs sent to the bot from server members (privacy sensitive)
                 </p>
                 <div className="mt-3">
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Log Channel
                   </label>
                   <ChannelSelector
@@ -1643,10 +1614,7 @@ const ServerSettingsContent: React.FC = () => {
           <div className="mt-6 flex items-center justify-center">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-              <span className={classNames(
-                "text-sm",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <span className="text-sm text-muted-foreground">
                 Saving changes...
               </span>
             </div>

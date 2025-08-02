@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, memo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -22,7 +22,7 @@ interface ConfigModalProps {
   className?: string;
 }
 
-const ConfigModal: React.FC<ConfigModalProps> = ({
+const ConfigModal: React.FC<ConfigModalProps> = memo(({
   isOpen,
   onClose,
   title,
@@ -76,57 +76,55 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className={classNames(
-                "w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl transition-all",
+                "w-full max-h-[85vh] overflow-y-auto rounded-xl shadow-xl transition-all",
                 maxWidthClasses[maxWidth],
-                darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200",
+                "content-area",
                 className
               )}>
                 {/* Header */}
                 <div className={classNames(
-                  "flex items-start justify-between p-6 border-b",
+                  "flex items-center justify-between p-4 border-b",
                   darkMode ? "border-gray-700" : "border-gray-200"
                 )}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center">
-                      {icon && (
-                        <span className="text-2xl mr-3 flex-shrink-0">{icon}</span>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <Dialog.Title className={classNames(
-                          "text-2xl font-bold",
-                          darkMode ? "text-white" : "text-gray-900"
+                  <div className="flex items-center">
+                    {icon && (
+                      <span className="text-xl mr-2 flex-shrink-0">{icon}</span>
+                    )}
+                    <div>
+                      <Dialog.Title className={classNames(
+                        "text-lg font-semibold",
+                        darkMode ? "text-white" : "text-gray-900"
+                      )}>
+                        {title}
+                      </Dialog.Title>
+                      {description && (
+                        <p className={classNames(
+                          "text-xs mt-0.5",
+                          darkMode ? "text-gray-400" : "text-gray-600"
                         )}>
-                          {title}
-                        </Dialog.Title>
-                        {description && (
-                          <p className={classNames(
-                            "text-sm mt-1",
-                            darkMode ? "text-gray-400" : "text-gray-600"
-                          )}>
-                            {description}
-                          </p>
-                        )}
-                      </div>
+                          {description}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button
                     onClick={onClose}
                     className={classNames(
-                      "p-2 rounded-lg transition-colors",
+                      "p-1.5 rounded-md transition-colors",
                       darkMode 
                         ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
                         : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
                     )}
                   >
-                    <XMarkIcon className="h-6 w-6" />
+                    <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
 
                 {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
                     <span className={classNames(
-                      "text-lg",
+                      "text-sm",
                       darkMode ? "text-gray-400" : "text-gray-600"
                     )}>
                       {loadingText}
@@ -135,14 +133,14 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
                 ) : (
                   <>
                     {/* Body */}
-                    <div className="p-6">
+                    <div className="p-4">
                       {children}
                     </div>
 
                     {/* Actions */}
                     {actions && (
                       <div className={classNames(
-                        "flex justify-end p-6 border-t space-x-3",
+                        "flex justify-end p-4 border-t space-x-2",
                         darkMode ? "border-gray-700" : "border-gray-200"
                       )}>
                         {actions}
@@ -157,7 +155,9 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
       </Dialog>
     </Transition>
   );
-};
+});
+
+ConfigModal.displayName = 'ConfigModal';
 
 export default ConfigModal;
 

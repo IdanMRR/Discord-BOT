@@ -830,7 +830,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/verification/create-message`, { channel_id: channelId });
+    }>('POST', `/api/simple-dashboard/server/${serverId}/verification/create-message`, { channel_id: channelId });
   }
 
   async createTicketPanelMessage(serverId: string, channelId: string): Promise<ApiResponse<{
@@ -856,7 +856,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/verification/create-custom-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/verification/create-custom-message`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,

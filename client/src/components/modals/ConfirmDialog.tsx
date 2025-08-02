@@ -68,7 +68,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
         <div 
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 backdrop-blur-sm"
+          className="fixed inset-0 transition-opacity bg-background/80 backdrop-blur-sm"
           onClick={onClose}
         />
 
@@ -76,12 +76,12 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className={classNames(
           "inline-block align-bottom rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full",
           "animate-in slide-in-from-bottom-4 duration-300",
-          darkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+"content-area"
         )}>
           {/* Header */}
           <div className={classNames(
             "px-6 py-4 border-b",
-            darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
+"border-border bg-muted/30"
           )}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -110,10 +110,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
 
           {/* Content */}
-          <div className={classNames(
-            "px-6 py-4",
-            darkMode ? "bg-gray-800" : "bg-white"
-          )}>
+          <div className="px-6 py-4 bg-card">
             <p className={classNames(
               "text-sm",
               darkMode ? "text-gray-300" : "text-gray-600"

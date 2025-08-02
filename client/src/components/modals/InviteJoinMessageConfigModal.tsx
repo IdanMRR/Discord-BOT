@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useCallback, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme as useNewTheme } from '../providers/ThemeProvider';
 import { apiService } from '../../services/api';
 import {
-  XMarkIcon,
   EyeIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import ConfigModal from '../common/ConfigModal';
+import FormField from '../common/FormField';
+import ActionButton from '../common/ActionButton';
+import CompactField from '../common/CompactField';
 
-// Utility function for conditional class names
-function classNames(...classes: string[]) {
+function classNames(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ');
 }
 
@@ -39,6 +41,7 @@ const InviteJoinMessageConfigModal: React.FC<InviteJoinMessageConfigModalProps> 
   serverId
 }) => {
   const { darkMode } = useTheme();
+  // const { primaryColor } = useNewTheme(); // Removed unused variable
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -112,6 +115,17 @@ const InviteJoinMessageConfigModal: React.FC<InviteJoinMessageConfigModalProps> 
   };
 
   const handleTest = async () => {
+    // Validate configuration before testing
+    if (!config.title || config.title.trim() === '') {
+      toast.error('Please enter a message title before testing');
+      return;
+    }
+    
+    if (!config.description || config.description.trim() === '') {
+      toast.error('Please enter a message description before testing');
+      return;
+    }
+    
     try {
       const response = await apiService.testInviteJoinMessage(serverId, config);
       
@@ -150,341 +164,194 @@ const InviteJoinMessageConfigModal: React.FC<InviteJoinMessageConfigModalProps> 
   };
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className={classNames(
-            "fixed inset-0 bg-black/60 backdrop-blur-sm",
-            darkMode ? "bg-gray-900/80" : "bg-black/50"
-          )} />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className={classNames(
-                "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl",
-                darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-              )}>
-        {/* Header */}
-        <div className={classNames(
-          "flex items-center justify-between p-6 border-b",
-          darkMode ? "border-gray-700" : "border-gray-200"
-        )}>
-          <div>
-            <h2 className={classNames(
-              "text-2xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
-              📥 Invite Join Message Configuration
-            </h2>
-            <p className={classNames(
-              "text-sm mt-1",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
-              Customize messages shown when members join via tracked invites
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className={classNames(
-              "p-2 rounded-lg transition-colors",
-              darkMode 
-                ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            )}
+    <ConfigModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Invite Join Message Configuration"
+      description="Customize messages shown when members join via tracked invites"
+      icon="📥"
+      maxWidth="2xl"
+      loading={loading}
+      loadingText="Loading configuration..."
+      actions={
+        <>
+          <ActionButton
+            variant="outline"
+            onClick={handleTest}
+            icon={EyeIcon}
           >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-            <p className={classNames(
-              "mt-4",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
-              Loading configuration...
-            </p>
-          </div>
-        ) : (
-          <div className="p-6 space-y-6">
+            Test Message
+          </ActionButton>
+          <ActionButton
+            variant="outline"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Cancel
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            onClick={handleSave}
+            loading={saving}
+            icon={CheckIcon}
+          >
+            Save Configuration
+          </ActionButton>
+        </>
+      }
+    >
+          <div className="space-y-4">
             {/* Variables Help */}
             <div className={classNames(
-              "p-4 rounded-lg border-l-4 border-green-500",
+              "p-3 rounded-lg border-l-4 border-green-500",
               darkMode ? "bg-green-900/20" : "bg-green-50"
             )}>
               <h3 className={classNames(
-                "text-sm font-medium mb-2",
+                "text-xs font-medium mb-2",
                 darkMode ? "text-green-300" : "text-green-800"
               )}>
                 Available Variables:
               </h3>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-1 text-xs">
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{user}'} - User mention
+                  {'{user}'}
                 </code>
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{inviter}'} - Inviter mention
+                  {'{inviter}'}
                 </code>
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{inviteCode}'} - Invite code
+                  {'{inviteCode}'}
                 </code>
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{inviteUses}'} - Total uses
+                  {'{inviteUses}'}
                 </code>
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{server}'} - Server name
+                  {'{server}'}
                 </code>
                 <code className={classNames(
-                  "px-2 py-1 rounded",
+                  "px-1.5 py-0.5 rounded",
                   darkMode ? "bg-gray-700 text-green-300" : "bg-green-100 text-green-800"
                 )}>
-                  {'{memberCount}'} - Member count
+                  {'{memberCount}'}
                 </code>
               </div>
             </div>
 
             {/* Basic Configuration */}
-            <div className="space-y-4">
-              {/* Title */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Message Title
-                </label>
-                <input
-                  type="text"
-                  value={config.title}
-                  onChange={(e) => setConfig({ ...config, title: e.target.value })}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Message Description
-                </label>
-                <textarea
-                  value={config.description}
-                  onChange={(e) => setConfig({ ...config, description: e.target.value })}
-                  rows={4}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                />
-              </div>
-
-              {/* Color */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Embed Color
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    value={config.color}
-                    onChange={(e) => setConfig({ ...config, color: e.target.value })}
-                    className="w-12 h-10 rounded border border-gray-300"
-                  />
-                  <input
-                    type="text"
-                    value={config.color}
-                    onChange={(e) => setConfig({ ...config, color: e.target.value })}
-                    className={classNames(
-                      "flex-1 px-3 py-2 rounded-lg border transition-colors",
-                      darkMode 
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                        : "bg-white border-gray-300 text-gray-900 focus:border-green-500"
-                    )}
-                  />
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <FormField
+                type="input"
+                label="Message Title"
+                value={config.title}
+                onChange={(value) => setConfig({ ...config, title: value })}
+                placeholder="Welcome via Invite! 🎉"
+                className="text-sm"
+              />
+              <FormField
+                type="color"
+                label="Embed Color"
+                value={config.color}
+                onChange={(value) => setConfig({ ...config, color: value })}
+                className="text-sm"
+              />
+              <div className="md:col-span-1"></div>
             </div>
+            
+            <FormField
+              type="textarea"
+              label="Message Description"
+              value={config.description}
+              onChange={(value) => setConfig({ ...config, description: value })}
+              rows={3}
+              placeholder="{user} joined via {inviter}'s invite ({inviteCode})!"
+              className="text-sm"
+            />
 
             {/* Fields Configuration */}
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <h3 className={classNames(
-                  "text-lg font-medium",
+                  "text-sm font-medium",
                   darkMode ? "text-white" : "text-gray-900"
                 )}>
                   Message Fields
                 </h3>
-                <button
+                <ActionButton
                   onClick={addField}
-                  className={classNames(
-                    "px-3 py-1 rounded text-sm font-medium transition-colors",
-                    "bg-green-600 hover:bg-green-700 text-white"
-                  )}
+                  variant="success"
+                  size="sm"
                 >
                   Add Field
-                </button>
+                </ActionButton>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {config.fields.map((field, index) => (
-                  <div key={index} className={classNames(
-                    "p-4 rounded-lg border",
-                    darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-                  )}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className={classNames(
-                          "block text-sm font-medium mb-1",
-                          darkMode ? "text-gray-300" : "text-gray-700"
-                        )}>
-                          Field Name
-                        </label>
-                        <input
-                          type="text"
-                          value={field.name}
-                          onChange={(e) => updateField(index, { name: e.target.value })}
-                          className={classNames(
-                            "w-full px-3 py-2 rounded border transition-colors text-sm",
-                            darkMode 
-                              ? "bg-gray-600 border-gray-500 text-white" 
-                              : "bg-white border-gray-300 text-gray-900"
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <label className={classNames(
-                          "block text-sm font-medium mb-1",
-                          darkMode ? "text-gray-300" : "text-gray-700"
-                        )}>
-                          Field Value
-                        </label>
-                        <input
-                          type="text"
-                          value={field.value}
-                          onChange={(e) => updateField(index, { value: e.target.value })}
-                          className={classNames(
-                            "w-full px-3 py-2 rounded border transition-colors text-sm",
-                            darkMode 
-                              ? "bg-gray-600 border-gray-500 text-white" 
-                              : "bg-white border-gray-300 text-gray-900"
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={field.inline || false}
-                          onChange={(e) => updateField(index, { inline: e.target.checked })}
-                          className="mr-2"
-                        />
-                        <span className={classNames(
-                          "text-sm",
-                          darkMode ? "text-gray-300" : "text-gray-700"
-                        )}>
-                          Inline field
-                        </span>
-                      </label>
-                      <button
-                        onClick={() => removeField(index)}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
+                  <CompactField
+                    key={index}
+                    index={index}
+                    field={field}
+                    onUpdate={updateField}
+                    onRemove={removeField}
+                  />
                 ))}
               </div>
             </div>
 
-            {/* Preview */}
+            {/* Compact Preview */}
             <div className={classNames(
-              "p-4 rounded-lg border",
+              "p-3 rounded-lg border",
               darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
             )}>
               <h3 className={classNames(
-                "text-sm font-medium mb-3",
+                "text-xs font-medium mb-2",
                 darkMode ? "text-gray-300" : "text-gray-700"
               )}>
                 Preview
               </h3>
               <div className={classNames(
-                "p-4 rounded border-l-4",
+                "p-3 rounded border-l-4 text-sm",
                 darkMode ? "bg-gray-800" : "bg-white"
               )} style={{ borderLeftColor: config.color }}>
                 <h4 className={classNames(
-                  "font-bold mb-2",
+                  "font-semibold mb-1.5 text-sm",
                   darkMode ? "text-white" : "text-gray-900"
                 )}>
                   {config.title}
                 </h4>
                 <div className={classNames(
-                  "text-sm whitespace-pre-wrap mb-3",
+                  "text-xs whitespace-pre-wrap mb-2",
                   darkMode ? "text-gray-300" : "text-gray-600"
                 )}>
                   {config.description}
                 </div>
                 {config.fields.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {config.fields.map((field, index) => (
                       <div key={index}>
                         <div className={classNames(
-                          "text-sm font-medium",
+                          "text-xs font-medium",
                           darkMode ? "text-white" : "text-gray-900"
                         )}>
                           {field.name}
                         </div>
                         <div className={classNames(
-                          "text-sm",
+                          "text-xs",
                           darkMode ? "text-gray-400" : "text-gray-600"
                         )}>
                           {field.value}
@@ -495,59 +362,8 @@ const InviteJoinMessageConfigModal: React.FC<InviteJoinMessageConfigModalProps> 
                 )}
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                onClick={handleTest}
-                className={classNames(
-                  "px-4 py-2 rounded-lg font-medium transition-colors border",
-                  darkMode 
-                    ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                )}
-              >
-                <EyeIcon className="h-4 w-4 inline mr-2" />
-                Test Message
-              </button>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={onClose}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  )}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    darkMode 
-                      ? "bg-green-600 text-white hover:bg-green-700" 
-                      : "bg-green-600 text-white hover:bg-green-700",
-                    saving ? "opacity-50 cursor-not-allowed" : ""
-                  )}
-                >
-                  <CheckIcon className="h-4 w-4 inline mr-2" />
-                  {saving ? 'Saving...' : 'Save Configuration'}
-                </button>
-              </div>
-            </div>
           </div>
-        )}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+    </ConfigModal>
   );
 };
 

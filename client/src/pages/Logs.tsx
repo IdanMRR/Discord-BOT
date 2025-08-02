@@ -338,6 +338,23 @@ const LogsContent: React.FC = () => {
           );
         }
 
+        // Filter out warning system command success messages and duplicate warning logs
+        allLogs = allLogs.filter(log => {
+          // Remove warning system command success messages that create duplicates
+          if (log.success === 1 && 
+              (log.command === 'warn' || log.command === 'warning' || log.command === 'removewarn' ||
+               log.action?.toLowerCase().includes('warn') ||
+               log.details?.toLowerCase().includes('warning system'))) {
+            return false;
+          }
+          // Remove duplicate memberWarning logs with raw JSON that have invalid timestamps
+          if (log.action === 'memberWarning' || 
+              (log.details && typeof log.details === 'string' && log.details.includes('"action":"Warning"'))) {
+            return false;
+          }
+          return true;
+        });
+
         // Apply user filter
         if (filter.userId) {
           allLogs = allLogs.filter(log => log.user_id === filter.userId);
@@ -487,31 +504,35 @@ const LogsContent: React.FC = () => {
   const getLogTypeColor = (logType: string) => {
     switch (logType) {
       case 'command':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-500/20 text-blue-100 border border-blue-400/50 shadow-lg shadow-blue-500/25';
       case 'message':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+        return 'bg-yellow-500/20 text-yellow-100 border border-yellow-400/50 shadow-lg shadow-yellow-500/25';
       case 'moderation':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-500/20 text-red-100 border border-red-400/50 shadow-lg shadow-red-500/25';
       case 'member':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-500/20 text-green-100 border border-green-400/50 shadow-lg shadow-green-500/25';
       case 'verification':
-        return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300';
+        return 'bg-cyan-500/20 text-cyan-100 border border-cyan-400/50 shadow-lg shadow-cyan-500/25';
       case 'warning':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+        return 'bg-amber-500/20 text-amber-100 border border-amber-400/50 shadow-lg shadow-amber-500/25';
       case 'giveaway':
-        return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
+        return 'bg-pink-500/20 text-pink-100 border border-pink-400/50 shadow-lg shadow-pink-500/25';
       case 'levelup':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
+        return 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/50 shadow-lg shadow-emerald-500/25';
       case 'automod':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-purple-500/20 text-purple-100 border border-purple-400/50 shadow-lg shadow-purple-500/25';
       case 'server':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-violet-500/20 text-violet-100 border border-violet-400/50 shadow-lg shadow-violet-500/25';
       case 'user':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-teal-500/20 text-teal-100 border border-teal-400/50 shadow-lg shadow-teal-500/25';
       case 'ticket':
-        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
+        return 'bg-indigo-500/20 text-indigo-100 border border-indigo-400/50 shadow-lg shadow-indigo-500/25';
+      case 'system':
+        return 'bg-orange-500/20 text-orange-100 border border-orange-400/50 shadow-lg shadow-orange-500/25';
+      case 'security':
+        return 'bg-rose-500/20 text-rose-100 border border-rose-400/50 shadow-lg shadow-rose-500/25';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+        return 'bg-gray-500/20 text-gray-100 border border-gray-400/50 shadow-lg shadow-gray-500/25';
     }
   };
 
@@ -522,17 +543,11 @@ const LogsContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={classNames(
-        "min-h-screen p-6",
-        darkMode ? "bg-gray-900" : "bg-gray-50"
-      )}>
+      <div className="page-container flex justify-center items-center min-h-screen">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
             <LoadingSpinner size="lg" className="text-blue-500" />
-            <p className={classNames(
-              "mt-4 text-lg font-medium",
-              darkMode ? "text-gray-300" : "text-gray-600"
-            )}>Loading logs...</p>
+            <p className="mt-4 text-lg font-medium text-muted-foreground">Loading logs...</p>
           </div>
         </div>
       </div>
@@ -540,33 +555,19 @@ const LogsContent: React.FC = () => {
   }
 
   return (
-    <div className={classNames("space-y-8", darkMode ? "bg-gray-900" : "bg-gray-50")}>
+    <div className="page-container space-y-8">
       {/* Professional Header Section */}
       <div className="relative">
         <div className="relative flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className={classNames(
-              "p-4 rounded-lg border transition-colors",
-              darkMode 
-                ? "bg-gray-800 border-gray-700" 
-                : "bg-white border-gray-200"
-            )}>
-              <EyeIcon className={classNames(
-                "h-8 w-8",
-                darkMode ? "text-slate-400" : "text-slate-600"
-              )} />
+            <div className="card p-4">
+              <EyeIcon className="h-8 w-8 text-muted-foreground" />
             </div>
             <div>
-              <h1 className={classNames(
-                "text-4xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
+              <h1 className="text-4xl font-bold text-foreground">
                 Activity Logs
               </h1>
-              <p className={classNames(
-                "text-lg font-medium mt-2",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <p className="text-lg font-medium mt-2 text-muted-foreground">
                 Monitor all bot activities and server events in real-time
               </p>
             </div>
@@ -594,16 +595,11 @@ const LogsContent: React.FC = () => {
               onClick={handleRefresh}
               disabled={refreshing}
               className={classNames(
-                "flex items-center space-x-2 px-6 py-3 rounded-lg font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                darkMode 
-                  ? "bg-primary-600 border-primary-600 text-white hover:bg-primary-700" 
-                  : "bg-primary-600 border-primary-600 text-white hover:bg-primary-700"
+                "btn-refresh",
+                refreshing ? "spinning" : ""
               )}
             >
-              <ArrowPathIcon className={classNames(
-                "h-5 w-5",
-                refreshing ? "animate-spin" : ""
-              )} />
+              <ArrowPathIcon className="icon" />
               <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
           </div>
@@ -612,30 +608,17 @@ const LogsContent: React.FC = () => {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode 
-            ? "bg-gray-800 border-gray-700" 
-            : "bg-white border-gray-200"
-        )}>
+        <div className="card p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Log Type Filter */}
             <div>
-              <label className={classNames(
-                "block text-sm font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-700"
-              )}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Log Type
               </label>
               <select
                 value={filter.type}
                 onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
-                className={classNames(
-                  "w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors",
-                  darkMode 
-                    ? "bg-gray-700 text-gray-100 border-gray-600" 
-                    : "bg-white text-gray-900 border-gray-300"
-                )}
+                className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors bg-background text-foreground border-border"
               >
                 {LOG_TYPES.map(type => (
                   <option key={type.value} value={type.value}>
@@ -647,14 +630,11 @@ const LogsContent: React.FC = () => {
 
             {/* Search */}
             <div>
-              <label className={classNames(
-                "block text-sm font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-700"
-              )}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Search
               </label>
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={filter.search}
@@ -672,10 +652,7 @@ const LogsContent: React.FC = () => {
 
             {/* User ID Filter */}
             <div>
-              <label className={classNames(
-                "block text-sm font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-700"
-              )}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 User ID
               </label>
               <input
@@ -694,21 +671,13 @@ const LogsContent: React.FC = () => {
 
             {/* Date Range Filter */}
             <div>
-              <label className={classNames(
-                "block text-sm font-medium mb-2",
-                darkMode ? "text-gray-300" : "text-gray-700"
-              )}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Date Range
               </label>
               <select
                 value={filter.dateRange}
                 onChange={(e) => setFilter(prev => ({ ...prev, dateRange: e.target.value }))}
-                className={classNames(
-                  "w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors",
-                  darkMode 
-                    ? "bg-gray-700 text-gray-100 border-gray-600" 
-                    : "bg-white text-gray-900 border-gray-300"
-                )}
+                className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors bg-background text-foreground border-border"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -737,27 +706,13 @@ const LogsContent: React.FC = () => {
       )}
 
       {/* Logs Container */}
-      <div className={classNames(
-        "rounded-lg border overflow-hidden",
-        darkMode 
-          ? "bg-gray-800 border-gray-700" 
-          : "bg-white border-gray-200"
-      )}>
-        <div className={classNames(
-          "px-8 py-6 border-b",
-          darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
-        )}>
+      <div className="card rounded-lg border overflow-hidden">
+        <div className="px-8 py-6 border-b border-border bg-muted">
           <div className="flex items-center justify-between">
-            <h3 className={classNames(
-              "text-2xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+            <h3 className="text-2xl font-bold text-foreground">
               Activity Logs
             </h3>
-            <span className={classNames(
-              "px-4 py-2 rounded-lg font-medium text-sm border",
-              darkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-200 text-gray-600"
-            )}>
+            <span className="px-4 py-2 rounded-lg font-medium text-sm border bg-background border-border text-muted-foreground">
               {logs.length} {logs.length === 1 ? 'entry' : 'entries'}
             </span>
           </div>
@@ -766,73 +721,36 @@ const LogsContent: React.FC = () => {
         <div className="p-8">
           {error ? (
             <div className="text-center py-16">
-              <div className={classNames(
-                "w-16 h-16 mx-auto mb-6 rounded-lg border flex items-center justify-center",
-                darkMode ? "border-red-700 bg-red-900/20" : "border-red-200 bg-red-50"
-              )}>
-                <XCircleIcon className={classNames(
-                  "h-8 w-8",
-                  darkMode ? "text-red-400" : "text-red-500"
-                )} />
+              <div className="w-16 h-16 mx-auto mb-6 rounded-lg border flex items-center justify-center border-destructive bg-destructive/10">
+                <XCircleIcon className="h-8 w-8 text-destructive" />
               </div>
-              <h3 className={classNames(
-                "text-2xl font-bold mb-4",
-                darkMode ? "text-red-400" : "text-red-500"
-              )}>Something went wrong</h3>
-              <p className={classNames(
-                "text-lg mb-6 max-w-md mx-auto",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>{error}</p>
+              <h3 className="text-2xl font-bold mb-4 text-destructive">Something went wrong</h3>
+              <p className="text-lg mb-6 max-w-md mx-auto text-muted-foreground">{error}</p>
               <button
                 onClick={handleRefresh}
-                className={classNames(
-                  "inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-medium border transition-colors",
-                  darkMode 
-                    ? "bg-primary-600 border-primary-600 text-white hover:bg-primary-700" 
-                    : "bg-primary-600 border-primary-600 text-white hover:bg-primary-700"
-                )}
+                className="btn-refresh"
               >
-                <ArrowPathIcon className="h-5 w-5" />
+                <ArrowPathIcon className="icon" />
                 <span>Try Again</span>
               </button>
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-16">
-              <div className={classNames(
-                "w-16 h-16 mx-auto mb-6 rounded-lg border flex items-center justify-center",
-                darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
-              )}>
-                <DocumentTextIcon className={classNames(
-                  "h-8 w-8",
-                  darkMode ? "text-gray-400" : "text-gray-500"
-                )} />
+              <div className="w-16 h-16 mx-auto mb-6 rounded-lg border flex items-center justify-center border-border bg-muted">
+                <DocumentTextIcon className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className={classNames(
-                "text-2xl font-bold mb-4",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>No logs found</h3>
-              <p className={classNames(
-                "text-lg mb-6 max-w-md mx-auto",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>
+              <h3 className="text-2xl font-bold mb-4 text-foreground">No logs found</h3>
+              <p className="text-lg mb-6 max-w-md mx-auto text-muted-foreground">
                 No activity logs match your current filters. Try adjusting your search criteria.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {displayLogs.map((log, index) => (
-                <div key={`${log.id}-${index}`} className={classNames(
-                  "relative p-6 rounded-lg border transition-colors",
-                  darkMode 
-                    ? "border-gray-700 bg-gray-800 hover:border-gray-600" 
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                )}>
+                <div key={`${log.id}-${index}`} className="relative p-6 rounded-lg border transition-colors border-border bg-card hover:border-muted-foreground/20">
                   <div className="flex items-start space-x-4">
                     {/* Log Icon */}
-                    <div className={classNames(
-                      "flex-shrink-0 p-2 rounded-lg border",
-                      darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-100 border-gray-200"
-                    )}>
+                    <div className="flex-shrink-0 p-2 rounded-lg border content-area">
                       {getLogIcon(log.log_type || 'general', log.action_type || log.action || '')}
                     </div>
 
@@ -841,10 +759,7 @@ const LogsContent: React.FC = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <h4 className={classNames(
-                              "font-semibold text-lg",
-                              darkMode ? "text-white" : "text-gray-900"
-                            )}>
+                            <h4 className="font-semibold text-lg text-foreground">
                               {log.action || log.command || 'Unknown Action'}
                             </h4>
                             <span className={classNames(
@@ -859,11 +774,8 @@ const LogsContent: React.FC = () => {
                           <div className="space-y-2">
                             {(log.userName || log.user_id) && (
                               <div className="flex items-center space-x-2">
-                                <UserIcon className="h-4 w-4 text-gray-400" />
-                                <span className={classNames(
-                                  "text-sm",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
-                                )}>
+                                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
                                   User: {log.userName || log.user_id}
                                 </span>
                               </div>
@@ -873,10 +785,7 @@ const LogsContent: React.FC = () => {
                               (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick')))) && (
                               <div className="flex items-center space-x-2">
                                 <ShieldCheckIcon className="h-4 w-4 text-primary-400" />
-                                <span className={classNames(
-                                  "text-sm",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
-                                )}>
+                                <span className="text-sm text-muted-foreground">
                                   Moderator: {log.moderatorId === 'dashboard' || log.moderatorId === 'system' || log.moderatorId === 'automod' || 
                                              log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
                                              (log.moderatorName && log.moderatorName.startsWith('User_')) ||
@@ -890,11 +799,8 @@ const LogsContent: React.FC = () => {
 
                             {log.channel_id && (
                               <div className="flex items-center space-x-2">
-                                <ChatBubbleLeftEllipsisIcon className="h-4 w-4 text-gray-400" />
-                                <span className={classNames(
-                                  "text-sm",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
-                                )}>
+                                <ChatBubbleLeftEllipsisIcon className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
                                   Channel: {log.channel_id}
                                 </span>
                               </div>
@@ -902,29 +808,30 @@ const LogsContent: React.FC = () => {
 
                             {log.details && (
                               <div className="space-y-1">
-                                <p className={classNames(
-                                  "text-sm font-medium",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
-                                )}>
+                                <p className="text-sm font-medium text-muted-foreground">
                                   {typeof log.details === 'string' 
                                     ? log.details 
                                     : 'Ticket activity'
                                   }
                                 </p>
                                 
+                                {/* Simple bright green success indicator - NO backgrounds or borders */}
+                                {(typeof log.details === 'string' && (log.details.includes('Success') || log.details.toLowerCase().includes('success') || log.details.includes('| Success'))) && (
+                                  <div className="flex items-center space-x-1 mt-1">
+                                    <CheckIcon className="h-3 w-3 text-green-400" />
+                                    <span className="text-sm text-green-500 font-semibold">
+                                      Command executed successfully
+                                    </span>
+                                  </div>
+                                )}
+                                
                                 {/* Only show JSON for debugging if it's an object and not parsed properly */}
                                 {typeof log.details === 'object' && log.details !== null && typeof log.details !== 'string' && (
                                   <details className="mt-2">
-                                    <summary className={classNames(
-                                      "cursor-pointer text-xs font-mono",
-                                      darkMode ? "text-gray-500" : "text-gray-400"
-                                    )}>
+                                    <summary className="cursor-pointer text-xs font-mono text-muted-foreground/70">
                                       Show raw data
                                     </summary>
-                                    <div className={classNames(
-                                      "mt-2 p-3 rounded-lg font-mono text-xs overflow-x-auto border",
-                                      darkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-200 text-gray-700"
-                                    )}>
+                                    <div className="mt-2 p-3 rounded-lg font-mono text-xs overflow-x-auto border content-area text-muted-foreground">
                                       <pre className="whitespace-pre-wrap">
                                         {JSON.stringify(log.details, null, 2)}
                                       </pre>
@@ -962,10 +869,7 @@ const LogsContent: React.FC = () => {
                             {log.ticket_id && (
                               <div className="flex items-center space-x-2">
                                 <TicketIcon className="h-4 w-4 text-primary-400" />
-                                <span className={classNames(
-                                  "text-sm",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
-                                )}>
+                                <span className="text-sm text-muted-foreground">
                                   Ticket ID: {log.ticket_id}
                                 </span>
                               </div>
@@ -983,29 +887,23 @@ const LogsContent: React.FC = () => {
                               </div>
                             )}
                             
-                            {/* Success/Error indicators for commands */}
-                            {log.success !== undefined && (
-                              <div className="flex items-center space-x-2">
-                                {log.success ? (
-                                  <>
-                                    <CheckIcon className="h-4 w-4 text-green-400" />
-                                    <span className={classNames(
-                                      "text-sm",
-                                      darkMode ? "text-green-400" : "text-green-600"
-                                    )}>
-                                      Command executed successfully
+                            {/* Success/Error indicators for other types */}
+                            {log.success !== undefined && !log.details?.includes('Success') && (
+                              <div className="mt-2">
+                                {log.success === 1 ? (
+                                  <div className="flex items-center space-x-2">
+                                    <CheckIcon className="h-3 w-3 text-green-600" />
+                                    <span className="text-xs text-green-600">
+                                      Action completed successfully
                                     </span>
-                                  </>
+                                  </div>
                                 ) : (
-                                  <>
-                                    <XCircleIcon className="h-4 w-4 text-red-400" />
-                                    <span className={classNames(
-                                      "text-sm",
-                                      darkMode ? "text-red-400" : "text-red-600"
-                                    )}>
-                                      Command failed
+                                  <div className="flex items-center space-x-2">
+                                    <XCircleIcon className="h-3 w-3 text-red-600" />
+                                    <span className="text-xs text-red-600">
+                                      Action failed
                                     </span>
-                                  </>
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -1013,13 +911,13 @@ const LogsContent: React.FC = () => {
                         </div>
 
                         {/* Timestamp */}
-                        <div className="flex items-center space-x-2 text-right">
-                          <ClockIcon className="h-4 w-4 text-gray-400" />
+                        <div className="flex items-center space-x-1 text-right">
                           <div>
                             <p className={classNames(
                               "text-sm font-medium",
                               darkMode ? "text-gray-300" : "text-gray-600"
                             )}>
+                              <ClockIcon className="h-4 w-4" />
                               {(() => {
                                 const dateStr = log.created_at || log.timestamp;
                                 if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
@@ -1038,11 +936,16 @@ const LogsContent: React.FC = () => {
                                   else if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000) {
                                     date = new Date(Number(dateStr) * 1000);
                                   }
-                                  // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss)
+                                  // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss) - already in Israeli timezone
                                   else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
                                     const [datePart, timePart] = dateStr.split(', ');
                                     const [day, month, year] = datePart.split(/[/.]/);
-                                    date = new Date(`${year}-${month}-${day}T${timePart}.000Z`);
+                                    // Create date object - the backend already added +3 hours for Israeli time
+                                    date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                                                   parseInt(timePart.split(':')[0]), 
+                                                   parseInt(timePart.split(':')[1]), 
+                                                   parseInt(timePart.split(':')[2]));
+                                    // Date is already in correct timezone
                                   }
                                   // Handle ISO format
                                   else if (dateStr.includes('T') || dateStr.includes('Z')) {
@@ -1092,10 +995,7 @@ const LogsContent: React.FC = () => {
                                 }
                               })()}
                             </p>
-                            <p className={classNames(
-                              "text-xs",
-                              darkMode ? "text-gray-500" : "text-gray-400"
-                            )}>
+                            <p className="text-xs text-muted-foreground/70">
                               {(() => {
                                 const dateStr = log.created_at || log.timestamp;
                                 if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {

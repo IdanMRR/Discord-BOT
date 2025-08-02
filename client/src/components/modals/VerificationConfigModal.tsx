@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useCallback, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme as useNewTheme } from '../providers/ThemeProvider';
 import { apiService } from '../../services/api';
 import {
-  XMarkIcon,
   EyeIcon,
   CheckIcon,
   ShieldCheckIcon,
-  TrashIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import ConfigModal from '../common/ConfigModal';
+import FormField from '../common/FormField';
+import ActionButton from '../common/ActionButton';
+import CompactField from '../common/CompactField';
 
 // Utility function for conditional class names
 function classNames(...classes: string[]) {
@@ -43,6 +45,7 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   serverId
 }) => {
   const { darkMode } = useTheme();
+  // const { primaryColor } = useNewTheme(); // Removed unused variable
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -76,11 +79,12 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   const [verificationChannel, setVerificationChannel] = useState<string>('');
   const [verifiedRole, setVerifiedRole] = useState<string>('');
   const [verificationType, setVerificationType] = useState<string>('button');
-  const [panelStyle, setPanelStyle] = useState<string>('modern');
-  const [showFooter, setShowFooter] = useState<boolean>(true);
-  const [footerText, setFooterText] = useState<string>('Click the button below to get verified!');
-  const [thumbnail, setThumbnail] = useState<string>('');
-  const [author, setAuthor] = useState<string>('');
+  // Removed unused panel style variables
+  // const [panelStyle, setPanelStyle] = useState<string>('modern');
+  // const [showFooter, setShowFooter] = useState<boolean>(true);
+  // const [footerText, setFooterText] = useState<string>('Click the button below to get verified!');
+  // const [thumbnail, setThumbnail] = useState<string>('');
+  // const [author, setAuthor] = useState<string>('');
 
   // Predefined styles
   const panelStyles = {
@@ -178,8 +182,24 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   };
 
   const handleCreatePanel = async () => {
-    if (!verificationChannel) {
-      toast.error('Please select a verification channel first');
+    // Validate all required fields
+    if (!verificationChannel || verificationChannel === '') {
+      toast.error('Please select a verification channel');
+      return;
+    }
+    
+    if (!verifiedRole || verifiedRole === '') {
+      toast.error('Please select a verified role');
+      return;
+    }
+    
+    if (!config.title || config.title.trim() === '') {
+      toast.error('Please enter a panel title');
+      return;
+    }
+    
+    if (!config.description || config.description.trim() === '') {
+      toast.error('Please enter a panel description');
       return;
     }
 
@@ -214,8 +234,19 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   };
 
   const handleTest = async () => {
-    if (!verificationChannel) {
-      toast.error('Please select a verification channel first');
+    // Validate required fields for testing
+    if (!verificationChannel || verificationChannel === '') {
+      toast.error('Please select a verification channel to test in');
+      return;
+    }
+    
+    if (!config.title || config.title.trim() === '') {
+      toast.error('Please enter a panel title before testing');
+      return;
+    }
+    
+    if (!config.description || config.description.trim() === '') {
+      toast.error('Please enter a panel description before testing');
       return;
     }
 
@@ -277,639 +308,345 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
     });
   };
 
-  const handleStyleChange = (styleKey: string) => {
-    setPanelStyle(styleKey);
-    const style = panelStyles[styleKey as keyof typeof panelStyles];
-    setConfig({ ...config, color: style.color });
-  };
+  // Removed unused style change handler
+  // const handleStyleChange = (styleKey: string) => {
+  //   setPanelStyle(styleKey);
+  //   const style = panelStyles[styleKey as keyof typeof panelStyles];
+  //   setConfig({ ...config, color: style.color });
+  // };
+
+  if (!isOpen) return null;
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className={classNames(
-            "fixed inset-0 bg-black/60 backdrop-blur-sm",
-            darkMode ? "bg-gray-900/80" : "bg-black/50"
-          )} />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+    <ConfigModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Verification System Configuration"
+      description="Set up member verification to keep your server secure"
+      icon="✅"
+      maxWidth="2xl"
+      loading={loading}
+      loadingText="Loading configuration..."
+      actions={
+        <div className="flex items-center justify-between w-full">
+          <div className="flex space-x-3">
+            <ActionButton
+              onClick={handleTest}
+              disabled={!verificationChannel}
+              variant="outline"
+              icon={EyeIcon}
             >
-              <Dialog.Panel className={classNames(
-                "max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl",
-                darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-              )}>
-        {/* Header */}
-        <div className={classNames(
-          "flex items-center justify-between p-6 border-b",
-          darkMode ? "border-gray-700" : "border-gray-200"
-        )}>
-          <div>
-            <h2 className={classNames(
-              "text-2xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
-              ✅ Verification System Configuration
-            </h2>
-            <p className={classNames(
-              "text-sm mt-1",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
-              Set up member verification to keep your server secure
-            </p>
+              Test Panel
+            </ActionButton>
+            <ActionButton
+              onClick={handleReset}
+              disabled={saving}
+              variant="danger"
+            >
+              Reset to Default
+            </ActionButton>
           </div>
-          <button
-            onClick={onClose}
-            className={classNames(
-              "p-2 rounded-lg transition-colors",
-              darkMode 
-                ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            )}
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
+          <div className="flex space-x-3">
+            <ActionButton
+              onClick={onClose}
+              variant="outline"
+              disabled={saving || creating}
+            >
+              Cancel
+            </ActionButton>
+            <ActionButton
+              onClick={handleSave}
+              disabled={saving}
+              loading={saving}
+              variant="primary"
+              icon={CheckIcon}
+            >
+              Save Configuration
+            </ActionButton>
+            <ActionButton
+              onClick={handleCreatePanel}
+              disabled={creating || !verificationChannel}
+              loading={creating}
+              variant="success"
+              icon={ShieldCheckIcon}
+            >
+              Create Panel
+            </ActionButton>
+          </div>
         </div>
-
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-            <p className={classNames(
-              "mt-4",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
-              Loading configuration...
-            </p>
-          </div>
-        ) : (
-          <div className="p-6 space-y-6">
+      }
+    >
+          <div className="space-y-6">
             {/* Settings Configuration */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Verification Channel */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Verification Channel
-                </label>
-                <select
-                  value={verificationChannel}
-                  onChange={(e) => setVerificationChannel(e.target.value)}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                >
-                  <option value="">-- Select Channel --</option>
-                  {channels.map((channel) => (
-                    <option key={channel.id} value={channel.id}>
-                      #{channel.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormField
+                type="select"
+                label="Verification Channel"
+                value={verificationChannel}
+                onChange={setVerificationChannel}
+                options={[
+                  { value: "", label: "-- Select Channel --" },
+                  ...channels.map(channel => ({ value: channel.id, label: `#${channel.name}` }))
+                ]}
+                className="text-sm"
+              />
 
               {/* Verified Role */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Verified Role
-                </label>
-                <select
-                  value={verifiedRole}
-                  onChange={(e) => setVerifiedRole(e.target.value)}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                >
-                  <option value="">-- Select Role --</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      @{role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormField
+                type="select"
+                label="Verified Role"
+                value={verifiedRole}
+                onChange={setVerifiedRole}
+                options={[
+                  { value: "", label: "-- Select Role --" },
+                  ...roles.map(role => ({ value: role.id, label: `@${role.name}` }))
+                ]}
+                className="text-sm"
+              />
 
               {/* Verification Type */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Verification Type
-                </label>
-                <select
-                  value={verificationType}
-                  onChange={(e) => setVerificationType(e.target.value)}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                >
-                  <option value="button">🔘 Button Click</option>
-                  <option value="captcha">🤖 Captcha</option>
-                  <option value="custom_question">❓ Custom Question</option>
-                  <option value="age_verification">🔞 Age Verification</option>
-                </select>
-              </div>
+              <FormField
+                type="select"
+                label="Verification Type"
+                value={verificationType}
+                onChange={setVerificationType}
+                options={[
+                  { value: "button", label: "🔘 Button Click" },
+                  { value: "captcha", label: "🤖 Captcha" },
+                  { value: "custom_question", label: "❓ Custom Question" },
+                  { value: "age_verification", label: "🔞 Age Verification" }
+                ]}
+                className="text-sm"
+              />
             </div>
 
             {/* Panel Configuration */}
-            <div className="space-y-4">
-              {/* Title */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Panel Title
-                </label>
-                <input
-                  type="text"
+            <div className="space-y-3">
+              {/* Title & Button Text in one row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField
+                  type="input"
+                  label="Panel Title"
                   value={config.title}
-                  onChange={(e) => setConfig({ ...config, title: e.target.value })}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
+                  onChange={(value) => setConfig({ ...config, title: value })}
+                  placeholder="✅ Server Verification Required"
+                  description="This will be the main title of your verification embed"
+                  required
+                  className="text-sm"
+                />
+                <FormField
+                  type="input"
+                  label="Button Text"
+                  value={config.buttonText}
+                  onChange={(value) => setConfig({ ...config, buttonText: value })}
+                  placeholder="✅ Verify Me"
+                  description="Text displayed on the verification button"
+                  required
+                  className="text-sm"
                 />
               </div>
 
-              {/* Description */}
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Panel Description
-                </label>
-                <textarea
-                  value={config.description}
-                  onChange={(e) => setConfig({ ...config, description: e.target.value })}
-                  rows={4}
-                  className={classNames(
-                    "w-full px-3 py-2 rounded-lg border transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                      : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                    "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  )}
-                />
-              </div>
-
-              {/* Button Text & Color */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
-                    Button Text
-                  </label>
-                  <input
-                    type="text"
-                    value={config.buttonText}
-                    onChange={(e) => setConfig({ ...config, buttonText: e.target.value })}
-                    className={classNames(
-                      "w-full px-3 py-2 rounded-lg border transition-colors",
-                      darkMode 
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                        : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                      "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                    )}
+              {/* Description & Color in one row */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="md:col-span-3">
+                  <FormField
+                    type="textarea"
+                    label="Panel Description"
+                    value={config.description}
+                    onChange={(value) => setConfig({ ...config, description: value })}
+                    rows={3}
+                    placeholder="Welcome to our server! To access all channels and features, please verify yourself by clicking the button below."
+                    description="Main message explaining the verification process"
+                    required
+                    className="text-sm"
                   />
                 </div>
-
-                <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
-                    Embed Color
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="color"
-                      value={config.color}
-                      onChange={(e) => setConfig({ ...config, color: e.target.value })}
-                      className="w-12 h-10 rounded border border-gray-300"
-                    />
-                    <input
-                      type="text"
-                      value={config.color}
-                      onChange={(e) => setConfig({ ...config, color: e.target.value })}
-                      className={classNames(
-                        "flex-1 px-3 py-2 rounded-lg border transition-colors",
-                        darkMode 
-                          ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                          : "bg-white border-gray-300 text-gray-900 focus:border-green-500"
-                      )}
-                    />
-                  </div>
-                </div>
+                <FormField
+                  type="color"
+                  label="Embed Color"
+                  value={config.color}
+                  onChange={(value) => setConfig({ ...config, color: value })}
+                  className="text-sm"
+                />
               </div>
 
               {/* Fields */}
-              <div className="space-y-3">
-                <h3 className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Custom Fields
-                </h3>
-                {config.fields.map((field, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Field Name"
-                      value={field.name}
-                      onChange={(e) => updateField(index, { name: e.target.value })}
-                      className={classNames(
-                        "w-full px-3 py-2 rounded-lg border transition-colors",
-                        darkMode 
-                          ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                          : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                        "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                      )}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Field Value"
-                      value={field.value}
-                      onChange={(e) => updateField(index, { value: e.target.value })}
-                      className={classNames(
-                        "w-full px-3 py-2 rounded-lg border transition-colors",
-                        darkMode 
-                          ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                          : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                        "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                      )}
-                    />
-                                         <button
-                       onClick={() => removeField(index)}
-                       className="p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20"
-                       title="Remove Field"
-                     >
-                       <TrashIcon className="h-4 w-4" />
-                     </button>
-                  </div>
-                ))}
-                                 <button
-                   onClick={addField}
-                   className="p-2 rounded-lg text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                   title="Add Field"
-                 >
-                   <PlusIcon className="h-4 w-4" />
-                 </button>
-              </div>
-
-              {/* Panel Style */}
-              <div className="space-y-2">
-                <h3 className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Panel Style
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(panelStyles).map(([key, style]) => (
-                    <button
-                      key={key}
-                      onClick={() => handleStyleChange(key)}
-                      className={classNames(
-                        "px-4 py-2 rounded-lg font-medium transition-colors border",
-                        config.color === style.color
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white border-gray-300 text-gray-900 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600",
-                        "focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      )}
-                    >
-                      {style.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="showFooter"
-                  checked={showFooter}
-                  onChange={(e) => setShowFooter(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="showFooter" className={classNames(
-                  "text-sm",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
-                  Show Footer
-                </label>
-              </div>
-              {showFooter && (
-                <div className="flex items-center space-x-2">
+              <div>
+                <div className="flex items-center justify-between mb-3">
                   <label className={classNames(
                     "block text-sm font-medium",
                     darkMode ? "text-gray-300" : "text-gray-700"
                   )}>
-                    Footer Text
+                    Embed Fields
                   </label>
-                  <input
-                    type="text"
-                    value={footerText}
-                    onChange={(e) => setFooterText(e.target.value)}
-                    className={classNames(
-                      "w-full px-3 py-2 rounded-lg border transition-colors",
-                      darkMode 
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                        : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                      "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                    )}
-                  />
+                  <ActionButton
+                    onClick={addField}
+                    variant="success"
+                    size="sm"
+                    icon={PlusIcon}
+                  >
+                    Add Field
+                  </ActionButton>
                 </div>
-              )}
 
-              {/* Thumbnail & Author */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
-                    Thumbnail URL
-                  </label>
-                  <input
-                    type="text"
-                    value={thumbnail}
-                    onChange={(e) => setThumbnail(e.target.value)}
-                    className={classNames(
-                      "w-full px-3 py-2 rounded-lg border transition-colors",
-                      darkMode 
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                        : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                      "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
-                    Author Name
-                  </label>
-                  <input
-                    type="text"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    className={classNames(
-                      "w-full px-3 py-2 rounded-lg border transition-colors",
-                      darkMode 
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-green-500" 
-                        : "bg-white border-gray-300 text-gray-900 focus:border-green-500",
-                      "focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                    )}
-                  />
+                <div className="space-y-2">
+                  {config.fields.map((field, index) => (
+                    <CompactField
+                      key={index}
+                      index={index}
+                      field={field}
+                      onUpdate={updateField}
+                      onRemove={removeField}
+                    />
+                  ))}
                 </div>
               </div>
+
             </div>
 
-            {/* Enhanced Preview */}
+            {/* Discord-style Preview */}
             <div className={classNames(
               "p-4 rounded-lg border",
-              darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
+              darkMode ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"
             )}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
+                  "text-sm font-medium flex items-center gap-2",
+                  darkMode ? "text-gray-200" : "text-gray-800"
                 )}>
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   Live Preview
                 </h3>
                 <div className={classNames(
                   "px-2 py-1 rounded text-xs font-medium",
-                  panelStyles[panelStyle as keyof typeof panelStyles]?.color === config.color
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                    : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                  "bg-discord-blurple/10 text-discord-blurple border border-discord-blurple/20"
                 )}>
-                  {panelStyles[panelStyle as keyof typeof panelStyles]?.name || 'Custom'} Style
+                  Discord Embed
                 </div>
               </div>
               
+              {/* Discord Channel Header */}
               <div className={classNames(
-                "p-4 rounded-lg relative overflow-hidden",
-                panelStyles[panelStyle as keyof typeof panelStyles]?.previewClass || "border-l-4 bg-white dark:bg-gray-800"
-              )} style={{ borderLeftColor: config.color }}>
-                {/* Author */}
-                {author && (
-                  <div className="flex items-center mb-2">
-                    <div className="w-6 h-6 bg-gray-400 rounded-full mr-2"></div>
+                "flex items-center gap-2 mb-3 p-2 rounded",
+                darkMode ? "bg-gray-700/50" : "bg-white/50"
+              )}>
+                <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  #
+                </div>
+                <span className={classNames(
+                  "text-sm font-medium",
+                  darkMode ? "text-gray-300" : "text-gray-700"
+                )}>
+                  verification
+                </span>
+              </div>
+              
+              {/* Bot Message */}
+              <div className="flex gap-3 mb-2">
+                <div className="w-8 h-8 bg-discord-blurple rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  🤖
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <span className={classNames(
-                      "text-sm font-medium",
-                      darkMode ? "text-gray-200" : "text-gray-800"
+                      "text-sm font-semibold",
+                      darkMode ? "text-white" : "text-gray-900"
                     )}>
-                      {author}
+                      Server Bot
+                    </span>
+                    <span className="bg-discord-blurple text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                      BOT
+                    </span>
+                    <span className={classNames(
+                      "text-xs",
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    )}>
+                      Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                )}
-                
-                {/* Thumbnail */}
-                {thumbnail && (
-                  <div className="absolute top-4 right-4 w-20 h-20">
-                    <img 
-                      src={thumbnail} 
-                      alt="Thumbnail" 
-                      className="w-full h-full object-cover rounded"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-                
-                {/* Title */}
-                <h4 className={classNames(
-                  "font-bold mb-2 text-lg",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
-                  {config.title}
-                </h4>
-                
-                {/* Description */}
-                <div className={classNames(
-                  "text-sm whitespace-pre-wrap mb-4 leading-relaxed",
-                  darkMode ? "text-gray-300" : "text-gray-600"
-                )}>
-                  {config.description}
-                </div>
-                
-                {/* Fields */}
-                {config.fields && config.fields.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                    {config.fields.map((field, index) => (
-                      <div key={index} className={classNames(
-                        field.inline ? "col-span-1" : "col-span-full"
-                      )}>
-                        <div className={classNames(
-                          "font-semibold text-sm mb-1",
-                          darkMode ? "text-gray-200" : "text-gray-800"
-                        )}>
-                          {field.name}
-                        </div>
-                        <div className={classNames(
-                          "text-xs leading-relaxed",
-                          darkMode ? "text-gray-400" : "text-gray-600"
-                        )}>
-                          {field.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Button */}
-                <div className="flex justify-start mb-3">
-                  <button 
-                    className={classNames(
-                      "px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md",
-                      panelStyle === 'modern' ? "bg-gradient-to-r from-green-600 to-blue-600 text-white" :
-                      panelStyle === 'security' ? "bg-red-600 text-white" :
-                      panelStyle === 'premium' ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" :
-                      "bg-green-600 text-white"
-                    )}
-                    style={panelStyle === 'classic' || panelStyle === 'minimal' ? { backgroundColor: config.color } : {}}
-                  >
-                    {config.buttonText}
-                  </button>
-                </div>
-                
-                {/* Footer */}
-                {showFooter && footerText && (
+                  
+                  {/* Discord Embed */}
                   <div className={classNames(
-                    "text-xs border-t pt-2 mt-2",
-                    darkMode ? "text-gray-500 border-gray-600" : "text-gray-400 border-gray-200"
-                  )}>
-                    {footerText}
+                    "rounded-md overflow-hidden border-l-4 max-w-lg",
+                    darkMode ? "bg-gray-750" : "bg-gray-50"
+                  )} style={{ borderLeftColor: config.color }}>
+                    <div className="p-4">
+                      {/* Embed Title */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">🔒</span>
+                        <h4 className={classNames(
+                          "font-semibold text-base",
+                          darkMode ? "text-white" : "text-gray-900"
+                        )}>
+                          {config.title || "Server Verification Required"}
+                        </h4>
+                      </div>
+                      
+                      {/* Embed Description */}
+                      <div className={classNames(
+                        "text-sm mb-4 whitespace-pre-wrap leading-relaxed",
+                        darkMode ? "text-gray-300" : "text-gray-600"
+                      )}>
+                        {config.description || "Welcome to our server! Please verify yourself to gain access."}
+                      </div>
+                      
+                      {/* Embed Fields */}
+                      {config.fields && config.fields.length > 0 && (
+                        <div className="mb-4">
+                          <div className="grid gap-3">
+                            {config.fields.map((field, index) => (
+                              <div key={index} className={classNames(
+                                field.inline ? "inline-block mr-6 min-w-0" : "block",
+                                field.inline ? "max-w-xs" : ""
+                              )}>
+                                <div className={classNames(
+                                  "font-semibold text-sm mb-1",
+                                  darkMode ? "text-gray-200" : "text-gray-800"
+                                )}>
+                                  {field.name}
+                                </div>
+                                <div className={classNames(
+                                  "text-sm leading-relaxed whitespace-pre-wrap",
+                                  darkMode ? "text-gray-300" : "text-gray-600"
+                                )}>
+                                  {field.value}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Verification Button */}
+                      <div className="mb-2">
+                        <button 
+                          className={classNames(
+                            "px-4 py-2 rounded font-medium text-sm transition-all duration-200 shadow-sm hover:shadow-md",
+                            "bg-green-600 hover:bg-green-700 text-white"
+                          )}
+                          style={{ backgroundColor: config.color }}
+                        >
+                          {config.buttonText || "✅ Verify Me"}
+                        </button>
+                      </div>
+                      
+                      {/* Embed Footer */}
+                      <div className={classNames(
+                        "text-xs flex items-center justify-between pt-2 border-t",
+                        darkMode ? "text-gray-500 border-gray-600" : "text-gray-400 border-gray-300"
+                      )}>
+                        <span>Click the button above to get verified!</span>
+                        <span>{new Date().toLocaleDateString()}</span>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleTest}
-                  disabled={!verificationChannel}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors border",
-                    darkMode 
-                      ? "border-gray-600 text-gray-300 hover:bg-gray-700" 
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50",
-                    !verificationChannel ? "opacity-50 cursor-not-allowed" : ""
-                  )}
-                >
-                  <EyeIcon className="h-4 w-4 inline mr-2" />
-                  Test Panel
-                </button>
-
-                <button
-                  onClick={handleReset}
-                  disabled={saving}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors border",
-                    "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20",
-                    saving ? "opacity-50 cursor-not-allowed" : ""
-                  )}
-                >
-                  Reset to Default
-                </button>
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={onClose}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    darkMode 
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  )}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    darkMode 
-                      ? "bg-blue-600 text-white hover:bg-blue-700" 
-                      : "bg-blue-600 text-white hover:bg-blue-700",
-                    saving ? "opacity-50 cursor-not-allowed" : ""
-                  )}
-                >
-                  <CheckIcon className="h-4 w-4 inline mr-2" />
-                  {saving ? 'Saving...' : 'Save Configuration'}
-                </button>
-
-                <button
-                  onClick={handleCreatePanel}
-                  disabled={creating || !verificationChannel}
-                  className={classNames(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    "bg-green-600 hover:bg-green-700 text-white",
-                    (creating || !verificationChannel) ? "opacity-50 cursor-not-allowed" : ""
-                  )}
-                >
-                  <ShieldCheckIcon className="h-4 w-4 inline mr-2" />
-                  {creating ? 'Creating...' : 'Create Panel'}
-                </button>
-              </div>
-            </div>
           </div>
-        )}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+    </ConfigModal>
   );
 };
 

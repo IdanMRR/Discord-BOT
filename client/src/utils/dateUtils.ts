@@ -97,14 +97,26 @@ export const formatDashboardLogDate = (dateString: string): string => {
     
     // Handle formatted timestamps from backend (DD/MM/YYYY, HH:mm:ss) - already in Israeli timezone
     if (dateString.match(/^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2}$/)) {
-      // Backend has already converted to Israeli timezone, so this timestamp represents Israeli time
-      // We need to parse it as if it were UTC, then adjust for timezone differences
       const [datePart, timePart] = dateString.split(', ');
       const [day, month, year] = datePart.split('/');
-      // Parse as UTC first
-      const utcDate = new Date(`${year}-${month}-${day}T${timePart}Z`);
-      // Then adjust for Israeli timezone (UTC+3) - subtract 3 hours to get the correct relative time
-      date = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+      
+      // Create date object - months are 0-indexed in JavaScript
+      // Important: treat this as local time (already in Israeli timezone)
+      date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                     parseInt(timePart.split(':')[0]), 
+                     parseInt(timePart.split(':')[1]), 
+                     parseInt(timePart.split(':')[2]));
+    }
+    // Handle Hebrew/Israeli locale timestamps (DD.MM.YYYY, HH:mm:ss) 
+    else if (dateString.match(/^\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+      const [datePart, timePart] = dateString.split(', ');
+      const [day, month, year] = datePart.split('.');
+      
+      // Create date object - months are 0-indexed in JavaScript
+      date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                     parseInt(timePart.split(':')[0]), 
+                     parseInt(timePart.split(':')[1]), 
+                     parseInt(timePart.split(':')[2]));
     } 
     // Handle numeric timestamps
     else if (!isNaN(Number(dateString)) && dateString.length > 10) {
@@ -130,10 +142,32 @@ export const formatDashboardLogDate = (dateString: string): string => {
     }
     
     const now = new Date();
-    const diffTime = now.getTime() - date.getTime();
+    
+    // If the date is from an Israeli formatted string, adjust for timezone comparison
+    let adjustedDate = date;
+    if (dateString.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+      // The backend already added +3 hours, so we need to subtract them for proper comparison
+      // since the browser's "now" is in local time
+      const israeliOffset = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+      const browserOffset = now.getTimezoneOffset() * 60 * 1000; // Browser timezone offset
+      adjustedDate = new Date(date.getTime() - israeliOffset + browserOffset);
+    }
+    
+    const diffTime = now.getTime() - adjustedDate.getTime();
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    // Debug logging
+    console.log('Date parsing debug:', {
+      original: dateString,
+      parsed: date.toISOString(),
+      adjusted: adjustedDate.toISOString(),
+      now: now.toISOString(),
+      diffMinutes,
+      diffHours,
+      diffDays
+    });
 
     // Show relative time for recent entries
     if (diffMinutes < 1 && diffTime >= 0) {

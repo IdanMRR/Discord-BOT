@@ -350,7 +350,7 @@ const AdminContent: React.FC = () => {
       case 'moderator':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+        return 'bg-muted/50 text-muted-foreground';
     }
   };
 
@@ -363,7 +363,7 @@ const AdminContent: React.FC = () => {
       case 'banned':
         return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+        return 'bg-muted/50 text-muted-foreground';
     }
   };
 
@@ -389,13 +389,13 @@ const AdminContent: React.FC = () => {
             <div>
               <h1 className={classNames(
                 "text-4xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                "text-foreground"
               )}>
                 User Management
               </h1>
               <p className={classNames(
                 "text-lg font-medium mt-2",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                "text-muted-foreground"
               )}>
                 Manage dashboard access and user permissions
               </p>
@@ -427,12 +427,7 @@ const AdminContent: React.FC = () => {
         ].map((stat, index) => (
           <div
             key={index}
-            className={classNames(
-              "p-6 rounded-lg border",
-              darkMode 
-                ? "bg-gray-800 border-gray-700" 
-                : "bg-white border-gray-200"
-            )}
+            className="p-6 rounded-lg border bg-card border-border"
           >
             <div className="flex items-center space-x-3">
               <stat.icon className={classNames(
@@ -443,16 +438,10 @@ const AdminContent: React.FC = () => {
                 "text-red-500"
               )} />
               <div>
-                <p className={classNames(
-                  "text-3xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-3xl font-bold text-card-foreground">
                   {stat.value}
                 </p>
-                <p className={classNames(
-                  "text-sm",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm text-muted-foreground">
                   {stat.label}
                 </p>
               </div>
@@ -462,14 +451,8 @@ const AdminContent: React.FC = () => {
       </div>
 
       {/* Enhanced Filters */}
-      <div className={classNames(
-        "p-6 rounded-lg border mb-8",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
-        <h3 className={classNames(
-          "text-lg font-semibold mb-4",
-          darkMode ? "text-white" : "text-gray-900"
-        )}>
+      <div className="p-6 rounded-lg border mb-8 bg-card border-border">
+        <h3 className="text-lg font-semibold mb-4 text-card-foreground">
           Filters & Search
         </h3>
         
@@ -478,7 +461,7 @@ const AdminContent: React.FC = () => {
           <div>
             <label className={classNames(
               "block text-sm font-medium mb-2",
-              darkMode ? "text-gray-300" : "text-gray-700"
+              "text-foreground"
             )}>
               Search Users
             </label>
@@ -492,8 +475,8 @@ const AdminContent: React.FC = () => {
                 className={classNames(
                   "w-full pl-10 pr-4 py-2 rounded-lg border transition-colors",
                   darkMode 
-                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500" 
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500",
+                    ? "input-field text-white placeholder-gray-400 focus:border-purple-500" 
+                    : "input-field text-gray-900 placeholder-gray-500 focus:border-purple-500",
                   "focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                 )}
               />
@@ -504,7 +487,7 @@ const AdminContent: React.FC = () => {
           <div>
             <label className={classNames(
               "block text-sm font-medium mb-2",
-              darkMode ? "text-gray-300" : "text-gray-700"
+              "text-foreground"
             )}>
               Role
             </label>
@@ -514,8 +497,8 @@ const AdminContent: React.FC = () => {
               className={classNames(
                 "w-full px-3 py-2 rounded-lg border transition-colors",
                 darkMode 
-                  ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-                  : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
+                  ? "input-field text-white focus:border-purple-500" 
+                  : "input-field text-gray-900 focus:border-purple-500",
                 "focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               )}
             >
@@ -530,7 +513,7 @@ const AdminContent: React.FC = () => {
           <div>
             <label className={classNames(
               "block text-sm font-medium mb-2",
-              darkMode ? "text-gray-300" : "text-gray-700"
+              "text-foreground"
             )}>
               Status
             </label>
@@ -540,8 +523,8 @@ const AdminContent: React.FC = () => {
               className={classNames(
                 "w-full px-3 py-2 rounded-lg border transition-colors",
                 darkMode 
-                  ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-                  : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
+                  ? "input-field text-white focus:border-purple-500" 
+                  : "input-field text-gray-900 focus:border-purple-500",
                 "focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               )}
             >
@@ -557,7 +540,7 @@ const AdminContent: React.FC = () => {
           <div>
             <label className={classNames(
               "block text-sm font-medium mb-2",
-              darkMode ? "text-gray-300" : "text-gray-700"
+              "text-foreground"
             )}>
               Sort By
             </label>
@@ -567,8 +550,8 @@ const AdminContent: React.FC = () => {
               className={classNames(
                 "w-full px-3 py-2 rounded-lg border transition-colors",
                 darkMode 
-                  ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500" 
-                  : "bg-white border-gray-300 text-gray-900 focus:border-purple-500",
+                  ? "input-field text-white focus:border-purple-500" 
+                  : "input-field text-gray-900 focus:border-purple-500",
                 "focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               )}
             >
@@ -596,14 +579,14 @@ const AdminContent: React.FC = () => {
       {/* Server Selection Only */}
       <div className={classNames(
         "mb-6 p-4 rounded-lg border",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        "bg-card border-border"
       )}>
         <div className="flex flex-col md:flex-row gap-4">
           {/* Server Selection */}
           <div className="flex-1">
             <label className={classNames(
               "block text-sm font-medium mb-2",
-              darkMode ? "text-gray-300" : "text-gray-700"
+              "text-foreground"
             )}>
               Select Discord Server
             </label>
@@ -613,8 +596,8 @@ const AdminContent: React.FC = () => {
               className={classNames(
                 "w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent",
                 darkMode 
-                  ? "bg-gray-700 border-gray-600 text-white" 
-                  : "bg-white border-gray-300 text-gray-900"
+                  ? "input-field text-white" 
+                  : "input-field text-gray-900"
               )}
             >
               <option value="">Select a server...</option>
@@ -631,47 +614,47 @@ const AdminContent: React.FC = () => {
       {/* Users Table */}
       <div className={classNames(
         "rounded-lg border overflow-hidden",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        "bg-card border-border"
       )}>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className={darkMode ? "bg-gray-700" : "bg-gray-50"}>
+            <thead className={"bg-muted"}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   User
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Dashboard Access
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Last Login
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr key={user.id} className="hover:bg-muted/30">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                          <UserIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                          <UserIcon className="h-6 w-6 text-muted-foreground" />
                         </div>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {user.username}#{user.discriminator}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                           ID: {user.id}
                         </div>
                       </div>
@@ -703,7 +686,7 @@ const AdminContent: React.FC = () => {
                       {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(user.lastLogin).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -733,7 +716,7 @@ const AdminContent: React.FC = () => {
       {pagination.pages > 1 && (
         <div className={classNames(
           "flex items-center justify-between px-6 py-4 border-t",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          "bg-card border-border"
         )}>
           <div className="flex items-center space-x-2">
             <span className={classNames(
@@ -834,7 +817,7 @@ const AdminContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-3xl transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "content-area"
                 )}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
@@ -850,14 +833,14 @@ const AdminContent: React.FC = () => {
                           as="h3"
                           className={classNames(
                             "text-xl font-bold",
-                            darkMode ? "text-gray-100" : "text-gray-900"
+                            "text-foreground"
                           )}
                         >
                           Edit User Permissions
                         </Dialog.Title>
                         <p className={classNames(
                           "text-sm mt-1",
-                          darkMode ? "text-gray-400" : "text-gray-600"
+                          "text-muted-foreground"
                         )}>
                           {editingUser?.username}#{editingUser?.discriminator}
                         </p>
@@ -887,7 +870,7 @@ const AdminContent: React.FC = () => {
                         )}>
                           <label className={classNames(
                             "block text-base font-semibold mb-3",
-                            darkMode ? "text-gray-100" : "text-gray-900"
+                            "text-foreground"
                           )}>
                             Role
                           </label>
@@ -926,7 +909,7 @@ const AdminContent: React.FC = () => {
                             }}
                             className={classNames(
                               "w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500 transition-all duration-200",
-                              darkMode ? "bg-gray-600 border-gray-500 text-white" : "bg-white border-gray-300 text-gray-900"
+                              "bg-card border-border text-card-foreground"
                             )}
                           >
                             <option value="user">User</option>
@@ -936,7 +919,7 @@ const AdminContent: React.FC = () => {
 
                           {/* Dashboard Access */}
                           <div className="mt-3">
-                            <label className="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                            <label className="flex items-center p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer">
                               <div className="relative">
                                 <input
                                   type="checkbox"
@@ -958,7 +941,7 @@ const AdminContent: React.FC = () => {
                               </div>
                               <span className={classNames(
                                 "ml-3 text-sm font-medium",
-                                darkMode ? "text-gray-200" : "text-gray-700"
+                                "text-muted-foreground"
                               )}>
                                 Grant Dashboard Access
                               </span>
@@ -973,7 +956,7 @@ const AdminContent: React.FC = () => {
                         )}>
                           <label className={classNames(
                             "block text-base font-semibold mb-3",
-                            darkMode ? "text-gray-100" : "text-gray-900"
+                            "text-foreground"
                           )}>
                             Permission Groups
                           </label>
@@ -992,11 +975,11 @@ const AdminContent: React.FC = () => {
                               >
                                 <div className={classNames(
                                   "font-medium text-sm",
-                                  darkMode ? "text-gray-100" : "text-gray-900"
+                                  "text-foreground"
                                 )}>{group.name}</div>
                                 <div className={classNames(
                                   "text-xs mt-1",
-                                  darkMode ? "text-gray-300" : "text-gray-600"
+                                  "text-muted-foreground"
                                 )}>{group.description}</div>
                               </button>
                             ))}
@@ -1011,13 +994,13 @@ const AdminContent: React.FC = () => {
                       )}>
                         <label className={classNames(
                           "block text-base font-semibold mb-3",
-                          darkMode ? "text-gray-100" : "text-gray-900"
+                          "text-foreground"
                         )}>
                           Individual Permissions
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           {availablePermissions.map((permission) => (
-                            <label key={permission} className="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                            <label key={permission} className="flex items-center p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer">
                               <div className="relative">
                                 <input
                                   type="checkbox"
@@ -1052,7 +1035,7 @@ const AdminContent: React.FC = () => {
                               </div>
                               <span className={classNames(
                                 "ml-2 text-xs font-medium",
-                                darkMode ? "text-gray-200" : "text-gray-700"
+                                "text-muted-foreground"
                               )}>
                                 {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                               </span>

@@ -20,6 +20,7 @@ import {
 import SettingsCard from '../components/common/SettingsCard';
 import ActionButton from '../components/common/ActionButton';
 import ToggleSwitch from '../components/common/ToggleSwitch';
+import { ColorCustomizer } from '../components/ui/ColorCustomizer';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -46,13 +47,12 @@ const Settings: React.FC = () => {
   
   // Local state for settings
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
-  const [primaryColor, setPrimaryColor] = useState('#64748b');
+  const [primaryColor, setPrimaryColor] = useState('#3b82f6');
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [compactMode, setCompactMode] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
-  const [hasChanges, setHasChanges] = useState(false);
   
   // Accessibility settings
   const [highContrast, setHighContrast] = useState(false);
@@ -119,13 +119,13 @@ const Settings: React.FC = () => {
     }
   ];
 
-  // Predefined color options
-  const colorPresets = [
+  // Removed unused color presets - using ColorCustomizer component instead
+  // const colorPresets = [
+    { name: 'Blue', value: '#3b82f6' },
     { name: 'Slate', value: '#64748b' },
     { name: 'Gray', value: '#6b7280' },
     { name: 'Zinc', value: '#71717a' },
     { name: 'Stone', value: '#78716c' },
-    { name: 'Blue', value: '#3b82f6' },
     { name: 'Indigo', value: '#6366f1' },
     { name: 'Purple', value: '#8b5cf6' },
     { name: 'Emerald', value: '#10b981' },
@@ -168,101 +168,37 @@ const Settings: React.FC = () => {
 
   // Load settings on mount
   useEffect(() => {
+    console.log('Settings loading:', settings); // Debug log
     if (settings && isInitialLoad.current) {
       isInitialLoad.current = false;
+      console.log('Loading saved settings:', settings); // Debug log
       
       setTheme(settings.theme || 'auto');
-      setPrimaryColor(settings.primaryColor || '#64748b');
+      setPrimaryColor(settings.primaryColor || '#3b82f6');
       setFontSize(settings.fontSize || 'medium');
       setAnimationsEnabled(settings.animationsEnabled ?? true);
       setCompactMode(settings.compactMode ?? false);
       setAutoRefresh(settings.autoRefresh ?? true);
       setRefreshInterval(settings.refreshInterval || 30);
       
-      // Apply settings immediately when loaded - but only set CSS, don't update context
-      const primaryColorToApply = settings.primaryColor || '#64748b';
-      const fontSizeToApply = settings.fontSize || 'medium';
+      // Load other settings
+      setHighContrast(settings.highContrast ?? false);
+      setReducedMotion(settings.reducedMotion ?? false);
+      setScreenReader(settings.screenReader ?? false);
+      setKeyboardNavigation(settings.keyboardNavigation ?? true);
+      setFocusIndicators(settings.focusIndicators ?? true);
+      setSoundEnabled(settings.soundEnabled ?? true);
+      setDesktopNotifications(settings.desktopNotifications ?? false);
+      setToastPosition((settings.toastPosition as 'top' | 'bottom' | 'top-right' | 'bottom-right') || 'top');
+      setDebugMode(settings.debugMode ?? false);
+      setPerformanceMonitoring(settings.performanceMonitoring ?? false);
+      setCacheEnabled(settings.cacheEnabled ?? true);
       
-      // Apply primary color directly to DOM
-      const hexToRgb = (hex: string) => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-        } : null;
-      };
-      
-      // Convert hex to HSL for CSS variables
-      const hexToHsl = (hex: string) => {
-        const rgb = hexToRgb(hex);
-        if (!rgb) return null;
-        
-        const r = rgb.r / 255;
-        const g = rgb.g / 255;
-        const b = rgb.b / 255;
-        
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        let h = 0, s = 0, l = (max + min) / 2;
-        
-        if (max !== min) {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          
-          switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-          }
-          h /= 6;
-        }
-        
-        return {
-          h: Math.round(h * 360),
-          s: Math.round(s * 100),
-          l: Math.round(l * 100)
-        };
-      };
-      
-      const rgb = hexToRgb(primaryColorToApply);
-      if (rgb) {
-        // Convert hex to HSL and update CSS variables
-        const hsl = hexToHsl(primaryColorToApply);
-        if (hsl) {
-          document.documentElement.style.setProperty('--primary', `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`);
-          document.documentElement.style.setProperty('--ring', `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`);
-        }
-      }
-      
-      // Apply font size directly to DOM
-      const fontSizeMap = {
-        small: '0.9',
-        medium: '1.0', 
-        large: '1.1'
-      };
-      const scale = fontSizeMap[fontSizeToApply] || '1.0';
-      document.documentElement.style.setProperty('--font-scale', scale);
+      console.log('Settings loaded in Settings page:', settings);
     }
   }, [settings]);
 
-  // Track changes
-  useEffect(() => {
-    const changed = 
-      theme !== (settings?.theme || 'auto') ||
-      primaryColor !== (settings?.primaryColor || '#64748b') ||
-      fontSize !== (settings?.fontSize || 'medium') ||
-      animationsEnabled !== (settings?.animationsEnabled ?? true) ||
-      compactMode !== (settings?.compactMode ?? false) ||
-      autoRefresh !== (settings?.autoRefresh ?? true) ||
-      refreshInterval !== (settings?.refreshInterval || 30) ||
-      highContrast !== (settings?.highContrast ?? false) ||
-      reducedMotion !== (settings?.reducedMotion ?? false) ||
-      soundEnabled !== (settings?.soundEnabled ?? true) ||
-      debugMode !== (settings?.debugMode ?? false);
-    setHasChanges(changed);
-  }, [theme, primaryColor, fontSize, animationsEnabled, compactMode, autoRefresh, refreshInterval, 
-      highContrast, reducedMotion, soundEnabled, debugMode, settings]);
+  // Settings are saved immediately, no change tracking needed
   
   // Initialize accessibility settings from browser preferences
   useEffect(() => {
@@ -281,12 +217,12 @@ const Settings: React.FC = () => {
     }
   }, [settings, updateSetting]);
 
-  // Apply theme changes (but don't save until Save button is clicked)
+  // Apply theme changes (save immediately for better UX)
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
     setTheme(newTheme);
     
-    // Don't update the context immediately - let the save button handle it
-    // updateSetting('theme', newTheme);
+    // Save the theme setting immediately
+    updateSetting('theme', newTheme);
     
     if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -328,90 +264,20 @@ const Settings: React.FC = () => {
     updateSetting('refreshInterval', newInterval);
   };
 
-  // Apply primary color (but don't save until Save button is clicked)
-  const handleColorChange = (color: string) => {
+  // Apply primary color (save immediately and let SettingsApplier handle the CSS)
+  const handleColorChange = React.useCallback((color: string) => {
+    console.log('Color changing to:', color);
     setPrimaryColor(color);
-    
-    // Don't update the context immediately - let the save button handle it
-    // updateSetting('primaryColor', color);
-    
-    // Convert hex to RGB for CSS variables
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    };
-    
-    // Convert hex to HSL for CSS variables
-    const hexToHsl = (hex: string) => {
-      const rgb = hexToRgb(hex);
-      if (!rgb) return null;
-      
-      const r = rgb.r / 255;
-      const g = rgb.g / 255;
-      const b = rgb.b / 255;
-      
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
-      
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-      
-      return {
-        h: Math.round(h * 360),
-        s: Math.round(s * 100),
-        l: Math.round(l * 100)
-      };
-    };
-    
-    const rgb = hexToRgb(color);
-    if (rgb) {
-      // Convert hex to HSL and update CSS variables for immediate visual feedback
-      const hsl = hexToHsl(color);
-      if (hsl) {
-        const primaryHsl = `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
-        const primaryForegroundHsl = hsl.l > 50 ? `hsl(${hsl.h} ${hsl.s}% 10%)` : `hsl(${hsl.h} ${hsl.s}% 98%)`;
-        
-        // Update all primary color variables
-        document.documentElement.style.setProperty('--primary', primaryHsl);
-        document.documentElement.style.setProperty('--primary-foreground', primaryForegroundHsl);
-        document.documentElement.style.setProperty('--ring', primaryHsl);
-        
-        // Update sidebar colors
-        document.documentElement.style.setProperty('--sidebar-primary', primaryHsl);
-        document.documentElement.style.setProperty('--sidebar-primary-foreground', primaryForegroundHsl);
-        document.documentElement.style.setProperty('--sidebar-ring', primaryHsl);
-        
-        // Update chart colors to match primary
-        document.documentElement.style.setProperty('--chart-1', primaryHsl);
-        
-        // Update additional color variables from global-settings.css
-        document.documentElement.style.setProperty('--primary-color', color);
-        document.documentElement.style.setProperty('--primary-dark', `hsl(${hsl.h} ${hsl.s}% ${Math.max(hsl.l - 10, 10)}%)`);
-        document.documentElement.style.setProperty('--primary-light', `hsl(${hsl.h} ${hsl.s}% ${Math.min(hsl.l + 10, 90)}%)`);
-      }
-    }
-  };
+    updateSetting('primaryColor', color);
+    console.log('Color setting saved to context');
+  }, [updateSetting]);
 
-  // Apply font size (but don't save until Save button is clicked)
+  // Apply font size (save immediately for better UX)
   const handleFontSizeChange = (size: 'small' | 'medium' | 'large' | 'xl') => {
     setFontSize(size as any);
     
-    // Don't update the context immediately - let the save button handle it
-    // updateSetting('fontSize', size);
+    // Save the font size setting immediately
+    updateSetting('fontSize', size);
     
     // Apply font size scaling using CSS custom property for immediate visual feedback
     const fontSizeMap = {
@@ -582,29 +448,13 @@ const Settings: React.FC = () => {
   };
 
 
-  // Save all settings
+  // Save all settings (now only used for manual save if needed)
   const handleSave = async () => {
-    if (!hasChanges) return;
-    
     setSaving(true);
     try {
-      updateSetting('theme', theme);
-      updateSetting('primaryColor', primaryColor);
-      updateSetting('fontSize', fontSize);
-      updateSetting('animationsEnabled', animationsEnabled);
-      updateSetting('compactMode', compactMode);
-      updateSetting('autoRefresh', autoRefresh);
-      updateSetting('refreshInterval', refreshInterval);
-      updateSetting('highContrast', highContrast);
-      updateSetting('reducedMotion', reducedMotion);
-      updateSetting('soundEnabled', soundEnabled);
-      updateSetting('debugMode', debugMode);
-      
-      // Simulate network delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setHasChanges(false);
-      toast.success('Settings saved successfully!');
+      // Settings are already saved automatically, this is just for user feedback
+      await new Promise(resolve => setTimeout(resolve, 300));
+      toast.success('All settings are saved!');
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error('Failed to save settings');
@@ -618,7 +468,7 @@ const Settings: React.FC = () => {
     if (!settings) return;
     
     setTheme(settings.theme || 'auto');
-    setPrimaryColor(settings.primaryColor || '#64748b');
+    setPrimaryColor(settings.primaryColor || '#3b82f6');
     setFontSize(settings.fontSize || 'medium');
     setAnimationsEnabled(settings.animationsEnabled ?? true);
     setCompactMode(settings.compactMode ?? false);
@@ -626,7 +476,7 @@ const Settings: React.FC = () => {
     setRefreshInterval(settings.refreshInterval || 30);
     
     // Re-apply current settings
-    handleColorChange(settings.primaryColor || '#64748b');
+    handleColorChange(settings.primaryColor || '#3b82f6');
     handleFontSizeChange(settings.fontSize || 'medium');
     
     toast.success('Settings reset');
@@ -664,34 +514,32 @@ const Settings: React.FC = () => {
                     className={classNames(
                       'relative p-4 rounded-xl border-2 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg text-left',
                       theme === id
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md scale-105'
-                        : darkMode
-                          ? 'border-gray-600 bg-gray-700/50 hover:border-primary-500 hover:bg-gray-600/50'
-                          : 'border-gray-200 bg-gray-50/50 hover:border-primary-400 hover:bg-white'
+                        ? 'border-primary bg-primary/10 shadow-md scale-105'
+                        : 'border-border bg-muted/50 hover:border-primary hover:bg-muted'
                     )}
                   >
                     <Icon className={classNames(
                       'w-8 h-8 mb-3 transition-all duration-300 group-hover:scale-110',
                       theme === id
-                        ? 'text-primary-600'
-                        : darkMode ? 'text-gray-400 group-hover:text-primary-400' : 'text-gray-500 group-hover:text-primary-600'
+                        ? 'text-primary'
+                        : 'text-muted-foreground group-hover:text-primary'
                     )} />
                     <div>
                       <div className={classNames(
                         'text-sm font-semibold mb-1',
                         theme === id
-                          ? 'text-primary-700 dark:text-primary-300'
-                          : darkMode ? 'text-gray-200' : 'text-gray-900'
+                          ? 'text-primary'
+                          : 'text-foreground'
                       )}>{name}</div>
                       <div className={classNames(
                         'text-xs',
                         theme === id
-                          ? 'text-primary-600 dark:text-primary-400'
-                          : darkMode ? 'text-gray-400' : 'text-gray-600'
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
                       )}>{desc}</div>
                     </div>
                     {theme === id && (
-                      <CheckIcon className="absolute top-3 right-3 w-5 h-5 text-primary-600" />
+                      <CheckIcon className="absolute top-3 right-3 w-5 h-5 text-primary" />
                     )}
                   </button>
                 ))}
@@ -703,65 +551,7 @@ const Settings: React.FC = () => {
               icon="🌈" 
               description="Customize your brand color throughout the interface"
             >
-              <div className="space-y-6">
-                <div className="grid grid-cols-5 gap-3">
-                  {colorPresets.map((preset) => (
-                    <button
-                      key={preset.value}
-                      onClick={() => handleColorChange(preset.value)}
-                      className={classNames(
-                        'relative h-12 rounded-xl border-2 transition-all duration-300 hover:shadow-lg group',
-                        primaryColor === preset.value
-                          ? 'border-gray-900 dark:border-white scale-110 shadow-lg ring-2 ring-offset-2 ring-primary-500'
-                          : 'border-gray-300 dark:border-gray-600 hover:scale-110 hover:border-gray-400 dark:hover:border-gray-500'
-                      )}
-                      style={{ backgroundColor: preset.value }}
-                      title={preset.name}
-                    >
-                      {primaryColor === preset.value && (
-                        <CheckIcon className="absolute inset-0 m-auto w-6 h-6 text-white drop-shadow-lg" />
-                      )}
-                      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                        {preset.name}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <label className={classNames(
-                      'block text-sm font-medium mb-2',
-                      darkMode ? 'text-gray-300' : 'text-gray-700'
-                    )}>Custom Color</label>
-                    <input
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => handleColorChange(e.target.value)}
-                      className="h-12 w-20 rounded-xl cursor-pointer border-2 border-gray-300 dark:border-gray-600 hover:border-primary-500 transition-colors"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className={classNames(
-                      'block text-sm font-medium mb-2',
-                      darkMode ? 'text-gray-300' : 'text-gray-700'
-                    )}>Hex Value</label>
-                    <input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => handleColorChange(e.target.value)}
-                      placeholder="#64748b"
-                      className={classNames(
-                        'w-full px-4 py-3 rounded-xl border-2 transition-all duration-200',
-                        darkMode
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-primary-500'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-primary-500',
-                        'focus:outline-none focus:ring-2 focus:ring-primary-500/20'
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
+              <ColorCustomizer />
             </SettingsCard>
           </div>
         );
@@ -782,27 +572,25 @@ const Settings: React.FC = () => {
                     className={classNames(
                       'relative p-4 rounded-xl border-2 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg text-center',
                       fontSize === preset.value
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md scale-105'
-                        : darkMode
-                          ? 'border-gray-600 bg-gray-700/50 hover:border-primary-500 hover:bg-gray-600/50'
-                          : 'border-gray-200 bg-gray-50/50 hover:border-primary-400 hover:bg-white'
+                        ? 'border-primary bg-primary/10 shadow-md scale-105'
+                        : 'border-border bg-muted/50 hover:border-primary hover:bg-muted'
                     )}
                   >
                     <div className={classNames(
                       'font-semibold mb-2 transition-all duration-300',
                       preset.preview,
                       fontSize === preset.value
-                        ? 'text-primary-700 dark:text-primary-300'
-                        : darkMode ? 'text-gray-200' : 'text-gray-900'
+                        ? 'text-primary'
+                        : 'text-foreground'
                     )}>Aa</div>
                     <div className={classNames(
                       'text-xs font-medium',
                       fontSize === preset.value
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : darkMode ? 'text-gray-400' : 'text-gray-600'
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
                     )}>{preset.label}</div>
                     {fontSize === preset.value && (
-                      <CheckIcon className="absolute top-2 right-2 w-4 h-4 text-primary-600" />
+                      <CheckIcon className="absolute top-2 right-2 w-4 h-4 text-primary" />
                     )}
                   </button>
                 ))}
@@ -856,12 +644,9 @@ const Settings: React.FC = () => {
                 />
                 
                 {autoRefresh && (
-                  <div className="space-y-4 pl-4 border-l-2 border-primary-500/30">
+                  <div className="space-y-4 pl-4 border-l-2 border-primary/30">
                     <div>
-                      <label className={classNames(
-                        'block text-sm font-medium mb-3',
-                        darkMode ? 'text-gray-200' : 'text-gray-800'
-                      )}>
+                      <label className="block text-sm font-medium mb-3 text-foreground">
                         Refresh Interval
                       </label>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -872,10 +657,8 @@ const Settings: React.FC = () => {
                             className={classNames(
                               'p-3 text-sm rounded-lg border-2 transition-all duration-200 hover:scale-105',
                               refreshInterval === interval.value
-                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                                : darkMode
-                                  ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-primary-500'
-                                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400'
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border bg-muted text-foreground hover:border-primary'
                             )}
                           >
                             {interval.label}
@@ -916,10 +699,7 @@ const Settings: React.FC = () => {
                 />
                 
                 <div>
-                  <label className={classNames(
-                    'block text-sm font-medium mb-3',
-                    darkMode ? 'text-gray-200' : 'text-gray-800'
-                  )}>
+                  <label className="block text-sm font-medium mb-3 text-foreground">
                     Toast Position
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -933,10 +713,8 @@ const Settings: React.FC = () => {
                         className={classNames(
                           'p-3 text-sm rounded-lg border-2 transition-all duration-200 hover:scale-105',
                           toastPosition === position.value
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                            : darkMode
-                              ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-primary-500'
-                              : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-400'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border bg-muted text-foreground hover:border-primary'
                         )}
                       >
                         {position.label}
@@ -1124,7 +902,7 @@ const Settings: React.FC = () => {
               description="Manage stored data and temporary files"
             >
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted border-border">
+                <div className="flex items-center justify-between p-4 rounded-lg border content-area">
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground">Clear Application Cache</h4>
                     <p className="text-sm mt-1 text-muted-foreground">Remove temporary files, cached responses, and stored data</p>
@@ -1149,22 +927,10 @@ const Settings: React.FC = () => {
             >
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={classNames(
-                    'p-4 rounded-lg border text-center',
-                    darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-                  )}>
-                    <ArrowDownTrayIcon className={classNames(
-                      'w-8 h-8 mx-auto mb-2',
-                      darkMode ? 'text-gray-400' : 'text-gray-500'
-                    )} />
-                    <h4 className={classNames(
-                      'font-medium mb-2',
-                      darkMode ? 'text-white' : 'text-gray-900'
-                    )}>Export Settings</h4>
-                    <p className={classNames(
-                      'text-sm mb-4',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>Download your current settings as a backup file</p>
+                  <div className="card p-4 text-center">
+                    <ArrowDownTrayIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <h4 className="font-medium mb-2 text-foreground">Export Settings</h4>
+                    <p className="text-sm mb-4 text-muted-foreground">Download your current settings as a backup file</p>
                     <ActionButton
                       onClick={handleExportSettings}
                       loading={exporting}
@@ -1177,22 +943,10 @@ const Settings: React.FC = () => {
                     </ActionButton>
                   </div>
                   
-                  <div className={classNames(
-                    'p-4 rounded-lg border text-center',
-                    darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-                  )}>
-                    <ArrowUpTrayIcon className={classNames(
-                      'w-8 h-8 mx-auto mb-2',
-                      darkMode ? 'text-gray-400' : 'text-gray-500'
-                    )} />
-                    <h4 className={classNames(
-                      'font-medium mb-2',
-                      darkMode ? 'text-white' : 'text-gray-900'
-                    )}>Import Settings</h4>
-                    <p className={classNames(
-                      'text-sm mb-4',
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    )}>Restore settings from a previously exported file</p>
+                  <div className="card p-4 text-center">
+                    <ArrowUpTrayIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <h4 className="font-medium mb-2 text-foreground">Import Settings</h4>
+                    <p className="text-sm mb-4 text-muted-foreground">Restore settings from a previously exported file</p>
                     <label className="block">
                       <input
                         type="file"
@@ -1224,11 +978,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className={classNames(
-      'min-h-full w-full',
-      darkMode ? 'bg-transparent' : 'bg-transparent'
-    )}>
-      <div className="w-full h-full px-0 py-0">
+    <div className="page-container p-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">
@@ -1245,10 +995,7 @@ const Settings: React.FC = () => {
             <div className="card rounded-lg border p-4 space-y-4 transition-all duration-300 hover:shadow-lg">
               {/* Search */}
               <div className="relative">
-                <MagnifyingGlassIcon className={classNames(
-                  'absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4',
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                )} />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search settings..."
@@ -1272,12 +1019,12 @@ const Settings: React.FC = () => {
                         'w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 text-left group hover:shadow-md',
                         isActive
                           ? 'bg-primary text-primary-foreground shadow-lg'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
+                          : 'text-foreground hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
                       )}
                     >
                       <Icon className={classNames(
                         'h-5 w-5 mr-3 transition-all duration-300 group-hover:scale-110',
-                        isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'
+                        isActive ? 'text-primary-foreground' : 'text-foreground group-hover:text-foreground'
                       )} />
                       <div className="flex-1 text-left">
                         <div className="text-sm font-medium">{category.name}</div>
@@ -1285,7 +1032,7 @@ const Settings: React.FC = () => {
                           'text-xs mt-0.5',
                           isActive 
                             ? 'text-primary-foreground/80' 
-                            : 'text-muted-foreground'
+                            : 'text-foreground/70'
                         )}>
                           {category.description}
                         </div>
@@ -1305,56 +1052,38 @@ const Settings: React.FC = () => {
 
             {/* Action Buttons - Always visible */}
             <div className={classNames(
-              "card mt-6 p-4 rounded-lg border flex items-center justify-between transition-all duration-300 hover:shadow-lg",
-              hasChanges ? "ring-2 ring-orange-500/50" : ""
+              "card mt-6 p-4 rounded-lg border flex items-center justify-between transition-all duration-300 hover:shadow-lg"
             )}>
               <div className="flex items-center">
-                {hasChanges ? (
-                  <>
-                    <div className={classNames(
-                      'w-2 h-2 rounded-full mr-2 animate-pulse',
-                      'bg-orange-500'
-                    )}></div>
-                    <p className="text-sm font-medium text-foreground">
-                      You have unsaved changes
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className={classNames(
-                      'w-2 h-2 rounded-full mr-2',
-                      'bg-green-500'
-                    )}></div>
-                    <p className="text-sm font-medium text-foreground">
-                      All changes saved
-                    </p>
-                  </>
-                )}
+                <div className={classNames(
+                  'w-2 h-2 rounded-full mr-2',
+                  'bg-green-500'
+                )}></div>
+                <p className="text-sm font-medium text-foreground">
+                  Settings are saved automatically
+                </p>
               </div>
               <div className="flex space-x-3">
                 <ActionButton
                   onClick={handleReset}
                   variant="outline"
                   size="sm"
-                  disabled={!hasChanges}
                 >
-                  Reset
+                  Reset to Defaults
                 </ActionButton>
                 <ActionButton
                   onClick={handleSave}
                   loading={saving}
-                  variant={hasChanges ? "primary" : "secondary"}
+                  variant="secondary"
                   size="sm"
                   icon={saving ? undefined : CheckIcon}
-                  disabled={!hasChanges && !saving}
                 >
-                  {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
+                  {saving ? 'Confirming...' : 'All Saved'}
                 </ActionButton>
               </div>
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };

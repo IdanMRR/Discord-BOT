@@ -323,13 +323,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <h1 className={classNames(
                 "text-4xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 Leveling System
               </h1>
               <p className={classNames(
                 "text-lg font-medium mt-2",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 Manage XP, levels, and leaderboards
               </p>
@@ -342,13 +342,12 @@ const LevelingPage: React.FC = () => {
               onClick={handleRefresh}
               disabled={refreshing || !serverId}
               className={classNames(
-                "flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors",
-                darkMode ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100",
-                (!serverId || refreshing) ? "opacity-50 cursor-not-allowed" : ""
+                "btn-refresh",
+                (refreshing || !serverId) ? "spinning" : ""
               )}
             >
-              <ArrowPathIcon className={classNames("h-4 w-4", refreshing ? "animate-spin" : "")} />
-              <span>Refresh</span>
+              <ArrowPathIcon className="icon" />
+              <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
 
             {/* Toggle Switch */}
@@ -406,10 +405,7 @@ const LevelingPage: React.FC = () => {
         <>
           {/* Status Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -427,7 +423,7 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 System Status
               </p>
@@ -443,10 +439,7 @@ const LevelingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -460,13 +453,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 Active Users
               </p>
               <p className={classNames(
                 "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 {leaderboard?.totalMembers.toLocaleString() || '0'}
               </p>
@@ -474,10 +467,7 @@ const LevelingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -491,13 +481,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 XP per Message
               </p>
               <p className={classNames(
                 "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 {settings?.xp_per_message || 15}
               </p>
@@ -505,10 +495,7 @@ const LevelingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -522,13 +509,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
               Level Formula
               </p>
               <p className={classNames(
                 "text-xl font-bold capitalize",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 {settings?.level_formula || 'quadratic'}
               </p>
@@ -539,10 +526,7 @@ const LevelingPage: React.FC = () => {
 
       {/* Additional Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -556,13 +540,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 XP Cooldown
               </p>
               <p className={classNames(
                 "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 {settings?.xp_cooldown ? `${settings.xp_cooldown}s` : '60s'}
               </p>
@@ -570,10 +554,7 @@ const LevelingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <div className="content-area rounded-lg p-6">
           <div className="flex items-center">
             <div className={classNames(
               "p-3 rounded-lg mr-4",
@@ -587,13 +568,13 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 XP Multiplier
               </p>
               <p className={classNames(
                 "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 {settings?.xp_multiplier ? `${settings.xp_multiplier}x` : '1.0x'}
               </p>
@@ -603,7 +584,7 @@ const LevelingPage: React.FC = () => {
 
         <div className={classNames(
           "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"  
+          darkMode ? "content-area" : "content-area"  
         )}>
           <div className="flex items-center">
             <div className={classNames(
@@ -622,7 +603,7 @@ const LevelingPage: React.FC = () => {
             <div>
               <p className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 Voice XP
               </p>
@@ -640,17 +621,14 @@ const LevelingPage: React.FC = () => {
       </div>
 
       {/* Leaderboard */}
-      <div className={classNames(
-        "rounded-lg border",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="content-area rounded-lg">
+        <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <TrophyIcon className="h-6 w-6 mr-3 text-yellow-500" />
+              <TrophyIcon className="h-6 w-6 mr-3 text-warning" />
               <h2 className={classNames(
                 "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
+                darkMode ? "text-white" : "text-foreground"
               )}>
                 Leaderboard
               </h2>
@@ -674,7 +652,7 @@ const LevelingPage: React.FC = () => {
                 
                 <span className={classNames(
                   "px-3 py-1 text-sm",
-                  darkMode ? "text-gray-300" : "text-gray-600"
+                  darkMode ? "text-gray-300" : "text-muted-foreground"
                 )}>
                   Page {currentPage} of {leaderboard.totalPages}
                 </span>
@@ -702,11 +680,11 @@ const LevelingPage: React.FC = () => {
             <div className="text-center py-12">
               <TrophyIcon className={classNames(
                 "h-12 w-12 mx-auto mb-4",
-                darkMode ? "text-gray-600" : "text-gray-400"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )} />
               <p className={classNames(
                 "text-lg",
-                darkMode ? "text-gray-400" : "text-gray-600"
+                darkMode ? "text-muted-foreground" : "text-muted-foreground"
               )}>
                 No users have earned XP yet
               </p>
@@ -729,10 +707,7 @@ const LevelingPage: React.FC = () => {
                 return (
                   <div
                     key={user.user_id}
-                    className={classNames(
-                      "flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-opacity-80 transition-colors",
-                      darkMode ? "bg-gray-700 border-gray-600 hover:bg-gray-600" : "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                    )}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border cursor-pointer hover:bg-muted/50 transition-colors bg-muted/20"
                     onClick={() => handleOpenUserModal(user)}
                   >
                     <div className="flex items-center space-x-4">
@@ -742,7 +717,7 @@ const LevelingPage: React.FC = () => {
                         ) : (
                           <span className={classNames(
                             "text-lg font-bold",
-                            darkMode ? "text-gray-300" : "text-gray-600"
+                            darkMode ? "text-gray-300" : "text-muted-foreground"
                           )}>
                             #{user.rank}
                           </span>
@@ -752,13 +727,13 @@ const LevelingPage: React.FC = () => {
                       <div>
                         <h3 className={classNames(
                           "font-semibold",
-                          darkMode ? "text-white" : "text-gray-900"
+                          darkMode ? "text-white" : "text-foreground"
                         )}>
                           {user.userData.displayName}
                         </h3>
                         <p className={classNames(
                           "text-sm",
-                          darkMode ? "text-gray-400" : "text-gray-600"
+                          darkMode ? "text-muted-foreground" : "text-muted-foreground"
                         )}>
                           Level {user.level} • {user.xp.toLocaleString()} XP • {user.message_count.toLocaleString()} messages
                         </p>
@@ -791,31 +766,22 @@ const LevelingPage: React.FC = () => {
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={classNames(
-            "bg-white rounded-lg shadow-xl max-w-md w-full mx-4",
-            darkMode ? "bg-gray-800" : "bg-white"
-          )}>
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center space-x-3">
-                <div className={classNames(
-                  "p-2 rounded-lg",
-                  darkMode ? "bg-blue-900/20" : "bg-blue-100"
-                )}>
-                  <UserIcon className={classNames(
-                    "h-6 w-6",
-                    darkMode ? "text-blue-400" : "text-blue-600"
-                  )} />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <UserIcon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <h3 className={classNames(
                     "text-lg font-semibold",
-                    darkMode ? "text-white" : "text-gray-900"
+                    darkMode ? "text-white" : "text-foreground"
                   )}>
                     {selectedUser.userData.displayName}
                   </h3>
                   <p className={classNames(
                     "text-sm",
-                    darkMode ? "text-gray-400" : "text-gray-600"
+                    darkMode ? "text-muted-foreground" : "text-muted-foreground"
                   )}>
                     Rank #{selectedUser.rank}
                   </p>
@@ -825,7 +791,7 @@ const LevelingPage: React.FC = () => {
                 onClick={handleCloseUserModal}
                 className={classNames(
                   "p-2 rounded-lg transition-colors",
-                  darkMode ? "text-gray-400 hover:bg-gray-700" : "text-gray-600 hover:bg-gray-100"
+                  darkMode ? "text-muted-foreground hover:bg-gray-700" : "text-muted-foreground hover:bg-gray-100"
                 )}
               >
                 <XMarkIcon className="h-5 w-5" />
@@ -835,37 +801,19 @@ const LevelingPage: React.FC = () => {
             <div className="p-6">
               {/* User Stats */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className={classNames(
-                  "text-center p-4 rounded-lg",
-                  darkMode ? "bg-gray-700" : "bg-gray-50"
-                )}>
-                  <p className={classNames(
-                    "text-2xl font-bold",
-                    darkMode ? "text-white" : "text-gray-900"
-                  )}>
+                <div className="text-center p-4 rounded-lg bg-muted/30">
+                  <p className="text-2xl font-bold text-foreground">
                     {selectedUser.level}
                   </p>
-                  <p className={classNames(
-                    "text-sm",
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  )}>
+                  <p className="text-sm text-muted-foreground">
                     Level
                   </p>
                 </div>
-                <div className={classNames(
-                  "text-center p-4 rounded-lg",
-                  darkMode ? "bg-gray-700" : "bg-gray-50"
-                )}>
-                  <p className={classNames(
-                    "text-2xl font-bold",
-                    darkMode ? "text-white" : "text-gray-900"
-                  )}>
+                <div className="text-center p-4 rounded-lg bg-muted/30">
+                  <p className="text-2xl font-bold text-foreground">
                     {selectedUser.xp.toLocaleString()}
                   </p>
-                  <p className={classNames(
-                    "text-sm",
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  )}>
+                  <p className="text-sm text-muted-foreground">
                     Total XP
                   </p>
                 </div>
@@ -888,7 +836,7 @@ const LevelingPage: React.FC = () => {
                       "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                       darkMode 
                         ? "bg-gray-700 border-gray-600 text-white" 
-                        : "bg-white border-gray-300 text-gray-900"
+                        : "bg-white border-gray-300 text-foreground"
                     )}
                     placeholder="Enter XP amount..."
                   />
@@ -909,7 +857,7 @@ const LevelingPage: React.FC = () => {
                       "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                       darkMode 
                         ? "bg-gray-700 border-gray-600 text-white" 
-                        : "bg-white border-gray-300 text-gray-900"
+                        : "bg-white border-gray-300 text-foreground"
                     )}
                     placeholder="Reason for change..."
                   />
@@ -934,7 +882,7 @@ const LevelingPage: React.FC = () => {
                 </div>
 
                 {/* Quick Level Actions */}
-                <div className="border-t pt-4 dark:border-gray-700">
+                <div className="border-t pt-4 border-border">
                   <p className={classNames(
                     "text-sm font-medium mb-3",
                     darkMode ? "text-gray-300" : "text-gray-700"

@@ -189,6 +189,14 @@ export interface User {
   public_flags?: number;
   permissions?: string[];
   isAdmin?: boolean;
+  accessibleServers?: AccessibleServer[];
+  serverPermissions?: Record<string, string[]>;
+}
+
+export interface AccessibleServer {
+  id: string;
+  name: string;
+  permissions: string[];
 }
 
 export interface AuthState {

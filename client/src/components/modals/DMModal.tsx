@@ -76,7 +76,7 @@ const DMModal: React.FC<DMModalProps> = ({
             >
               <Dialog.Panel className={classNames(
                 "w-full max-w-3xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all border",
-                darkMode ? "bg-gray-800/95 backdrop-blur-lg text-white border-gray-700" : "bg-white/95 backdrop-blur-lg text-gray-900 border-gray-200"
+                "content-area backdrop-blur-lg"
         )}>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

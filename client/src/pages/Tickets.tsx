@@ -263,9 +263,9 @@ const TicketsContent: React.FC = () => {
       return (
         <span className={classNames(
           "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm",
-          darkMode ? "bg-gray-800/50 text-gray-400 ring-1 ring-gray-600/50" : "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
+          "bg-muted text-muted-foreground ring-1 ring-border"
         )}>
-          <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+          <div className="w-2 h-2 bg-muted-foreground rounded-full mr-2"></div>
           ❌ Closed
         </span>
       );
@@ -403,21 +403,17 @@ const TicketsContent: React.FC = () => {
                 onClick={() => fetchTickets(currentPage)}
                 disabled={loading}
                 className={classNames(
-                  "inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
-                  darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
-                  loading ? "opacity-50 cursor-not-allowed" : ""
+                  "btn-refresh",
+                  loading ? "spinning" : ""
                 )}
                 title="Refresh tickets"
               >
-                <ArrowPathIcon className={classNames(
-                  "h-4 w-4 mr-2",
-                  loading ? "animate-spin" : ""
-                )} />
-                Refresh
+                <ArrowPathIcon className="icon" />
+                <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
               </button>
               <div className={classNames(
                 'flex items-center px-3 py-1 rounded-lg text-sm',
-                darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                'bg-muted text-muted-foreground'
               )}>
                 Total: {totalTickets}
               </div>
@@ -435,21 +431,21 @@ const TicketsContent: React.FC = () => {
 
         <Card className={classNames(
           "shadow-xl border-0 rounded-xl overflow-hidden",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+          "bg-card ring-1 ring-border"
         )}>
         <div className={classNames(
           "p-6 border-b",
-          darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
+          "border-border bg-muted"
         )}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className={classNames(
                 "text-xl font-semibold",
-                darkMode ? "text-white" : "text-gray-900"
+                "text-foreground"
               )}>Tickets Overview</h3>
               <span className={classNames(
                 "text-sm font-medium",
-                darkMode ? "text-gray-300" : "text-gray-600"
+                "text-muted-foreground"
               )}>
                 {totalTickets} total tickets • 
                 {statusFilter === 'all' 
@@ -481,14 +477,14 @@ const TicketsContent: React.FC = () => {
 
         <div className={classNames(
           "p-6",
-          darkMode ? "bg-gray-900" : "bg-white"
+          "bg-background"
         )}>
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <LoadingSpinner className="text-blue-500" size="lg" />
               <span className={classNames(
                 "ml-3 text-lg",
-                darkMode ? "text-gray-300" : "text-gray-600"
+                "text-muted-foreground"
               )}>Loading tickets...</span>
             </div>
           ) : tickets.length === 0 ? (
@@ -670,7 +666,7 @@ const TicketsContent: React.FC = () => {
                         </td>
                         <td className={classNames(
                           "px-6 py-4 whitespace-nowrap text-sm",
-                          darkMode ? "text-gray-300" : "text-gray-600"
+                          "text-muted-foreground"
                         )}>
                           {ticket.rating ? (
                             <div className="flex items-center space-x-1">
@@ -795,7 +791,7 @@ const TicketsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-2xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "bg-card ring-1 ring-border"
                 )}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
@@ -965,7 +961,7 @@ const TicketsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-2xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "bg-card ring-1 ring-border"
                 )}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
@@ -1092,13 +1088,13 @@ const TicketsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-4xl transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "bg-card ring-1 ring-border"
                 )}>
                   <Dialog.Title
                     as="h3"
                     className={classNames(
                       "text-xl font-semibold leading-6 flex items-center justify-between mb-4",
-                      darkMode ? "text-white" : "text-gray-900"
+                      "text-foreground"
                     )}
                   >
                     <div className="flex items-center">
@@ -1131,7 +1127,7 @@ const TicketsContent: React.FC = () => {
                           <LoadingSpinner size="lg" className="text-blue-500" />
                           <p className={classNames(
                             "mt-4 text-lg",
-                            darkMode ? "text-gray-300" : "text-gray-600"
+                            "text-muted-foreground"
                           )}>Loading transcript...</p>
                         </div>
                       </div>
@@ -1216,7 +1212,7 @@ const TicketsContent: React.FC = () => {
                                     {embed.title && (
                                       <p className={classNames(
                                         "font-semibold mb-1",
-                                        darkMode ? "text-white" : "text-gray-900"
+                                        "text-foreground"
                                       )}>{embed.title}</p>
                                     )}
                                     {embed.description && (
@@ -1315,7 +1311,7 @@ const TicketsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-2xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "bg-card ring-1 ring-border"
                 )}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">

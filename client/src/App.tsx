@@ -2,13 +2,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ThemeProvider as OldThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './components/providers/ThemeProvider';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ToastPortal from './components/common/ToastPortal';
 
-// Stagewise imports (only in development)
+// Stagewise imports
 import { StagewiseToolbar } from '@stagewise/toolbar-react';
 import ReactPlugin from '@stagewise-plugins/react';
+import { environment } from './config/environment';
 
 // Import global settings CSS
 import './styles/global-settings.css';
@@ -23,8 +26,7 @@ import Admin from './pages/Admin';
 import NoPermissions from './pages/NoPermissions';
 import ServerDashboardLayout from './components/layout/ServerDashboardLayout';
 import ServerSelection from './pages/ServerSelection';
-// Fix import for Settings component
-const Settings = React.lazy(() => import('./pages/Settings'));
+import Settings from './pages/Settings';
 
 
 // Protected Route Component
@@ -112,124 +114,17 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-// Settings Applier Component - applies theme and modern settings
+// Settings Applier Component - applies custom settings using clean CSS variables
 const SettingsApplier: React.FC = () => {
   const { settings } = useSettings();
-  const { darkMode } = useTheme();
 
-  // Apply settings immediately on load
+  // Apply custom settings
   React.useEffect(() => {
-    // Apply font size scaling immediately
+    console.log('SettingsApplier applying settings:', settings);
     const root = document.documentElement;
-    const fontSizeMap = {
-      small: '0.9',
-      medium: '1.0', 
-      large: '1.1'
-    };
-    
-    const scale = fontSizeMap[settings.fontSize] || '1.0';
-    root.style.setProperty('--font-scale', scale);
-    
-    // Apply primary color immediately
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    };
-    
-    const rgb = hexToRgb(settings.primaryColor);
-    if (rgb) {
-      root.style.setProperty('--primary-color', settings.primaryColor);
-      root.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-    }
-    
-    // Apply other settings
     const body = document.body;
-    if (settings.animationsEnabled) {
-      body.classList.remove('no-animations');
-    } else {
-      body.classList.add('no-animations');
-    }
     
-    if (settings.compactMode) {
-      body.classList.add('compact-mode');
-    } else {
-      body.classList.remove('compact-mode');
-    }
-  }, [settings.animationsEnabled, settings.compactMode, settings.fontSize, settings.primaryColor]);
-
-  React.useEffect(() => {
-    // Apply dark mode classes to all necessary elements
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
-    const themeColorMeta = document.getElementById('theme-color-meta') as HTMLMetaElement;
-    
-    if (darkMode) {
-      html.classList.add('dark');
-      body.classList.add('dark');
-      if (root) root.classList.add('dark');
-      // Update browser theme color for dark mode - use the dark mode primary color
-      if (themeColorMeta) {
-        themeColorMeta.content = 'hsl(263, 70%, 70%)'; // Dark mode primary color
-      }
-    } else {
-      html.classList.remove('dark');
-      body.classList.remove('dark');
-      if (root) root.classList.remove('dark');
-      // Update browser theme color for light mode - use the primary color or user's custom color
-      if (themeColorMeta) {
-        themeColorMeta.content = settings.primaryColor || 'hsl(262, 83%, 58%)'; // Light mode primary color
-      }
-    }
-  }, [darkMode, settings.primaryColor]);
-
-  React.useEffect(() => {
-    // Apply primary color CSS variables
-    const root = document.documentElement;
-    
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    };
-    
-    const rgb = hexToRgb(settings.primaryColor);
-    if (rgb) {
-      root.style.setProperty('--primary-color', settings.primaryColor);
-      root.style.setProperty('--primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-    }
-  }, [settings.primaryColor]);
-
-  React.useEffect(() => {
-    // Apply animations setting
-    const body = document.body;
-    if (settings.animationsEnabled) {
-      body.classList.remove('no-animations');
-    } else {
-      body.classList.add('no-animations');
-    }
-  }, [settings.animationsEnabled]);
-
-  React.useEffect(() => {
-    // Apply modern compact mode
-    const body = document.body;
-    if (settings.compactMode) {
-      body.classList.add('compact-mode');
-    } else {
-      body.classList.remove('compact-mode');
-    }
-  }, [settings.compactMode]);
-
-  React.useEffect(() => {
     // Apply font size scaling
-    const root = document.documentElement;
     const fontSizeMap = {
       small: '0.9',
       medium: '1.0', 
@@ -238,7 +133,63 @@ const SettingsApplier: React.FC = () => {
     
     const scale = fontSizeMap[settings.fontSize] || '1.0';
     root.style.setProperty('--font-scale', scale);
-  }, [settings.fontSize]);
+    
+    // Convert hex to HSL and apply primary color
+    const hexToHsl = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!result) return null;
+      
+      let r = parseInt(result[1], 16) / 255;
+      let g = parseInt(result[2], 16) / 255;
+      let b = parseInt(result[3], 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      
+      return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+      };
+    };
+    
+    const hsl = hexToHsl(settings.primaryColor);
+    
+    if (hsl) {
+      // Update CSS custom properties
+      root.style.setProperty('--primary-hue', hsl.h.toString());
+      root.style.setProperty('--primary-saturation', `${hsl.s}%`);
+      
+      console.log(`Primary color updated: H:${hsl.h} S:${hsl.s}% L:${hsl.l}%`);
+    }
+    
+    // Apply animations setting
+    if (settings.animationsEnabled) {
+      body.classList.remove('no-animations');
+    } else {
+      body.classList.add('no-animations');
+    }
+    
+    // Apply compact mode
+    if (settings.compactMode) {
+      body.classList.add('compact-mode');
+    } else {
+      body.classList.remove('compact-mode');
+    }
+  }, [settings]);
 
   return null;
 };
@@ -250,13 +201,17 @@ function App() {
   }, []);
   return (
     <ErrorBoundary>
-      <ThemeProvider>
+      <OldThemeProvider>
         <AuthProvider>
           <SettingsProvider>
-            <Router>
+            <ThemeProvider>
+              <Router>
               <div className="App app-container">
                 <SettingsApplier />
                 <AppRoutes />
+              </div>
+              {/* Use ToastPortal to ensure toasts appear above everything */}
+              <ToastPortal>
                 <Toaster 
                 position="top-center" 
                 containerStyle={{
@@ -264,26 +219,26 @@ function App() {
                   top: '20px',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  zIndex: 999999,
+                  zIndex: 2147483647, // Maximum z-index value
                   pointerEvents: 'none',
                 }}
                 toastOptions={{
-                  duration: 3000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                    fontWeight: '500',
-                    borderRadius: '12px',
-                    border: '1px solid #4f4f4f',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
-                    zIndex: 999999,
-                    pointerEvents: 'auto',
-                    minWidth: '300px',
-                    maxWidth: '500px',
-                    padding: '16px 20px',
-                    fontSize: '14px',
-                    backdropFilter: 'blur(10px)',
-                  },
+                duration: 3000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                  fontWeight: '500',
+                  borderRadius: '12px',
+                  border: '1px solid #4f4f4f',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+                  zIndex: 2147483647, // Maximum z-index value
+                  pointerEvents: 'auto',
+                  minWidth: '300px',
+                  maxWidth: '500px',
+                  padding: '16px 20px',
+                  fontSize: '14px',
+                  backdropFilter: 'blur(10px)',
+                },
                   success: {
                     duration: 2500,
                     style: {
@@ -321,18 +276,21 @@ function App() {
                   },
                 }}
                 />
-              </div>
-            </Router>
+              </ToastPortal>
+              </Router>
+            </ThemeProvider>
           </SettingsProvider>
         </AuthProvider>
-      </ThemeProvider>
+      </OldThemeProvider>
       
       {/* Stagewise Toolbar - only in development */}
-      <StagewiseToolbar 
-        config={{
-          plugins: [ReactPlugin]
-        }}
-      />
+      {environment.isDevelopment && (
+        <StagewiseToolbar 
+          config={{
+            plugins: [ReactPlugin]
+          }}
+        />
+      )}
     </ErrorBoundary>
   );
 }

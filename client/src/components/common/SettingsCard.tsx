@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -27,13 +26,12 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   collapsible = false,
   defaultExpanded = true
 }) => {
-  const { darkMode } = useTheme();
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
   const cardClasses = classNames(
     "rounded-lg border transition-all duration-200",
-    darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200",
-    variant === 'highlighted' && (darkMode ? "bg-gray-750 border-purple-600/30" : "bg-purple-50 border-purple-200"),
+    "bg-card border-border",
+    variant === 'highlighted' && "bg-accent/50 border-primary/30",
     variant === 'compact' ? "p-4" : "p-6",
     "hover:shadow-md",
     className
@@ -42,12 +40,12 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   const titleClasses = classNames(
     "font-semibold flex items-center",
     variant === 'compact' ? "text-lg" : "text-xl",
-    darkMode ? "text-white" : "text-gray-900"
+    "text-card-foreground"
   );
 
   const descriptionClasses = classNames(
     "text-sm mt-1",
-    darkMode ? "text-gray-400" : "text-gray-600"
+    "text-muted-foreground"
   );
 
   const contentClasses = classNames(
@@ -82,10 +80,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
             isExpanded ? "rotate-90" : "rotate-0"
           )}>
             <svg 
-              className={classNames(
-                "w-5 h-5",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )} 
+              className="w-5 h-5 text-muted-foreground"
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"

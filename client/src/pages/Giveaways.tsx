@@ -139,9 +139,9 @@ const Giveaways: React.FC = () => {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
-      case 'ended': return 'text-gray-600 bg-gray-100';
+      case 'ended': return 'text-muted-foreground bg-muted/50';
       case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-muted-foreground bg-muted/50';
     }
   };
 
@@ -150,7 +150,7 @@ const Giveaways: React.FC = () => {
       <div className="p-6">
         <Card>
           <div className="text-center py-8">
-            <p className="text-gray-500">Please select a server to manage giveaways.</p>
+            <p className="text-muted-foreground">Please select a server to manage giveaways.</p>
           </div>
         </Card>
       </div>
@@ -163,7 +163,7 @@ const Giveaways: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Giveaways</h1>
+            <h1 className="text-2xl font-bold text-foreground">Giveaways</h1>
             <p className="text-gray-600">Manage server giveaways and contests</p>
           </div>
           <button
@@ -183,7 +183,7 @@ const Giveaways: React.FC = () => {
               className={`px-4 py-2 rounded-lg capitalize transition-colors ${
                 filter === status
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 text-foreground hover:bg-gray-200'
               }`}
             >
               {status}
@@ -201,7 +201,7 @@ const Giveaways: React.FC = () => {
             {giveaways.length === 0 ? (
               <Card>
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No giveaways found.</p>
+                  <p className="text-muted-foreground">No giveaways found.</p>
                 </div>
               </Card>
             ) : (
@@ -210,7 +210,7 @@ const Giveaways: React.FC = () => {
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-foreground">
                           🎉 {giveaway.title}
                         </h3>
                         <p className="text-gray-600">🏆 {giveaway.prize}</p>
@@ -222,21 +222,21 @@ const Giveaways: React.FC = () => {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-500">Entries</p>
+                        <p className="text-muted-foreground">Entries</p>
                         <p className="font-medium">📊 {giveaway.entryCount || 0}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Winners</p>
+                        <p className="text-muted-foreground">Winners</p>
                         <p className="font-medium">👑 {giveaway.winner_count}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Time Remaining</p>
+                        <p className="text-muted-foreground">Time Remaining</p>
                         <p className="font-medium">
                           ⏰ {formatTimeRemaining(giveaway.timeRemaining || 0)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Created</p>
+                        <p className="text-muted-foreground">Created</p>
                         <p className="font-medium">
                           📅 {new Date(giveaway.created_at).toLocaleDateString()}
                         </p>
@@ -259,7 +259,7 @@ const Giveaways: React.FC = () => {
                         <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
                           End Now
                         </button>
-                        <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors">
+                        <button className="px-3 py-1 bg-gray-100 text-foreground rounded text-sm hover:bg-gray-200 transition-colors">
                           Cancel
                         </button>
                       </div>
@@ -278,7 +278,7 @@ const Giveaways: React.FC = () => {
               <h2 className="text-xl font-bold mb-4">🎉 Create New Giveaway</h2>
               <form onSubmit={handleCreateGiveaway} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Title *
                   </label>
                   <input
@@ -286,13 +286,13 @@ const Giveaways: React.FC = () => {
                     required
                     value={createForm.title}
                     onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Amazing Prize Giveaway"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Prize *
                   </label>
                   <input
@@ -300,14 +300,14 @@ const Giveaways: React.FC = () => {
                     required
                     value={createForm.prize}
                     onChange={(e) => setCreateForm({...createForm, prize: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="$100 Discord Nitro"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Duration (minutes) *
                     </label>
                     <input
@@ -317,11 +317,11 @@ const Giveaways: React.FC = () => {
                       max="43200"
                       value={createForm.duration}
                       onChange={(e) => setCreateForm({...createForm, duration: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Winners *
                     </label>
                     <input
@@ -331,19 +331,19 @@ const Giveaways: React.FC = () => {
                       max="20"
                       value={createForm.winnerCount}
                       onChange={(e) => setCreateForm({...createForm, winnerCount: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Description
                   </label>
                   <textarea
                     value={createForm.description}
                     onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
                     placeholder="Additional details about the giveaway..."
                   />
@@ -353,7 +353,7 @@ const Giveaways: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="px-4 py-2 text-foreground bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     Cancel
                   </button>

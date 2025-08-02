@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme as useNewTheme } from '../providers/ThemeProvider';
 import { wsService } from '../../services/websocket';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../common/Logo';
 import {
-  BellIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
@@ -35,29 +35,19 @@ const Header: React.FC<HeaderProps> = ({
   onSidebarToggle 
 }) => {
   const { user, logout } = useAuth();
-  const { darkMode, toggleTheme } = useTheme();
+  const { toggleTheme: oldToggleTheme } = useTheme();
+  const { isDark, toggleTheme: newToggleTheme } = useNewTheme();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = React.useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = React.useState(0);
+  // Notification state removed per user request
 
-  React.useEffect(() => {
-    // Listen for real-time notifications
-    const unsubscribe = wsService.on('notification', (notification) => {
-      setNotifications(prev => [notification, ...prev.slice(0, 9)]); // Keep last 10
-      setUnreadCount(prev => prev + 1);
-    });
-
-    return unsubscribe;
-  }, []);
+  // Notification effect removed per user request
 
   const handleLogout = () => {
     logout();
     wsService.disconnect();
   };
 
-  const markNotificationsAsRead = () => {
-    setUnreadCount(0);
-  };
+  // Notification handler removed per user request
 
   return (
     <header className="relative backdrop-blur-xl top-0 z-40 transition-all duration-500 border-b bg-card/95 border-border shadow-2xl">
@@ -135,14 +125,17 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Enhanced Dark Mode Toggle */}
             <button
-              onClick={toggleTheme}
+              onClick={() => {
+                oldToggleTheme();
+                newToggleTheme();
+              }}
               className="relative p-3 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 group overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg bg-gradient-to-br from-accent via-primary to-secondary text-foreground hover:opacity-90 focus:ring-primary"
               aria-label="Toggle dark mode"
             >
               {/* Glowing background effect */}
               <div className="absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-30 blur-xl bg-primary"></div>
               <div className="relative">
-                {darkMode ? (
+                {isDark ? (
                   <SunIcon className="h-5 w-5 transform transition-transform duration-300 rotate-0 group-hover:rotate-180" aria-hidden="true" />
                 ) : (
                   <MoonIcon className="h-5 w-5 transform transition-transform duration-300 rotate-0 group-hover:-rotate-180" aria-hidden="true" />
@@ -150,71 +143,13 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </button>
 
-            {/* Enhanced Notifications */}
-            <Menu as="div" className="relative">
-              <Menu.Button
-                className="relative p-3 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95 group overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground hover:opacity-90 focus:ring-primary"
-                onClick={markNotificationsAsRead}
-              >
-                {/* Glowing background effect */}
-                <div className="absolute inset-0 bg-primary transition-opacity duration-300 opacity-0 group-hover:opacity-30 blur-xl"></div>
-                <div className="relative">
-                  <BellIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" aria-hidden="true" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-gradient-to-r from-destructive to-accent text-destructive-foreground text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse ring-2 ring-background">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </div>
-              </Menu.Button>
-              <Transition
-                as={Fragment}
-                enter="transition ease-out duration-200"
-                enterFrom="transform opacity-0 scale-95 translate-y-2"
-                enterTo="transform opacity-100 scale-100 translate-y-0"
-                leave="transition ease-in duration-150"
-                leaveFrom="transform opacity-100 scale-100 translate-y-0"
-                leaveTo="transform opacity-0 scale-95 translate-y-2"
-              >
-                <Menu.Items className="absolute right-0 z-30 mt-4 w-80 lg:w-96 origin-top-right rounded-2xl shadow-2xl ring-1 focus:outline-none transition-all duration-200 backdrop-blur-xl bg-card/95 ring-border">
-                  <div className="p-2">
-                    <div className="px-4 py-3 border-b rounded-t-xl border-border bg-muted/50">
-                      <h3 className="text-sm font-semibold flex items-center text-foreground">
-                        <BellIcon className="h-4 w-4 mr-2" />
-                        Notifications
-                      </h3>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        notifications.map((notification, index) => (
-                          <Menu.Item key={index}>
-                            {({ active }) => (
-                              <div className={`px-4 py-3 transition-all duration-200 ${
-                                active ? 'bg-muted/50' : 'transparent'
-                              }`}>
-                                <p className="text-sm font-medium text-foreground">{notification.title}</p>
-                                <p className="text-xs mt-1 text-muted-foreground">{notification.message}</p>
-                              </div>
-                            )}
-                          </Menu.Item>
-                        ))
-                      ) : (
-                        <div className="px-4 py-8 text-center">
-                          <BellIcon className="h-8 w-8 mx-auto mb-2 opacity-50 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">No notifications</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Menu.Items>
-              </Transition>
-            </Menu>
+            {/* Notifications removed per user request */}
 
             {/* Enhanced User Menu */}
             <Menu as="div" className="relative">
-              <Menu.Button className="flex items-center p-2 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg bg-card/80 hover:bg-muted/80 focus:ring-primary">
+              <Menu.Button className="flex items-center p-2 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 group focus:outline-none shadow-lg bg-card/80 hover:bg-muted/80">
                 <img
-                  className="h-10 w-10 rounded-xl ring-2 ring-offset-2 ring-primary transition-all duration-300 group-hover:ring-accent"
+className="h-10 w-10 rounded-xl transition-all duration-300"
                   src={
                     user?.avatar
                       ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`

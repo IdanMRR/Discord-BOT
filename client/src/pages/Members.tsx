@@ -117,14 +117,14 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
         <div 
           className={classNames(
             "fixed inset-0 bg-black/60 backdrop-blur-sm",
-            darkMode ? "bg-gray-900/80" : "bg-black/50"
+            "bg-background/80"
           )}
           onClick={onClose}
         />
 
         <div className={classNames(
           "w-full max-w-3xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+          "bg-card ring-1 ring-border"
         )}>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -141,13 +141,13 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
               <div>
                 <h3 className={classNames(
                   "text-2xl font-bold",
-                  darkMode ? "text-gray-100" : "text-gray-900"
+                  "text-foreground"
                 )}>
                   {actionTitles[action]}
                 </h3>
                 <p className={classNames(
                   "text-sm mt-1",
-                  darkMode ? "text-gray-400" : "text-gray-600"
+                  "text-muted-foreground"
                 )}>
                   Are you sure you want to {action} {member.displayName}?
                   {action === 'ban' && ' This action cannot be easily undone.'}
@@ -159,8 +159,8 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
               className={classNames(
                 "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
                 darkMode 
-                  ? "text-gray-400 hover:text-gray-300 hover:bg-gray-700" 
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  ? "text-muted-foreground hover:text-foreground hover:bg-muted" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
               <XMarkIcon className="h-6 w-6" />
@@ -170,7 +170,7 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
           {/* Member Info */}
           <div className={classNames(
             "p-6 rounded-xl mb-6",
-            darkMode ? "bg-gray-700/30" : "bg-gray-50"
+            "bg-muted/30"
           )}>
             <div className="flex items-center space-x-4">
               <img
@@ -181,7 +181,7 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
               <div>
                 <h4 className={classNames(
                   "text-xl font-semibold",
-                  darkMode ? "text-white" : "text-gray-900"
+                  "text-foreground"
                 )}>
                   {member.displayName}
                 </h4>
@@ -193,7 +193,7 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
                 </p>
                 <p className={classNames(
                   "text-xs mt-1",
-                  darkMode ? "text-gray-500" : "text-gray-400"
+                  "text-muted-foreground/70"
                 )}>
                   ID: {member.id}
                 </p>
@@ -204,7 +204,7 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
           {/* Content */}
           <div className={classNames(
             "p-6 rounded-xl mb-6",
-            darkMode ? "bg-gray-700/30" : "bg-gray-50"
+            "bg-muted/30"
           )}>
             <p className={classNames(
               "text-base leading-relaxed mb-6",
@@ -673,87 +673,42 @@ const Members: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
-          <div className="flex items-center">
-            <div className={classNames(
-              "p-3 rounded-lg",
-              darkMode ? "bg-blue-900/20" : "bg-blue-100"
-            )}>
-              <UserGroupIcon className={classNames(
-                "h-6 w-6",
-                darkMode ? "text-blue-400" : "text-blue-600"
-              )} />
-            </div>
-            <div className="ml-4">
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>Total Members</p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
-                {serverInfo?.memberCount || 0}
-              </p>
-            </div>
+              <Card className="content-area p-6">
+        <div className="flex items-center">
+          <div className="p-3 rounded-lg bg-primary/10">
+            <UserGroupIcon className="h-6 w-6 text-primary" />
           </div>
-        </Card>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-muted-foreground">Total Members</p>
+            <p className="text-2xl font-bold text-foreground">
+              {serverInfo?.memberCount || 0}
+            </p>
+          </div>
+        </div>
+      </Card>
 
-        <Card className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <Card className="content-area p-6">
           <div className="flex items-center">
-            <div className={classNames(
-              "p-3 rounded-lg",
-              darkMode ? "bg-green-900/20" : "bg-green-100"
-            )}>
-              <EyeIcon className={classNames(
-                "h-6 w-6",
-                darkMode ? "text-green-400" : "text-green-600"
-              )} />
+            <div className="p-3 rounded-lg bg-success/10">
+              <EyeIcon className="h-6 w-6 text-success" />
             </div>
             <div className="ml-4">
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>Viewing</p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
+              <p className="text-sm font-medium text-muted-foreground">Viewing</p>
+              <p className="text-2xl font-bold text-foreground">
                 {totalMembers}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <Card className="content-area p-6">
           <div className="flex items-center">
-            <div className={classNames(
-              "p-3 rounded-lg",
-              darkMode ? "bg-yellow-900/20" : "bg-yellow-100"
-            )}>
-              <ExclamationTriangleIcon className={classNames(
-                "h-6 w-6",
-                darkMode ? "text-yellow-400" : "text-yellow-600"
-              )} />
+            <div className="p-3 rounded-lg bg-warning/10">
+              <ExclamationTriangleIcon className="h-6 w-6 text-warning" />
             </div>
             <div className="ml-4">
-              <p className={classNames(
-                "text-sm font-medium",
-                darkMode ? "text-gray-400" : "text-gray-600"
-              )}>Members with Warnings</p>
-              <p className={classNames(
-                "text-2xl font-bold",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
+              <p className="text-sm font-medium text-muted-foreground">Members with Warnings</p>
+              <p className="text-2xl font-bold text-foreground">
                 {members.filter(m => m.warningCount > 0).length}
               </p>
             </div>
@@ -763,10 +718,7 @@ const Members: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Card className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-        )}>
+        <Card className="content-area p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className={classNames(
@@ -841,10 +793,7 @@ const Members: React.FC = () => {
       )}
 
       {/* Members List */}
-      <Card className={classNames(
-        "overflow-hidden",
-        darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      )}>
+      <Card className="content-area overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
             <LoadingSpinner size="lg" className="text-blue-500" />
@@ -872,53 +821,30 @@ const Members: React.FC = () => {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className={classNames(
-                  darkMode ? "bg-gray-700" : "bg-gray-50"
-                )}>
+                <thead className="bg-muted">
                   <tr>
-                    <th className={classNames(
-                      "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    )}>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Member
                     </th>
-                    <th className={classNames(
-                      "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    )}>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Roles
                     </th>
-                    <th className={classNames(
-                      "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    )}>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Joined
                     </th>
-                    <th className={classNames(
-                      "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    )}>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Warnings
                     </th>
-                    <th className={classNames(
-                      "px-6 py-3 text-right text-xs font-medium uppercase tracking-wider",
-                      darkMode ? "text-gray-300" : "text-gray-500"
-                    )}>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className={classNames(
-                  "divide-y",
-                  darkMode ? "bg-gray-800 divide-gray-700" : "bg-white divide-gray-200"
-                )}>
+                <tbody className="bg-card divide-y divide-border">
                   {members.map((member) => (
                     <tr
                       key={member.id}
-                      className={classNames(
-                        "transition-colors",
-                        darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                      )}
+                      className="transition-colors hover:bg-muted/50"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -940,7 +866,7 @@ const Members: React.FC = () => {
                           <div className="ml-4">
                             <div className={classNames(
                               "text-sm font-medium",
-                              darkMode ? "text-white" : "text-gray-900"
+                              "text-foreground"
                             )}>
                               {member.displayName}
                             </div>
@@ -969,10 +895,7 @@ const Members: React.FC = () => {
                             </span>
                           ))}
                           {member.roles.length > 3 && (
-                            <span className={classNames(
-                              "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                              darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-500"
-                            )}>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                               +{member.roles.length - 3} more
                             </span>
                           )}

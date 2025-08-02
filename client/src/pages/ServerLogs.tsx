@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Card from '../components/common/Card';
 import PermissionGuard from '../components/common/PermissionGuard';
-import { formatDashboardLogDate } from '../utils/dateUtils';
+// import { formatDashboardLogDate } from '../utils/dateUtils'; // Removed unused import
 import {
   EyeIcon,
   FunnelIcon,
@@ -440,13 +440,59 @@ const ServerLogsContent: React.FC = () => {
       case 'message': return 'green';
       case 'server': return 'purple';
       case 'ticket': return 'indigo';
+      case 'admin': return 'orange';
+      case 'security': return 'pink';
+      case 'system': return 'cyan';
+      case 'voice': return 'teal';
+      case 'role': return 'emerald';
+      case 'channel': return 'violet';
       default: return 'gray';
     }
   };
 
-  // Use the same date formatting as the working GitHub version
+  // Fixed date formatting function
   const formatDate = (dateString: string) => {
-    return formatDashboardLogDate(dateString);
+    if (!dateString) return 'Recently';
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Recently';
+      }
+      
+      const now = new Date();
+      const diffTime = now.getTime() - date.getTime();
+      const diffMinutes = Math.floor(diffTime / (1000 * 60));
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      // Show relative time for recent entries
+      if (diffMinutes < 1 && diffTime >= 0) {
+        return 'Just now';
+      } else if (diffMinutes < 60 && diffTime >= 0) {
+        return `${diffMinutes} min ago`;
+      } else if (diffHours < 24 && diffTime >= 0) {
+        return `${diffHours}h ago`;
+      } else if (diffDays < 7 && diffTime >= 0) {
+        return `${diffDays}d ago`;
+      } else {
+        // For older entries, show formatted date
+        return date.toLocaleString('en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      }
+      
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Recently';
+    }
   };
 
   const handleRefresh = () => {
@@ -468,16 +514,16 @@ const ServerLogsContent: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <XCircleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <XCircleIcon className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Server Not Found
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             The server ID is missing or invalid.
           </p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
           >
             Return to Dashboard
           </button>
@@ -506,16 +552,16 @@ const ServerLogsContent: React.FC = () => {
               </button>
               
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
-                  <ServerIcon className="h-6 w-6" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 text-blue-600">
+                  <EyeIcon className="h-5 w-5" />
                 </div>
                 
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">
-                    Server Activity Logs
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Activity Logs
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    📊 Monitor all server activity and events
+                    Monitor all bot activities and server events in real-time
                   </p>
                 </div>
               </div>
@@ -526,53 +572,30 @@ const ServerLogsContent: React.FC = () => {
                 onClick={handleRefresh}
                 disabled={loading}
                 className={classNames(
-                  "inline-flex items-center px-6 py-3 text-sm font-semibold rounded-xl border-2 shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                  loading
-                    ? "bg-gray-400 text-white cursor-not-allowed border-gray-400"
-                    : "text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-500/50 hover:border-green-400",
-                  darkMode ? "focus:ring-offset-gray-900" : "focus:ring-offset-white"
+                  "btn-refresh",
+                  loading ? "spinning" : ""
                 )}
               >
-                <ArrowPathIcon className={classNames(
-                  "h-5 w-5 mr-2",
-                  loading ? "animate-spin" : ""
-                )} />
-                {loading ? 'Refreshing...' : '🔄 Refresh Logs'}
+                <ArrowPathIcon className="icon" />
+                <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
               </button>
-              
-
-              
-
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <Card className={classNames(
-          "mb-6 shadow-lg border-0 rounded-xl overflow-hidden",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-        )}>
-          <div className={classNames(
-            "p-6 border-b",
-            darkMode ? "border-gray-700" : "border-gray-200"
-          )}>
+        <Card className="mb-6 shadow-lg border-0 rounded-xl overflow-hidden bg-card ring-1 ring-border">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center justify-between">
-              <h3 className={classNames(
-                "text-lg font-semibold flex items-center",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
+              <h3 className="text-lg font-semibold flex items-center text-foreground">
                 <FunnelIcon className="h-5 w-5 mr-2" />
                 Filters
               </h3>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={classNames(
-                  "inline-flex items-center px-3 py-1 text-sm font-medium rounded-lg transition-colors duration-200",
-                  darkMode 
-                    ? "text-gray-300 hover:text-white hover:bg-gray-700" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                )}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg border transition-colors duration-200 text-muted-foreground hover:text-foreground hover:bg-muted border-border"
               >
+                <FunnelIcon className="h-4 w-4 mr-2" />
                 {showFilters ? 'Hide' : 'Show'} Filters
                 <ChevronDownIcon className={classNames(
                   "h-4 w-4 ml-1 transition-transform duration-200",
@@ -583,28 +606,17 @@ const ServerLogsContent: React.FC = () => {
           </div>
 
           {showFilters && (
-            <div className={classNames(
-              "p-6 space-y-4",
-              darkMode ? "bg-gray-800" : "bg-white"
-            )}>
+            <div className="p-6 space-y-4 bg-card">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Log Type Filter */}
                 <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Log Type
                   </label>
                   <select
                     value={filter.type}
                     onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
-                    className={classNames(
-                      "w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
-                      darkMode 
-                        ? "bg-gray-700 text-gray-100 border-gray-600 hover:border-gray-500" 
-                        : "bg-white text-gray-900 border-gray-300 hover:border-gray-400"
-                    )}
+                    className="w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-background text-foreground border-input hover:border-border"
                   >
                     {LOG_TYPES.map(type => (
                       <option key={type.value} value={type.value}>
@@ -616,10 +628,7 @@ const ServerLogsContent: React.FC = () => {
 
                 {/* Search Filter */}
                 <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Search
                   </label>
                   <div className="relative">
@@ -628,26 +637,15 @@ const ServerLogsContent: React.FC = () => {
                       value={filter.search}
                       onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
                       placeholder="Search logs..."
-                      className={classNames(
-                        "w-full p-3 pl-10 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
-                        darkMode 
-                          ? "bg-gray-700 text-gray-100 border-gray-600 hover:border-gray-500 placeholder-gray-400" 
-                          : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 placeholder-gray-500"
-                      )}
+                      className="w-full p-3 pl-10 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-background text-foreground border-input hover:border-border placeholder:text-muted-foreground"
                     />
-                    <MagnifyingGlassIcon className={classNames(
-                      "absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5",
-                      darkMode ? "text-gray-400" : "text-gray-500"
-                    )} />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
 
                 {/* User ID Filter */}
                 <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     User ID
                   </label>
                   <input
@@ -655,32 +653,19 @@ const ServerLogsContent: React.FC = () => {
                     value={filter.userId}
                     onChange={(e) => setFilter(prev => ({ ...prev, userId: e.target.value }))}
                     placeholder="Filter by user ID..."
-                    className={classNames(
-                      "w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
-                      darkMode 
-                        ? "bg-gray-700 text-gray-100 border-gray-600 hover:border-gray-500 placeholder-gray-400" 
-                        : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 placeholder-gray-500"
-                    )}
+                    className="w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-background text-foreground border-input hover:border-border placeholder:text-muted-foreground"
                   />
                 </div>
 
                 {/* Date Range Filter */}
                 <div>
-                  <label className={classNames(
-                    "block text-sm font-medium mb-2",
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  )}>
+                  <label className="block text-sm font-medium mb-2 text-foreground">
                     Date Range
                   </label>
                   <select
                     value={filter.dateRange}
                     onChange={(e) => setFilter(prev => ({ ...prev, dateRange: e.target.value }))}
-                    className={classNames(
-                      "w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
-                      darkMode 
-                        ? "bg-gray-700 text-gray-100 border-gray-600 hover:border-gray-500" 
-                        : "bg-white text-gray-900 border-gray-300 hover:border-gray-400"
-                    )}
+                    className="w-full p-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-background text-foreground border-input hover:border-border"
                   >
                     <option value="all">All Time</option>
                     <option value="1h">Last Hour</option>
@@ -695,12 +680,7 @@ const ServerLogsContent: React.FC = () => {
               <div className="flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className={classNames(
-                    "inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200",
-                    darkMode 
-                      ? "text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-600" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300"
-                  )}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-muted-foreground hover:text-foreground hover:bg-muted border border-border"
                 >
                   <XMarkIcon className="h-4 w-4 mr-2" />
                   Clear Filters
@@ -711,88 +691,52 @@ const ServerLogsContent: React.FC = () => {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className={classNames(
-            "p-6 shadow-lg border-0 rounded-xl",
-            darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-          )}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4">
             <div className="flex items-center">
-              <div className={classNames(
-                "w-12 h-12 rounded-lg flex items-center justify-center mr-4",
-                darkMode ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-              )}>
-                <DocumentTextIcon className="h-6 w-6" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-blue-100 text-blue-600">
+                <DocumentTextIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   {filter.type !== 'all' || filter.search || filter.userId || filter.dateRange !== 'all' 
                     ? 'Filtered Logs' 
-                    : 'All Activity Logs'
+                    : 'Total Logs'
                   }
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-xl font-semibold text-foreground">
                   {logs.length.toLocaleString()}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className={classNames(
-            "p-6 shadow-lg border-0 rounded-xl",
-            darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-          )}>
+          <Card className="p-4">
             <div className="flex items-center">
-              <div className={classNames(
-                "w-12 h-12 rounded-lg flex items-center justify-center mr-4",
-                darkMode ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-600"
-              )}>
-                <ClockIcon className="h-6 w-6" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-green-100 text-green-600">
+                <ClockIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Last Activity
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-xl font-semibold text-foreground">
                   {logs.length > 0 ? formatDate(logs[0].timestamp || logs[0].created_at) : 'None'}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card className={classNames(
-            "p-6 shadow-lg border-0 rounded-xl",
-            darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-          )}>
+          <Card className="p-4">
             <div className="flex items-center">
-              <div className={classNames(
-                "w-12 h-12 rounded-lg flex items-center justify-center mr-4",
-                darkMode ? "bg-purple-900/30 text-purple-400" : "bg-purple-100 text-purple-600"
-              )}>
-                <UserIcon className="h-6 w-6" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-purple-100 text-purple-600">
+                <UserIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className={classNames(
-                  "text-sm font-medium",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm font-medium text-muted-foreground">
                   Total Events
                 </p>
-                <p className={classNames(
-                  "text-2xl font-bold",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-xl font-semibold text-foreground">
                   {logs.length.toLocaleString()}
                 </p>
               </div>
@@ -801,82 +745,49 @@ const ServerLogsContent: React.FC = () => {
         </div>
 
         {/* Logs List */}
-        <Card className={classNames(
-          "shadow-lg border-0 rounded-xl overflow-hidden",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-        )}>
-          <div className={classNames(
-            "p-6 border-b",
-            darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
-          )}>
-            <h3 className={classNames(
-              "text-lg font-semibold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+        <Card className="shadow-lg border-0 rounded-xl overflow-hidden bg-card ring-1 ring-border">
+          <div className="p-6 border-b border-border bg-muted/50">
+            <h3 className="text-lg font-semibold text-foreground">
               Activity Logs
             </h3>
           </div>
 
-          <div className={classNames(
-            "p-6",
-            darkMode ? "bg-gray-900" : "bg-white"
-          )}>
+          <div className="p-6 bg-card">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <LoadingSpinner size="lg" />
-                <span className={classNames(
-                  "ml-3 text-lg",
-                  darkMode ? "text-gray-300" : "text-gray-600"
-                )}>
+                <span className="ml-3 text-lg text-muted-foreground">
                   Loading server logs...
                 </span>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <XCircleIcon className={classNames(
-                  "h-16 w-16 mx-auto mb-4",
-                  darkMode ? "text-red-400" : "text-red-500"
-                )} />
-                <h3 className={classNames(
-                  "text-lg font-semibold mb-2",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <XCircleIcon className="h-16 w-16 mx-auto mb-4 text-destructive" />
+                <h3 className="text-lg font-semibold mb-2 text-foreground">
                   Error Loading Logs
                 </h3>
-                <p className={classNames(
-                  "mb-4",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="mb-4 text-muted-foreground">
                   {error}
                 </p>
                 <button
                   onClick={handleRefresh}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Try Again
                 </button>
               </div>
             ) : logs.length === 0 ? (
               <div className="text-center py-12">
-                <DocumentTextIcon className={classNames(
-                  "h-16 w-16 mx-auto mb-4",
-                  darkMode ? "text-gray-600" : "text-gray-400"
-                )} />
-                <h3 className={classNames(
-                  "text-lg font-semibold mb-2",
-                  darkMode ? "text-white" : "text-gray-900"
-                )}>
+                <DocumentTextIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2 text-foreground">
                   No Logs Found
                 </h3>
-                <p className={classNames(
-                  "mb-4",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="mb-4 text-muted-foreground">
                   No activity logs match your current filters.
                 </p>
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -887,51 +798,85 @@ const ServerLogsContent: React.FC = () => {
                   const IconComponent = getLogIcon(log.log_type || '', log.action_type || '');
                   const color = getLogTypeColor(log.log_type || '');
                   
+                  
                   return (
                     <div
                       key={`${log.id}-${index}`}
                       className={classNames(
-                        "group relative p-6 rounded-2xl border-2 shadow-2xl backdrop-blur-lg transition-all duration-300 hover:scale-[1.01] hover:shadow-3xl active:scale-[0.99] cursor-pointer",
+                        "p-4 rounded-lg border",
                         darkMode 
-                          ? "bg-gray-800/60 border-gray-600/30 hover:border-gray-500/50 hover:bg-gray-800/80" 
-                          : "bg-white/60 border-gray-200/50 hover:border-gray-300/70 hover:bg-white/80"
+                          ? "bg-gray-800/50 border-gray-700" 
+                          : "bg-white border-gray-200"
                       )}
                     >
-                      {/* Background Pattern */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-500/5 rounded-2xl pointer-events-none" />
                       
                       {/* Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
                           <div className={classNames(
-                            "w-14 h-14 rounded-xl flex items-center justify-center shadow-lg",
-                            color === 'blue' && (darkMode ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-gradient-to-br from-blue-500 to-blue-600 text-white"),
-                            color === 'green' && (darkMode ? "bg-gradient-to-br from-green-600 to-green-700 text-white" : "bg-gradient-to-br from-green-500 to-green-600 text-white"),
-                            color === 'red' && (darkMode ? "bg-gradient-to-br from-red-600 to-red-700 text-white" : "bg-gradient-to-br from-red-500 to-red-600 text-white"),
-                            color === 'purple' && (darkMode ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white" : "bg-gradient-to-br from-purple-500 to-purple-600 text-white"),
-                            color === 'yellow' && (darkMode ? "bg-gradient-to-br from-yellow-600 to-yellow-700 text-white" : "bg-gradient-to-br from-yellow-500 to-yellow-600 text-white"),
-                            color === 'indigo' && (darkMode ? "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white" : "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white"),
-                            color === 'gray' && (darkMode ? "bg-gradient-to-br from-gray-600 to-gray-700 text-white" : "bg-gradient-to-br from-gray-500 to-gray-600 text-white")
+                            "w-10 h-10 rounded-lg flex items-center justify-center",
+                            color === 'blue' && "bg-blue-100 text-blue-600",
+                            color === 'green' && "bg-green-100 text-green-600",
+                            color === 'red' && "bg-red-100 text-red-600",
+                            color === 'purple' && "bg-purple-100 text-purple-600",
+                            color === 'yellow' && "bg-yellow-100 text-yellow-600",
+                            color === 'indigo' && "bg-indigo-100 text-indigo-600",
+                            color === 'orange' && "bg-orange-100 text-orange-600",
+                            color === 'pink' && "bg-pink-100 text-pink-600",
+                            color === 'cyan' && "bg-cyan-100 text-cyan-600",
+                            color === 'teal' && "bg-teal-100 text-teal-600",
+                            color === 'emerald' && "bg-emerald-100 text-emerald-600",
+                            color === 'violet' && "bg-violet-100 text-violet-600",
+                            color === 'gray' && "bg-gray-100 text-gray-600",
+                            darkMode && color === 'blue' && "bg-blue-900/30 text-blue-400",
+                            darkMode && color === 'green' && "bg-green-900/30 text-green-400",
+                            darkMode && color === 'red' && "bg-red-900/30 text-red-400",
+                            darkMode && color === 'purple' && "bg-purple-900/30 text-purple-400",
+                            darkMode && color === 'yellow' && "bg-yellow-900/30 text-yellow-400",
+                            darkMode && color === 'indigo' && "bg-indigo-900/30 text-indigo-400",
+                            darkMode && color === 'orange' && "bg-orange-900/30 text-orange-400",
+                            darkMode && color === 'pink' && "bg-pink-900/30 text-pink-400",
+                            darkMode && color === 'cyan' && "bg-cyan-900/30 text-cyan-400",
+                            darkMode && color === 'teal' && "bg-teal-900/30 text-teal-400",
+                            darkMode && color === 'emerald' && "bg-emerald-900/30 text-emerald-400",
+                            darkMode && color === 'violet' && "bg-violet-900/30 text-violet-400",
+                            darkMode && color === 'gray' && "bg-gray-900/30 text-gray-400"
                           )}>
-                            <IconComponent className="h-7 w-7" />
+                            <IconComponent className="h-5 w-5" />
                           </div>
                           
                           <div>
-                            <h3 className={classNames(
-                              "text-xl font-bold",
-                              darkMode ? "text-white" : "text-gray-900"
-                            )}>
+                            <h4 className="text-lg font-semibold text-foreground">
                               {safeRender(log.action) || 'Unknown Action'}
-                            </h3>
+                            </h4>
                             <span className={classNames(
-                              "inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full shadow-sm",
-                              color === 'blue' && (darkMode ? "bg-blue-900/50 text-blue-300 border border-blue-700/50" : "bg-blue-100 text-blue-700 border border-blue-200"),
-                              color === 'green' && (darkMode ? "bg-green-900/50 text-green-300 border border-green-700/50" : "bg-green-100 text-green-700 border border-green-200"),
-                              color === 'red' && (darkMode ? "bg-red-900/50 text-red-300 border border-red-700/50" : "bg-red-100 text-red-700 border border-red-200"),
-                              color === 'purple' && (darkMode ? "bg-purple-900/50 text-purple-300 border border-purple-700/50" : "bg-purple-100 text-purple-700 border border-purple-200"),
-                              color === 'yellow' && (darkMode ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700/50" : "bg-yellow-100 text-yellow-700 border border-yellow-200"),
-                              color === 'indigo' && (darkMode ? "bg-indigo-900/50 text-indigo-300 border border-indigo-700/50" : "bg-indigo-100 text-indigo-700 border border-indigo-200"),
-                              color === 'gray' && (darkMode ? "bg-gray-700/50 text-gray-300 border border-gray-600/50" : "bg-gray-100 text-gray-700 border border-gray-200")
+                              "inline-flex items-center px-2 py-1 text-xs font-medium rounded-md",
+                              color === 'blue' && "bg-blue-100 text-blue-800",
+                              color === 'green' && "bg-green-100 text-green-800",
+                              color === 'red' && "bg-red-100 text-red-800",
+                              color === 'purple' && "bg-purple-100 text-purple-800",
+                              color === 'yellow' && "bg-yellow-100 text-yellow-800",
+                              color === 'indigo' && "bg-indigo-100 text-indigo-800",
+                              color === 'orange' && "bg-orange-100 text-orange-800",
+                              color === 'pink' && "bg-pink-100 text-pink-800",
+                              color === 'cyan' && "bg-cyan-100 text-cyan-800",
+                              color === 'teal' && "bg-teal-100 text-teal-800",
+                              color === 'emerald' && "bg-emerald-100 text-emerald-800",
+                              color === 'violet' && "bg-violet-100 text-violet-800",
+                              color === 'gray' && "bg-gray-100 text-gray-800",
+                              darkMode && color === 'blue' && "bg-blue-900/30 text-blue-300",
+                              darkMode && color === 'green' && "bg-green-900/30 text-green-300",
+                              darkMode && color === 'red' && "bg-red-900/30 text-red-300",
+                              darkMode && color === 'purple' && "bg-purple-900/30 text-purple-300",
+                              darkMode && color === 'yellow' && "bg-yellow-900/30 text-yellow-300",
+                              darkMode && color === 'indigo' && "bg-indigo-900/30 text-indigo-300",
+                              darkMode && color === 'orange' && "bg-orange-900/30 text-orange-300",
+                              darkMode && color === 'pink' && "bg-pink-900/30 text-pink-300",
+                              darkMode && color === 'cyan' && "bg-cyan-900/30 text-cyan-300",
+                              darkMode && color === 'teal' && "bg-teal-900/30 text-teal-300",
+                              darkMode && color === 'emerald' && "bg-emerald-900/30 text-emerald-300",
+                              darkMode && color === 'violet' && "bg-violet-900/30 text-violet-300",
+                              darkMode && color === 'gray' && "bg-gray-900/30 text-gray-300"
                             )}>
                               {log.log_type || 'unknown'}
                             </span>
@@ -939,11 +884,9 @@ const ServerLogsContent: React.FC = () => {
                         </div>
                         
                         <div className="text-right">
-                          <div className={classNames(
-                            "text-sm font-medium",
-                            darkMode ? "text-gray-300" : "text-gray-600"
-                          )}>
-                            📅 {formatDate(log.timestamp || log.created_at)}
+                          <div className="text-sm text-muted-foreground">
+                            <ClockIcon className="inline h-4 w-4 mr-1" />
+                            {formatDate(log.timestamp || log.created_at)}
                           </div>
                         </div>
                       </div>
@@ -951,115 +894,71 @@ const ServerLogsContent: React.FC = () => {
                       {/* Details */}
                       {log.details && (
                         <div className={classNames(
-                          "p-4 rounded-xl mb-4 border",
+                          "p-3 rounded-lg mb-3 border-l-4",
                           darkMode 
-                            ? "bg-gray-700/30 border-gray-600/30 text-gray-200" 
-                            : "bg-gray-50/50 border-gray-200/50 text-gray-700"
+                            ? "bg-gray-700/20 border-l-gray-500" 
+                            : "bg-gray-50 border-l-gray-400",
+                          log.details.toLowerCase().includes('success') && "border-l-green-500",
+                          log.details.toLowerCase().includes('error') && "border-l-red-500"
                         )}>
-                          <div className="flex items-start space-x-2">
-                            <span className="text-sm">📋</span>
-                            <p className="text-sm font-medium leading-relaxed">
-                              {log.details}
-                            </p>
-                          </div>
+                          <p className={classNames(
+                            "text-sm leading-relaxed",
+                            log.details.toLowerCase().includes('success') 
+                              ? "text-green-600 font-medium" 
+                              : log.details.toLowerCase().includes('error')
+                              ? "text-red-600 font-medium"
+                              : darkMode ? "text-gray-300" : "text-gray-700"
+                          )}>
+                            {log.details}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Success/Status Indicator */}
+                      {(log.success === 1 || (log.details && log.details.toLowerCase().includes('success'))) && (
+                        <div className="flex items-center space-x-1 mt-1">
+                          <CheckIcon className="h-4 w-4 !text-green-500" />
+                          <span className="text-sm !text-green-500 font-semibold">
+                            Command executed successfully
+                          </span>
                         </div>
                       )}
                       
                       {/* Metadata */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                         {log.userName && (
-                          <div className={classNames(
-                            "flex items-center space-x-3 p-3 rounded-lg border",
-                            darkMode 
-                              ? "bg-gray-700/20 border-gray-600/20" 
-                              : "bg-gray-50/30 border-gray-200/30"
-                          )}>
-                            <div className={classNames(
-                              "w-8 h-8 rounded-lg flex items-center justify-center",
-                              darkMode ? "bg-blue-600/20 text-blue-400" : "bg-blue-100 text-blue-600"
-                            )}>
-                              <span className="text-sm">👤</span>
-                            </div>
-                            <div>
-                              <p className={classNames(
-                                "text-xs font-medium",
-                                darkMode ? "text-gray-400" : "text-gray-500"
-                              )}>
-                                User
-                              </p>
-                              <p className={classNames(
-                                "text-sm font-semibold",
-                                darkMode ? "text-white" : "text-gray-900"
-                              )}>
-                                {safeRender(log.userName)}
-                              </p>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">User:</span>
+                            <span className="font-medium text-foreground">
+                              {safeRender(log.userName)}
+                            </span>
                           </div>
                         )}
                         
                         {log.moderatorName && (
-                          <div className={classNames(
-                            "flex items-center space-x-3 p-3 rounded-lg border",
-                            darkMode 
-                              ? "bg-gray-700/20 border-gray-600/20" 
-                              : "bg-gray-50/30 border-gray-200/30"
-                          )}>
-                            <div className={classNames(
-                              "w-8 h-8 rounded-lg flex items-center justify-center",
-                              darkMode ? "bg-purple-600/20 text-purple-400" : "bg-purple-100 text-purple-600"
-                            )}>
-                              <span className="text-sm">🛡️</span>
-                            </div>
-                            <div>
-                              <p className={classNames(
-                                "text-xs font-medium",
-                                darkMode ? "text-gray-400" : "text-gray-500"
-                              )}>
-                                Moderator
-                              </p>
-                              <p className={classNames(
-                                "text-sm font-semibold",
-                                darkMode ? "text-white" : "text-gray-900"
-                              )}>
-                                {safeRender(
-                                  log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
-                                  (log.moderatorName && log.moderatorName.startsWith('User_')) ||
-                                  (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
-                                  (log.details && log.details.toLowerCase().includes('automatic'))
-                                  ? 'AutoMod System' : log.moderatorName
-                                )}
-                              </p>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Moderator:</span>
+                            <span className="font-medium text-foreground">
+                              {safeRender(
+                                log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
+                                (log.moderatorName && log.moderatorName.startsWith('User_')) ||
+                                (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
+                                (log.details && log.details.toLowerCase().includes('automatic'))
+                                ? 'AutoMod System' : log.moderatorName
+                              )}
+                            </span>
                           </div>
                         )}
                         
                         {log.reason && (
-                          <div className={classNames(
-                            "flex items-center space-x-3 p-3 rounded-lg border",
-                            darkMode 
-                              ? "bg-gray-700/20 border-gray-600/20" 
-                              : "bg-gray-50/30 border-gray-200/30"
-                          )}>
-                            <div className={classNames(
-                              "w-8 h-8 rounded-lg flex items-center justify-center",
-                              darkMode ? "bg-green-600/20 text-green-400" : "bg-green-100 text-green-600"
-                            )}>
-                              <span className="text-sm">📝</span>
-                            </div>
-                            <div>
-                              <p className={classNames(
-                                "text-xs font-medium",
-                                darkMode ? "text-gray-400" : "text-gray-500"
-                              )}>
-                                Reason
-                              </p>
-                              <p className={classNames(
-                                "text-sm font-semibold",
-                                darkMode ? "text-white" : "text-gray-900"
-                              )}>
-                                {safeRender(log.reason)}
-                              </p>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <DocumentTextIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Reason:</span>
+                            <span className="font-medium text-foreground">
+                              {safeRender(log.reason)}
+                            </span>
                           </div>
                         )}
                       </div>

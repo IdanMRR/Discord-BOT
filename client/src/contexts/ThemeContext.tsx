@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { updatePrimaryColorsForCurrentTheme } from '../lib/utils';
 
 const ThemeContext = createContext<{
   theme: string;
@@ -23,12 +24,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
+    const rootElement = document.getElementById('root');
+    const themeColorMeta = document.getElementById('theme-color-meta') as HTMLMetaElement;
+    
     if (theme === 'dark') {
       root.classList.add('dark');
+      body.classList.add('dark');
+      if (rootElement) rootElement.classList.add('dark');
+      if (themeColorMeta) {
+        themeColorMeta.content = 'hsl(263, 70%, 70%)';
+      }
     } else {
       root.classList.remove('dark');
+      body.classList.remove('dark');
+      if (rootElement) rootElement.classList.remove('dark');
+      if (themeColorMeta) {
+        themeColorMeta.content = 'hsl(262, 83%, 58%)';
+      }
     }
     localStorage.setItem('theme', theme);
+    
+    // Update primary colors for the new theme
+    setTimeout(() => {
+      updatePrimaryColorsForCurrentTheme();
+    }, 50);
   }, [theme]);
 
   const toggleTheme = () => {

@@ -611,7 +611,7 @@ const LevelingEnhanced: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leveling System</h1>
+          <h1 className="text-2xl font-bold text-foreground">Leveling System</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage XP, levels and view leaderboards</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -629,22 +629,18 @@ const LevelingEnhanced: React.FC = () => {
             onClick={handleRefresh}
             disabled={refreshing}
             className={classNames(
-              "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
-              refreshing
-                ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
-                : darkMode
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              "btn-refresh",
+              refreshing ? "spinning" : ""
             )}
           >
-            <ArrowPathIcon className={classNames("h-4 w-4 mr-2", refreshing && "animate-spin")} />
-            Refresh
+            <ArrowPathIcon className="icon" />
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+      <div className="flex space-x-2 border-b border-border pb-4">
         {renderTabButton('leaderboard', 'Leaderboard', TrophyIcon)}
         {/* Temporarily disabled until XP management API is fixed */}
         {/* {renderTabButton('management', 'XP Management', ChartBarIcon)} */}
@@ -658,13 +654,13 @@ const LevelingEnhanced: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className={classNames(
               "rounded-lg p-6 border",
-              darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+              darkMode ? "content-area" : "content-area"
             )}>
               <div className="flex items-center">
                 <UserGroupIcon className="h-8 w-8 text-blue-500 mr-3" />
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total Members</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {leaderboard?.pagination.totalMembers.toLocaleString() || '0'}
                   </p>
                 </div>
@@ -673,13 +669,13 @@ const LevelingEnhanced: React.FC = () => {
             
             <div className={classNames(
               "rounded-lg p-6 border",
-              darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+              darkMode ? "content-area" : "content-area"
             )}>
               <div className="flex items-center">
                 <TrophyIcon className="h-8 w-8 text-yellow-500 mr-3" />
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Top Level</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-2xl font-bold text-foreground">
                     {leaderboard?.leaderboard[0]?.level || 0}
                   </p>
                 </div>
@@ -688,7 +684,7 @@ const LevelingEnhanced: React.FC = () => {
             
             <div className={classNames(
               "rounded-lg p-6 border",
-              darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+              darkMode ? "content-area" : "content-area"
             )}>
               <div className="flex items-center">
                 <StarIcon className="h-8 w-8 text-purple-500 mr-3" />
@@ -705,20 +701,20 @@ const LevelingEnhanced: React.FC = () => {
           {/* Enhanced Leaderboard */}
           <div className={classNames(
             "rounded-lg border overflow-hidden",
-            darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+            darkMode ? "content-area" : "content-area"
           )}>
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Server Leaderboard</h3>
+            <div className="px-6 py-4 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">Server Leaderboard</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Page {leaderboard?.pagination.page || 1} of {leaderboard?.pagination.totalPages || 1}
               </p>
             </div>
             
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y divide-border">
               {!leaderboard || leaderboard.leaderboard.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <TrophyIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Leaderboard Data</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No Leaderboard Data</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     {isSystemDisabled 
                       ? "The leveling system is disabled. Enable it to start tracking user levels."
@@ -764,7 +760,7 @@ const LevelingEnhanced: React.FC = () => {
                             <UserIcon className="h-6 w-6 text-white" />
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
+                            <p className="font-semibold text-foreground">
                               {user.userData?.displayName || user.userData?.username || `User ${user.user_id.slice(-4)}`}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -798,7 +794,7 @@ const LevelingEnhanced: React.FC = () => {
 
             {/* Pagination */}
             {leaderboard && leaderboard.pagination.totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="px-6 py-4 border-t border-border flex items-center justify-between">
                 <button
                   onClick={() => setCurrentPage(currentPage - 1)}
                   disabled={!leaderboard?.pagination.hasPrev}
@@ -845,9 +841,9 @@ const LevelingEnhanced: React.FC = () => {
           {/* XP Management Controls */}
           <div className={classNames(
             "rounded-lg border p-6",
-            darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+            darkMode ? "content-area" : "content-area"
           )}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">XP Management Controls</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">XP Management Controls</h3>
             
             {selectedUser && (
               <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -879,10 +875,10 @@ const LevelingEnhanced: React.FC = () => {
                     onChange={(e) => setTargetUserId(e.target.value)}
                     placeholder="Enter Discord User ID"
                     readOnly={selectedUser !== null}
-                    className={`flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md shadow-sm ${
+                    className={`flex-1 px-3 py-2 border border-border rounded-l-md shadow-sm ${
                       selectedUser 
                         ? 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-not-allowed' 
-                        : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+                        : 'input-field text-foreground'
                     }`}
                   />
                   {selectedUser && (
@@ -911,7 +907,7 @@ const LevelingEnhanced: React.FC = () => {
                       value={xpAmount}
                       onChange={(e) => setXpAmount(e.target.value)}
                       placeholder="XP amount"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 py-2 border border-border rounded-md shadow-sm input-field text-foreground"
                     />
                     <div className="flex flex-wrap gap-1">
                       {[10, 25, 50, 100, 250, 500, 1000].map((amount) => (
@@ -944,7 +940,7 @@ const LevelingEnhanced: React.FC = () => {
                         }
                       }}
                       placeholder="Target level"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 py-2 border border-border rounded-md shadow-sm input-field text-foreground"
                     />
                     <div className="flex flex-wrap gap-1">
                       {[1, 5, 10, 15, 20, 25, 30, 50].map((level) => (
@@ -979,7 +975,7 @@ const LevelingEnhanced: React.FC = () => {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Reason for the change"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm input-field text-foreground"
                 />
               </div>
 
@@ -1032,9 +1028,9 @@ const LevelingEnhanced: React.FC = () => {
           {selectedUser && (
             <div className={classNames(
               "rounded-lg border p-6",
-              darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+              darkMode ? "content-area" : "content-area"
             )}>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Selected User Info</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Selected User Info</h3>
               
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1094,10 +1090,10 @@ const LevelingEnhanced: React.FC = () => {
       {activeTab === 'settings' && (
         <div className={classNames(
           "rounded-lg border p-6",
-          darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          darkMode ? "content-area" : "content-area"
         )}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Leveling Settings</h3>
+            <h3 className="text-lg font-semibold text-foreground">Leveling Settings</h3>
             <button
               onClick={saveSettings}
               disabled={settingsSaving || !settingsForm}
@@ -1119,7 +1115,7 @@ const LevelingEnhanced: React.FC = () => {
               {/* Enable/Disable Toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div>
-                  <label className="font-medium text-gray-900 dark:text-white">Enable Leveling System</label>
+                  <label className="font-medium text-foreground">Enable Leveling System</label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Toggle the leveling system for this server</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1137,7 +1133,7 @@ const LevelingEnhanced: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* XP per Message */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     XP per Message
                   </label>
                   <input
@@ -1160,7 +1156,7 @@ const LevelingEnhanced: React.FC = () => {
 
                 {/* XP Cooldown */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     XP Cooldown (seconds)
                   </label>
                   <input
@@ -1183,7 +1179,7 @@ const LevelingEnhanced: React.FC = () => {
 
                 {/* Level Formula */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Level Formula
                   </label>
                   <select
@@ -1207,7 +1203,7 @@ const LevelingEnhanced: React.FC = () => {
 
                 {/* Current Status Display */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Current Status
                   </label>
                   <div className={classNames(

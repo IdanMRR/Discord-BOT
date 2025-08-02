@@ -374,7 +374,7 @@ const WarningsContent: React.FC = () => {
       case 'ban': return 'bg-red-100 text-red-800';
       case 'role_remove': return 'bg-purple-100 text-purple-800';
       case 'role_add': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted/50 text-muted-foreground';
     }
   };
 
@@ -435,11 +435,8 @@ const WarningsContent: React.FC = () => {
       );
     } else {
       return (
-        <span className={classNames(
-          "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm",
-          darkMode ? "bg-gray-800/50 text-gray-400 ring-1 ring-gray-600/50" : "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
-        )}>
-          <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm bg-muted text-muted-foreground ring-1 ring-border">
+          <div className="w-2 h-2 bg-muted-foreground rounded-full mr-2"></div>
           ❌ Removed
         </span>
       );
@@ -492,21 +489,17 @@ const WarningsContent: React.FC = () => {
               onClick={() => fetchWarnings(currentPage)}
               disabled={loading}
               className={classNames(
-                "inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
-                darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white",
-                loading ? "opacity-50 cursor-not-allowed" : ""
+                "btn-refresh",
+                loading ? "spinning" : ""
               )}
               title="Refresh warnings"
             >
-              <ArrowPathIcon className={classNames(
-                "h-4 w-4 mr-2",
-                loading ? "animate-spin" : ""
-              )} />
-              Refresh
+              <ArrowPathIcon className="icon" />
+              <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
             </button>
             <div className={classNames(
               'flex items-center px-3 py-1 rounded-lg text-sm',
-              darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+              darkMode ? 'bg-muted text-muted-foreground' : 'bg-muted/30 text-muted-foreground'
             )}>
               Total: {totalWarnings}
             </div>
@@ -514,7 +507,7 @@ const WarningsContent: React.FC = () => {
               'flex items-center px-3 py-1 rounded-lg text-sm',
               selectedWarnings.size > 0 
                 ? (darkMode ? 'bg-primary-500/20 text-primary-400' : 'bg-primary-100 text-primary-600')
-                : (darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600')
+                : (darkMode ? 'bg-muted text-muted-foreground' : 'bg-muted/30 text-muted-foreground')
             )}>
               Selected: {selectedWarnings.size}
             </div>
@@ -523,14 +516,8 @@ const WarningsContent: React.FC = () => {
       </div>
 
 
-        <Card className={classNames(
-          "shadow-xl border-0 rounded-xl overflow-hidden",
-          darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-        )}>
-        <div className={classNames(
-          "p-6 border-b",
-          darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
-        )}>
+        <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-border bg-muted/30">
           <div className="flex items-center justify-between">
           <div>
             <h3 className={classNames(
@@ -569,10 +556,7 @@ const WarningsContent: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-900" : "bg-white"
-        )}>
+        <div className="p-6 bg-card">
         {loading ? (
             <div className="flex items-center justify-center py-16">
               <LoadingSpinner className="text-blue-500" size="lg" />
@@ -608,97 +592,60 @@ const WarningsContent: React.FC = () => {
                   "min-w-full divide-y-2",
                 darkMode ? "divide-gray-700" : "divide-gray-200"
               )}>
-                <thead className={classNames(
-                    "rounded-t-lg",
-                    darkMode ? "bg-gray-800" : "bg-gray-100"
-                )}>
+                <thead className="rounded-t-lg bg-muted">
                   <tr>
                       <th className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                       <input
                         type="checkbox"
-                        className={classNames(
-                            "h-5 w-5 rounded border-2 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all duration-200",
-                            darkMode ? "border-gray-500 bg-gray-700" : "border-gray-400 bg-white"
-                        )}
+                        className="h-5 w-5 rounded border-2 text-primary border-input bg-background focus:ring-primary focus:ring-2 transition-all duration-200"
                         checked={selectedWarnings.size > 0 && selectedWarnings.size === warnings.length}
                         onChange={selectAllWarnings}
                       />
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         🔢 Case #
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         🏠 Server
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         👤 User
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         📝 Reason
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         📊 Status
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         🛡️ Warned By
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         📅 Date
                     </th>
-                    <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                    )}>
+                    <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         ⚙️ Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className={classNames(
-                  "divide-y",
-                    darkMode ? "bg-gray-900 divide-gray-800" : "bg-white divide-gray-100"
-                )}>
+                <tbody className="bg-card divide-y divide-border">
                   {warnings.map((warning) => (
                     <tr 
                       key={warning.id} 
                       className={classNames(
-                          "transition-all duration-200 hover:shadow-lg",
+                          "transition-all duration-200 hover:shadow-lg relative group",
                         selectedWarnings.has(warning.id) 
-                            ? darkMode ? 'bg-blue-900/30 ring-1 ring-blue-500' : 'bg-blue-50 ring-1 ring-blue-300'
-                            : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-50',
-                          'relative group'
+                            ? 'bg-primary/10 ring-1 ring-primary/30'
+                            : 'hover:bg-muted/50'
                       )}
                     >
                         <td className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                         {selectedWarnings.has(warning.id) && (
-                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r" />
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary to-primary/80 rounded-r" />
                         )}
                         <input
                           type="checkbox"
-                          className={classNames(
-                              "h-5 w-5 rounded border-2 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all duration-200",
-                              darkMode ? "border-gray-500 bg-gray-700" : "border-gray-400 bg-white"
-                          )}
+                          className="h-5 w-5 rounded border-2 text-primary border-input bg-background focus:ring-primary focus:ring-2 transition-all duration-200"
                           checked={selectedWarnings.has(warning.id)}
                           onChange={() => toggleWarningSelection(warning.id)}
                             disabled={!isWarningActive(warning.active)}
@@ -723,7 +670,7 @@ const WarningsContent: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <div className={classNames(
                               "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
-                              darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+                              darkMode ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"
                             )}>
                               {((warning as any).username || `User ${warning.user_id}`).charAt(0).toUpperCase()}
                             </div>
@@ -789,14 +736,8 @@ const WarningsContent: React.FC = () => {
       </Card>
 
       {/* Automod Escalation Section */}
-      <Card className={classNames(
-        "shadow-xl border-0 rounded-xl overflow-hidden",
-        darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
-      )}>
-        <div className={classNames(
-          "p-6 border-b",
-          darkMode ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
-        )}>
+      <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-border bg-muted/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Shield className="w-6 h-6 text-blue-600" />
@@ -818,10 +759,7 @@ const WarningsContent: React.FC = () => {
           </div>
         </div>
 
-        <div className={classNames(
-          "p-6",
-          darkMode ? "bg-gray-900" : "bg-white"
-        )}>
+        <div className="p-6 bg-card">
           {automodLoading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner className="text-blue-500" size="lg" />
@@ -835,10 +773,7 @@ const WarningsContent: React.FC = () => {
                 {/* Stats Cards */}
                 {automodStats && (
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div className={classNames(
-                      "p-4 rounded-lg border",
-                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                    )}>
+                    <div className="content-area p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={classNames(
@@ -854,10 +789,7 @@ const WarningsContent: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className={classNames(
-                      "p-4 rounded-lg border",
-                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                    )}>
+                    <div className="content-area p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={classNames(
@@ -870,10 +802,7 @@ const WarningsContent: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className={classNames(
-                      "p-4 rounded-lg border",
-                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                    )}>
+                    <div className="content-area p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={classNames(
@@ -889,10 +818,7 @@ const WarningsContent: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className={classNames(
-                      "p-4 rounded-lg border",
-                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                    )}>
+                    <div className="content-area p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={classNames(
@@ -907,10 +833,7 @@ const WarningsContent: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className={classNames(
-                      "p-4 rounded-lg border",
-                      darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                    )}>
+                    <div className="content-area p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className={classNames(
@@ -927,10 +850,7 @@ const WarningsContent: React.FC = () => {
 
                 {/* Settings */}
                 {automodSettings && (
-                  <div className={classNames(
-                    "p-4 rounded-lg border",
-                    darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                  )}>
+                  <div className="content-area p-4 rounded-lg">
                     <h4 className={classNames(
                       "text-lg font-medium mb-4",
                       darkMode ? "text-white" : "text-gray-900"
@@ -999,8 +919,8 @@ const WarningsContent: React.FC = () => {
                             className={classNames(
                               "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
                               darkMode 
-                                ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
-                                : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                                ? "input-field text-white placeholder-gray-400 hover:border-gray-500" 
+                                : "input-field text-gray-900 placeholder-gray-500 hover:border-gray-300"
                             )}
                           />
                         </div>
@@ -1010,10 +930,7 @@ const WarningsContent: React.FC = () => {
                 )}
 
                 {/* Rules */}
-                <div className={classNames(
-                  "p-4 rounded-lg border",
-                  darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                )}>
+                <div className="content-area p-4 rounded-lg">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className={classNames(
                       "text-lg font-medium",
@@ -1077,7 +994,7 @@ const WarningsContent: React.FC = () => {
                                   {rule.punishment_duration && ` (${rule.punishment_duration}min)`}
                                 </span>
                                 {!rule.enabled && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                                     Disabled
                                   </span>
                                 )}
@@ -1228,7 +1145,7 @@ const WarningsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-3xl transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "content-area"
                 )}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
@@ -1376,12 +1293,12 @@ const WarningsContent: React.FC = () => {
               >
                 <Dialog.Panel className={classNames(
                   "w-full max-w-lg transform overflow-hidden rounded-2xl p-8 text-left align-middle shadow-2xl transition-all",
-                  darkMode ? "bg-gray-800 ring-1 ring-gray-700" : "bg-white ring-1 ring-gray-200"
+                  "content-area"
                 )}>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className={classNames("p-3 rounded-full", darkMode ? "bg-blue-900/20" : "bg-blue-100")}>
+                    <div className="p-3 rounded-full bg-blue-500/10">
                       <svg className={classNames("h-6 w-6", darkMode ? "text-blue-400" : "text-blue-600")} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -1437,8 +1354,8 @@ const WarningsContent: React.FC = () => {
                         className={classNames(
                           "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
                           darkMode 
-                            ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
-                            : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                            ? "input-field text-white placeholder-gray-400 hover:border-gray-500" 
+                            : "input-field text-gray-900 placeholder-gray-500 hover:border-gray-300"
                         )}
                       />
                     </div>
@@ -1454,8 +1371,8 @@ const WarningsContent: React.FC = () => {
                         className={classNames(
                           "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10",
                           darkMode 
-                            ? "border-gray-600 bg-gray-700/50 text-white hover:border-gray-500" 
-                            : "border-gray-200 bg-gray-50/50 text-gray-900 hover:border-gray-300",
+                            ? "input-field text-white hover:border-gray-500" 
+                            : "input-field text-gray-900 hover:border-gray-300",
                           "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzZCNzI4MCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+')]"
                         )}
                       >
@@ -1483,8 +1400,8 @@ const WarningsContent: React.FC = () => {
                           className={classNames(
                             "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
                             darkMode 
-                              ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
-                              : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                              ? "input-field text-white placeholder-gray-400 hover:border-gray-500" 
+                              : "input-field text-gray-900 placeholder-gray-500 hover:border-gray-300"
                           )}
                         />
                       </div>
@@ -1502,8 +1419,8 @@ const WarningsContent: React.FC = () => {
                         className={classNames(
                           "mt-2 block w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
                           darkMode 
-                            ? "border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 hover:border-gray-500" 
-                            : "border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-500 hover:border-gray-300"
+                            ? "input-field text-white placeholder-gray-400 hover:border-gray-500" 
+                            : "input-field text-gray-900 placeholder-gray-500 hover:border-gray-300"
                         )}
                       />
                     </div>

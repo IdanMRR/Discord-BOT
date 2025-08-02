@@ -252,18 +252,10 @@ const Profile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={classNames(
-        "min-h-screen p-6",
-        darkMode ? "bg-gray-900" : "bg-gray-50"
-      )}>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="text-blue-500" />
-            <p className={classNames(
-              "mt-4 text-lg font-medium",
-              darkMode ? "text-gray-300" : "text-gray-600"
-            )}>Loading your profile...</p>
-          </div>
+      <div className="page-container flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-lg font-medium text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
@@ -271,52 +263,32 @@ const Profile: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className={classNames(
-        "min-h-screen p-6",
-        darkMode ? "bg-gray-900" : "bg-gray-50"
-      )}>
+      <div className="page-container">
         <div className="text-center py-16">
           <div className="text-8xl mb-6">❌</div>
-          <h3 className={classNames(
-            "text-2xl font-bold mb-4",
-            darkMode ? "text-red-400" : "text-red-500"
-          )}>Profile Not Found</h3>
-          <p className={classNames(
-            "text-lg",
-            darkMode ? "text-gray-400" : "text-gray-600"
-          )}>Unable to load your profile information.</p>
+          <h3 className="text-2xl font-bold mb-4 text-destructive">Profile Not Found</h3>
+          <p className="text-lg text-muted-foreground">Unable to load your profile information.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={classNames("space-y-8", darkMode ? "bg-gray-900" : "bg-gray-50")}>
+    <div className="page-container p-8 space-y-8">
       {/* Header */}
       <div className="relative">
         <div className="flex items-center space-x-4">
-          <div className={classNames(
-            "p-4 rounded-lg border transition-colors",
-            darkMode 
-              ? "bg-gray-800 border-gray-700" 
-              : "bg-white border-gray-200"
-          )}>
+          <div className="card p-4">
             <UserCircleIcon className={classNames(
               "h-8 w-8",
               darkMode ? "text-slate-400" : "text-slate-600"
             )} />
           </div>
           <div>
-            <h1 className={classNames(
-              "text-4xl font-bold",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+            <h1 className="text-4xl font-bold text-foreground">
               Profile
             </h1>
-            <p className={classNames(
-              "text-lg font-medium mt-2",
-              darkMode ? "text-gray-400" : "text-gray-600"
-            )}>
+            <p className="text-lg font-medium mt-2 text-muted-foreground">
               Manage your account and view your activity
             </p>
           </div>
@@ -328,12 +300,7 @@ const Profile: React.FC = () => {
         
         {/* Profile Info */}
         <div className="lg:col-span-1">
-          <div className={classNames(
-            "rounded-lg border p-8",
-            darkMode 
-              ? "bg-gray-800 border-gray-700" 
-              : "bg-white border-gray-200"
-          )}>
+          <div className="card p-8">
             <div className="text-center">
               {/* Avatar */}
               <div className="relative mx-auto w-32 h-32 mb-6">
@@ -383,18 +350,15 @@ const Profile: React.FC = () => {
                 <button className={classNames(
                   "absolute bottom-0 right-0 p-2 rounded-full border transition-colors",
                   darkMode 
-                    ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600" 
-                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-primary/20 hover:text-primary-400 hover:border-primary-500" 
+                    : "bg-white border-gray-200 text-gray-600 hover:bg-primary/10 hover:text-primary-600 hover:border-primary-300"
                 )}>
                   <CameraIcon className="h-4 w-4" />
                 </button>
               </div>
 
               {/* Username */}
-              <h2 className={classNames(
-                "text-2xl font-bold mb-2",
-                darkMode ? "text-white" : "text-gray-900"
-              )}>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">
                 {profile.username}#{profile.discriminator}
               </h2>
 
@@ -481,12 +445,7 @@ const Profile: React.FC = () => {
             ].map((stat, index) => (
               <div
                 key={index}
-                className={classNames(
-                  "p-4 rounded-lg border",
-                  darkMode 
-                    ? "bg-gray-800 border-gray-700" 
-                    : "bg-white border-gray-200"
-                )}
+                className="card p-4"
               >
                 <div className="flex items-center space-x-2 mb-2">
                   <stat.icon className={classNames(
@@ -499,17 +458,11 @@ const Profile: React.FC = () => {
                       ? darkMode ? "text-secondary-400" : "text-secondary-600"
                       : darkMode ? "text-accent-400" : "text-accent-600"
                   )} />
-                  <span className={classNames(
-                    "text-2xl font-bold",
-                    darkMode ? "text-white" : "text-gray-900"
-                  )}>
+                  <span className="text-2xl font-bold text-foreground">
                     {stat.value.toLocaleString()}
                   </span>
                 </div>
-                <p className={classNames(
-                  "text-sm",
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                )}>
+                <p className="text-sm text-muted-foreground">
                   {stat.label}
                 </p>
               </div>
@@ -517,16 +470,8 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Permissions */}
-          <div className={classNames(
-            "rounded-lg border p-6",
-            darkMode 
-              ? "bg-gray-800 border-gray-700" 
-              : "bg-white border-gray-200"
-          )}>
-            <h3 className={classNames(
-              "text-xl font-bold mb-4",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+          <div className="card p-6">
+            <h3 className="text-xl font-bold mb-4 text-foreground">
               🔐 Permissions
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -545,16 +490,8 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className={classNames(
-            "rounded-lg border p-6",
-            darkMode 
-              ? "bg-gray-800 border-gray-700" 
-              : "bg-white border-gray-200"
-          )}>
-            <h3 className={classNames(
-              "text-xl font-bold mb-4",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
+          <div className="card p-6">
+            <h3 className="text-xl font-bold mb-4 text-foreground">
               📊 Recent Activity
             </h3>
             <div className="space-y-3">
@@ -562,8 +499,8 @@ const Profile: React.FC = () => {
                 <div
                   key={index}
                   className={classNames(
-                    "flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:scale-[1.02]",
-                    darkMode ? "bg-gray-700/30 hover:bg-gray-700/50" : "bg-gray-50 hover:bg-gray-100"
+                    "flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
+                    darkMode ? "bg-gray-700/30 hover:bg-primary/10 hover:ring-1 hover:ring-primary/20" : "bg-gray-50 hover:bg-primary/5 hover:ring-1 hover:ring-primary/20"
                   )}
                 >
                   <div className={classNames(
