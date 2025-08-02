@@ -12,10 +12,10 @@ import FormField from '../common/FormField';
 import ActionButton from '../common/ActionButton';
 import ToggleSwitch from '../common/ToggleSwitch';
 
-// Utility function for conditional class names
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
+// Utility function for conditional class names (if needed in future)
+// function classNames(...classes: string[]) {
+//   return classes.filter(Boolean).join(' ');
+// }
 
 interface AutoRole {
   roleId: string;
@@ -36,7 +36,7 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
   onClose,
   serverId
 }) => {
-  const { darkMode } = useTheme();
+  // const { darkMode } = useTheme(); // Not needed with ConfigModal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -187,7 +187,7 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                 </p>
               </div>
               <ToggleSwitch
-                checked={enableAutoRoles}
+                enabled={enableAutoRoles}
                 onChange={setEnableAutoRoles}
                 label="Enable Auto-Roles"
               />
@@ -274,7 +274,6 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                             { value: "", label: "-- Select Role --" },
                             ...roles.map(role => ({ value: role.id, label: `@${role.name}` }))
                           ]}
-                          size="sm"
                         />
 
                         <FormField
@@ -288,7 +287,6 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                             { value: "reaction", label: "Reaction Role" },
                             { value: "time", label: "Time-based" }
                           ]}
-                          size="sm"
                         />
 
                         {autoRole.condition === 'level' && (
@@ -298,8 +296,7 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                             label="Level"
                             value={autoRole.level?.toString() || "1"}
                             onChange={(value) => updateAutoRole(index, { level: parseInt(value) || 1 })}
-                            size="sm"
-                            min="1"
+                            min={1}
                           />
                         )}
 
@@ -309,8 +306,9 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                             variant="danger"
                             size="sm"
                             icon={TrashIcon}
-                            title="Remove Rule"
-                          />
+                          >
+                            Remove
+                          </ActionButton>
                         </div>
                       </div>
 
@@ -321,7 +319,6 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                           value={autoRole.description}
                           onChange={(value) => updateAutoRole(index, { description: value })}
                           placeholder="Description of this auto-role rule"
-                          size="sm"
                         />
                       </div>
                     </div>
