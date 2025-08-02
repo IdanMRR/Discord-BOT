@@ -187,6 +187,7 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
       title="Welcome Message Configuration"
       description="Customize the message new members see when they join your server"
       icon="👋"
+      maxWidth="2xl"
       loading={loading}
       loadingText="Loading configuration..."
       actions={
@@ -205,39 +206,21 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
     >
       <div className="space-y-6">
             {/* Available Variables Info */}
-            <div className={classNames(
-              "p-4 rounded-lg border-l-4 border-blue-500",
-              darkMode ? "bg-blue-900/20" : "bg-blue-50"
-            )}>
-              <h3 className={classNames(
-                "font-semibold mb-2",
-                darkMode ? "text-blue-300" : "text-blue-800"
-              )}>
+            <div className="p-4 rounded-lg border-l-4 border-primary bg-primary/10">
+              <h3 className="font-semibold mb-2 text-primary">
                 Available Variables
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                <code className={classNames(
-                  "px-2 py-1 rounded",
-                  darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                )}>
+                <code className="px-2 py-1 rounded bg-muted text-primary">
                   {'{user}'}
                 </code>
-                <code className={classNames(
-                  "px-2 py-1 rounded",
-                  darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                )}>
+                <code className="px-2 py-1 rounded bg-muted text-primary">
                   {'{server}'}
                 </code>
-                <code className={classNames(
-                  "px-2 py-1 rounded",
-                  darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                )}>
+                <code className="px-2 py-1 rounded bg-muted text-primary">
                   {'{memberCount}'}
                 </code>
-                <code className={classNames(
-                  "px-2 py-1 rounded",
-                  darkMode ? "bg-gray-700 text-blue-300" : "bg-blue-100 text-blue-800"
-                )}>
+                <code className="px-2 py-1 rounded bg-muted text-primary">
                   {'{date}'}
                 </code>
               </div>
@@ -273,10 +256,7 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
             {/* Fields */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <label className={classNames(
-                  "block text-sm font-medium",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
+                <label className="block text-sm font-medium text-foreground">
                   Embed Fields
                 </label>
                 <ActionButton
@@ -291,15 +271,9 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
 
               <div className="space-y-4">
                 {config.fields.map((field, index) => (
-                  <div key={index} className={classNames(
-                    "p-4 rounded-lg border",
-                    darkMode ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
-                  )}>
+                  <div key={index} className="p-4 rounded-lg border border-border bg-muted/50">
                     <div className="flex items-center justify-between mb-3">
-                      <span className={classNames(
-                        "text-sm font-medium",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
+                      <span className="text-sm font-medium text-foreground">
                         Field {index + 1}
                       </span>
                       <ActionButton
@@ -319,7 +293,6 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
                         label="Field Name"
                         value={field.name}
                         onChange={(value) => updateField(index, { name: value })}
-                        className="text-sm"
                       />
 
                       <FormField
@@ -328,7 +301,6 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
                         value={field.value}
                         onChange={(value) => updateField(index, { value: value })}
                         rows={2}
-                        className="text-sm"
                       />
                     </div>
 
@@ -346,7 +318,7 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
             </div>
 
             {/* Reset Button */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="pt-4 border-t border-border">
               <ActionButton
                 onClick={handleReset}
                 disabled={saving}

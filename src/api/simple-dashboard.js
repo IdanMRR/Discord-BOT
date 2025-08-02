@@ -5097,11 +5097,11 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
       console.error(`[AUTO-ROLES] Database error getting role settings:`, dbError);
     }
     
-    // Get server settings for welcome role
+    // Get server settings for role configurations
     let serverSettings = null;
     try {
       serverSettings = db.prepare(`
-        SELECT welcome_role_id FROM server_settings WHERE guild_id = ?
+        SELECT welcome_role_id, muted_role_id, mod_role_id, admin_role_id FROM server_settings WHERE guild_id = ?
       `).get(serverId);
       console.log(`[AUTO-ROLES] Server settings:`, serverSettings);
     } catch (dbError) {
@@ -5111,10 +5111,10 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
         db.prepare(`
           INSERT OR IGNORE INTO server_settings (guild_id) VALUES (?)
         `).run(serverId);
-        serverSettings = { welcome_role_id: null };
+        serverSettings = { welcome_role_id: null, muted_role_id: null, mod_role_id: null, admin_role_id: null };
       } catch (insertError) {
         console.error(`[AUTO-ROLES] Failed to create server settings:`, insertError);
-        serverSettings = { welcome_role_id: null };
+        serverSettings = { welcome_role_id: null, muted_role_id: null, mod_role_id: null, admin_role_id: null };
       }
     }
 
@@ -5135,9 +5135,9 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
       enabled: Boolean(roleSettings?.auto_roles_enabled),
       autoRoles: autoRoles,
       joinRole: serverSettings?.welcome_role_id || '',
-      mutedRole: '', // Will need to add this field if needed
-      modRole: '', // Will need to add this field if needed  
-      adminRole: '' // Will need to add this field if needed
+      mutedRole: serverSettings?.muted_role_id || '',
+      modRole: serverSettings?.mod_role_id || '',
+      adminRole: serverSettings?.admin_role_id || ''
     };
 
     console.log(`[AUTO-ROLES] Returning config:`, config);
@@ -5173,22 +5173,27 @@ router.post('/server/:serverId/auto-roles/save-config', async (req, res) => {
       JSON.stringify(autoRoles || [])
     );
 
-    // Update server settings for join role if provided
-    if (joinRole) {
-      const updateServerSettings = db.prepare(`
-        UPDATE server_settings SET welcome_role_id = ? WHERE guild_id = ?
-      `);
-      
-      const result = updateServerSettings.run(joinRole, serverId);
-      
-      if (result.changes === 0) {
-        // If no rows were updated, insert a new row
-        const insertServerSettings = db.prepare(`
-          INSERT OR IGNORE INTO server_settings (guild_id, welcome_role_id) VALUES (?, ?)
-        `);
-        insertServerSettings.run(serverId, joinRole);
-      }
-    }
+    // Update server settings for all role types
+    // First ensure server_settings entry exists
+    db.prepare(`INSERT OR IGNORE INTO server_settings (guild_id) VALUES (?)`).run(serverId);
+    
+    // Update all role settings
+    const updateServerSettings = db.prepare(`
+      UPDATE server_settings SET 
+        welcome_role_id = ?, 
+        muted_role_id = ?, 
+        mod_role_id = ?, 
+        admin_role_id = ? 
+      WHERE guild_id = ?
+    `);
+    
+    updateServerSettings.run(
+      joinRole || null,
+      mutedRole || null, 
+      modRole || null,
+      adminRole || null,
+      serverId
+    );
 
     // Log the activity
     console.log(`Auto-roles configuration updated for server ${serverId}: Enabled: ${enabled}, Rules: ${autoRoles?.length || 0}`);

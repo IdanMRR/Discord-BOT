@@ -231,7 +231,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
 
         {/* Main Content */}
         <div className={classNames(
-          'flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent',
+          'flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent',
           collapsed ? 'px-3 py-4' : 'px-6 py-4'
         )}>
           <div className="space-y-6">
@@ -409,20 +409,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
             {!collapsed && (
               <>
                 <div className="ml-4 flex-1 min-w-0">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center">
                     <p className="text-base font-bold transition-colors truncate text-sidebar-foreground group-hover:text-sidebar-primary">
                       {user?.username || 'Unknown User'}
                     </p>
-                    <div className={classNames(
-                      'px-2 py-0.5 rounded-full text-xs font-semibold',
-                      'bg-gradient-to-r from-sidebar-primary/20 to-primary/20 text-sidebar-primary'
-                    )}>
-                      ADMIN
-                    </div>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
                     <p className="text-xs transition-colors text-sidebar-foreground/70 group-hover:text-sidebar-foreground">
-                      #{user?.discriminator || '0000'}
+                      @{user?.username || 'unknown'}
                     </p>
                     <span className="w-1 h-1 rounded-full bg-sidebar-border"></span>
                     <p className="text-xs font-medium transition-colors text-success">
@@ -431,18 +425,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, isMobile = false
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/settings');
-                    }}
-                    className="p-2.5 rounded-lg transition-all duration-200 group/btn hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-primary hover:shadow-lg hover:scale-105"
-                    title="Settings"
-                  >
-                    <CogIcon className="h-4 w-4 transition-transform duration-200 group-hover/btn:rotate-90" />
-                  </button>
-                  
+                <div className="flex items-center">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

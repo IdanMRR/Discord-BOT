@@ -82,26 +82,17 @@ const ConfigModal: React.FC<ConfigModalProps> = memo(({
                 className
               )}>
                 {/* Header */}
-                <div className={classNames(
-                  "flex items-center justify-between p-4 border-b",
-                  darkMode ? "border-gray-700" : "border-gray-200"
-                )}>
+                <div className="flex items-center justify-between p-4 border-b border-border">
                   <div className="flex items-center">
                     {icon && (
                       <span className="text-xl mr-2 flex-shrink-0">{icon}</span>
                     )}
                     <div>
-                      <Dialog.Title className={classNames(
-                        "text-lg font-semibold",
-                        darkMode ? "text-white" : "text-gray-900"
-                      )}>
+                      <Dialog.Title className="text-lg font-semibold text-foreground">
                         {title}
                       </Dialog.Title>
                       {description && (
-                        <p className={classNames(
-                          "text-xs mt-0.5",
-                          darkMode ? "text-gray-400" : "text-gray-600"
-                        )}>
+                        <p className="text-xs mt-0.5 text-muted-foreground">
                           {description}
                         </p>
                       )}
@@ -109,12 +100,7 @@ const ConfigModal: React.FC<ConfigModalProps> = memo(({
                   </div>
                   <button
                     onClick={onClose}
-                    className={classNames(
-                      "p-1.5 rounded-md transition-colors",
-                      darkMode 
-                        ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200" 
-                        : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-                    )}
+                    className="p-1.5 rounded-md transition-colors hover:bg-muted text-muted-foreground hover:text-foreground"
                   >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
@@ -139,10 +125,7 @@ const ConfigModal: React.FC<ConfigModalProps> = memo(({
 
                     {/* Actions */}
                     {actions && (
-                      <div className={classNames(
-                        "flex justify-end p-4 border-t space-x-2",
-                        darkMode ? "border-gray-700" : "border-gray-200"
-                      )}>
+                      <div className="flex justify-end p-4 border-t border-border space-x-2">
                         {actions}
                       </div>
                     )}

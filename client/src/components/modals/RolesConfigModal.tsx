@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import { apiService } from '../../services/api';
 import {
   CheckIcon,
@@ -21,6 +20,8 @@ interface AutoRole {
   roleId: string;
   roleName: string;
   level?: number;
+  timeAmount?: number;
+  timeUnit?: 'hours' | 'days' | 'weeks' | 'months';
   condition: 'join' | 'level' | 'reaction' | 'time';
   description: string;
 }
@@ -36,7 +37,6 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
   onClose,
   serverId
 }) => {
-  // const { darkMode } = useTheme(); // Not needed with ConfigModal
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -275,7 +275,7 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                 <div className="space-y-4">
                   {autoRoles.map((autoRole, index) => (
                     <div key={index} className="p-4 rounded-lg border card">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                         <FormField
                           type="select"
                           label="Role"
@@ -309,6 +309,32 @@ const RolesConfigModal: React.FC<RolesConfigModalProps> = ({
                             onChange={(value) => updateAutoRole(index, { level: parseInt(value) || 1 })}
                             min={1}
                           />
+                        )}
+
+                        {autoRole.condition === 'time' && (
+                          <>
+                            <FormField
+                              type="input"
+                              inputType="number"
+                              label="Duration"
+                              value={autoRole.timeAmount?.toString() || "1"}
+                              onChange={(value) => updateAutoRole(index, { timeAmount: parseInt(value) || 1 })}
+                              min={1}
+                              placeholder="Amount"
+                            />
+                            <FormField
+                              type="select"
+                              label="Time Unit"
+                              value={autoRole.timeUnit || 'days'}
+                              onChange={(value) => updateAutoRole(index, { timeUnit: value as any })}
+                              options={[
+                                { value: "hours", label: "Hours" },
+                                { value: "days", label: "Days" },
+                                { value: "weeks", label: "Weeks" },
+                                { value: "months", label: "Months" }
+                              ]}
+                            />
+                          </>
                         )}
 
                         <div className="flex items-end">

@@ -97,6 +97,38 @@ const ServerSettingsContent: React.FC = () => {
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [rolesConfigModalOpen, setRolesConfigModalOpen] = useState(false);
 
+  // Scroll to section function
+  const scrollToSection = (sectionId: string) => {
+    console.log('Scrolling to section:', sectionId); // Debug log
+    const element = document.getElementById(sectionId);
+    console.log('Found element:', element); // Debug log
+    
+    if (element) {
+      // Simple scrollIntoView with block: 'start' and offset for header
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+
+      // Adjust for header after scroll
+      setTimeout(() => {
+        window.scrollBy(0, -80);
+      }, 100);
+
+      // Add a highlight effect
+      setTimeout(() => {
+        element.style.transition = 'box-shadow 0.3s ease';
+        element.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
+        setTimeout(() => {
+          element.style.boxShadow = '';
+        }, 2000);
+      }, 200);
+    } else {
+      console.error('Element not found with ID:', sectionId);
+    }
+  };
+
   // Load server data
   useEffect(() => {
     if (!serverId) return;
@@ -672,7 +704,7 @@ const ServerSettingsContent: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Welcome & Leave Messages */}
           <button
-            onClick={() => setWelcomeModalOpen(true)}
+            onClick={() => scrollToSection('welcome-messages-section')}
             className="flex flex-col items-center justify-center p-6 bg-blue-500/10 rounded-lg hover:bg-blue-500/20 transition-colors"
           >
             <UserPlusIcon className="h-8 w-8 text-blue-600 mb-2" />
@@ -682,7 +714,7 @@ const ServerSettingsContent: React.FC = () => {
 
           {/* Verification System */}
           <button
-            onClick={() => setVerificationModalOpen(true)}
+            onClick={() => scrollToSection('verification-section')}
             className="flex flex-col items-center justify-center p-6 bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors"
           >
             <CheckBadgeIcon className="h-8 w-8 text-green-600 mb-2" />
@@ -706,7 +738,7 @@ const ServerSettingsContent: React.FC = () => {
 
           {/* Role Management */}
           <button
-            onClick={() => setRolesConfigModalOpen(true)}
+            onClick={() => scrollToSection('roles-section')}
             className="flex flex-col items-center justify-center p-6 bg-orange-500/10 rounded-lg hover:bg-orange-500/20 transition-colors"
           >
             <UserGroupIcon className="h-8 w-8 text-orange-600 mb-2" />
@@ -925,11 +957,12 @@ const ServerSettingsContent: React.FC = () => {
       </SettingsCard>
 
       {/* Member Verification */}
-      <SettingsCard
-        title="Member Verification"
-        description="Configure verification system for new members"
-        icon="✅"
-        variant="compact"
+      <div id="verification-section">
+        <SettingsCard
+          title="Member Verification"
+          description="Configure verification system for new members"
+          icon="✅"
+          variant="compact"
         className="mb-8"
       >
 
@@ -1041,9 +1074,10 @@ const ServerSettingsContent: React.FC = () => {
           </div>
         </div>
       </SettingsCard>
+      </div>
 
       {/* Welcome Messages */}
-      <div className="card rounded-lg border mb-8">
+      <div id="welcome-messages-section" className="card rounded-lg border mb-8">
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-6 flex items-center text-foreground">
             👋 Welcome Messages
@@ -1164,11 +1198,13 @@ const ServerSettingsContent: React.FC = () => {
                 <button
                   onClick={() => setWelcomeModalOpen(true)}
                   className={classNames(
-                    "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                    "bg-blue-600 hover:bg-blue-700 text-white"
+                    "w-full px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2",
+                    "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800",
+                    "text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                   )}
                 >
-                  🎨 Configure Welcome Message
+                  <span className="text-lg">🎨</span>
+                  Configure Welcome Message
                 </button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -1191,9 +1227,10 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center gap-1"
                   >
-                    🧪 Test Message
+                    <span>🧪</span>
+                    Test
                   </button>
                   
                   <button
@@ -1212,9 +1249,10 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
                   >
-                    🔄 Reset to Default
+                    <span>🔄</span>
+                    Reset
                   </button>
                 </div>
               </div>
@@ -1259,11 +1297,13 @@ const ServerSettingsContent: React.FC = () => {
                 <button
                   onClick={() => setGoodbyeModalOpen(true)}
                   className={classNames(
-                    "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                    "bg-orange-600 hover:bg-orange-700 text-white"
+                    "w-full px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2",
+                    "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800",
+                    "text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                   )}
                 >
-                  🎨 Configure Goodbye Message
+                  <span className="text-lg">🎨</span>
+                  Configure Goodbye Message
                 </button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -1286,9 +1326,10 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center gap-1"
                   >
-                    🧪 Test Message
+                    <span>🧪</span>
+                    Test
                   </button>
                   
                   <button
@@ -1307,9 +1348,10 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
                   >
-                    🔄 Reset to Default
+                    <span>🔄</span>
+                    Reset
                   </button>
                 </div>
               </div>
@@ -1354,11 +1396,13 @@ const ServerSettingsContent: React.FC = () => {
                 <button
                   onClick={() => setInviteJoinModalOpen(true)}
                   className={classNames(
-                    "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                    "bg-green-600 hover:bg-green-700 text-white"
+                    "w-full px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2",
+                    "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800",
+                    "text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                   )}
                 >
-                  🎨 Configure Invite Join Message
+                  <span className="text-lg">🎨</span>
+                  Configure Invite Join Message
                 </button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -1381,9 +1425,10 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center gap-1"
                   >
-                    🧪 Test Message
+                    <span>🧪</span>
+                    Test
                   </button>
                   
                   <button
@@ -1402,9 +1447,10 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
                   >
-                    🔄 Reset to Default
+                    <span>🔄</span>
+                    Reset
                   </button>
                 </div>
               </div>
@@ -1449,11 +1495,13 @@ const ServerSettingsContent: React.FC = () => {
                 <button
                   onClick={() => setInviteLeaveModalOpen(true)}
                   className={classNames(
-                    "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                    "bg-red-600 hover:bg-red-700 text-white"
+                    "w-full px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2",
+                    "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800",
+                    "text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                   )}
                 >
-                  🎨 Configure Invite Leave Message
+                  <span className="text-lg">🎨</span>
+                  Configure Invite Leave Message
                 </button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -1476,9 +1524,10 @@ const ServerSettingsContent: React.FC = () => {
                         toast.error('Error sending test message');
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-border text-foreground hover:bg-muted"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center gap-1"
                   >
-                    🧪 Test Message
+                    <span>🧪</span>
+                    Test
                   </button>
                   
                   <button
@@ -1497,13 +1546,103 @@ const ServerSettingsContent: React.FC = () => {
                         }
                       }
                     }}
-                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-colors border-destructive text-destructive hover:bg-destructive/10"
+                    className="px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
                   >
-                    🔄 Reset to Default
+                    <span>🔄</span>
+                    Reset
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Role Management & Auto-Roles */}
+      <div id="roles-section" className="card rounded-lg border mb-8">
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-foreground">
+            👥 Role Management & Auto-Roles
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Server Roles */}
+            <div className="p-4 rounded-lg border content-area">
+              <div className="flex items-center mb-3">
+                <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-orange-600 dark:text-orange-400">🛡️</span>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Server Roles
+                </h3>
+              </div>
+              <p className="text-sm mb-3 text-muted-foreground">
+                Configure staff roles and permissions for your server.
+              </p>
+              
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">🛡️</span>
+                  <span>Moderator roles with moderation permissions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-red-600">👑</span>
+                  <span>Administrator roles with full control</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600">🔇</span>
+                  <span>Muted roles for temporary restrictions</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Auto-Roles */}
+            <div className="p-4 rounded-lg border content-area">
+              <div className="flex items-center mb-3">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-purple-600 dark:text-purple-400">🤖</span>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Auto-Roles System
+                </h3>
+              </div>
+              <p className="text-sm mb-3 text-muted-foreground">
+                Automatically assign roles based on member actions.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">👋</span>
+                  <span>Join roles</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-600">📈</span>
+                  <span>Level roles</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">⏰</span>
+                  <span>Time roles</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-600">👆</span>
+                  <span>Reaction roles</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={() => setRolesConfigModalOpen(true)}
+              className={classNames(
+                "px-8 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-3",
+                "bg-gradient-to-r from-orange-600 to-purple-600 hover:from-orange-700 hover:to-purple-700",
+                "text-white shadow-lg hover:shadow-xl transform hover:scale-105"
+              )}
+            >
+              <UserGroupIcon className="h-6 w-6" />
+              Configure Roles & Auto-Roles
+            </button>
           </div>
         </div>
       </div>
