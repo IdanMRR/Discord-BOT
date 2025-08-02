@@ -13,6 +13,7 @@ import InviteJoinMessageConfigModal from '../components/modals/InviteJoinMessage
 import InviteLeaveMessageConfigModal from '../components/modals/InviteLeaveMessageConfigModal';
 import RolesConfigModal from '../components/modals/RolesConfigModal';
 import toast from 'react-hot-toast';
+import { dashboardLogger } from '../services/dashboardLogger';
 import {
   UserPlusIcon,
   CheckBadgeIcon,
@@ -221,6 +222,15 @@ const ServerSettingsContent: React.FC = () => {
       if (response.success) {
         setLoggingSettings(updatedSettings);
         toast.success(`${getSettingDisplayName(setting)} ${value ? 'enabled' : 'disabled'}`);
+        
+        // Log the settings change
+        dashboardLogger.logLogSettingsChanged(
+          serverId, 
+          getSettingDisplayName(setting), 
+          value, 
+          undefined, 
+          'User'
+        );
       } else {
         toast.error('Failed to update setting');
       }
@@ -237,6 +247,7 @@ const ServerSettingsContent: React.FC = () => {
 
     setSaving(true);
     try {
+      const oldChannelId = loggingSettings[setting] as string;
       const updatedSettings = {
         ...loggingSettings,
         [setting]: channelId || undefined
@@ -247,7 +258,17 @@ const ServerSettingsContent: React.FC = () => {
       if (response.success) {
         setLoggingSettings(updatedSettings);
         const channelName = channels.find(c => c.id === channelId)?.name || 'None';
+        const oldChannelName = channels.find(c => c.id === oldChannelId)?.name || 'None';
         toast.success(`${getSettingDisplayName(setting)} set to #${channelName}`);
+        
+        // Log the settings change
+        dashboardLogger.logSettingsChanged(
+          serverId, 
+          getSettingDisplayName(setting), 
+          oldChannelName === 'None' ? 'No channel' : `#${oldChannelName}`,
+          channelName === 'None' ? 'No channel' : `#${channelName}`,
+          'User'
+        );
       } else {
         toast.error('Failed to update channel setting');
       }
@@ -592,14 +613,14 @@ const ServerSettingsContent: React.FC = () => {
       </div>
 
       {/* Info Banner */}
-      <div className="mb-8 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-500/10">
+      <div className="mb-8 p-4 rounded-lg border-l-4 border-primary bg-primary/10">
         <div className="flex items-start">
-          <InformationCircleIcon className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+          <InformationCircleIcon className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-blue-600">
+            <h3 className="text-sm font-medium text-primary">
               Message Logs
             </h3>
-            <p className="text-sm mt-1 text-blue-600/80">
+            <p className="text-sm mt-1 text-primary/80">
               Configure which Discord events are logged and where they are sent. These settings only affect logging for this server.
             </p>
           </div>

@@ -21,6 +21,7 @@ import SettingsCard from '../components/common/SettingsCard';
 import ActionButton from '../components/common/ActionButton';
 import ToggleSwitch from '../components/common/ToggleSwitch';
 import { ColorCustomizer } from '../components/ui/ColorCustomizer';
+import { dashboardLogger } from '../services/dashboardLogger';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -219,10 +220,14 @@ const Settings: React.FC = (): React.ReactElement => {
 
   // Apply theme changes (save immediately for better UX)
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
+    const oldTheme = theme;
     setTheme(newTheme);
     
     // Save the theme setting immediately
     updateSetting('theme', newTheme);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Theme', oldTheme, newTheme, 'User');
     
     if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -239,45 +244,69 @@ const Settings: React.FC = (): React.ReactElement => {
 
   // Handle animation toggle
   const handleAnimationsToggle = () => {
+    const oldValue = animationsEnabled;
     const newValue = !animationsEnabled;
     setAnimationsEnabled(newValue);
     updateSetting('animationsEnabled', newValue);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Animations', oldValue ? 'enabled' : 'disabled', newValue ? 'enabled' : 'disabled', 'User');
   };
 
   // Handle compact mode toggle
   const handleCompactModeToggle = () => {
+    const oldValue = compactMode;
     const newValue = !compactMode;
     setCompactMode(newValue);
     updateSetting('compactMode', newValue);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Compact Mode', oldValue ? 'enabled' : 'disabled', newValue ? 'enabled' : 'disabled', 'User');
   };
 
   // Handle auto refresh toggle
   const handleAutoRefreshToggle = () => {
+    const oldValue = autoRefresh;
     const newValue = !autoRefresh;
     setAutoRefresh(newValue);
     updateSetting('autoRefresh', newValue);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Auto Refresh', oldValue ? 'enabled' : 'disabled', newValue ? 'enabled' : 'disabled', 'User');
   };
 
   // Handle refresh interval change
   const handleRefreshIntervalChange = (newInterval: number) => {
+    const oldInterval = refreshInterval;
     setRefreshInterval(newInterval);
     updateSetting('refreshInterval', newInterval);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Refresh Interval', `${oldInterval}s`, `${newInterval}s`, 'User');
   };
 
   // Apply primary color (save immediately and let SettingsApplier handle the CSS)
   const handleColorChange = React.useCallback((color: string) => {
     console.log('Color changing to:', color);
+    const oldColor = primaryColor;
     setPrimaryColor(color);
     updateSetting('primaryColor', color);
     console.log('Color setting saved to context');
-  }, [updateSetting]);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Primary Color', oldColor, color, 'User');
+  }, [updateSetting, primaryColor]);
 
   // Apply font size (save immediately for better UX)
   const handleFontSizeChange = (size: 'small' | 'medium' | 'large' | 'xl') => {
+    const oldSize = fontSize;
     setFontSize(size as any);
     
     // Save the font size setting immediately
     updateSetting('fontSize', size);
+    
+    // Log the settings change
+    dashboardLogger.logSettingsChanged('dashboard', 'Font Size', oldSize, size, 'User');
     
     // Apply font size scaling using CSS custom property for immediate visual feedback
     const fontSizeMap = {
