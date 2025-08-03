@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { checkServerAccess } = require('../../dist/middleware/serverAuth');
 
 // Import database and utilities directly at file level to avoid path resolution issues
 // Load these once instead of on each request
@@ -2823,7 +2824,37 @@ router.get('/all-logs', async (req, res) => {
       
       for (const log of serverLogs) {
         log.userName = await getUserNameAsync(log.user_id);
-        log.details = `📋 ${log.action} | User: ${log.userName} | ${log.details || 'No additional details'}`;
+        
+        // Special handling for verification logs
+        if (log.action === 'memberVerificationSuccess' || log.action === 'memberVerificationFailed') {
+          const isSuccess = log.action === 'memberVerificationSuccess';
+          const emoji = isSuccess ? '✅' : '❌';
+          const actionDisplay = isSuccess ? 'Verification Success' : 'Verification Failed';
+          
+          // Parse verification details if available
+          let detailsText = `User: ${log.userName}`;
+          if (log.details) {
+            try {
+              const parsed = JSON.parse(log.details);
+              if (parsed.verification_type) {
+                detailsText += ` | Type: ${parsed.verification_type.toUpperCase()}`;
+              }
+              if (parsed.reason && !isSuccess) {
+                detailsText += ` | Reason: ${parsed.reason}`;
+              }
+              if (parsed.account_age_days !== undefined) {
+                detailsText += ` | Account Age: ${parsed.account_age_days} days`;
+              }
+            } catch (e) {
+              // Use basic details if parsing fails
+            }
+          }
+          
+          log.details = `${emoji} ${actionDisplay} | ${detailsText}`;
+        } else {
+          // Default handling for other server logs
+          log.details = `📋 ${log.action} | User: ${log.userName} | ${log.details || 'No additional details'}`;
+        }
         
         // Convert timestamp from milliseconds to ISO string
         const israeliTime = new Date(log.created_at + (3 * 60 * 60 * 1000));
@@ -3061,7 +3092,7 @@ router.get('/servers', async (req, res) => {
 });
 
 // Get server channels only
-router.get('/servers/:serverId/channels', async (req, res) => {
+router.get('/servers/:serverId/channels', checkServerAccess(), async (req, res) => {
   try {
     const { serverId } = req.params;
     const { type = 'text' } = req.query;
@@ -3528,8 +3559,10 @@ router.post('/server/:guildId/verification/save-config', async (req, res) => {
     const { title, description, color, buttonText, fields } = req.body;
     
     console.log('[DASHBOARD] Saving verification message config for guild:', guildId);
+    console.log('[DASHBOARD] Request body:', { title, description, color, buttonText, fields });
     
     if (!db || typeof db.prepare !== 'function') {
+      console.log('[DASHBOARD] Database not available');
       return res.json({
         success: false,
         error: 'Database not available'
@@ -3547,17 +3580,40 @@ router.post('/server/:guildId/verification/save-config', async (req, res) => {
       ]
     };
     
-    const stmt = db.prepare(`
-      UPDATE server_settings 
-      SET verification_message_config = ?, updated_at = CURRENT_TIMESTAMP 
-      WHERE guild_id = ?
-    `);
+    console.log('[DASHBOARD] Final config to save:', verificationConfig);
     
-    const result = stmt.run(JSON.stringify(verificationConfig), guildId);
+    // First, make sure the server exists in server_settings
+    const checkStmt = db.prepare('SELECT guild_id FROM server_settings WHERE guild_id = ?');
+    const existingServer = checkStmt.get(guildId);
+    
+    if (!existingServer) {
+      console.log('[DASHBOARD] Server not found, creating entry for guild:', guildId);
+      const insertStmt = db.prepare(`
+        INSERT INTO server_settings (guild_id, verification_message_config, created_at, updated_at) 
+        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `);
+      insertStmt.run(guildId, JSON.stringify(verificationConfig));
+    } else {
+      console.log('[DASHBOARD] Updating existing server configuration');
+      const updateStmt = db.prepare(`
+        UPDATE server_settings 
+        SET verification_message_config = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE guild_id = ?
+      `);
+      updateStmt.run(JSON.stringify(verificationConfig), guildId);
+    }
+    
+    // Verify the save was successful
+    const verifyStmt = db.prepare('SELECT verification_message_config FROM server_settings WHERE guild_id = ?');
+    const savedConfig = verifyStmt.get(guildId);
+    console.log('[DASHBOARD] Verification of saved config:', savedConfig);
     
     res.json({
       success: true,
-      data: { message: 'Verification message configuration saved successfully' }
+      data: { 
+        message: 'Verification message configuration saved successfully',
+        config: verificationConfig
+      }
     });
     
   } catch (error) {
@@ -3574,7 +3630,10 @@ router.get('/server/:guildId/verification/config', async (req, res) => {
   try {
     const { guildId } = req.params;
     
+    console.log('[DASHBOARD] Getting verification message config for guild:', guildId);
+    
     if (!db || typeof db.prepare !== 'function') {
+      console.log('[DASHBOARD] Database not available');
       return res.json({
         success: false,
         error: 'Database not available'
@@ -3583,26 +3642,31 @@ router.get('/server/:guildId/verification/config', async (req, res) => {
     
     const settings = db.prepare('SELECT verification_message_config FROM server_settings WHERE guild_id = ?').get(guildId);
     
+    console.log('[DASHBOARD] Raw settings from DB:', settings);
+    
     if (settings?.verification_message_config) {
       const config = JSON.parse(settings.verification_message_config);
+      console.log('[DASHBOARD] Parsed config:', config);
       res.json({
         success: true,
         data: config
       });
     } else {
+      console.log('[DASHBOARD] No saved config found, returning defaults');
       // Return default configuration
+      const defaultConfig = {
+        title: '🔒 Server Verification',
+        description: 'Welcome! Please verify your account to gain access to this server.',
+        color: '#3B82F6',
+        buttonText: 'Verify',
+        fields: [
+          { name: '🔹 Why Verification?', value: 'Verification helps maintain a safe and secure community.' },
+          { name: '🔹 How to Verify', value: 'Click the button below to start the verification process.' }
+        ]
+      };
       res.json({
         success: true,
-        data: {
-          title: '🔒 Server Verification',
-          description: 'Welcome! Please verify your account to gain access to this server.',
-          color: '#3B82F6',
-          buttonText: 'Verify',
-          fields: [
-            { name: '🔹 Why Verification?', value: 'Verification helps maintain a safe and secure community.' },
-            { name: '🔹 How to Verify', value: 'Click the button below to start the verification process.' }
-          ]
-        }
+        data: defaultConfig
       });
     }
     
@@ -5080,7 +5144,7 @@ router.post('/server/:guildId/invite-tracker/test-leave-message', async (req, re
 });
 
 // Auto-Roles Configuration Routes
-router.get('/server/:serverId/auto-roles/config', async (req, res) => {
+router.get('/server/:serverId/auto-roles/config', checkServerAccess(), async (req, res) => {
   try {
     const { serverId } = req.params;
     
@@ -5155,7 +5219,7 @@ router.get('/server/:serverId/auto-roles/config', async (req, res) => {
   }
 });
 
-router.post('/server/:serverId/auto-roles/save-config', async (req, res) => {
+router.post('/server/:serverId/auto-roles/save-config', checkServerAccess(), async (req, res) => {
   try {
     const { serverId } = req.params;
     const { enabled, autoRoles, joinRole, mutedRole, modRole, adminRole } = req.body;
@@ -5207,6 +5271,237 @@ router.post('/server/:serverId/auto-roles/save-config', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to save auto-roles configuration'
+    });
+  }
+});
+
+// Custom Questions API Endpoints
+router.get('/verification/questions/:guildId', checkServerAccess(), async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    
+    const settings = db.prepare(`
+      SELECT custom_questions FROM verification_settings WHERE guild_id = ?
+    `).get(guildId);
+    
+    let questions = [];
+    if (settings?.custom_questions) {
+      try {
+        questions = JSON.parse(settings.custom_questions);
+      } catch (error) {
+        console.error('Error parsing custom questions:', error);
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: questions
+    });
+  } catch (error) {
+    console.error('Error getting custom questions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get custom questions'
+    });
+  }
+});
+
+router.post('/verification/questions/:guildId', checkServerAccess(), async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const { question, answer, case_sensitive = false } = req.body;
+    
+    if (!question || !answer) {
+      return res.status(400).json({
+        success: false,
+        error: 'Question and answer are required'
+      });
+    }
+    
+    // Get existing questions
+    const settings = db.prepare(`
+      SELECT custom_questions FROM verification_settings WHERE guild_id = ?
+    `).get(guildId);
+    
+    let questions = [];
+    if (settings?.custom_questions) {
+      try {
+        questions = JSON.parse(settings.custom_questions);
+      } catch (error) {
+        console.error('Error parsing existing questions:', error);
+      }
+    }
+    
+    // Add new question
+    const newQuestion = {
+      id: Date.now().toString(),
+      question: question.trim(),
+      answer: answer.trim(),
+      case_sensitive: Boolean(case_sensitive)
+    };
+    
+    questions.push(newQuestion);
+    
+    // Ensure verification_settings table exists
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS verification_settings (
+        guild_id TEXT PRIMARY KEY,
+        enabled INTEGER DEFAULT 0,
+        type TEXT DEFAULT 'button',
+        role_id TEXT,
+        channel_id TEXT,
+        message_id TEXT,
+        custom_questions TEXT,
+        min_age INTEGER DEFAULT 13,
+        require_account_age INTEGER DEFAULT 0,
+        min_account_age_days INTEGER DEFAULT 7,
+        log_channel_id TEXT,
+        timeout_minutes INTEGER DEFAULT 10,
+        welcome_message TEXT,
+        welcome_channel_id TEXT
+      )
+    `).run();
+    
+    // Save updated questions
+    const upsertQuestions = db.prepare(`
+      INSERT OR REPLACE INTO verification_settings (guild_id, custom_questions)
+      VALUES (?, ?)
+    `);
+    
+    upsertQuestions.run(guildId, JSON.stringify(questions));
+    
+    res.json({
+      success: true,
+      data: newQuestion
+    });
+  } catch (error) {
+    console.error('Error adding custom question:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add custom question'
+    });
+  }
+});
+
+router.delete('/verification/questions/:guildId/:questionId', checkServerAccess(), async (req, res) => {
+  try {
+    const { guildId, questionId } = req.params;
+    
+    // Get existing questions
+    const settings = db.prepare(`
+      SELECT custom_questions FROM verification_settings WHERE guild_id = ?
+    `).get(guildId);
+    
+    let questions = [];
+    if (settings?.custom_questions) {
+      try {
+        questions = JSON.parse(settings.custom_questions);
+      } catch (error) {
+        console.error('Error parsing existing questions:', error);
+      }
+    }
+    
+    // Remove question
+    questions = questions.filter(q => q.id !== questionId);
+    
+    // Save updated questions
+    const updateQuestions = db.prepare(`
+      UPDATE verification_settings SET custom_questions = ? WHERE guild_id = ?
+    `);
+    
+    updateQuestions.run(JSON.stringify(questions), guildId);
+    
+    res.json({
+      success: true,
+      message: 'Question deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting custom question:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete custom question'
+    });
+  }
+});
+
+// Age Verification Settings - GET
+router.get('/verification/age-settings/:guildId', checkServerAccess(), async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    
+    const settings = db.prepare(`
+      SELECT min_age, require_account_age, min_account_age_days 
+      FROM verification_settings WHERE guild_id = ?
+    `).get(guildId);
+    
+    const ageSettings = {
+      min_age: settings?.min_age || 18,
+      require_account_age: Boolean(settings?.require_account_age || 0),
+      min_account_age_days: settings?.min_account_age_days || 30
+    };
+    
+    res.json({
+      success: true,
+      data: ageSettings
+    });
+  } catch (error) {
+    console.error('Error getting age verification settings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get age verification settings'
+    });
+  }
+});
+
+// Age Verification Settings - POST
+router.post('/verification/age-settings/:guildId', checkServerAccess(), async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const { min_age = 13, require_account_age = false, min_account_age_days = 7 } = req.body;
+    
+    // Ensure verification_settings table exists
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS verification_settings (
+        guild_id TEXT PRIMARY KEY,
+        enabled INTEGER DEFAULT 0,
+        type TEXT DEFAULT 'button',
+        role_id TEXT,
+        channel_id TEXT,
+        message_id TEXT,
+        custom_questions TEXT,
+        min_age INTEGER DEFAULT 13,
+        require_account_age INTEGER DEFAULT 0,
+        min_account_age_days INTEGER DEFAULT 7,
+        log_channel_id TEXT,
+        timeout_minutes INTEGER DEFAULT 10,
+        welcome_message TEXT,
+        welcome_channel_id TEXT
+      )
+    `).run();
+    
+    // Save age settings
+    const upsertAgeSettings = db.prepare(`
+      INSERT OR REPLACE INTO verification_settings (
+        guild_id, min_age, require_account_age, min_account_age_days
+      ) VALUES (?, ?, ?, ?)
+    `);
+    
+    upsertAgeSettings.run(
+      guildId,
+      parseInt(min_age),
+      require_account_age ? 1 : 0,
+      parseInt(min_account_age_days)
+    );
+    
+    res.json({
+      success: true,
+      message: 'Age verification settings saved successfully'
+    });
+  } catch (error) {
+    console.error('Error saving age verification settings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save age verification settings'
     });
   }
 });
