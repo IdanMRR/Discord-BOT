@@ -804,7 +804,7 @@ const LogsContent: React.FC = () => {
                                 }
                                 // Format moderation actions
                                 else if (action === 'MemberKick' || action === 'memberKick') {
-                                  return 'Kick';
+                                  return 'Kick System';
                                 } else if (action === 'MemberBan' || action === 'memberBan') {
                                   return 'Ban';
                                 } else if (action === 'MemberTimeout' || action === 'memberTimeout') {
