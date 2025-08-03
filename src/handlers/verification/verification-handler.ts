@@ -221,30 +221,10 @@ async function generateCaptchaImage(text: string): Promise<Buffer> {
 export async function handleVerificationButtonClick(interaction: ButtonInteraction): Promise<boolean> {
   const { guildId, user } = interaction;
   
-  // Create unique interaction key to prevent duplicates
-  const interactionKey = `verify-${interaction.id}`;
-  
-  // Check if this interaction was already processed
-  if (processedVerificationInteractions.has(interactionKey)) {
-    logWarning('Verification', `Duplicate verification interaction detected for ${user.tag}, skipping`);
-    return true;
-  }
-  
-  // Mark as processed immediately
-  processedVerificationInteractions.add(interactionKey);
-  
-  // Clean up old processed interactions (keep only last 100)
-  if (processedVerificationInteractions.size > 100) {
-    const entries = Array.from(processedVerificationInteractions);
-    entries.slice(0, 50).forEach(key => processedVerificationInteractions.delete(key));
-  }
-  
-  // Log the attempt
-  logInfo('Verification', `Verification button clicked by ${user.tag} (interaction: ${interaction.id})`);
-
   try {
+    logInfo('Verification', `Verification button clicked by ${user.tag}`);
+    
     if (!guildId) {
-      // Only reply if not already handled
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: 'This command can only be used in a server.',
@@ -253,9 +233,6 @@ export async function handleVerificationButtonClick(interaction: ButtonInteracti
       }
       return false;
     }
-    
-    // Clear any existing verification attempts for this user first
-    clearVerificationAttempt(guildId, user.id);
     
     // Get verification settings
     const settings = await getVerificationSettings(guildId);
@@ -271,73 +248,86 @@ export async function handleVerificationButtonClick(interaction: ButtonInteracti
     
     // Check if user is already verified
     const member = interaction.member as GuildMember;
-    if (settings.role_id && member.roles.cache.has(settings.role_id)) {
+    if (settings.role_id && member?.roles?.cache?.has(settings.role_id)) {
+      const alreadyVerifiedEmbed = new EmbedBuilder()
+        .setColor(Colors.SUCCESS)
+        .setTitle('✅ Already Verified')
+        .setDescription('You are already verified on this server!')
+        .addFields([
+          { name: '🎉 Status', value: 'You have full access to this server', inline: false },
+          { name: '📅 Verified Role', value: `<@&${settings.role_id}>`, inline: false }
+        ])
+        .setFooter({ text: 'Made by Soggra • Verification System' })
+        .setTimestamp();
+      
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
-          content: 'You are already verified on this server.',
+          embeds: [alreadyVerifiedEmbed],
           flags: MessageFlags.Ephemeral
         });
       }
       return false;
     }
     
-    // DEFER THE INTERACTION ONCE HERE FOR ALL VERIFICATION TYPES (if not already deferred)
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-      logInfo('Verification', `Deferred interaction for ${user.tag} - ${settings.type} verification`);
-    } else {
-      logInfo('Verification', `Interaction already deferred for ${user.tag} - ${settings.type} verification`);
-    }
-    
-    // Handle verification based on type
     logInfo('Verification', `Processing ${settings.type} verification for ${user.tag}`);
     
+    // Handle different verification types
     switch (settings.type) {
       case VerificationType.BUTTON:
+      case 'button':
+        // Defer for button verification (needs time to process)
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        }
         return await handleSimpleButtonVerification(interaction, settings);
       
       case VerificationType.CAPTCHA:
+      case 'captcha':
+        // Defer for captcha verification (needs time to generate image)
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        }
         return await handleCaptchaVerificationStart(interaction, settings);
       
       case VerificationType.CUSTOM_QUESTION:
+      case 'custom_question':
+        // DON'T defer for modal interactions - handle directly
         return await handleQuestionVerificationStart(interaction, settings);
       
       case VerificationType.AGE_VERIFICATION:
+      case 'age_verification':
+        // DON'T defer for modal interactions - handle directly
         return await handleAgeVerificationStart(interaction, settings);
       
       default:
-        await interaction.editReply({
-          content: 'Unknown verification type. Please contact a server administrator.'
-        });
+        logError('Verification', `Unknown verification type: ${settings.type}`);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: 'Unknown verification type. Please contact a server administrator.',
+            flags: MessageFlags.Ephemeral
+          });
+        }
         return false;
     }
+    
   } catch (error) {
-    logError('Verification', `Error in verification button handler for ${user.tag}: ${error}`);
+    logError('Verification', `Error in verification: ${error}`);
     
-    // Clear any verification attempts on error
-    if (guildId) {
-      clearVerificationAttempt(guildId, user.id);
-    }
-    
-    // Only reply if we haven't already
-    if (!interaction.replied && !interaction.deferred) {
-      try {
-        await interaction.reply({ 
+    try {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
           content: 'An error occurred during verification. Please try again.',
           flags: MessageFlags.Ephemeral
         });
-      } catch (replyError) {
-        logError('Verification', `Failed to send error reply: ${replyError}`);
-      }
-    } else {
-      try {
+      } else {
         await interaction.editReply({
           content: 'An error occurred during verification. Please try again.'
         });
-      } catch (editError) {
-        logError('Verification', `Failed to send error edit: ${editError}`);
       }
+    } catch (replyError) {
+      logError('Verification', `Failed to send error message: ${replyError}`);
     }
+    
     return false;
   }
 }
@@ -347,12 +337,27 @@ export async function handleVerificationButtonClick(interaction: ButtonInteracti
  */
 async function handleSimpleButtonVerification(interaction: ButtonInteraction, settings: VerificationSettings): Promise<boolean> {
   try {
+    logInfo('Verification', `Starting simple button verification for ${interaction.user.tag}`);
     // Interaction is already deferred in main handler
     const success = await assignVerificationRole(interaction, settings);
     
     if (success) {
+      const successEmbed = new EmbedBuilder()
+        .setColor(Colors.SUCCESS)
+        .setTitle('✅ Verification Successful!')
+        .setDescription('Welcome to the server! You have been verified and given access.')
+        .addFields([
+          { name: '🎉 Welcome!', value: 'You now have full access to this server.', inline: false },
+          { name: '📋 Next Steps', value: 'Feel free to explore the channels and join the community!', inline: false },
+          { name: '🏷️ Role Assigned', value: `<@&${settings.role_id}>`, inline: true },
+          { name: '⏱️ Verified At', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+        ])
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setFooter({ text: 'Made by Soggra • Verification System' })
+        .setTimestamp();
+
       await interaction.editReply({
-        content: '✅ You have been verified! Welcome to the server.'
+        embeds: [successEmbed]
       });
       await logVerificationAttempt(interaction, settings, true);
     } else {
@@ -682,9 +687,16 @@ export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteracti
 async function handleQuestionVerificationStart(interaction: ButtonInteraction, settings: VerificationSettings): Promise<boolean> {
   try {
     if (!settings.custom_questions || settings.custom_questions.length === 0) {
-      await interaction.editReply({
-        content: 'No verification questions have been configured. Please contact a server administrator.'
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: 'No verification questions have been configured. Please contact a server administrator.',
+          flags: MessageFlags.Ephemeral
+        });
+      } else {
+        await interaction.editReply({
+          content: 'No verification questions have been configured. Please contact a server administrator.'
+        });
+      }
       return false;
     }
     
@@ -708,10 +720,24 @@ async function handleQuestionVerificationStart(interaction: ButtonInteraction, s
       .setCustomId(`question_submit_${interaction.user.id}`)
       .setTitle('Verification Question');
     
+    // Handle long questions properly (Discord label limit is 45 characters)
+    let questionLabel: string;
+    let placeholder: string;
+    
+    if (question.question.length > 45) {
+      questionLabel = 'Verification Question';
+      placeholder = question.question.length > 100 
+        ? question.question.substring(0, 97) + '...'
+        : question.question;
+    } else {
+      questionLabel = question.question;
+      placeholder = 'Enter your answer...';
+    }
+    
     const answerInput = new TextInputBuilder()
       .setCustomId('question_answer')
-      .setLabel(question.question)
-      .setPlaceholder('Enter your answer...')
+      .setLabel(questionLabel)
+      .setPlaceholder(placeholder)
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
     
@@ -827,6 +853,11 @@ export async function handleQuestionModalSubmit(interaction: ModalSubmitInteract
  */
 async function handleAgeVerificationStart(interaction: ButtonInteraction, settings: VerificationSettings): Promise<boolean> {
   try {
+    // Ensure we have valid age settings
+    const minAge = settings.min_age && settings.min_age >= 13 && settings.min_age <= 25 ? settings.min_age : 18;
+    
+    logInfo('Verification', `Starting age verification for ${interaction.user.tag}, min age: ${minAge}`);
+    
     // Store attempt
     const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
     verificationAttempts.set(attemptKey, {
@@ -845,7 +876,7 @@ async function handleAgeVerificationStart(interaction: ButtonInteraction, settin
     
     const yearInput = new TextInputBuilder()
       .setCustomId('birth_year')
-      .setLabel(`What year were you born? (Must be ${settings.min_age || 13}+ years old)`)
+      .setLabel(`Birth year (must be ${minAge}+ years old)`)
       .setPlaceholder('YYYY')
       .setStyle(TextInputStyle.Short)
       .setMinLength(4)
@@ -863,6 +894,148 @@ async function handleAgeVerificationStart(interaction: ButtonInteraction, settin
   }
 }
 
+/**
+ * Handle age verification modal submission
+ */
+export async function handleAgeModalSubmit(interaction: ModalSubmitInteraction): Promise<boolean> {
+  try {
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    }
+    
+    const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
+    const attempt = verificationAttempts.get(attemptKey);
+    
+    if (!attempt || attempt.type !== 'age') {
+      await interaction.editReply({
+        content: 'Your age verification attempt has expired. Please start verification again.'
+      });
+      return false;
+    }
+    
+    const settings = await getVerificationSettings(interaction.guildId!);
+    if (!settings) {
+      await interaction.editReply({
+        content: 'Verification configuration error. Please contact a server administrator.'
+      });
+      return false;
+    }
+    
+    const birthYear = interaction.fields.getTextInputValue('birth_year');
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - parseInt(birthYear);
+    const minAge = settings.min_age || 13;
+    
+    // Validate birth year
+    if (!/^\d{4}$/.test(birthYear)) {
+      attempt.attempts++;
+      if (attempt.attempts >= 3) {
+        clearTimeout(attempt.timeout);
+        verificationAttempts.delete(attemptKey);
+        
+        await interaction.editReply({
+          content: '❌ **Verification Failed**\nToo many invalid attempts. Please start verification again.'
+        });
+        
+        await logVerificationAttempt(interaction, settings, false, 'Too many age verification attempts');
+        return false;
+      }
+      
+      await interaction.editReply({
+        content: `❌ **Invalid Year**\nPlease enter a valid 4-digit birth year. You have ${3 - attempt.attempts} attempts remaining.`
+      });
+      return false;
+    }
+    
+    // Check minimum age
+    if (age < minAge) {
+      clearTimeout(attempt.timeout);
+      verificationAttempts.delete(attemptKey);
+      
+      await interaction.editReply({
+        content: `❌ **Age Verification Failed**\nYou must be at least ${minAge} years old to join this server.`
+      });
+      
+      await logVerificationAttempt(interaction, settings, false, `User is ${age} years old, minimum required is ${minAge}`);
+      return false;
+    }
+    
+    // Check if birth year is reasonable (not future, not too old)
+    if (parseInt(birthYear) > currentYear || parseInt(birthYear) < (currentYear - 100)) {
+      attempt.attempts++;
+      if (attempt.attempts >= 3) {
+        clearTimeout(attempt.timeout);
+        verificationAttempts.delete(attemptKey);
+        
+        await interaction.editReply({
+          content: '❌ **Verification Failed**\nToo many invalid attempts. Please start verification again.'
+        });
+        
+        await logVerificationAttempt(interaction, settings, false, 'Invalid birth year provided');
+        return false;
+      }
+      
+      await interaction.editReply({
+        content: `❌ **Invalid Birth Year**\nPlease enter a realistic birth year. You have ${3 - attempt.attempts} attempts remaining.`
+      });
+      return false;
+    }
+    
+    // Check account age if required
+    if (settings.require_account_age) {
+      const accountAge = Date.now() - interaction.user.createdAt.getTime();
+      const accountAgeDays = Math.floor(accountAge / (1000 * 60 * 60 * 24));
+      const minAccountAgeDays = settings.min_account_age_days || 7;
+      
+      if (accountAgeDays < minAccountAgeDays) {
+        await interaction.editReply({
+          content: `❌ **Account Too New**\nYour Discord account must be at least ${minAccountAgeDays} days old to join this server. Your account is ${accountAgeDays} days old.`
+        });
+        
+        await logVerificationAttempt(interaction, settings, false, `Account age ${accountAgeDays} days, minimum required ${minAccountAgeDays} days`);
+        return false;
+      }
+    }
+    
+    // Success!
+    clearTimeout(attempt.timeout);
+    verificationAttempts.delete(attemptKey);
+    
+    const roleAssigned = await assignVerificationRole(interaction, settings);
+    
+    if (roleAssigned) {
+      const successEmbed = new EmbedBuilder()
+        .setColor(Colors.SUCCESS)
+        .setTitle('✅ Age Verification Successful!')
+        .setDescription('You have been verified and given access to the server. Welcome!')
+        .addFields([
+          { name: '🎂 Age Verified', value: `${age} years old (minimum: ${minAge})`, inline: true },
+          { name: '📅 Account Age', value: `${Math.floor((Date.now() - interaction.user.createdAt.getTime()) / (1000 * 60 * 60 * 24))} days`, inline: true },
+          { name: '🎉 Welcome!', value: 'You now have full access to this server.', inline: false },
+          { name: '📋 Next Steps', value: 'Feel free to explore the channels and join the community!', inline: false }
+        ])
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setFooter({ text: 'Made by Soggra • Age Verification System' })
+        .setTimestamp();
+
+      await interaction.editReply({
+        embeds: [successEmbed]
+      });
+      await logVerificationAttempt(interaction, settings, true);
+      return true;
+    } else {
+      await interaction.editReply({
+        content: '❌ Failed to assign verification role. Please contact a server administrator.'
+      });
+      await logVerificationAttempt(interaction, settings, false, 'Role assignment failed');
+      return false;
+    }
+  } catch (error) {
+    logError('Verification', `Error processing age verification submission: ${error}`);
+    return false;
+  }
+}
+
 // Legacy function placeholders for compatibility
 export async function handleCaptchaAnswerClick(interaction: ButtonInteraction): Promise<boolean> {
   // Redirect to new CAPTCHA solve handler
@@ -874,6 +1047,7 @@ export async function handleCaptchaAnswerClick(interaction: ButtonInteraction): 
  */
 async function assignVerificationRole(interaction: ButtonInteraction | ModalSubmitInteraction, settings: VerificationSettings): Promise<boolean> {
   try {
+    logInfo('Verification', `Attempting to assign verification role for ${interaction.user.tag}`);
     if (!settings.role_id) {
       logError('Verification', 'No verification role configured');
       return false;

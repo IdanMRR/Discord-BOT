@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits, EmbedBuilder, Colors, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, EmbedBuilder, Colors, MessageFlags } from 'discord.js';
 import { setWeatherSchedule, getWeatherSchedule } from '../../handlers/utility/weather-scheduler';
 import { getClient } from '../../utils/client-utils';
 import { logInfo, logError } from '../../utils/logger';
@@ -28,7 +28,7 @@ export const data = new SlashCommandBuilder()
             .setDescription('Time for third update (24h format in UTC, e.g. 12:00)'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId) {
         await interaction.reply({
             content: '❌ This command can only be used in a server',

@@ -245,6 +245,31 @@ function initDatabase() {
         db.exec('ALTER TABLE server_settings ADD COLUMN ticket_panel_config TEXT');
       }
       
+      // Add role-related columns for auto-roles feature
+      const hasWelcomeRoleId = columnNames.includes('welcome_role_id');
+      if (!hasWelcomeRoleId) {
+        logInfo('SQLite', 'Adding welcome_role_id column to server_settings table');
+        db.exec('ALTER TABLE server_settings ADD COLUMN welcome_role_id TEXT');
+      }
+      
+      const hasMutedRoleId = columnNames.includes('muted_role_id');
+      if (!hasMutedRoleId) {
+        logInfo('SQLite', 'Adding muted_role_id column to server_settings table');
+        db.exec('ALTER TABLE server_settings ADD COLUMN muted_role_id TEXT');
+      }
+      
+      const hasModRoleId = columnNames.includes('mod_role_id');
+      if (!hasModRoleId) {
+        logInfo('SQLite', 'Adding mod_role_id column to server_settings table');
+        db.exec('ALTER TABLE server_settings ADD COLUMN mod_role_id TEXT');
+      }
+      
+      const hasAdminRoleId = columnNames.includes('admin_role_id');
+      if (!hasAdminRoleId) {
+        logInfo('SQLite', 'Adding admin_role_id column to server_settings table');
+        db.exec('ALTER TABLE server_settings ADD COLUMN admin_role_id TEXT');
+      }
+      
       // Log current schema for debugging
       logInfo('SQLite', `Current server_settings columns: ${columnNames.join(', ')}`);
     } catch (error) {
@@ -495,6 +520,10 @@ export interface GuildSettings {
   ticket_logs_channel_id?: string;
   red_alert_channels?: string; // JSON string of channel IDs
   staff_role_ids?: string;
+  welcome_role_id?: string; // Role assigned when users join
+  muted_role_id?: string; // Role for muted users
+  mod_role_id?: string; // Moderator role
+  admin_role_id?: string; // Administrator role
   auto_mod_enabled?: number;
   auto_mod_settings?: string;
   created_at?: string;

@@ -141,7 +141,14 @@ export async function saveAndSendTranscript(
     // Add each message to the transcript
     if (sortedMessages.length > 0) {
       for (const message of sortedMessages) {
-        const timestamp = new Date(message.createdTimestamp).toLocaleString();
+        const timestamp = new Date(message.createdTimestamp).toLocaleString('en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }).replace(',', '');
         
         textContent += `[${timestamp}] ${message.author.username}: ${message.content || '(No text content)'}\n`;
         
@@ -170,7 +177,14 @@ export async function saveAndSendTranscript(
     
     // Add footer
     textContent += `\n=============== END OF TRANSCRIPT ===============\n`;
-    textContent += `Generated on ${new Date().toLocaleString()} • Support Ticket System`;
+    textContent += `Generated on ${new Date().toLocaleString('en-GB', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(',', '')} • Support Ticket System`;
     
     // Create attachment
     const buffer = Buffer.from(textContent, 'utf-8');

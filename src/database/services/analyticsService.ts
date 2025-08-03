@@ -212,33 +212,6 @@ export class AnalyticsService {
     }
   }
 
-  // Record server health metrics
-  static async recordServerHealth(data: ServerHealth): Promise<void> {
-    try {
-      const stmt = db.prepare(`
-        INSERT INTO server_health 
-        (guild_id, member_count, online_count, bot_latency, api_response_time, memory_usage, cpu_usage, uptime, error_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      
-      stmt.run(
-        data.guild_id,
-        data.member_count,
-        data.online_count,
-        data.bot_latency || null,
-        data.api_response_time || null,
-        data.memory_usage || null,
-        data.cpu_usage || null,
-        data.uptime || null,
-        data.error_count
-      );
-      
-    } catch (error) {
-      logError('AnalyticsService', `Error recording server health: ${error}`);
-      throw error;
-    }
-  }
-
   // Get server overview stats
   static async getServerOverview(guildId: string, days: number = 7): Promise<any> {
     try {
@@ -260,20 +233,31 @@ export class AnalyticsService {
       
       // Get current online count
       const healthStmt = db.prepare(`
-        SELECT online_count, member_count
+        SELECT online_count, member_count, bot_latency
         FROM server_health 
         WHERE guild_id = ? 
         ORDER BY timestamp DESC 
         LIMIT 1
       `);
       
-      const health = healthStmt.get(guildId) as { online_count?: number; member_count?: number } | undefined;
+      const health = healthStmt.get(guildId) as { online_count?: number; member_count?: number; bot_latency?: number } | undefined;
       
-      return {
-        ...(overview || {}),
+      // Provide default values if no data exists
+      const result = {
+        total_messages: overview?.total_messages || 0,
+        avg_members: overview?.avg_members || health?.member_count || 0,
+        total_commands: overview?.total_commands || 0,
+        peak_online: overview?.peak_online || health?.online_count || 0,
+        new_members: overview?.new_members || 0,
+        left_members: overview?.left_members || 0,
+        voice_minutes: overview?.voice_minutes || 0,
+        reactions_given: overview?.reactions_given || 0,
         current_online: health?.online_count || 0,
-        current_members: health?.member_count || 0
+        current_members: health?.member_count || 0,
+        bot_latency: health?.bot_latency || 0
       };
+      
+      return result;
       
     } catch (error) {
       logError('AnalyticsService', `Error getting server overview: ${error}`);
@@ -369,7 +353,17 @@ export class AnalyticsService {
         WHERE guild_id = ? AND date >= date('now', '-' || ? || ' days')
       `);
       
-      return stmt.get(guildId, days);
+      const engagement = stmt.get(guildId, days) as any;
+      
+      // Provide default values if no engagement data exists
+      return {
+        active_members: engagement?.active_members || 0,
+        avg_messages_per_member: Math.round(engagement?.avg_messages_per_member || 0),
+        avg_commands_per_member: Math.round(engagement?.avg_commands_per_member || 0),
+        avg_voice_per_member: Math.round(engagement?.avg_voice_per_member || 0),
+        most_messages: engagement?.most_messages || 0,
+        most_voice_time: engagement?.most_voice_time || 0
+      };
       
     } catch (error) {
       logError('AnalyticsService', `Error getting member engagement: ${error}`);
@@ -425,6 +419,54 @@ export class AnalyticsService {
       case 'voice_activity': return 'voice_minutes';
       case 'reaction_count': return 'reactions_given';
       default: return 'total_messages';
+    }
+  }
+
+  // Record server health metrics
+  static async recordServerHealth(data: ServerHealth): Promise<void> {
+    try {
+      const stmt = db.prepare(`
+        INSERT INTO server_health 
+        (guild_id, member_count, online_count, bot_latency, api_response_time, memory_usage, cpu_usage, uptime, error_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      stmt.run(
+        data.guild_id,
+        data.member_count,
+        data.online_count || 0,
+        data.bot_latency || null,
+        data.api_response_time || null,
+        data.memory_usage || null,
+        data.cpu_usage || null,
+        data.uptime || null,
+        data.error_count || 0
+      );
+      
+    } catch (error) {
+      logError('AnalyticsService', `Error recording server health: ${error}`);
+      throw error;
+    }
+  }
+
+  // Update daily member count (for real-time updates)
+  static async updateDailyMemberCount(guildId: string, memberCount: number, onlineCount: number): Promise<void> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const stmt = db.prepare(`
+        INSERT INTO daily_server_stats (guild_id, date, total_members, peak_online)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(guild_id, date) DO UPDATE SET
+        total_members = ?,
+        peak_online = MAX(peak_online, ?),
+        updated_at = CURRENT_TIMESTAMP
+      `);
+      
+      stmt.run(guildId, today, memberCount, onlineCount, memberCount, onlineCount);
+      
+    } catch (error) {
+      logError('AnalyticsService', `Error updating daily member count: ${error}`);
     }
   }
 

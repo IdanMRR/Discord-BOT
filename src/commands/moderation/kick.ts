@@ -184,23 +184,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         
         await modalSubmission.editReply({ embeds: [kickEmbed] });
         
-        // Log the moderation action
-        const logResult: LogResult = await logModeration({
-          guild: guild,
-          action: 'Kick',
-          target: targetUser,
-          moderator: interaction.user,
-          reason: reason,
-          caseNumber: moderationCase.case_number,
-          additionalInfo: `User was kicked from ${guild.name}`
-        });
-        
-        // If logging failed, add a note to the response
-        if (!logResult.success && logResult.message) {
-          const logInfoEmbed = createInfoEmbed('Logging Information', logResult.message);
-          await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
-        }
-        
         // Log to database
         await logModerationToDatabase({
           guild: guild,

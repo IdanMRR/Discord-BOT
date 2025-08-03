@@ -28,6 +28,7 @@ import statsRouter from './stats';
 import serversRouter from './servers';
 import authRouter from './auth';
 import adminPanelRouter from './admin-panel';
+import integrationsRouter from './integrations';
 const activityRouter = require('./activity');
 import '../database/services/sqliteServiceExtensions';
 // Import dashboard logging middleware
@@ -430,6 +431,10 @@ app.use('/api/automod-escalation', automodEscalationRouter);
 // Register the analytics router
 console.log('Registering analytics router at /api/analytics');
 app.use('/api/analytics', analyticsRouter);
+
+// Register the integrations router
+console.log('Registering integrations router at /api/integrations');
+app.use('/api/integrations', integrationsRouter);
 
 // Register the comprehensive logs router
 console.log('Registering comprehensive logs router at /api/logs');

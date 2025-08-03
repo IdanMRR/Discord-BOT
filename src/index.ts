@@ -22,11 +22,14 @@ import { connectToDatabase } from './database/connection';
 import { createSuccessEmbed, createErrorEmbed } from './utils/embeds';
 import { logInfo, logError, logCommandUsage } from './utils/logger';
 import { AnalyticsService } from './database/services/analyticsService';
+import { RealTimeAnalyticsCollector } from './handlers/analytics/realtime-collector';
+import { DiscordDataCollector } from './handlers/analytics/discord-data-collector';
 import * as dotenv from 'dotenv';
 import { loadCommands, registerCommands } from './command-handler';
 import { setClient } from './utils/client-utils';
 import { Command } from './types/Command';
 import { setupGlobalErrorHandlers } from './middleware/errorHandler';
+import { initializeIntegrationSystems, shutdownIntegrationSystems } from './handlers/integrations/integration-initializer';
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +43,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent
   ],
@@ -101,8 +106,38 @@ const initializeCommands = async (): Promise<void> => {
 let commandInitializationStarted = false;
 
 // When the client is ready, run this code (only once)
+// Global analytics collector instances
+let analyticsCollector: RealTimeAnalyticsCollector;
+let discordDataCollector: DiscordDataCollector;
+
 client.once(Events.ClientReady, async (readyClient) => {
   logInfo('Bot', `🚀 Ready! Logged in as ${readyClient.user.tag}`);
+  
+  // Initialize analytics collectors
+  analyticsCollector = new RealTimeAnalyticsCollector(client);
+  analyticsCollector.start();
+  logInfo('Bot', '📊 Real-time analytics collector started');
+
+  // Initialize Discord data collector and collect initial data
+  discordDataCollector = new DiscordDataCollector(client);
+  setTimeout(async () => {
+    try {
+      const results = await discordDataCollector.collectAllServersData();
+      logInfo('Bot', `📈 Initial data collection completed for ${results.length} servers`);
+    } catch (error) {
+      logError('Bot', `Error in initial data collection: ${error}`);
+    }
+  }, 5000); // Wait 5 seconds for bot to fully initialize
+
+  // Initialize Integration and Automation Systems
+  setTimeout(async () => {
+    try {
+      await initializeIntegrationSystems(client);
+      logInfo('Bot', '🔗 Integration and automation systems initialized successfully');
+    } catch (error) {
+      logError('Bot', `Error initializing integration systems: ${error}`);
+    }
+  }, 3000); // Wait 3 seconds for bot to be ready
   
   // Set initial bot activity
   const updateBotActivity = () => {
@@ -293,18 +328,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
           execution_time: executionTime
         }).catch(error => logError('Analytics', `Failed to track command: ${error}`));
 
-        // Log command usage for dashboard activity logs
-        await logCommandUsage({
-          guild: interaction.guild,
-          user: interaction.user,
-          command: interaction.commandName,
-          options: interaction.options.data.reduce((acc, option) => {
-            acc[option.name] = option.value;
-            return acc;
-          }, {} as Record<string, any>),
-          channel: interaction.channel,
-          success: true
-        }).catch(error => logError('Command Logging', `Failed to log command usage: ${error}`));
+        // Log command usage for dashboard activity logs (exclude moderation commands - they have their own logging)
+        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute'];
+        const isModCommand = moderationCommands.includes(interaction.commandName);
+        
+        if (!isModCommand) {
+          await logCommandUsage({
+            guild: interaction.guild,
+            user: interaction.user,
+            command: interaction.commandName,
+            options: interaction.options.data.reduce((acc, option) => {
+              acc[option.name] = option.value;
+              return acc;
+            }, {} as Record<string, any>),
+            channel: interaction.channel,
+            success: true
+          }).catch(error => logError('Command Logging', `Failed to log command usage: ${error}`));
+        }
       }
     } catch (error) {
       logError('Bot', `Error executing command ${interaction.commandName}: ${error}`);
@@ -320,19 +360,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
           error_message: error instanceof Error ? error.message : String(error)
         }).catch(analyticsError => logError('Analytics', `Failed to track failed command: ${analyticsError}`));
 
-        // Log failed command usage for dashboard activity logs
-        await logCommandUsage({
-          guild: interaction.guild,
-          user: interaction.user,
-          command: interaction.commandName,
-          options: interaction.options.data.reduce((acc, option) => {
-            acc[option.name] = option.value;
-            return acc;
-          }, {} as Record<string, any>),
-          channel: interaction.channel,
-          success: false,
-          error: error instanceof Error ? error.message : String(error)
-        }).catch(logErr => logError('Command Logging', `Failed to log failed command: ${logErr}`));
+        // Log failed command usage for dashboard activity logs (exclude moderation commands - they have their own logging)
+        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute'];
+        const isModCommand = moderationCommands.includes(interaction.commandName);
+        
+        if (!isModCommand) {
+          await logCommandUsage({
+            guild: interaction.guild,
+            user: interaction.user,
+            command: interaction.commandName,
+            options: interaction.options.data.reduce((acc, option) => {
+              acc[option.name] = option.value;
+              return acc;
+            }, {} as Record<string, any>),
+            channel: interaction.channel,
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
+          }).catch(logErr => logError('Command Logging', `Failed to log failed command: ${logErr}`));
+        }
       }
       
       const errorEmbed = createErrorEmbed('Error executing command', 'There was an error while executing this command!');
@@ -476,12 +521,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
       else if (customId.startsWith('age_submit_')) {
-        // Age verification modal submit - need to implement this
-        logInfo('Bot', `Age verification modal submitted by ${interaction.user.tag}`);
-        await interaction.reply({
-          content: 'Age verification functionality is not yet implemented.',
-          flags: MessageFlags.Ephemeral
-        });
+        const { handleAgeModalSubmit } = await import('./handlers/verification/verification-handler');
+        await handleAgeModalSubmit(interaction);
         return;
       }
       
@@ -834,7 +875,8 @@ connectToDatabase()
       'add-soft-delete-column',
       'fix-dm-logs-table',
       'add-log-channels',
-      'ensure-log-channels'
+      'ensure-log-channels',
+      'add-moderator-id-column'
     ];
     
     migrations.forEach(migration => {
@@ -849,14 +891,26 @@ connectToDatabase()
   });
 
 // Handle process termination gracefully
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Received SIGINT. Graceful shutdown ...');
+  try {
+    await shutdownIntegrationSystems();
+    logInfo('Bot', '🔗 Integration systems shut down gracefully');
+  } catch (error) {
+    logError('Bot', `Error shutting down integration systems: ${error}`);
+  }
   client.destroy();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('Received SIGTERM. Graceful shutdown ...');
+  try {
+    await shutdownIntegrationSystems();
+    logInfo('Bot', '🔗 Integration systems shut down gracefully');
+  } catch (error) {
+    logError('Bot', `Error shutting down integration systems: ${error}`);
+  }
   client.destroy();
   process.exit(0);
 });

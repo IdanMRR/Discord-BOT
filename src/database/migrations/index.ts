@@ -26,6 +26,7 @@ import { addAutomodEscalation } from './add-automod-escalation';
 import { addAnalyticsSystem } from './add-analytics-system';
 import { addLoggingSettings } from './add-logging-settings';
 import { addComprehensiveSettingsSystem } from './add-comprehensive-settings-system';
+import { addScheduledContentAndIntegrations } from './add-scheduled-content-and-integrations';
 
 /**
  * Run all database migrations
@@ -211,6 +212,15 @@ export async function runMigrations(): Promise<void> {
       logInfo('Database Migration', 'Comprehensive settings system migration completed successfully');
     } catch (error) {
       logError('Database Migration', `Error in comprehensive settings system migration: ${error}`);
+      throw error;
+    }
+    
+    // Add scheduled content and integrations system tables if they don't exist
+    try {
+      addScheduledContentAndIntegrations.up(db);
+      logInfo('Database Migration', 'Scheduled content and integrations system migration completed successfully');
+    } catch (error) {
+      logError('Database Migration', `Error in scheduled content and integrations system migration: ${error}`);
       throw error;
     }
     

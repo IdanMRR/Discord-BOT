@@ -169,23 +169,6 @@ module.exports = {
         
         await modalSubmission.editReply({ embeds: [banEmbed] });
         
-        // Log the moderation action
-        const logResult: LogResult = await logModeration({
-          guild: guild,
-          action: 'Ban',
-          target: targetUser,
-          moderator: interaction.user,
-          reason: reason,
-          caseNumber: moderationCase.case_number,
-          additionalInfo: `User was banned from ${guild.name}. Message history deleted: ${days} day(s).`
-        });
-        
-        // If logging failed, add a note to the response
-        if (!logResult.success && logResult.message) {
-          const logInfoEmbed = createInfoEmbed('Logging Information', logResult.message);
-          await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
-        }
-        
         // Log to database
         await logModerationToDatabase({
           guild: guild,

@@ -83,19 +83,24 @@ export async function logModerationToDatabase(options: {
         actionType = action.toLowerCase().replace(/\s+/g, '');
     }
     
-    // Create a new log entry
+    // Create a new log entry with clearer format
     const result = await ServerLogService.create({
       guild_id: guild.id,
       action_type: actionType,
-      user_id: moderator.id,
-      target_id: target.id,
-      reason,
+      user_id: moderator.id,     // The moderator who performed the action
+      target_id: target.id,      // The target user (the user being acted upon)
+      reason: reason,            // Just the actual reason, not formatted string
       details: {
         action,
         targetTag: target.tag,
         moderatorTag: moderator.tag,
+        targetUsername: target.username,
+        moderatorUsername: moderator.username,
+        targetId: target.id,
+        moderatorId: moderator.id,
         duration,
-        additionalInfo
+        additionalInfo,
+        formattedReason: reason
       }
     });
     

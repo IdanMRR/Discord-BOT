@@ -132,7 +132,7 @@ export async function getVerificationSettings(guildId: string): Promise<Verifica
       welcome_channel_id: verificationSettings?.welcome_channel_id
     };
 
-    logInfo('Verification', `Loaded verification settings for guild ${guildId}: role_id=${settings.role_id}, enabled=${settings.enabled}`);
+    logInfo('Verification', `Loaded verification settings for guild ${guildId}: role_id=${settings.role_id}, enabled=${settings.enabled}, type=${settings.type}`);
     
     return settings;
   } catch (error) {

@@ -48,6 +48,10 @@ export interface ServerSettings {
   weather_schedule?: string;
   ticket_chatbot_enabled?: boolean;
   ticket_chatbot_ai_enabled?: boolean; // New property for AI chatbot
+  welcome_role_id?: string; // Role assigned when users join
+  muted_role_id?: string; // Role for muted users
+  mod_role_id?: string; // Moderator role
+  admin_role_id?: string; // Administrator role
 }
 
 // Default settings for the server

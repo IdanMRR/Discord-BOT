@@ -413,12 +413,11 @@ router.get('/warnings', async (req, res) => {
         warning.userName = await getUserNameAsync(warning.user_id);
         if (warning.moderator_id) {
           let moderatorName = await getUserNameAsync(warning.moderator_id);
-          // Handle automated system actions for warnings
-          if (!warning.moderator_id || 
-              warning.moderator_id === 'system' || 
+          // Handle automated system actions for warnings (ONLY for actual automod)
+          // Only treat as AutoMod if: explicitly system/automod ID, or explicit automod keywords in reason
+          if (warning.moderator_id === 'system' || 
               warning.moderator_id === 'automod' ||
-              (moderatorName && moderatorName.startsWith('User_')) ||
-              (warning.reason && warning.reason.toLowerCase().includes('automatic'))) {
+              (warning.reason && (warning.reason.toLowerCase().includes('automatic') || warning.reason.toLowerCase().includes('automod')))) {
             moderatorName = 'AutoMod System';
           }
           warning.moderatorName = moderatorName;
@@ -920,12 +919,11 @@ router.get('/recent-activity', async (req, res) => {
         const userName = await getUserNameAsync(warning.user_id);
         let moderatorName = warning.moderator_id ? await getUserNameAsync(warning.moderator_id) : 'AutoMod System';
         
-        // Handle automated system actions
-        if (!warning.moderator_id || 
-            warning.moderator_id === 'system' || 
+        // Handle automated system actions (ONLY for actual automod)
+        // Only treat as AutoMod if: explicitly system/automod ID, or explicit automod keywords in reason
+        if (warning.moderator_id === 'system' || 
             warning.moderator_id === 'automod' ||
-            (moderatorName && moderatorName.startsWith('User_')) ||
-            (warning.reason && warning.reason.toLowerCase().includes('automatic'))) {
+            (warning.reason && (warning.reason.toLowerCase().includes('automatic') || warning.reason.toLowerCase().includes('automod')))) {
           moderatorName = 'AutoMod System';
         }
         
@@ -1237,9 +1235,9 @@ router.get('/command-logs', async (req, res) => {
           log.channelDisplay = `#${channelName}`;
         }
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -1247,7 +1245,7 @@ router.get('/command-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         // Format the command for better display
@@ -1450,14 +1448,14 @@ router.get('/mod-logs', async (req, res) => {
           id,
           guild_id,
           user_id as moderator_id,
-          target_id as user_id,
+          target_id,
           action_type as action,
           reason,
           details,
           created_at,
           'moderation' as log_type
         FROM server_logs
-        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'warningRemoved')
+        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
       `;
       
       const params = [];
@@ -1472,8 +1470,8 @@ router.get('/mod-logs', async (req, res) => {
       
       // Process logs instantly (no async calls)
       for (const log of moderationLogs) {
-        // user_id is the target, moderator_id is who performed the action
-        log.userName = getDisplayName(log.user_id);
+        // target_id is the target, moderator_id is who performed the action
+        log.userName = getDisplayName(log.target_id);
         log.moderatorName = getDisplayName(log.moderator_id);
         
         // Format the action for display
@@ -1522,9 +1520,8 @@ router.get('/mod-logs', async (req, res) => {
             WHERE guild_id = ? AND user_id = ? AND action_type = ? 
             ORDER BY created_at DESC LIMIT 1
           `);
-          // For server logs, use target_id (the actual user) not user_id (the moderator)
-          const targetUserId = log.target_id || log.user_id;
-          const caseResult = caseStmt.get(log.guild_id, targetUserId, moderationCaseType);
+          // For server logs, use target_id (the actual user who received the action)
+          const caseResult = caseStmt.get(log.guild_id, log.target_id, moderationCaseType);
           const caseNumber = caseResult ? caseResult.case_number : null;
           const caseDisplay = caseNumber ? `Case #${String(caseNumber).padStart(4, '0')}` : 'Case #Unknown';
           
@@ -1541,9 +1538,9 @@ router.get('/mod-logs', async (req, res) => {
           log.details = `${log.action} | Target: ${log.userName} | Moderator: ${log.moderatorName} | Reason: ${log.reason || 'No reason provided'}`;
         }
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -1551,7 +1548,7 @@ router.get('/mod-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         allModerationLogs.push(log);
@@ -1663,9 +1660,9 @@ router.get('/mod-logs', async (req, res) => {
         // Enhanced details for verification
         log.details = `${emoji} ${log.action} | User: ${log.userName}`;
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -1673,7 +1670,7 @@ router.get('/mod-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         allModerationLogs.push(log);
@@ -1739,9 +1736,9 @@ router.get('/server-logs', async (req, res) => {
       for (const log of serverLogs) {
         log.userName = await getUserNameAsync(log.user_id);
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -1749,7 +1746,7 @@ router.get('/server-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         activities.push(log);
@@ -2170,9 +2167,9 @@ router.get('/dashboard-logs', async (req, res) => {
           log.userName = 'Anonymous';
         }
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -2180,11 +2177,58 @@ router.get('/dashboard-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         // Format action type for better display
-        log.actionDisplay = log.action_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        let actionDisplay;
+        switch (log.action_type) {
+          case 'memberVerificationSuccess':
+            actionDisplay = 'Verification Success';
+            break;
+          case 'memberVerificationFailed':
+            actionDisplay = 'Verification Failed';
+            break;
+          case 'login':
+            actionDisplay = 'User Login';
+            break;
+          case 'logout':
+            actionDisplay = 'User Logout';
+            break;
+          case 'export_data':
+            actionDisplay = 'Data Export';
+            break;
+          case 'manage_warnings':
+            actionDisplay = 'Manage Warnings';
+            break;
+          case 'manage_tickets':
+            actionDisplay = 'Manage Tickets';
+            break;
+          case 'manage_settings':
+            actionDisplay = 'Manage Settings';
+            break;
+          case 'update_server_settings':
+            actionDisplay = 'Update Server Settings';
+            break;
+          case 'update_settings':
+            actionDisplay = 'Update Settings';
+            break;
+          case 'create_ticket':
+            actionDisplay = 'Create Ticket';
+            break;
+          case 'create_warning':
+            actionDisplay = 'Create Warning';
+            break;
+          case 'delete_ticket':
+            actionDisplay = 'Delete Ticket';
+            break;
+          case 'delete_warning':
+            actionDisplay = 'Delete Warning';
+            break;
+          default:
+            actionDisplay = log.action_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        log.actionDisplay = actionDisplay;
         
         // Format success status
         log.statusDisplay = log.success ? '✅ Success' : '❌ Failed';
@@ -2378,25 +2422,26 @@ router.get('/logs', async (req, res) => {
       console.log('[DASHBOARD] Error querying command logs:', dbError);
     }
 
-    // Get recent moderation logs (ultra-fast)
+    // Get recent moderation logs from server_logs table (ultra-fast)
     try {
       console.log('[DASHBOARD] Querying moderation logs...');
       let moderationQuery = `
         SELECT 
           id,
           'moderation' as type,
-          user_id,
-          moderator_id,
-          action as action,
+          user_id as moderator_id,
+          target_id,
+          action_type,
           reason,
           created_at,
           guild_id
-        FROM moderation_logs
+        FROM server_logs
+        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
       `;
       
       const moderationParams = [];
       if (guild_id) {
-        moderationQuery += ' WHERE guild_id = ?';
+        moderationQuery += ' AND guild_id = ?';
         moderationParams.push(guild_id);
       }
       
@@ -2407,17 +2452,71 @@ router.get('/logs', async (req, res) => {
       
       for (const log of moderationLogs) {
         try {
-          const userName = await getUserNameAsync(log.user_id);
-          let moderatorName = await getUserNameAsync(log.moderator_id);
+          // For moderation actions in server_logs: user_id = moderator, target_id = target user
+          let userName = await getUserNameAsync(log.target_id);
+          let moderatorName = await getUserNameAsync(log.user_id);
           
-          // Handle automated system actions
-          if (!log.moderator_id || 
-              log.moderator_id === 'system' || 
-              log.moderator_id === 'automod' ||
-              (moderatorName && moderatorName.startsWith('User_')) ||
-              (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
-              (log.reason && log.reason.toLowerCase().includes('automatic'))) {
+          // Fallback: Extract usernames from details JSON if lookup failed
+          if ((userName === 'Unknown User' || userName.startsWith('User_')) && log.details) {
+            try {
+              const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+              if (details.targetTag) {
+                userName = details.targetTag;
+              }
+            } catch (e) {
+              // Keep the fallback username
+            }
+          }
+          
+          if ((moderatorName === 'Unknown User' || moderatorName.startsWith('User_')) && log.details) {
+            try {
+              const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+              if (details.moderatorTag) {
+                moderatorName = details.moderatorTag;
+              }
+            } catch (e) {
+              // Keep the fallback username
+            }
+          }
+          
+          // Debug logging
+          console.log('[DEBUG] Moderation log:', {
+            user_id: log.user_id,
+            target_id: log.target_id,
+            moderatorName: moderatorName,
+            userName: userName,
+            action_type: log.action_type
+          });
+          
+          // Only show AutoMod for actual system actions, never for regular user IDs
+          if (log.user_id === 'system' || 
+              log.user_id === 'automod' ||
+              (log.reason && (log.reason.toLowerCase().includes('automatic') || log.reason.toLowerCase().includes('automod')))) {
             moderatorName = 'AutoMod System';
+          } else if (!moderatorName) {
+            // If we can't get the moderator name, show the ID instead of defaulting to AutoMod
+            moderatorName = `User (${log.user_id})`;
+          }
+          
+          // Map action_type to display action
+          switch(log.action_type) {
+            case 'memberBan':
+              log.action = 'Ban';
+              break;
+            case 'memberKick':
+              log.action = 'Kick';
+              break;
+            case 'memberTimeout':
+              log.action = 'Timeout';
+              break;
+            case 'memberWarning':
+              log.action = 'Warning';
+              break;
+            case 'warningRemoved':
+              log.action = 'Warning Removed';
+              break;
+            default:
+              log.action = log.action_type;
           }
           
           log.userName = userName;
@@ -2437,6 +2536,8 @@ router.get('/logs', async (req, res) => {
               emoji = '🔓';
               break;
             case 'kick':
+            case 'MemberKick':
+            case 'memberKick':
               actionDisplay = 'Kick';
               emoji = '👢';
               break;
@@ -2474,6 +2575,8 @@ router.get('/logs', async (req, res) => {
               moderationCaseType = 'Unban';
               break;
             case 'kick':
+            case 'MemberKick':
+            case 'memberKick':
               moderationCaseType = 'Kick';
               break;
             case 'timeout':
@@ -2495,7 +2598,8 @@ router.get('/logs', async (req, res) => {
                 WHERE guild_id = ? AND user_id = ? AND action_type = ? 
                 ORDER BY created_at DESC LIMIT 1
               `);
-              const caseResult = caseStmt.get(log.guild_id, log.user_id, moderationCaseType);
+              // For server_logs, user_id is the target user (the one who received the action)
+              const caseResult = caseStmt.get(log.guild_id, log.target_id, moderationCaseType);
               const caseNumber = caseResult ? caseResult.case_number : null;
               const caseDisplay = caseNumber ? `Case #${String(caseNumber).padStart(4, '0')}` : 'Case #Unknown';
               
@@ -2598,9 +2702,9 @@ router.get('/all-logs', async (req, res) => {
         log.userName = await getUserNameAsync(log.user_id);
         log.details = `🤖 Command: /${log.action} | User: ${log.userName} | ${log.success ? 'Success' : 'Failed'}`;
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -2608,7 +2712,7 @@ router.get('/all-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         allLogs.push(log);
@@ -2627,6 +2731,7 @@ router.get('/all-logs', async (req, res) => {
           target_id as user_id,
           action_type as action,
           reason,
+          details,
           created_at,
           guild_id
         FROM server_logs
@@ -2644,50 +2749,99 @@ router.get('/all-logs', async (req, res) => {
       const modLogs = db.prepare(modQuery).all(...modParams);
       
       for (const log of modLogs) {
-        log.userName = await getUserNameAsync(log.user_id);
-        let moderatorName = await getUserNameAsync(log.moderator_id);
+        // For moderation actions: user_id = moderator, target_id = target user
+        // Note: SQL aliases are user_id as moderator_id, target_id as user_id
+        let userName = await getUserNameAsync(log.user_id); // This is actually target_id after alias
+        let moderatorName = await getUserNameAsync(log.moderator_id); // This is actually user_id after alias
         
-        // Handle automated system actions
-        if (!log.moderator_id || 
-            log.moderator_id === 'system' || 
+        // Fallback: Extract usernames from details JSON if lookup failed
+        if ((userName === 'Unknown User' || userName.startsWith('User_')) && log.details) {
+          try {
+            const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+            if (details.targetTag) {
+              userName = details.targetTag;
+            }
+          } catch (e) {
+            // Keep the fallback username
+          }
+        }
+        
+        if ((moderatorName === 'Unknown User' || moderatorName.startsWith('User_')) && log.details) {
+          try {
+            const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+            if (details.moderatorTag) {
+              moderatorName = details.moderatorTag;
+            }
+          } catch (e) {
+            // Keep the fallback username
+          }
+        }
+        
+        log.userName = userName;
+        
+        
+        // Only show AutoMod for actual system actions, never for regular user IDs
+        if (log.moderator_id === 'system' || 
             log.moderator_id === 'automod' ||
-            (moderatorName && moderatorName.startsWith('User_')) ||
-            (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
-            (log.reason && log.reason.toLowerCase().includes('automatic'))) {
+            (log.reason && (log.reason.toLowerCase().includes('automatic') || log.reason.toLowerCase().includes('automod')))) {
           moderatorName = 'AutoMod System';
+        } else if (!moderatorName) {
+          // If we can't get the moderator name, show the ID instead of defaulting to AutoMod
+          moderatorName = `User (${log.moderator_id})`;
+        }
+        
+        // Map action_type to display action
+        switch(log.action) {
+          case 'memberBan':
+            log.action = 'Ban';
+            break;
+          case 'memberKick':
+            log.action = 'Kick';
+            break;
+          case 'memberTimeout':
+            log.action = 'Timeout';
+            break;
+          case 'warningRemoved':
+            log.action = 'Warning Removed';
+            break;
+          default:
+            // Keep the original action value
+            break;
         }
         
         log.moderatorName = moderatorName;
         
-        // Format action for display
+        // Format action for display - use the updated log.action values
         let actionDisplay = log.action;
         let emoji = '⚖️';
-        switch(log.action) {
-          case 'memberBan': actionDisplay = 'Ban'; break;
-          case 'memberKick': actionDisplay = 'Kick'; break;
-          case 'memberTimeout': actionDisplay = 'Timeout'; break;
-          case 'warningRemoved': actionDisplay = 'Warning Removed'; break;
-        }
         
         // Special formatting for ALL moderation actions with case numbers
         let actionEmoji = '⚖️';
         let moderationCaseType = '';
         
         switch(log.action) {
-          case 'memberBan':
+          case 'Ban':
             actionEmoji = '🔨';
+            actionDisplay = 'Ban';
+            emoji = '🔨';
             moderationCaseType = 'Ban';
             break;
-          case 'memberKick':
+          case 'Kick':
             actionEmoji = '👢';
+            actionDisplay = 'Kick';
+            emoji = '👢';
             moderationCaseType = 'Kick';
             break;
-          case 'memberTimeout':
+          case 'Timeout':
             actionEmoji = '⏰';
+            actionDisplay = 'Timeout';
+            emoji = '⏰';
             moderationCaseType = 'Timeout';
             break;
-          case 'warningRemoved':
+          case 'Warning Removed':
             actionEmoji = '🚫';
+            actionDisplay = 'Warning Removed';
+            emoji = '🚫';
             moderationCaseType = 'Warning Removal';
             break;
         }
@@ -2705,7 +2859,7 @@ router.get('/all-logs', async (req, res) => {
             const caseDisplay = caseNumber ? `Case #${String(caseNumber).padStart(4, '0')}` : 'Case #Unknown';
             
             // Format exactly like warnings for ALL moderation actions
-            if (log.action === 'warningRemoved') {
+            if (log.action === 'Warning Removed') {
               // Update the action title to include case number for consistency with warnings
               log.action = caseNumber ? `Warning Removed Case #${caseNumber}` : 'Warning Removed Case #Unknown';
               log.details = `${actionEmoji} ${caseDisplay}: ${log.moderatorName} removed warning from ${log.userName} | Reason: ${log.reason || 'No reason provided'}`;
@@ -2723,9 +2877,9 @@ router.get('/all-logs', async (req, res) => {
           log.details = `${emoji} ${actionDisplay} | Target: ${log.userName} | Moderator: ${log.moderatorName}`;
         }
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -2733,7 +2887,7 @@ router.get('/all-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         allLogs.push(log);
@@ -2907,9 +3061,9 @@ router.get('/all-logs', async (req, res) => {
         
         log.details = `💬 DM ${log.success ? 'sent' : 'failed'} | From: ${log.userName} | To: ${recipientName} | Command: ${log.command || 'Manual'}${log.error ? ` | Error: ${log.error}` : ''}`;
         
-        // Convert to Israeli time (+3 hours) and format as 24-hour
+        // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));
-        const formattedTime = israeliTime.toLocaleString('he-IL', {
+        const formattedTime = israeliTime.toLocaleString('en-GB', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -2917,7 +3071,7 @@ router.get('/all-logs', async (req, res) => {
           minute: '2-digit',
           second: '2-digit',
           hour12: false
-        });
+        }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/, '$1/$2/$3 at $4');
         log.created_at = formattedTime;
         
         allLogs.push(log);

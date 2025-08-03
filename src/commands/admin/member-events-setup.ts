@@ -1,6 +1,6 @@
 import { 
   SlashCommandBuilder, 
-  CommandInteraction, 
+  ChatInputCommandInteraction, 
   ChannelType,
   TextChannel,
   MessageFlags
@@ -40,7 +40,7 @@ module.exports = {
         .setDescription('Show member count in chat occasionally')
         .setRequired(false)),
   
-  async execute(interaction: CommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if this is a guild command
       if (!interaction.guildId) {

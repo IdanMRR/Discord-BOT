@@ -1,6 +1,6 @@
 import { 
   SlashCommandBuilder, 
-  CommandInteraction, 
+  ChatInputCommandInteraction, 
   PermissionFlagsBits,
   EmbedBuilder,
   Colors,
@@ -20,7 +20,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(interaction: CommandInteraction): Promise<void> {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
     await interaction.deferReply({ ephemeral: true });
     

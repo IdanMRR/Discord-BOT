@@ -197,16 +197,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           console.error('[Warn] Error during automod escalation:', escalationError);
         }
         
-        // Log to moderation channel with the case number
-        const logResult = await logModeration({
-          guild: guild,
-          action: 'Warning',
-          target: targetUser,
-          moderator: interaction.user,
-          reason: reason,
-          caseNumber: moderationCase.case_number
-        });
-        
         // Create additional fields for the embed
         const additionalFields = [
           { name: '🏠 Server', value: guild.name, inline: true },
@@ -275,12 +265,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         } catch (error) {
           // Couldn't DM the user, but we already stored the warning and updated the reply
           console.log(`Could not send DM to ${targetUser.tag}: ${error}`);
-        }
-        
-        // If logging failed, add a note to the response
-        if (!logResult.success && logResult.message) {
-          const logInfoEmbed = createInfoEmbed('Logging Information', logResult.message);
-          await modalSubmission.followUp({ embeds: [logInfoEmbed], flags: MessageFlags.Ephemeral });
         }
         
         // Log to database

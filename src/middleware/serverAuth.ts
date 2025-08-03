@@ -41,6 +41,7 @@ export const checkServerAccess = (requiredPermission?: string) => {
       // Get server ID from request (query, params, or body)
       const guildId = req.query.guildId as string || 
                      req.params.guildId as string || 
+                     req.params.serverId as string ||
                      req.body.guildId as string;
 
       if (!guildId) {
