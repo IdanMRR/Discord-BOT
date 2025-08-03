@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useTheme as useNewTheme } from '../providers/ThemeProvider';
 import { apiService } from '../../services/api';
 import {
   EyeIcon,
@@ -87,38 +86,38 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   // const [author, setAuthor] = useState<string>('');
 
   // Predefined styles
-  const panelStyles = {
-    modern: {
-      name: 'Modern',
-      description: 'Clean modern design with gradient accents',
-      color: '#00D166',
-      previewClass: 'border-l-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20'
-    },
-    classic: {
-      name: 'Classic',
-      description: 'Traditional Discord-style embed',
-      color: '#5865F2',
-      previewClass: 'border-l-4 bg-gray-50 dark:bg-gray-800'
-    },
-    security: {
-      name: 'Security',
-      description: 'Professional security-focused design',
-      color: '#ED4245',
-      previewClass: 'border-l-4 bg-red-50 dark:bg-red-900/20'
-    },
-    minimal: {
-      name: 'Minimal',
-      description: 'Simple and clean design',
-      color: '#57F287',
-      previewClass: 'border-l-4 bg-white dark:bg-gray-700'
-    },
-    premium: {
-      name: 'Premium',
-      description: 'Elegant premium design with gold accents',
-      color: '#FEE75C',
-      previewClass: 'border-l-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20'
-    }
-  };
+  // const panelStyles = {
+  //   modern: {
+  //     name: 'Modern',
+  //     description: 'Clean modern design with gradient accents',
+  //     color: '#00D166',
+  //     previewClass: 'border-l-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20'
+  //   },
+  //   classic: {
+  //     name: 'Classic',
+  //     description: 'Traditional Discord-style embed',
+  //     color: '#5865F2',
+  //     previewClass: 'border-l-4 bg-gray-50 dark:bg-gray-800'
+  //   },
+  //   security: {
+  //     name: 'Security',
+  //     description: 'Professional security-focused design',
+  //     color: '#ED4245',
+  //     previewClass: 'border-l-4 bg-red-50 dark:bg-red-900/20'
+  //   },
+  //   minimal: {
+  //     name: 'Minimal',
+  //     description: 'Simple and clean design',
+  //     color: '#57F287',
+  //     previewClass: 'border-l-4 bg-white dark:bg-gray-700'
+  //   },
+  //   premium: {
+  //     name: 'Premium',
+  //     description: 'Elegant premium design with gold accents',
+  //     color: '#FEE75C',
+  //     previewClass: 'border-l-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20'
+  //   }
+  // };
 
   const loadVerificationConfig = useCallback(async () => {
     try {

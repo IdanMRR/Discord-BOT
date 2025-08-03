@@ -240,7 +240,7 @@ const LevelingPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${selectedUser.user_id}/add-xp`, {
+      const response = await fetch(`/api/xp-management/${serverId}/user/${selectedUser.user_id}/add-xp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ const LevelingPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${selectedUser.user_id}/update`, {
+      const response = await fetch(`/api/xp-management/${serverId}/user/${selectedUser.user_id}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

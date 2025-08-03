@@ -37,7 +37,7 @@ export async function getDiscordUsername(userId: string): Promise<string> {
   
   try {
     if (!clientInstance || !clientInstance.isReady()) {
-      return `User_${userId.slice(-4)}`;
+      return 'Unknown User';
     }
 
     // Try to get from cache first
@@ -49,19 +49,19 @@ export async function getDiscordUsername(userId: string): Promise<string> {
         user = await clientInstance.users.fetch(userId);
       } catch (fetchError) {
         console.log(`Could not fetch user ${userId} from Discord API`);
-        return `User_${userId.slice(-4)}`;
+        return 'Unknown User';
       }
     }
 
     if (user) {
       // Use displayName (global display name) if available, otherwise username
-      return user.displayName || user.username || `User_${userId.slice(-4)}`;
+      return user.displayName || user.username || 'Unknown User';
     }
 
-    return `User_${userId.slice(-4)}`;
+    return 'Unknown User';
   } catch (error) {
     console.log('Error resolving Discord username for', userId, ':', error);
-    return `User_${userId.slice(-4)}`;
+    return 'Unknown User';
   }
 }
 
@@ -75,19 +75,19 @@ export function getDiscordUsernameSync(userId: string): string {
   
   try {
     if (!clientInstance || !clientInstance.isReady()) {
-      return `User_${userId.slice(-4)}`;
+      return 'Unknown User';
     }
 
     // Only check cache for synchronous version
     const user = clientInstance.users.cache.get(userId);
     
     if (user) {
-      return user.displayName || user.username || `User_${userId.slice(-4)}`;
+      return user.displayName || user.username || 'Unknown User';
     }
 
-    return `User_${userId.slice(-4)}`;
+    return 'Unknown User';
   } catch (error) {
     console.log('Error resolving Discord username for', userId, ':', error);
-    return `User_${userId.slice(-4)}`;
+    return 'Unknown User';
   }
 }

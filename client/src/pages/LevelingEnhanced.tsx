@@ -19,7 +19,6 @@ import {
   Cog6ToothIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { formatDashboardLogDate } from '../utils/dateUtils';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]): string {
@@ -125,9 +124,9 @@ const LevelingEnhanced: React.FC = () => {
     };
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling/leaderboard?limit=10&offset=${(currentPage - 1) * 10}`, {
+      const response = await fetch(`/api/settings/${serverId}/leveling/leaderboard?limit=10&offset=${(currentPage - 1) * 10}`, {
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         }
@@ -203,9 +202,9 @@ const LevelingEnhanced: React.FC = () => {
     if (!serverId) return null;
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`, {
+      const response = await fetch(`/api/settings/${serverId}/leveling`, {
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user'
         }
       });
@@ -325,27 +324,87 @@ const LevelingEnhanced: React.FC = () => {
     toast.success('Data refreshed');
   };
 
+  // Calculate what the new level and XP will be after adding/removing XP
+  const calculateNewLevel = (currentXP: number, xpChange: number) => {
+    const newTotalXP = Math.max(0, currentXP + xpChange);
+    
+    // Using quadratic formula: level = sqrt(xp / 100)
+    const newLevel = Math.floor(Math.sqrt(newTotalXP / 100));
+    const xpForCurrentLevel = Math.pow(newLevel, 2) * 100;
+    const xpForNextLevel = Math.pow(newLevel + 1, 2) * 100;
+    const currentLevelXP = newTotalXP - xpForCurrentLevel;
+    const nextLevelXP = xpForNextLevel - xpForCurrentLevel;
+    
+    return {
+      newLevel,
+      newTotalXP,
+      currentLevelXP,
+      nextLevelXP,
+      progressPercent: (currentLevelXP / nextLevelXP) * 100
+    };
+  };
+
   const loadUserData = async (userId: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${userId}`, {
+      console.log('Loading user data for:', userId, 'in server:', serverId);
+      console.log('API Key:', process.env.REACT_APP_API_KEY ? 'Present' : 'Missing');
+      console.log('Settings enabled:', settings?.enabled);
+      
+      // First try to find user in the leaderboard data as a fallback
+      const leaderboardUser = leaderboard?.leaderboard?.find(user => user.user_id === userId);
+      if (leaderboardUser) {
+        console.log('Found user in leaderboard:', leaderboardUser);
+        
+        // Calculate missing XP progression data for the level card
+        const currentLevel = leaderboardUser.level;
+        const totalXP = leaderboardUser.xp;
+        
+        // Use quadratic formula: Level = sqrt(totalXP / 100)
+        // XP for current level: level^2 * 100
+        const xpForCurrentLevel = Math.pow(currentLevel, 2) * 100;
+        const xpForNextLevel = Math.pow(currentLevel + 1, 2) * 100;
+        const currentLevelXP = totalXP - xpForCurrentLevel;
+        const nextLevelXP = xpForNextLevel - xpForCurrentLevel;
+        
+        // Enhanced user data with calculated progression
+        const enhancedUser = {
+          ...leaderboardUser,
+          currentLevelXP: Math.max(0, currentLevelXP),
+          nextLevelXP: nextLevelXP,
+          progressPercent: nextLevelXP > 0 ? (currentLevelXP / nextLevelXP) * 100 : 0
+        };
+        
+        console.log('Enhanced user data:', enhancedUser);
+        setSelectedUser(enhancedUser);
+        toast.success('User loaded from leaderboard');
+        return;
+      }
+      
+      const apiKey = process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765';
+      
+      const response = await fetch(`/api/xp-management/${serverId}/user/${userId}`, {
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': apiKey,
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         }
       });
       
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (data.success) {
         setSelectedUser(data.data);
+        toast.success('User loaded successfully');
       } else {
-        toast.error('User not found or has no XP data');
+        console.error('API Error:', data.error);
+        toast.error(data.error || 'User not found or has no XP data');
         setSelectedUser(null);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
-      toast.error('Error loading user data');
+      toast.error('Error loading user data: ' + (error as Error).message);
     }
   };
 
@@ -363,10 +422,10 @@ const LevelingEnhanced: React.FC = () => {
 
     try {
       setActionLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${targetUserId}/add-xp`, {
+      const response = await fetch(`/api/xp-management/${serverId}/user/${targetUserId}/add-xp`, {
         method: 'POST',
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         },
@@ -413,10 +472,10 @@ const LevelingEnhanced: React.FC = () => {
 
     try {
       setActionLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${targetUserId}/update`, {
+      const response = await fetch(`/api/xp-management/${serverId}/user/${targetUserId}/update`, {
         method: 'POST',
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         },
@@ -461,10 +520,10 @@ const LevelingEnhanced: React.FC = () => {
 
     try {
       setActionLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/xp-management/${serverId}/user/${targetUserId}`, {
+      const response = await fetch(`/api/xp-management/${serverId}/user/${targetUserId}`, {
         method: 'DELETE',
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         },
@@ -501,10 +560,10 @@ const LevelingEnhanced: React.FC = () => {
 
     try {
       setSettingsSaving(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/${serverId}/leveling`, {
+      const response = await fetch(`/api/settings/${serverId}/leveling`, {
         method: 'POST',
         headers: {
-          'x-api-key': process.env.REACT_APP_API_KEY || '',
+          'x-api-key': process.env.REACT_APP_API_KEY || 'f8e7d6c5b4a3928170615243cba98765',
           'x-user-id': 'dashboard-user',
           'Content-Type': 'application/json'
         },
@@ -539,18 +598,6 @@ const LevelingEnhanced: React.FC = () => {
     setActiveTab('management');
   };
 
-  const renderProgressBar = (user: UserLevel | null) => {
-    if (!user?.progressPercentage) return null;
-    
-    return (
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
-        <div 
-          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${Math.min(100, user.progressPercentage)}%` }}
-        />
-      </div>
-    );
-  };
 
   const renderTabButton = (tab: typeof activeTab, label: string, icon: React.ElementType) => {
     const Icon = icon;
@@ -837,7 +884,136 @@ const LevelingEnhanced: React.FC = () => {
       )}
 
       {activeTab === 'management' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* User Search Panel */}
+          <div className={classNames(
+            "rounded-lg border p-6",
+            darkMode ? "content-area" : "content-area"
+          )}>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Select User</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Search Users
+                </label>
+                <input
+                  type="text"
+                  value={targetUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  placeholder="Enter Discord User ID or search..."
+                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm input-field text-foreground"
+                />
+                <button
+                  onClick={() => loadUserData(targetUserId)}
+                  disabled={!targetUserId || targetUserId.length < 10}
+                  className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Load User
+                </button>
+              </div>
+
+              {selectedUser && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">{selectedUser.level}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-blue-800 dark:text-blue-200">
+                        {selectedUser.userData?.displayName || `User ${selectedUser.user_id.slice(-4)}`}
+                      </h4>
+                      <p className="text-sm text-blue-600 dark:text-blue-300">
+                        ID: {selectedUser.user_id}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 dark:text-gray-400">Level</div>
+                      <div className="font-bold text-blue-600 dark:text-blue-400">{selectedUser.level}</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 dark:text-gray-400">Rank</div>
+                      <div className="font-bold">#{selectedUser.rank}</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 dark:text-gray-400">Total XP</div>
+                      <div className="font-bold">{selectedUser.xp.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <div className="text-gray-500 dark:text-gray-400">Messages</div>
+                      <div className="font-bold">{selectedUser.message_count.toLocaleString()}</div>
+                    </div>
+                  </div>
+
+                  {selectedUser?.nextLevelXP && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                        <span>Progress to Level {selectedUser.level + 1}</span>
+                        <span>{selectedUser.currentLevelXP?.toLocaleString()} / {selectedUser.nextLevelXP.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${Math.min(100, ((selectedUser.currentLevelXP || 0) / selectedUser.nextLevelXP) * 100)}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setTargetUserId('');
+                    }}
+                    className="w-full mt-3 px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              )}
+
+              {/* Top Users Quick Select */}
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Top Users</h4>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {leaderboard?.leaderboard?.slice(0, 10).map((user, index) => (
+                    <button
+                      key={user.user_id}
+                      onClick={() => {
+                        setTargetUserId(user.user_id);
+                        loadUserData(user.user_id);
+                      }}
+                      className="w-full p-2 text-left bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xs text-white font-bold">
+                          {user.level}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">
+                            {user.userData?.displayName || `User ${user.user_id.slice(-4)}`}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            #{index + 1} • {user.xp.toLocaleString()} XP
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  )) || (
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                      No users found
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* XP Management Controls */}
           <div className={classNames(
             "rounded-lg border p-6",
@@ -864,37 +1040,13 @@ const LevelingEnhanced: React.FC = () => {
             )}
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  User ID
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={targetUserId}
-                    onChange={(e) => setTargetUserId(e.target.value)}
-                    placeholder="Enter Discord User ID"
-                    readOnly={selectedUser !== null}
-                    className={`flex-1 px-3 py-2 border border-border rounded-l-md shadow-sm ${
-                      selectedUser 
-                        ? 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-not-allowed' 
-                        : 'input-field text-foreground'
-                    }`}
-                  />
-                  {selectedUser && (
-                    <button
-                      onClick={() => {
-                        setSelectedUser(null);
-                        setTargetUserId('');
-                      }}
-                      className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-r-md transition-colors"
-                      title="Clear selection"
-                    >
-                      ✕
-                    </button>
-                  )}
+              {!selectedUser && (
+                <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                    Please select a user from the left panel to manage their XP.
+                  </p>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1021,66 +1173,277 @@ const LevelingEnhanced: React.FC = () => {
                   Reset User
                 </button>
               </div>
+
+              {/* XP Change Preview */}
+              {selectedUser && xpAmount && parseInt(xpAmount) !== 0 && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3">Preview Changes</h4>
+                  {(() => {
+                    const xpChange = parseInt(xpAmount) || 0;
+                    const preview = calculateNewLevel(selectedUser.xp, xpChange);
+                    const levelChange = preview.newLevel - selectedUser.level;
+                    
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Current:</span>
+                          <span className="font-medium">Level {selectedUser.level} • {selectedUser.xp.toLocaleString()} XP</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-center my-2">
+                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            xpChange > 0 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                          }`}>
+                            {xpChange > 0 ? '+' : ''}{xpChange.toLocaleString()} XP
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Result:</span>
+                          <span className="font-medium">
+                            Level {preview.newLevel} • {preview.newTotalXP.toLocaleString()} XP
+                            {levelChange !== 0 && (
+                              <span className={`ml-2 ${
+                                levelChange > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                              }`}>
+                                ({levelChange > 0 ? '+' : ''}{levelChange} level{Math.abs(levelChange) !== 1 ? 's' : ''})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        
+                        {preview.newLevel > 0 && (
+                          <div className="mt-2">
+                            <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              <span>Progress to Level {preview.newLevel + 1}</span>
+                              <span>{preview.currentLevelXP.toLocaleString()} / {preview.nextLevelXP.toLocaleString()}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min(100, preview.progressPercent)}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Selected User Info */}
+          {/* Discord-Style Level Card Preview */}
           {selectedUser && (
             <div className={classNames(
               "rounded-lg border p-6",
               darkMode ? "content-area" : "content-area"
             )}>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Selected User Info</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Level Card Preview</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                This is how the user's level appears when they use <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">/level</code>
+              </p>
               
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Level:</span>
-                    <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400">
-                      {selectedUser?.level}
-                    </span>
+              
+              {/* Discord-style embed card */}
+              <div className="bg-[#2f3136] rounded-lg p-3 border-l-4 border-blue-500 max-w-sm">
+                {/* Bot header */}
+                <div className="flex items-center mb-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center mr-2">
+                    <span className="text-white text-xs font-bold font-sans">B</span>
                   </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Rank:</span>
-                    <span className="ml-2 font-semibold">
-                      #{selectedUser?.rank} / {selectedUser?.totalMembers}
-                    </span>
+                  <span className="text-white text-xs font-medium font-sans">Discord Bot</span>
+                  <span className="text-[#72767d] text-[10px] ml-1 font-sans uppercase tracking-wide">BOT</span>
+                  <span className="text-[#72767d] text-[10px] ml-auto font-mono">Today at {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+
+                {/* Level card content */}
+                <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-md p-3 relative overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+                  {/* Enhanced background pattern with animations */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-2 right-2 w-20 h-20 border-2 border-white/20 rounded-full animate-pulse"></div>
+                    <div className="absolute bottom-2 left-2 w-16 h-16 border-2 border-white/20 rounded-full animate-bounce"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/10 rounded-full" style={{ animation: 'spin 8s linear infinite' }}></div>
+                    {/* Floating particles */}
+                    <div className="absolute top-4 left-4 w-2 h-2 bg-white/20 rounded-full animate-ping"></div>
+                    <div className="absolute top-8 right-8 w-1 h-1 bg-white/30 rounded-full animate-pulse"></div>
+                    <div className="absolute bottom-6 right-6 w-1.5 h-1.5 bg-white/25 rounded-full animate-bounce"></div>
                   </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Total XP:</span>
-                    <span className="ml-2 font-semibold">
-                      {selectedUser?.xp.toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Messages:</span>
-                    <span className="ml-2 font-semibold">
-                      {selectedUser?.message_count.toLocaleString()}
-                    </span>
+                  
+                  {/* Gradient overlay animation */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse"></div>
+
+                  <div className="relative z-10">
+                    {/* User info header */}
+                    <div className="flex items-center mb-3">
+                      <div className="relative mr-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 via-pink-500 to-red-500 rounded-full flex items-center justify-center border border-white/20 shadow-lg transform transition-all duration-300 hover:scale-110 hover:rotate-12">
+                          <span className="text-white font-bold text-sm font-sans">
+                            {selectedUser.userData?.displayName?.[0] || 'U'}
+                          </span>
+                        </div>
+                        {/* Level badge */}
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg border border-white/20 animate-pulse font-mono">
+                          {selectedUser.level}
+                        </div>
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400/20 to-pink-500/20 blur-sm animate-pulse"></div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-sm hover:text-yellow-200 transition-colors duration-200 cursor-default font-sans">
+                          {selectedUser.userData?.displayName || `User ${selectedUser.user_id.slice(-4)}`}
+                        </h3>
+                        <p className="text-white/80 text-xs flex items-center space-x-1.5 font-sans">
+                          <span className="bg-yellow-500/20 px-1.5 py-0.5 rounded-full text-yellow-200 font-medium text-[10px]">
+                            Rank #{selectedUser.rank}
+                          </span>
+                          <span className="text-white/60">•</span>
+                          <span className="bg-blue-500/20 px-1.5 py-0.5 rounded-full text-blue-200 font-medium text-[10px]">
+                            Level {selectedUser.level}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* XP Progress */}
+                    <div className="mb-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-white/90 text-xs font-medium flex items-center font-mono">
+                          <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
+                          {selectedUser.currentLevelXP?.toLocaleString() || 0} / {selectedUser.nextLevelXP?.toLocaleString() || 1} XP
+                        </span>
+                        <span className="text-white/90 text-xs font-medium bg-white/10 px-1.5 py-0.5 rounded-full backdrop-blur-sm font-mono">
+                          {selectedUser.nextLevelXP ? Math.round(((selectedUser.currentLevelXP || 0) / selectedUser.nextLevelXP) * 100) : 0}%
+                        </span>
+                      </div>
+                      <div className="relative w-full bg-black/30 rounded-full h-3 overflow-hidden border border-white/10">
+                        {/* Background glow */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 animate-pulse"></div>
+                        
+                        {/* Progress bar */}
+                        <div 
+                          className="relative bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 h-full rounded-full transition-all duration-1000 ease-out shadow-lg"
+                          style={{ 
+                            width: `${selectedUser.nextLevelXP ? Math.min(100, ((selectedUser.currentLevelXP || 0) / selectedUser.nextLevelXP) * 100) : 0}%` 
+                          }}
+                        >
+                          {/* Shimmer effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                          {/* Glow effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-sm opacity-50"></div>
+                        </div>
+                        
+                        {/* Progress indicators */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex space-x-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <div 
+                                key={i}
+                                className={`w-0.5 h-0.5 rounded-full transition-all duration-300 ${
+                                  i < Math.floor(((selectedUser.currentLevelXP || 0) / (selectedUser.nextLevelXP || 1)) * 5) 
+                                    ? 'bg-white animate-pulse' 
+                                    : 'bg-white/20'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-black/30 rounded-md p-2 text-center backdrop-blur-sm border border-white/10 transform transition-all duration-300 hover:scale-105 hover:bg-black/40 hover:border-blue-400/50 group cursor-pointer">
+                        <div className="text-white font-semibold text-sm group-hover:text-blue-300 transition-colors duration-200 flex items-center justify-center font-mono">
+                          <span className="mr-1 text-xs">💎</span>
+                          {selectedUser.xp.toLocaleString()}
+                        </div>
+                        <div className="text-white/70 text-[10px] uppercase tracking-wider group-hover:text-blue-200 transition-colors duration-200 font-sans mt-0.5">TOTAL XP</div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="bg-black/30 rounded-md p-2 text-center backdrop-blur-sm border border-white/10 transform transition-all duration-300 hover:scale-105 hover:bg-black/40 hover:border-yellow-400/50 group cursor-pointer relative">
+                        <div className="text-white font-semibold text-sm group-hover:text-yellow-300 transition-colors duration-200 flex items-center justify-center font-mono">
+                          <span className="mr-1 text-xs">⭐</span>
+                          {selectedUser.level}
+                        </div>
+                        <div className="text-white/70 text-[10px] uppercase tracking-wider group-hover:text-yellow-200 transition-colors duration-200 font-sans mt-0.5">LEVEL</div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/10 to-yellow-500/0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        {/* Special glow for level */}
+                        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-md blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+                      </div>
+                      <div className="bg-black/30 rounded-md p-2 text-center backdrop-blur-sm border border-white/10 transform transition-all duration-300 hover:scale-105 hover:bg-black/40 hover:border-green-400/50 group cursor-pointer">
+                        <div className="text-white font-semibold text-sm group-hover:text-green-300 transition-colors duration-200 flex items-center justify-center font-mono">
+                          <span className="mr-1 text-xs">💬</span>
+                          {selectedUser.message_count.toLocaleString()}
+                        </div>
+                        <div className="text-white/70 text-[10px] uppercase tracking-wider group-hover:text-green-200 transition-colors duration-200 font-sans mt-0.5">MESSAGES</div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/10 to-green-500/0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                    </div>
+
+                    {/* Next level info */}
+                    {selectedUser.nextLevelXP && (
+                      <div className="mt-3 text-center">
+                        <p className="text-white/80 text-sm">
+                          <span className="font-medium">{(selectedUser.nextLevelXP - (selectedUser.currentLevelXP || 0)).toLocaleString()} XP</span> until level {selectedUser.level + 1}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                {selectedUser?.nextLevelXP && (
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <span>Progress to Level {(selectedUser?.level || 0) + 1}</span>
-                      <span>
-                        {selectedUser?.currentLevelXP?.toLocaleString()} / {selectedUser?.nextLevelXP?.toLocaleString()} XP
+
+                {/* Footer with server info */}
+                <div className="mt-3 flex items-center justify-between text-xs text-[#72767d]">
+                  <span>Coding API Server</span>
+                  <span>🎯 Leveling System</span>
+                </div>
+              </div>
+
+              {/* Additional Discord-style info */}
+              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Level Rewards Preview</h4>
+                <div className="space-y-2">
+                  {/* Show next few level milestones */}
+                  {[selectedUser.level + 1, selectedUser.level + 5, selectedUser.level + 10].map((level) => (
+                    <div key={level} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Level {level}</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-medium">
+                        {Math.pow(level, 2) * 100} XP
                       </span>
                     </div>
-                    {selectedUser && renderProgressBar(selectedUser)}
-                  </div>
-                )}
-
-                <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                  Last XP gain: {(() => {
-                    const lastXpGain = selectedUser?.last_xp_gain;
-                    if (lastXpGain && typeof lastXpGain === 'string') {
-                      return formatDashboardLogDate(lastXpGain as string);
-                    }
-                    return 'Never';
-                  })()}
+                  ))}
                 </div>
+              </div>
+
+              {/* Live preview toggle */}
+              <div className="mt-4 flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Live Preview</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">Updates automatically when XP changes</p>
+                </div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          )}
+
+          {!selectedUser && (
+            <div className={classNames(
+              "rounded-lg border p-6 flex items-center justify-center",
+              darkMode ? "content-area" : "content-area"
+            )}>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No User Selected</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Select a user to see their Discord level card preview
+                </p>
               </div>
             </div>
           )}

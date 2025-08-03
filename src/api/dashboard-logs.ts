@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { DashboardLogsService, DashboardLogFilter } from '../database/services/dashboardLogsService';
 import { logInfo, logError } from '../utils/logger';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -167,21 +168,140 @@ const createLogEntry = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
+// Delete specific log entry
+const deleteLogEntry = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { logId } = req.params;
+    
+    if (!logId) {
+      sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Log ID is required'
+      });
+      return;
+    }
+
+    // Check if user has admin permissions
+    if (!req.user || !req.user.permissions?.includes('admin')) {
+      sendJsonResponse(res, 403, {
+        success: false,
+        error: 'Admin permissions required to delete log entries'
+      });
+      return;
+    }
+
+    const deleted = await DashboardLogsService.deleteLogEntry(parseInt(logId));
+
+    if (deleted) {
+      // Log the deletion activity
+      await DashboardLogsService.logActivity({
+        guild_id: 'dashboard',
+        user_id: req.user.userId || 'unknown',
+        username: req.user.username || null,
+        action_type: 'delete_log',
+        page: 'dashboard-logs',
+        target_type: 'log_entry',
+        target_id: logId,
+        details: `Deleted log entry #${logId}`,
+        success: 1,
+        ip_address: req.ip || req.connection?.remoteAddress || null,
+        user_agent: req.get('User-Agent') || null
+      });
+
+      sendJsonResponse(res, 200, {
+        success: true,
+        message: 'Log entry deleted successfully'
+      });
+    } else {
+      sendJsonResponse(res, 404, {
+        success: false,
+        error: 'Log entry not found'
+      });
+    }
+  } catch (error) {
+    logError('DashboardLogs API', `Error deleting log entry: ${error}`);
+    next(error);
+  }
+};
+
+// Delete multiple log entries
+const deleteMultipleLogs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { logIds } = req.body;
+    
+    if (!Array.isArray(logIds) || logIds.length === 0) {
+      sendJsonResponse(res, 400, {
+        success: false,
+        error: 'Array of log IDs is required'
+      });
+      return;
+    }
+
+    // Check if user has admin permissions
+    if (!req.user || !req.user.permissions?.includes('admin')) {
+      sendJsonResponse(res, 403, {
+        success: false,
+        error: 'Admin permissions required to delete log entries'
+      });
+      return;
+    }
+
+    const deletedCount = await DashboardLogsService.deleteMultipleLogs(logIds);
+
+    // Log the deletion activity
+    await DashboardLogsService.logActivity({
+      guild_id: 'dashboard',
+      user_id: req.user.userId || 'unknown',
+      username: req.user.username || null,
+      action_type: 'bulk_delete_logs',
+      page: 'dashboard-logs',
+      details: `Bulk deleted ${deletedCount} log entries`,
+      success: 1,
+      ip_address: req.ip || req.connection?.remoteAddress || null,
+      user_agent: req.get('User-Agent') || null
+    });
+
+    sendJsonResponse(res, 200, {
+      success: true,
+      data: {
+        deletedCount,
+        message: `Successfully deleted ${deletedCount} log entries`
+      }
+    });
+  } catch (error) {
+    logError('DashboardLogs API', `Error deleting multiple logs: ${error}`);
+    next(error);
+  }
+};
+
 // Clean old logs
 const cleanOldLogs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const daysOld = parseInt(req.query.days as string) || 30;
     
-    // Only allow admin users to clean logs
-    if (!req.user?.userId || req.user.userId !== 'dashboard') {
+    // Check if user has admin permissions
+    if (!req.user || !req.user.permissions?.includes('admin')) {
       sendJsonResponse(res, 403, {
         success: false,
-        error: 'Insufficient permissions'
+        error: 'Admin permissions required to clean logs'
       });
       return;
     }
 
     const deletedCount = await DashboardLogsService.cleanOldLogs(daysOld);
+
+    // Log the cleanup activity
+    await DashboardLogsService.logActivity({
+      guild_id: 'dashboard',
+      user_id: req.user.userId || 'unknown',
+      username: req.user.username || null,
+      action_type: 'cleanup_logs',
+      page: 'dashboard-logs',
+      details: `Cleaned ${deletedCount} log entries older than ${daysOld} days`,
+      success: 1,
+      ip_address: req.ip || req.connection?.remoteAddress || null,
+      user_agent: req.get('User-Agent') || null
+    });
 
     sendJsonResponse(res, 200, {
       success: true,
@@ -201,8 +321,10 @@ router.get('/', getDashboardLogs);
 router.get('/users/:userId', getUserLogs);
 router.get('/recent', getRecentActivity);
 router.get('/stats', getActivityStats);
-router.post('/', createLogEntry);
-router.delete('/cleanup', cleanOldLogs);
+router.post('/', authenticateToken, createLogEntry);
+router.delete('/cleanup', authenticateToken, cleanOldLogs);
+router.delete('/bulk', authenticateToken, deleteMultipleLogs);
+router.delete('/:logId', authenticateToken, deleteLogEntry);
 
 // Test endpoint to create a test log entry (no auth required for testing)
 router.post('/test', async (req: Request, res: Response) => {

@@ -56,7 +56,6 @@ interface ColorFieldProps extends BaseFieldProps {
 type FormFieldProps = InputFieldProps | TextareaFieldProps | SelectFieldProps | CheckboxFieldProps | ColorFieldProps;
 
 const FormField: React.FC<FormFieldProps> = (props) => {
-  const { darkMode } = useTheme();
   const { label, description, error, required, disabled, className = '' } = props;
 
   const baseInputClasses = classNames(

@@ -106,8 +106,10 @@ const getAllowedOrigins = () => {
   
   const developmentOrigins = [
     "http://localhost:3000", 
+    "http://localhost:3001",
     "http://localhost:3002", 
     "http://127.0.0.1:3000", 
+    "http://127.0.0.1:3001",
     "http://127.0.0.1:3002"
   ];
 
@@ -121,7 +123,10 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or server-to-server)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    // Remove trailing slash from origin for comparison
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    
+    if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
       logError('CORS', `Blocked request from unauthorized origin: ${origin}`);

@@ -13,9 +13,9 @@ import ActionButton from '../common/ActionButton';
 import ConfigModal, { ModalActions } from '../common/ConfigModal';
 
 // Utility function for conditional class names
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
+// function classNames(...classes: string[]) {
+//   return classes.filter(Boolean).join(' ');
+// }
 
 interface WelcomeMessageField {
   name: string;
@@ -41,7 +41,6 @@ const WelcomeMessageConfigModal: React.FC<WelcomeMessageConfigModalProps> = ({
   onClose,
   serverId
 }) => {
-  const { darkMode } = useTheme();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);

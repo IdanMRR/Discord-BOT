@@ -281,9 +281,13 @@ export async function handleVerificationButtonClick(interaction: ButtonInteracti
       return false;
     }
     
-    // DEFER THE INTERACTION ONCE HERE FOR ALL VERIFICATION TYPES
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    logInfo('Verification', `Deferred interaction for ${user.tag} - ${settings.type} verification`);
+    // DEFER THE INTERACTION ONCE HERE FOR ALL VERIFICATION TYPES (if not already deferred)
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      logInfo('Verification', `Deferred interaction for ${user.tag} - ${settings.type} verification`);
+    } else {
+      logInfo('Verification', `Interaction already deferred for ${user.tag} - ${settings.type} verification`);
+    }
     
     // Handle verification based on type
     logInfo('Verification', `Processing ${settings.type} verification for ${user.tag}`);
@@ -580,7 +584,9 @@ export async function handleCaptchaModalSubmit(interaction: ModalSubmitInteracti
   logInfo('Verification', `CAPTCHA modal submitted by ${interaction.user.tag} (interaction: ${interaction.id})`);
   
   try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    }
     
     const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
     const attempt = verificationAttempts.get(attemptKey);
@@ -725,7 +731,9 @@ async function handleQuestionVerificationStart(interaction: ButtonInteraction, s
  */
 export async function handleQuestionModalSubmit(interaction: ModalSubmitInteraction): Promise<boolean> {
   try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    }
     
     const attemptKey = `${interaction.guildId}-${interaction.user.id}`;
     const attempt = verificationAttempts.get(attemptKey);

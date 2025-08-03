@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { logInfo, logError } from '../utils/logger';
 import { getClient } from '../utils/client-utils';
 import { getDashboardPermissions } from '../database/migrations/add-dashboard-permissions';
+import { DashboardLogsService } from '../database/services/dashboardLogsService';
 
 const router = express.Router();
 
@@ -133,7 +134,7 @@ router.get('/discord', (req: Request, res: Response) => {
 });
 
 // Simplified authentication endpoint
-router.post('/discord/simple', (req: Request, res: Response) => {
+router.post('/discord/simple', async (req: Request, res: Response) => {
   try {
     const { userId, username } = req.body;
     
@@ -173,6 +174,19 @@ router.post('/discord/simple', (req: Request, res: Response) => {
     );
 
     logInfo('Auth', `Successfully authenticated user: ${user.username}#${user.discriminator} (${user.id})`);
+    
+    // Log the authentication activity with proper username
+    await DashboardLogsService.logActivity({
+      guild_id: 'dashboard',
+      user_id: user.id,
+      username: user.username,
+      action_type: 'login',
+      page: 'login',
+      details: `User ${user.username} logged into dashboard via simple auth`,
+      success: 1,
+      ip_address: req.ip || req.connection?.remoteAddress || null,
+      user_agent: req.get('User-Agent') || null
+    });
     
     res.json({
       success: true,
@@ -268,6 +282,19 @@ router.post('/discord/callback', authRateLimit, async (req: Request, res: Respon
         { expiresIn: '7d' }
       );
 
+      // Log the authentication activity with proper username
+      await DashboardLogsService.logActivity({
+        guild_id: 'dashboard',
+        user_id: user.id,
+        username: user.username,
+        action_type: 'login',
+        page: 'login',
+        details: `User ${user.username} logged into dashboard (fallback auth)`,
+        success: 1,
+        ip_address: req.ip || req.connection?.remoteAddress || null,
+        user_agent: req.get('User-Agent') || null
+      });
+
       return res.json({
         success: true,
         data: {
@@ -346,6 +373,19 @@ router.post('/discord/callback', authRateLimit, async (req: Request, res: Respon
       );
 
       logInfo('Auth', `Successfully authenticated Discord user: ${user.username}#${user.discriminator} (${user.id})`);
+      
+      // Log the authentication activity with proper username
+      await DashboardLogsService.logActivity({
+        guild_id: 'dashboard',
+        user_id: user.id,
+        username: user.username,
+        action_type: 'login',
+        page: 'login',
+        details: `User ${user.username} logged into dashboard via Discord OAuth`,
+        success: 1,
+        ip_address: req.ip || req.connection?.remoteAddress || null,
+        user_agent: req.get('User-Agent') || null
+      });
     
       res.json({
         success: true,
@@ -398,6 +438,19 @@ router.post('/discord/callback', authRateLimit, async (req: Request, res: Respon
         JWT_SECRET,
         { expiresIn: '7d' }
       );
+
+      // Log the authentication activity with proper username
+      await DashboardLogsService.logActivity({
+        guild_id: 'dashboard',
+        user_id: user.id,
+        username: user.username,
+        action_type: 'login',
+        page: 'login',
+        details: `User ${user.username} logged into dashboard (fallback auth)`,
+        success: 1,
+        ip_address: req.ip || req.connection?.remoteAddress || null,
+        user_agent: req.get('User-Agent') || null
+      });
 
       return res.json({
         success: true,

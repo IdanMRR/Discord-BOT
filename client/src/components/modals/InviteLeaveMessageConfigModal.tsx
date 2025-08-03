@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useTheme as useNewTheme } from '../providers/ThemeProvider';
 import { apiService } from '../../services/api';
 import {
   EyeIcon,

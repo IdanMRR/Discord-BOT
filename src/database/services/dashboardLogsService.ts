@@ -187,7 +187,7 @@ export const DashboardLogsService = {
         this.usernameCache = new Map<string, string>();
       }
 
-      const { getClient } = require('../../utils/client-utils');
+      const { getClient, getDiscordUsername } = require('../../utils/client-utils');
       const client = getClient();
       
       // Collect unique user IDs that need username fetching
@@ -206,7 +206,13 @@ export const DashboardLogsService = {
           
           // Use cached username or existing username
           if (!enhanced.username && enhanced.user_id) {
-            enhanced.username = this.usernameCache.get(enhanced.user_id) || `User ${enhanced.user_id.slice(-4)}`;
+            const cachedUsername = this.usernameCache.get(enhanced.user_id);
+            if (cachedUsername) {
+              enhanced.username = cachedUsername;
+            } else {
+              // Better fallback: show "Unknown User" instead of confusing slice
+              enhanced.username = `Unknown User`;
+            }
           }
           
           // Convert page IDs to readable names
@@ -230,14 +236,16 @@ export const DashboardLogsService = {
       if (usersToFetch.size > 0 && client) {
         const batchFetchPromises = Array.from(usersToFetch).map(async (userId) => {
           try {
-            const user = await client.users.fetch(userId);
-            if (user) {
-              this.usernameCache.set(userId, user.username);
+            const username = await getDiscordUsername(userId);
+            this.usernameCache.set(userId, username);
+            
+            // Only update database if we got a real username (not the fallback)
+            if (username !== 'Unknown User') {
               // Update database for future use (async, don't wait for it)
               setImmediate(() => {
                 try {
                   const updateStmt = db.prepare('UPDATE dashboard_logs SET username = ? WHERE user_id = ? AND username IS NULL');
-                  updateStmt.run(user.username, userId);
+                  updateStmt.run(username, userId);
                 } catch (updateError) {
                   logError('DashboardLogs', `Error bulk updating username: ${updateError}`);
                 }
@@ -245,7 +253,7 @@ export const DashboardLogsService = {
             }
           } catch (userFetchError) {
             // Cache fallback username to prevent repeated failed fetches
-            this.usernameCache.set(userId, `User ${userId.slice(-4)}`);
+            this.usernameCache.set(userId, 'Unknown User');
           }
         });
 
@@ -259,7 +267,13 @@ export const DashboardLogsService = {
         
         // Use cached username or existing username
         if (!enhanced.username && enhanced.user_id) {
-          enhanced.username = this.usernameCache.get(enhanced.user_id) || `User ${enhanced.user_id.slice(-4)}`;
+          const cachedUsername = this.usernameCache.get(enhanced.user_id);
+          if (cachedUsername) {
+            enhanced.username = cachedUsername;
+          } else {
+            // Better fallback: show "Unknown User" instead of confusing slice
+            enhanced.username = `Unknown User`;
+          }
         }
         
         // Convert page IDs to readable names
@@ -306,7 +320,9 @@ export const DashboardLogsService = {
       'logout': 'Logout',
       'test_page': 'Test Page',
       'comprehensive-logs': 'Comprehensive Logs',
-      'dashboard-logs': 'Dashboard Activity'
+      'dashboard-logs': 'Dashboard Activity',
+      'xp_management': 'XP Management',
+      'leveling': 'Leveling System'
     };
     
     return pageNames[page] || page;
@@ -337,7 +353,10 @@ export const DashboardLogsService = {
       'reopen_ticket': 'Reopen Ticket',
       'admin': 'Admin Action',
       'system_admin': 'System Admin',
-      'test_action': 'Test Action'
+      'test_action': 'Test Action',
+      'xp_management': 'XP Management',
+      'xp_modification': 'XP Modification',
+      'level_reset': 'Level Reset'
     };
     
     return actionNames[actionType] || actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -481,6 +500,48 @@ export const DashboardLogsService = {
         actionsByPage: {},
         successRate: 0
       };
+    }
+  },
+
+  /**
+   * Delete a specific log entry by ID
+   */
+  async deleteLogEntry(logId: number): Promise<boolean> {
+    try {
+      const stmt = db.prepare('DELETE FROM dashboard_logs WHERE id = ?');
+      const result = stmt.run(logId);
+      
+      if (result.changes > 0) {
+        logInfo('DashboardLogs', `Deleted log entry ${logId}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      logError('DashboardLogs', `Error deleting log entry: ${error}`);
+      return false;
+    }
+  },
+
+  /**
+   * Delete multiple log entries by IDs
+   */
+  async deleteMultipleLogs(logIds: number[]): Promise<number> {
+    try {
+      if (logIds.length === 0) return 0;
+      
+      const placeholders = logIds.map(() => '?').join(',');
+      const stmt = db.prepare(`DELETE FROM dashboard_logs WHERE id IN (${placeholders})`);
+      const result = stmt.run(...logIds);
+      
+      if (result.changes > 0) {
+        logInfo('DashboardLogs', `Deleted ${result.changes} log entries`);
+      }
+      
+      return result.changes;
+    } catch (error) {
+      logError('DashboardLogs', `Error deleting multiple logs: ${error}`);
+      return 0;
     }
   },
 
