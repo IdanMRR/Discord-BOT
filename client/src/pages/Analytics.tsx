@@ -521,35 +521,6 @@ useEffect(() => {
                 </div>
               )}
 
-              {/* Export Button */}
-              <div className="flex justify-center">
-                <button
-                  onClick={async () => {
-                    if (!currentServerId) return;
-                    try {
-                      const exportRes = await apiService.exportAnalytics(currentServerId, selectedPeriod);
-                      if (exportRes.success && exportRes.data) {
-                        const blob = new Blob([JSON.stringify(exportRes.data, null, 2)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `analytics-${currentServerId}-${selectedPeriod}days.json`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                      } else {
-                        console.error('Failed to export analytics:', exportRes.error);
-                        alert('Failed to export analytics data. Please try again.');
-                      }
-                    } catch (error) {
-                      console.error('Error exporting analytics:', error);
-                      alert('Error exporting analytics data. Please check your connection and try again.');
-                    }
-                  }}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  📤 Export Data
-                </button>
-              </div>
             </div>
           )}
       </div>

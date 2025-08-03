@@ -814,7 +814,7 @@ class ApiService {
       channels: any[];
       roles: any[];
       guildName: string;
-    }>('GET', `/api/dashboard/server/${serverId}/channels-and-roles`);
+    }>('GET', `/api/simple-dashboard/server/${serverId}/channels-and-roles`);
   }
 
   async updateVerificationSettings(serverId: string, settings: {
@@ -822,7 +822,7 @@ class ApiService {
     verified_role_id?: string;
     verification_type?: string;
   }): Promise<ApiResponse<void>> {
-    return this.makeRequest<void>('POST', `/api/dashboard/server/${serverId}/verification`, settings);
+    return this.makeRequest<void>('POST', `/api/simple-dashboard/server/${serverId}/verification`, settings);
   }
 
   async createVerificationMessage(serverId: string, channelId: string): Promise<ApiResponse<{
@@ -838,7 +838,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/tickets/create-panel`, { channel_id: channelId });
+    }>('POST', `/api/simple-dashboard/server/${serverId}/tickets/create-panel`, { channel_id: channelId });
   }
 
   async createCustomVerificationMessage(serverId: string, channelId: string, customMessage: {
@@ -866,6 +866,54 @@ class ApiService {
     });
   }
 
+  // Age Verification Settings
+  async getAgeVerificationSettings(serverId: string): Promise<ApiResponse<{
+    min_age: number;
+    require_account_age: boolean;
+    min_account_age_days: number;
+  }>> {
+    return this.makeRequest<{
+      min_age: number;
+      require_account_age: boolean;
+      min_account_age_days: number;
+    }>('GET', `/api/simple-dashboard/verification/age-settings/${serverId}`);
+  }
+
+  async saveAgeVerificationSettings(serverId: string, settings: {
+    min_age: number;
+    require_account_age: boolean;
+    min_account_age_days: number;
+  }): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('POST', `/api/simple-dashboard/verification/age-settings/${serverId}`, settings);
+  }
+
+  // Custom Questions Management
+  async getCustomQuestions(serverId: string): Promise<ApiResponse<Array<{
+    id: string;
+    question: string;
+    answer: string;
+    case_sensitive: boolean;
+  }>>> {
+    return this.makeRequest<Array<{
+      id: string;
+      question: string;
+      answer: string;
+      case_sensitive: boolean;
+    }>>('GET', `/api/simple-dashboard/verification/questions/${serverId}`);
+  }
+
+  async addCustomQuestion(serverId: string, question: {
+    question: string;
+    answer: string;
+    case_sensitive: boolean;
+  }): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('POST', `/api/simple-dashboard/verification/questions/${serverId}`, question);
+  }
+
+  async deleteCustomQuestion(serverId: string, questionId: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>('DELETE', `/api/simple-dashboard/verification/questions/${serverId}/${questionId}`);
+  }
+
   async createCustomTicketPanelMessage(serverId: string, channelId: string, customMessage: {
     title: string;
     description: string;
@@ -882,7 +930,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/tickets/create-custom-panel`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/tickets/create-custom-panel`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,
@@ -907,7 +955,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/member-events/create-welcome-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/member-events/create-welcome-message`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,
@@ -930,7 +978,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/member-events/create-leave-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/member-events/create-leave-message`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,
@@ -953,7 +1001,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/invite-tracker/create-join-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/invite-tracker/create-join-message`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,
@@ -976,7 +1024,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/invite-tracker/create-leave-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/invite-tracker/create-leave-message`, {
       channel_id: channelId,
       title: customMessage.title,
       description: customMessage.description,
@@ -999,7 +1047,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/invite-tracker/test-join-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/invite-tracker/test-join-message`, {
       title: customMessage.title,
       description: customMessage.description,
       color: customMessage.color,
@@ -1021,7 +1069,7 @@ class ApiService {
   }>> {
     return this.makeRequest<{
       messageId: string;
-    }>('POST', `/api/dashboard/server/${serverId}/invite-tracker/test-leave-message`, {
+    }>('POST', `/api/simple-dashboard/server/${serverId}/invite-tracker/test-leave-message`, {
       title: customMessage.title,
       description: customMessage.description,
       color: customMessage.color,

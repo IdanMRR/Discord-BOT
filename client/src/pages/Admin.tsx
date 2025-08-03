@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import PermissionGuard from '../components/common/PermissionGuard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import ConfigModal, { ModalActions } from '../components/common/ConfigModal';
 import { apiService } from '../services/api';
 import {
   CogIcon,
@@ -13,11 +14,9 @@ import {
   PlusIcon,
   EyeIcon,
   CheckCircleIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { Dialog, Transition } from '@headlessui/react';
 
 // Utility function for conditional class names
 function classNames(...classes: string[]) {
@@ -53,6 +52,7 @@ const AdminContent: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('joinedAt');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [saving, setSaving] = useState(false);
   const [servers, setServers] = useState<any[]>([]);
   const [selectedServer, setSelectedServer] = useState<string>('');
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
@@ -280,6 +280,7 @@ const AdminContent: React.FC = () => {
 
   const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
     try {
+      setSaving(true);
       console.log('🔄 Updating user permissions:', { 
         userId, 
         updates, 
@@ -325,6 +326,8 @@ const AdminContent: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Error updating user:', error);
       toast.error(error.message || 'Failed to update user permissions');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -787,304 +790,186 @@ const AdminContent: React.FC = () => {
       )}
 
       {/* Edit User Modal */}
-      <Transition appear show={!!editingUser} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setEditingUser(null)}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className={classNames(
-              "fixed inset-0 bg-black/60 backdrop-blur-sm",
-              darkMode ? "bg-gray-900/80" : "bg-black/50"
-            )} />
-          </Transition.Child>
+      <ConfigModal
+        isOpen={!!editingUser}
+        onClose={() => setEditingUser(null)}
+        title="Edit User Permissions"
+        description={editingUser ? `${editingUser.username}#${editingUser.discriminator}` : ''}
+        icon="👤"
+        maxWidth="2xl"
+        actions={
+          <ModalActions.SaveCancel
+            onSave={() => {
+              if (editingUser) {
+                console.log('💾 Save Changes clicked. Current editingUser:', {
+                  id: editingUser.id,
+                  username: editingUser.username,
+                  role: editingUser.role,
+                  dashboardAccess: editingUser.dashboardAccess,
+                  permissions: editingUser.permissions
+                });
+                handleUpdateUser(editingUser.id, editingUser);
+              }
+            }}
+            onCancel={() => setEditingUser(null)}
+            saving={saving}
+            saveText="Save Changes"
+          />
+        }
+      >
+        {editingUser && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Role Selection */}
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-foreground">
+                  Role
+                </label>
+                <select
+                  value={editingUser.role}
+                  onChange={(e) => {
+                    const newRole = e.target.value as any;
+                    let newPermissions = editingUser.permissions;
+                    let newDashboardAccess = editingUser.dashboardAccess;
+                    
+                    // Auto-assign permissions based on role
+                    switch (newRole) {
+                      case 'admin':
+                        newPermissions = ['dashboard_access', 'view_logs', 'manage_warnings', 'manage_tickets', 'manage_servers', 'manage_members', 'view_analytics', 'system_admin', 'moderate_users', 'manage_roles'];
+                        newDashboardAccess = true;
+                        break;
+                      case 'moderator':
+                        newPermissions = ['dashboard_access', 'view_logs', 'manage_warnings', 'manage_tickets', 'moderate_users'];
+                        newDashboardAccess = true;
+                        break;
+                      case 'user':
+                        newPermissions = ['dashboard_access'];
+                        newDashboardAccess = false;
+                        break;
+                      default:
+                        newPermissions = [];
+                        newDashboardAccess = false;
+                    }
+                    
+                    setEditingUser({
+                      ...editingUser, 
+                      role: newRole,
+                      permissions: newPermissions,
+                      dashboardAccess: newDashboardAccess
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-card text-card-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="user">User</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="admin">Admin</option>
+                </select>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className={classNames(
-                  "w-full max-w-3xl transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-2xl transition-all",
-                  "content-area"
-                )}>
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
+                {/* Dashboard Access */}
+                <div className="mt-4">
+                  <label className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={editingUser.dashboardAccess}
+                        onChange={(e) => setEditingUser({...editingUser, dashboardAccess: e.target.checked})}
+                        className="sr-only"
+                      />
                       <div className={classNames(
-                        "w-12 h-12 rounded-full flex items-center justify-center mr-4",
-                        darkMode ? "bg-purple-900/30 text-purple-400" : "bg-purple-100 text-purple-600"
+                        "block w-10 h-6 rounded-full transition-colors duration-200",
+                        editingUser.dashboardAccess 
+                          ? "bg-primary" 
+                          : "bg-muted"
                       )}>
-                        <span className="text-2xl">👤</span>
-                      </div>
-                      <div>
-                        <Dialog.Title
-                          as="h3"
-                          className={classNames(
-                            "text-xl font-bold",
-                            "text-foreground"
-                          )}
-                        >
-                          Edit User Permissions
-                        </Dialog.Title>
-                        <p className={classNames(
-                          "text-sm mt-1",
-                          "text-muted-foreground"
-                        )}>
-                          {editingUser?.username}#{editingUser?.discriminator}
-                        </p>
+                        <div className={classNames(
+                          "absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200",
+                          editingUser.dashboardAccess ? "transform translate-x-4" : ""
+                        )}></div>
                       </div>
                     </div>
+                    <span className="text-sm font-medium text-foreground">
+                      Grant Dashboard Access
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Permission Groups */}
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-foreground">
+                  Permission Groups
+                </label>
+                <div className="space-y-2">
+                  {permissionGroups.map((group) => (
                     <button
-                      type="button"
+                      key={group.name}
+                      onClick={() => setEditingUser({...editingUser, permissions: group.permissions})}
                       className={classNames(
-                        "w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200",
-                        darkMode 
-                          ? "text-gray-400 hover:text-gray-300 hover:bg-gray-700" 
-                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        "w-full text-left p-3 rounded-lg border transition-all duration-200",
+                        editingUser.permissions.length === group.permissions.length &&
+                        group.permissions.every(p => editingUser.permissions.includes(p))
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:bg-muted/30"
                       )}
-                      onClick={() => setEditingUser(null)}
                     >
-                      <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                      <div className="font-medium text-sm text-foreground">{group.name}</div>
+                      <div className="text-xs mt-1 text-muted-foreground">{group.description}</div>
                     </button>
-                  </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                  {editingUser && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {/* Role Selection */}
-                        <div className={classNames(
-                          "p-4 rounded-xl border",
-                          darkMode ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"
-                        )}>
-                          <label className={classNames(
-                            "block text-base font-semibold mb-3",
-                            "text-foreground"
-                          )}>
-                            Role
-                          </label>
-                          <select
-                            value={editingUser.role}
-                            onChange={(e) => {
-                              const newRole = e.target.value as any;
-                              let newPermissions = editingUser.permissions;
-                              let newDashboardAccess = editingUser.dashboardAccess;
-                              
-                              // Auto-assign permissions based on role
-                              switch (newRole) {
-                                case 'admin':
-                                  newPermissions = ['dashboard_access', 'view_logs', 'manage_warnings', 'manage_tickets', 'manage_servers', 'manage_members', 'view_analytics', 'system_admin', 'moderate_users', 'manage_roles'];
-                                  newDashboardAccess = true;
-                                  break;
-                                case 'moderator':
-                                  newPermissions = ['dashboard_access', 'view_logs', 'manage_warnings', 'manage_tickets', 'moderate_users'];
-                                  newDashboardAccess = true;
-                                  break;
-                                case 'user':
-                                  newPermissions = ['dashboard_access'];
-                                  newDashboardAccess = false;
-                                  break;
-                                default:
-                                  newPermissions = [];
-                                  newDashboardAccess = false;
-                              }
-                              
-                              setEditingUser({
-                                ...editingUser, 
-                                role: newRole,
-                                permissions: newPermissions,
-                                dashboardAccess: newDashboardAccess
-                              });
-                            }}
-                            className={classNames(
-                              "w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500 transition-all duration-200",
-                              "bg-card border-border text-card-foreground"
-                            )}
-                          >
-                            <option value="user">User</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
-                          </select>
-
-                          {/* Dashboard Access */}
-                          <div className="mt-3">
-                            <label className="flex items-center p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer">
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  checked={editingUser.dashboardAccess}
-                                  onChange={(e) => setEditingUser({...editingUser, dashboardAccess: e.target.checked})}
-                                  className="sr-only"
-                                />
-                                <div className={classNames(
-                                  "block w-10 h-6 rounded-full transition-colors duration-200",
-                                  editingUser.dashboardAccess 
-                                    ? "bg-purple-600" 
-                                    : (darkMode ? "bg-gray-600" : "bg-gray-300")
-                                )}>
-                                  <div className={classNames(
-                                    "dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200",
-                                    editingUser.dashboardAccess ? "transform translate-x-4" : ""
-                                  )}></div>
-                                </div>
-                              </div>
-                              <span className={classNames(
-                                "ml-3 text-sm font-medium",
-                                "text-muted-foreground"
-                              )}>
-                                Grant Dashboard Access
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-
-                        {/* Permission Groups */}
-                        <div className={classNames(
-                          "p-4 rounded-xl border",
-                          darkMode ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"
-                        )}>
-                          <label className={classNames(
-                            "block text-base font-semibold mb-3",
-                            "text-foreground"
-                          )}>
-                            Permission Groups
-                          </label>
-                          <div className="space-y-2">
-                            {permissionGroups.map((group) => (
-                              <button
-                                key={group.name}
-                                onClick={() => setEditingUser({...editingUser, permissions: group.permissions})}
-                                className={classNames(
-                                  "w-full text-left p-3 rounded-lg border transition-all duration-200",
-                                  editingUser.permissions.length === group.permissions.length &&
-                                  group.permissions.every(p => editingUser.permissions.includes(p))
-                                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-md"
-                                    : "border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                )}
-                              >
-                                <div className={classNames(
-                                  "font-medium text-sm",
-                                  "text-foreground"
-                                )}>{group.name}</div>
-                                <div className={classNames(
-                                  "text-xs mt-1",
-                                  "text-muted-foreground"
-                                )}>{group.description}</div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Individual Permissions */}
+            {/* Individual Permissions */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-foreground">
+                Individual Permissions
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {availablePermissions.map((permission) => (
+                  <label key={permission} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={editingUser.permissions.includes(permission)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setEditingUser({
+                              ...editingUser,
+                              permissions: [...editingUser.permissions, permission]
+                            });
+                          } else {
+                            setEditingUser({
+                              ...editingUser,
+                              permissions: editingUser.permissions.filter(p => p !== permission)
+                            });
+                          }
+                        }}
+                        className="sr-only"
+                      />
                       <div className={classNames(
-                        "p-4 rounded-xl border",
-                        darkMode ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"
+                        "w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200",
+                        editingUser.permissions.includes(permission)
+                          ? "bg-primary border-primary"
+                          : "border-border bg-card"
                       )}>
-                        <label className={classNames(
-                          "block text-base font-semibold mb-3",
-                          "text-foreground"
-                        )}>
-                          Individual Permissions
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {availablePermissions.map((permission) => (
-                            <label key={permission} className="flex items-center p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer">
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  checked={editingUser.permissions.includes(permission)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setEditingUser({
-                                        ...editingUser,
-                                        permissions: [...editingUser.permissions, permission]
-                                      });
-                                    } else {
-                                      setEditingUser({
-                                        ...editingUser,
-                                        permissions: editingUser.permissions.filter(p => p !== permission)
-                                      });
-                                    }
-                                  }}
-                                  className="sr-only"
-                                />
-                                <div className={classNames(
-                                  "w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                  editingUser.permissions.includes(permission)
-                                    ? "bg-purple-600 border-purple-600"
-                                    : (darkMode ? "border-gray-500 bg-gray-700" : "border-gray-300 bg-white")
-                                )}>
-                                  {editingUser.permissions.includes(permission) && (
-                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  )}
-                                </div>
-                              </div>
-                              <span className={classNames(
-                                "ml-2 text-xs font-medium",
-                                "text-muted-foreground"
-                              )}>
-                                {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
+                        {editingUser.permissions.includes(permission) && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
                       </div>
                     </div>
-                  )}
-
-                  {/* Footer */}
-                  <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 mt-6">
-                    <button
-                      type="button"
-                      className={classNames(
-                        "flex-1 px-4 py-2.5 border text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400/30",
-                        darkMode 
-                          ? "border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500" 
-                          : "border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
-                      )}
-                      onClick={() => setEditingUser(null)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="flex-1 px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
-                      onClick={() => {
-                        if (editingUser) {
-                          console.log('💾 Save Changes clicked. Current editingUser:', {
-                            id: editingUser.id,
-                            username: editingUser.username,
-                            role: editingUser.role,
-                            dashboardAccess: editingUser.dashboardAccess,
-                            permissions: editingUser.permissions
-                          });
-                          handleUpdateUser(editingUser.id, editingUser);
-                        }
-                      }}
-                    >
-                      💾 Save Changes
-                    </button>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        </Dialog>
-      </Transition>
+        )}
+      </ConfigModal>
     </div>
   );
 };

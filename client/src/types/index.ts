@@ -166,6 +166,7 @@ export interface DashboardStats {
 export interface ActivityLog {
   id: string;
   type: string;
+  actionDisplay?: string;
   user: string;
   description: string;
   details?: string;
@@ -238,4 +239,293 @@ export interface RealTimeUpdate {
   type: 'ticket_created' | 'ticket_closed' | 'warning_added' | 'server_joined' | 'server_left';
   data: any;
   guildId: string;
+}
+
+// ==========================================
+// SCHEDULED CONTENT & AUTOMATION SYSTEM
+// ==========================================
+
+export interface ScheduledTask {
+  id: number;
+  guild_id: string;
+  name: string;
+  description?: string;
+  task_type: 'message' | 'announcement' | 'role_assignment' | 'channel_action' | 'moderation' | 'custom';
+  trigger_type: 'cron' | 'interval' | 'once' | 'event';
+  cron_expression?: string;
+  interval_seconds?: number;
+  scheduled_time?: string;
+  event_trigger?: string;
+  target_channel_id?: string;
+  target_role_ids?: string; // JSON array
+  message_template?: string;
+  embed_config?: string; // JSON
+  components_config?: string; // JSON
+  is_active: number;
+  max_executions?: number;
+  execution_count: number;
+  last_execution?: string;
+  next_execution?: string;
+  timezone: string;
+  conditions?: string; // JSON array
+  error_count: number;
+  last_error?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutomationRule {
+  id: number;
+  guild_id: string;
+  name: string;
+  description?: string;
+  trigger_event: 'member_join' | 'member_leave' | 'message_sent' | 'reaction_added' | 'role_assigned' | 'voice_join' | 'voice_leave' | 'custom';
+  trigger_conditions?: string; // JSON array
+  actions: string; // JSON array of actions
+  cooldown_seconds: number;
+  max_triggers_per_user?: number;
+  is_active: number;
+  priority: number;
+  execution_count: number;
+  last_execution?: string;
+  success_count: number;
+  error_count: number;
+  last_error?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskExecutionHistory {
+  id: number;
+  task_id?: number;
+  rule_id?: number;
+  guild_id: string;
+  execution_type: 'scheduled_task' | 'automation_rule';
+  trigger_source?: string;
+  trigger_user_id?: string;
+  start_time: string;
+  end_time?: string;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  result_data?: string; // JSON
+  error_message?: string;
+  execution_duration?: number; // milliseconds
+  actions_performed?: string; // JSON array
+  metadata?: string; // JSON
+}
+
+export interface RecurringSchedule {
+  id: number;
+  task_id: number;
+  pattern_type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+  pattern_config: string; // JSON
+  days_of_week?: string; // JSON array
+  days_of_month?: string; // JSON array
+  months?: string; // JSON array
+  time_slots?: string; // JSON array
+  exceptions?: string; // JSON array
+  timezone: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==========================================
+// ADVANCED INTEGRATION HUB
+// ==========================================
+
+export interface Integration {
+  id: number;
+  guild_id: string;
+  name: string;
+  integration_type: 'webhook' | 'api' | 'rss' | 'github' | 'twitter' | 'twitch' | 'youtube' | 'minecraft' | 'steam' | 'custom';
+  provider: string;
+  config: string; // JSON
+  credentials_encrypted?: string;
+  target_channel_id?: string;
+  message_template?: string;
+  embed_template?: string; // JSON
+  is_active: number;
+  sync_frequency?: number; // seconds
+  last_sync?: string;
+  next_sync?: string;
+  sync_count: number;
+  error_count: number;
+  last_error?: string;
+  rate_limit_config?: string; // JSON
+  retry_config?: string; // JSON
+  filter_config?: string; // JSON
+  transform_config?: string; // JSON
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Webhook {
+  id: number;
+  guild_id: string;
+  integration_id?: number;
+  name: string;
+  webhook_url: string;
+  secret_token?: string;
+  events: string; // JSON array
+  is_active: number;
+  security_config?: string; // JSON
+  rate_limit_per_minute: number;
+  max_payload_size: number;
+  timeout_seconds: number;
+  retry_attempts: number;
+  success_count: number;
+  failure_count: number;
+  last_triggered?: string;
+  last_success?: string;
+  last_failure?: string;
+  last_error?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IntegrationLog {
+  id: number;
+  guild_id: string;
+  integration_id?: number;
+  webhook_id?: number;
+  event_type: string;
+  event_source?: string;
+  status: 'success' | 'failed' | 'pending' | 'cancelled';
+  request_method?: string;
+  request_url?: string;
+  request_headers?: string; // JSON
+  request_body?: string;
+  response_status?: number;
+  response_headers?: string; // JSON
+  response_body?: string;
+  processing_time?: number; // milliseconds
+  error_message?: string;
+  retry_count: number;
+  metadata?: string; // JSON
+  user_agent?: string;
+  ip_address?: string;
+  created_at: string;
+}
+
+export interface WebhookDelivery {
+  id: number;
+  webhook_id: number;
+  guild_id: string;
+  delivery_id: string; // UUID
+  event_type: string;
+  payload: string; // JSON
+  target_url: string;
+  http_method: string;
+  headers?: string; // JSON
+  attempt_number: number;
+  max_attempts: number;
+  status: 'pending' | 'delivered' | 'failed' | 'cancelled';
+  response_status?: number;
+  response_body?: string;
+  response_time?: number; // milliseconds
+  scheduled_at: string;
+  delivered_at?: string;
+  next_retry_at?: string;
+  error_message?: string;
+  user_data?: string; // JSON
+  created_at: string;
+  updated_at: string;
+}
+
+// ==========================================
+// CONFIGURATION TYPES
+// ==========================================
+
+export interface ScheduleTaskConfig {
+  messageTemplate?: {
+    content?: string;
+    embeds?: Array<{
+      title?: string;
+      description?: string;
+      color?: number;
+      fields?: Array<{
+        name: string;
+        value: string;
+        inline?: boolean;
+      }>;
+      footer?: {
+        text: string;
+        iconURL?: string;
+      };
+      thumbnail?: {
+        url: string;
+      };
+      image?: {
+        url: string;
+      };
+    }>;
+  };
+  roleAssignment?: {
+    roleIds: string[];
+    action: 'add' | 'remove';
+    conditions?: {
+      requiredRoles?: string[];
+      excludedRoles?: string[];
+      minAccountAge?: number; // days
+      minServerAge?: number; // days
+    };
+  };
+  channelAction?: {
+    action: 'create' | 'delete' | 'modify' | 'archive';
+    channelType?: 'text' | 'voice' | 'category';
+    permissions?: Array<{
+      id: string;
+      type: 'role' | 'member';
+      allow?: string;
+      deny?: string;
+    }>;
+  };
+}
+
+export interface AutomationRuleAction {
+  type: 'send_message' | 'assign_role' | 'remove_role' | 'create_channel' | 'send_dm' | 'log_event' | 'webhook' | 'custom';
+  config: {
+    channelId?: string;
+    roleId?: string;
+    message?: string;
+    embedConfig?: any;
+    webhookUrl?: string;
+    customData?: any;
+  };
+  conditions?: {
+    delay?: number; // seconds
+    requiresConfirmation?: boolean;
+  };
+}
+
+export interface IntegrationConfig {
+  github?: {
+    repoUrl: string;
+    events: string[];
+    accessToken?: string;
+    webhookSecret?: string;
+  };
+  rss?: {
+    feedUrl: string;
+    checkInterval: number; // minutes
+    maxItems?: number;
+  };
+  minecraft?: {
+    serverAddress: string;
+    serverPort?: number;
+    queryInterval?: number; // minutes
+    showPlayerCount?: boolean;
+    showOnlineStatus?: boolean;
+  };
+  twitch?: {
+    channelName: string;
+    clientId?: string;
+    checkInterval?: number; // minutes
+    notifyOnLive?: boolean;
+    notifyOnOffline?: boolean;
+  };
 }

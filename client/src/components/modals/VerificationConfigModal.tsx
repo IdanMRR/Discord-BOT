@@ -122,10 +122,14 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   const loadVerificationConfig = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('[VerificationModal] Loading config for server:', serverId);
       const response = await apiService.getVerificationConfig(serverId);
+      
+      console.log('[VerificationModal] Config response:', response);
       
       if (response.success && response.data) {
         const data = response.data;
+        console.log('[VerificationModal] Setting config data:', data);
         setConfig(prevConfig => ({
           title: data.title || prevConfig.title,
           description: data.description || prevConfig.description,
@@ -133,6 +137,8 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
           buttonText: data.buttonText || prevConfig.buttonText,
           fields: data.fields || prevConfig.fields
         }));
+      } else {
+        console.warn('[VerificationModal] Failed to load config:', response);
       }
     } catch (error) {
       console.error('Error loading verification config:', error);
@@ -143,11 +149,18 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
 
   const loadChannelsAndRoles = useCallback(async () => {
     try {
+      console.log('[VerificationModal] Loading channels and roles for server:', serverId);
       const response = await apiService.getServerChannelsAndRoles(serverId);
       
+      console.log('[VerificationModal] Channels and roles response:', response);
+      
       if (response.success && response.data) {
+        console.log('[VerificationModal] Setting channels:', response.data.channels);
+        console.log('[VerificationModal] Setting roles:', response.data.roles);
         setChannels(response.data.channels || []);
         setRoles(response.data.roles || []);
+      } else {
+        console.warn('[VerificationModal] Failed to load channels and roles:', response);
       }
     } catch (error) {
       console.error('Error loading channels and roles:', error);
@@ -165,12 +178,19 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   const handleSave = async () => {
     try {
       setSaving(true);
+      console.log('[VerificationModal] Saving config for server:', serverId);
+      console.log('[VerificationModal] Config to save:', config);
+      
       const response = await apiService.saveVerificationConfig(serverId, config);
+      
+      console.log('[VerificationModal] Save response:', response);
       
       if (response.success) {
         toast.success('Verification configuration saved!');
+        // Reload the config to confirm it was saved
+        await loadVerificationConfig();
       } else {
-        toast.error('Failed to save verification configuration');
+        toast.error(`Failed to save verification configuration: ${response.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving verification config:', error);
@@ -215,8 +235,8 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
         verification_type: verificationType
       });
       
-      // Create verification message
-      const response = await apiService.createVerificationMessage(serverId, verificationChannel);
+      // Create verification message with custom config
+      const response = await apiService.createCustomVerificationMessage(serverId, verificationChannel, config);
       
       if (response.success) {
         toast.success('Verification panel created successfully!');
@@ -285,26 +305,29 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   };
 
   const addField = () => {
-    setConfig({
-      ...config,
+    console.log('[VerificationModal] Adding new field');
+    setConfig(prev => ({
+      ...prev,
       fields: [
-        ...config.fields,
+        ...prev.fields,
         { name: 'New Field', value: 'Field value', inline: false }
       ]
-    });
+    }));
   };
 
   const updateField = (index: number, field: Partial<VerificationField>) => {
+    console.log('[VerificationModal] Updating field', index, ':', field);
     const newFields = [...config.fields];
     newFields[index] = { ...newFields[index], ...field };
-    setConfig({ ...config, fields: newFields });
+    setConfig(prev => ({ ...prev, fields: newFields }));
   };
 
   const removeField = (index: number) => {
-    setConfig({
-      ...config,
-      fields: config.fields.filter((_, i) => i !== index)
-    });
+    console.log('[VerificationModal] Removing field', index);
+    setConfig(prev => ({
+      ...prev,
+      fields: prev.fields.filter((_, i) => i !== index)
+    }));
   };
 
   // Removed unused style change handler
@@ -313,6 +336,17 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
   //   const style = panelStyles[styleKey as keyof typeof panelStyles];
   //   setConfig({ ...config, color: style.color });
   // };
+
+  // Debug log for button state
+  React.useEffect(() => {
+    console.log('[VerificationModal] Button state:', {
+      verificationChannel,
+      verifiedRole,
+      channelsLength: channels.length,
+      rolesLength: roles.length,
+      createButtonDisabled: creating || !verificationChannel
+    });
+  }, [verificationChannel, verifiedRole, channels.length, roles.length, creating]);
 
   if (!isOpen) return null;
 
@@ -364,7 +398,7 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
             </ActionButton>
             <ActionButton
               onClick={handleCreatePanel}
-              disabled={creating || !verificationChannel}
+              disabled={creating || !verificationChannel || !verifiedRole}
               loading={creating}
               variant="success"
               icon={ShieldCheckIcon}
@@ -376,6 +410,27 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
       }
     >
           <div className="space-y-6">
+            {/* Status Message */}
+            {(!verificationChannel || !verifiedRole) && (
+              <div className={classNames(
+                "p-4 rounded-lg border",
+                darkMode ? "bg-yellow-900/20 border-yellow-700 text-yellow-300" : "bg-yellow-50 border-yellow-200 text-yellow-800"
+              )}>
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-500">⚠️</span>
+                  <span className="font-medium">Configuration Required</span>
+                </div>
+                <p className="mt-1 text-sm">
+                  {!verificationChannel && !verifiedRole 
+                    ? "Please select a verification channel and verified role to enable the Create Panel button."
+                    : !verificationChannel 
+                    ? "Please select a verification channel to enable the Create Panel button."
+                    : "Please select a verified role to enable the Create Panel button."
+                  }
+                </p>
+              </div>
+            )}
+
             {/* Settings Configuration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Verification Channel */}
@@ -383,7 +438,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                 type="select"
                 label="Verification Channel"
                 value={verificationChannel}
-                onChange={setVerificationChannel}
+                onChange={(value) => {
+                  console.log('[VerificationModal] Verification channel changed to:', value);
+                  setVerificationChannel(value);
+                }}
                 options={[
                   { value: "", label: "-- Select Channel --" },
                   ...channels.map(channel => ({ value: channel.id, label: `#${channel.name}` }))
@@ -396,7 +454,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                 type="select"
                 label="Verified Role"
                 value={verifiedRole}
-                onChange={setVerifiedRole}
+                onChange={(value) => {
+                  console.log('[VerificationModal] Verified role changed to:', value);
+                  setVerifiedRole(value);
+                }}
                 options={[
                   { value: "", label: "-- Select Role --" },
                   ...roles.map(role => ({ value: role.id, label: `@${role.name}` }))
@@ -428,7 +489,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                   type="input"
                   label="Panel Title"
                   value={config.title}
-                  onChange={(value) => setConfig({ ...config, title: value })}
+                  onChange={(value) => {
+                    console.log('[VerificationModal] Updating title:', value);
+                    setConfig(prev => ({ ...prev, title: value }));
+                  }}
                   placeholder="✅ Server Verification Required"
                   description="This will be the main title of your verification embed"
                   required
@@ -438,7 +502,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                   type="input"
                   label="Button Text"
                   value={config.buttonText}
-                  onChange={(value) => setConfig({ ...config, buttonText: value })}
+                  onChange={(value) => {
+                    console.log('[VerificationModal] Updating buttonText:', value);
+                    setConfig(prev => ({ ...prev, buttonText: value }));
+                  }}
                   placeholder="✅ Verify Me"
                   description="Text displayed on the verification button"
                   required
@@ -453,7 +520,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                     type="textarea"
                     label="Panel Description"
                     value={config.description}
-                    onChange={(value) => setConfig({ ...config, description: value })}
+                    onChange={(value) => {
+                      console.log('[VerificationModal] Updating description:', value);
+                      setConfig(prev => ({ ...prev, description: value }));
+                    }}
                     rows={3}
                     placeholder="Welcome to our server! To access all channels and features, please verify yourself by clicking the button below."
                     description="Main message explaining the verification process"
@@ -465,7 +535,10 @@ const VerificationConfigModal: React.FC<VerificationConfigModalProps> = ({
                   type="color"
                   label="Embed Color"
                   value={config.color}
-                  onChange={(value) => setConfig({ ...config, color: value })}
+                  onChange={(value) => {
+                    console.log('[VerificationModal] Updating color:', value);
+                    setConfig(prev => ({ ...prev, color: value }));
+                  }}
                   className="text-sm"
                 />
               </div>

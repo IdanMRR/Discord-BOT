@@ -188,7 +188,7 @@ const ServerLogsContent: React.FC = () => {
                 break;
               case 'kick':
               case 'memberkick':
-                actionDescription = 'Member Kick';
+                actionDescription = 'Kick System';
                 break;
               case 'timeout':
               case 'membertimeout':
@@ -271,7 +271,7 @@ const ServerLogsContent: React.FC = () => {
               // Check if it has a case number for proper formatting
               if (log.case_number) {
                 if (actionLower.includes('kick')) {
-                  actionDescription = `Member Kick`;
+                  actionDescription = `Kick System`;
                   detailsDescription = `👢 Case #${String(log.case_number).padStart(4, '0')}: ${moderatorName} kicked ${userName}`;
                 } else if (actionLower.includes('ban')) {
                   actionDescription = `Member Ban`;
@@ -295,7 +295,7 @@ const ServerLogsContent: React.FC = () => {
                     break;
                   case 'kick':
                   case 'memberkick':
-                    actionDescription = 'Member Kick';
+                    actionDescription = 'Kick System';
                     detailsDescription = `👢 ${moderatorName} kicked ${userName}`;
                     break;
                   case 'timeout':
@@ -311,7 +311,7 @@ const ServerLogsContent: React.FC = () => {
                   default:
                     // Format camelCase actions to proper case
                     if (actionLower.includes('kick')) {
-                      actionDescription = 'Member Kick';
+                      actionDescription = 'Kick System';
                       detailsDescription = `👢 ${moderatorName} kicked ${userName}`;
                     } else if (actionLower.includes('ban')) {
                       actionDescription = 'Member Ban';
@@ -941,13 +941,7 @@ const ServerLogsContent: React.FC = () => {
                             <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">Moderator:</span>
                             <span className="font-medium text-foreground">
-                              {safeRender(
-                                log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
-                                (log.moderatorName && log.moderatorName.startsWith('User_')) ||
-                                (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout'))) ||
-                                (log.details && log.details.toLowerCase().includes('automatic'))
-                                ? 'AutoMod System' : log.moderatorName
-                              )}
+                              {safeRender(log.moderatorName)}
                             </span>
                           </div>
                         )}

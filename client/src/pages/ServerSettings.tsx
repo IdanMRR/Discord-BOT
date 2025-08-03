@@ -12,6 +12,8 @@ import GoodbyeMessageConfigModal from '../components/modals/GoodbyeMessageConfig
 import InviteJoinMessageConfigModal from '../components/modals/InviteJoinMessageConfigModal';
 import InviteLeaveMessageConfigModal from '../components/modals/InviteLeaveMessageConfigModal';
 import RolesConfigModal from '../components/modals/RolesConfigModal';
+import CustomQuestionsModal from '../components/modals/CustomQuestionsModal';
+import { TicketPanelConfigModal, TicketPanelConfig } from '../components/modals/TicketPanelConfigModal';
 import toast from 'react-hot-toast';
 import { dashboardLogger } from '../services/dashboardLogger';
 import { useNavigate } from 'react-router-dom';
@@ -96,6 +98,16 @@ const ServerSettingsContent: React.FC = () => {
   const [inviteLeaveModalOpen, setInviteLeaveModalOpen] = useState(false);
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [rolesConfigModalOpen, setRolesConfigModalOpen] = useState(false);
+  const [customQuestionsModalOpen, setCustomQuestionsModalOpen] = useState(false);
+  const [isTicketPanelModalOpen, setIsTicketPanelModalOpen] = useState(false);
+
+  // Age verification settings
+  const [ageSettings, setAgeSettings] = useState({
+    min_age: 18,
+    require_account_age: false,
+    min_account_age_days: 30
+  });
+  const [ageSettingsLoading, setAgeSettingsLoading] = useState(false);
 
   // Scroll to section function
   const scrollToSection = (sectionId: string) => {
@@ -319,15 +331,17 @@ const ServerSettingsContent: React.FC = () => {
 
     setSaving(true);
     try {
-      const updatedSettings = {
-        ...serverSettings,
-        [setting]: channelId || undefined
+      const updatePayload = {
+        [setting]: channelId || null
       };
 
-      const response = await apiService.updateServerSettings(serverId, updatedSettings);
+      const response = await apiService.updateServerSettings(serverId, updatePayload);
       
       if (response.success) {
-        setServerSettings(updatedSettings);
+        setServerSettings({
+          ...serverSettings,
+          [setting]: channelId || undefined
+        });
         const channelName = channelLookup.get(channelId)?.name || 'None';
         toast.success(`${getServerSettingDisplayName(setting)} set to #${channelName}`);
       } else {
@@ -346,15 +360,17 @@ const ServerSettingsContent: React.FC = () => {
 
     setSaving(true);
     try {
-      const updatedSettings = {
-        ...serverSettings,
-        [setting]: categoryId || undefined
+      const updatePayload = {
+        [setting]: categoryId || null
       };
 
-      const response = await apiService.updateServerSettings(serverId, updatedSettings);
+      const response = await apiService.updateServerSettings(serverId, updatePayload);
       
       if (response.success) {
-        setServerSettings(updatedSettings);
+        setServerSettings({
+          ...serverSettings,
+          [setting]: categoryId || undefined
+        });
         const categoryName = categoryLookup.get(categoryId)?.name || 'None';
         toast.success(`${getServerSettingDisplayName(setting)} set to ${categoryName}`);
       } else {
@@ -367,6 +383,87 @@ const ServerSettingsContent: React.FC = () => {
       setSaving(false);
     }
   }, [serverSettings, serverId, categoryLookup]);
+
+  const handleVerificationTypeChange = useCallback(async (verificationType: string) => {
+    if (!serverSettings || !serverId) return;
+
+    setSaving(true);
+    try {
+      // Only send the fields that are changing
+      const updatePayload = {
+        verification_type: verificationType as 'button' | 'captcha' | 'custom_question' | 'age_verification'
+      };
+
+      const response = await apiService.updateServerSettings(serverId, updatePayload);
+      
+      if (response.success) {
+        setServerSettings({
+          ...serverSettings,
+          verification_type: verificationType as 'button' | 'captcha' | 'custom_question' | 'age_verification'
+        });
+        
+        // Map verification type values to display names
+        const verificationTypeNames: Record<string, string> = {
+          'button': 'Button Verification',
+          'captcha': 'Captcha Verification', 
+          'custom_question': 'Custom Question',
+          'age_verification': 'Age Verification'
+        };
+        
+        const displayName = verificationTypeNames[verificationType] || verificationType;
+        toast.success(`Verification Type set to ${displayName}`);
+      } else {
+        toast.error('Failed to update verification type');
+      }
+    } catch (error) {
+      console.error('Error updating verification type:', error);
+      toast.error('Failed to update verification type');
+    } finally {
+      setSaving(false);
+    }
+  }, [serverSettings, serverId]);
+
+  const loadAgeVerificationSettings = useCallback(async () => {
+    if (!serverId) return;
+    
+    setAgeSettingsLoading(true);
+    try {
+      const response = await apiService.getAgeVerificationSettings(serverId);
+      if (response.success && response.data) {
+        setAgeSettings(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading age verification settings:', error);
+    } finally {
+      setAgeSettingsLoading(false);
+    }
+  }, [serverId]);
+
+  const saveAgeVerificationSettings = useCallback(async () => {
+    if (!serverId) return;
+    
+    setSaving(true);
+    try {
+      const response = await apiService.saveAgeVerificationSettings(serverId, ageSettings);
+      if (response.success) {
+        toast.success('Age verification settings saved successfully!');
+      } else {
+        toast.error('Failed to save age verification settings');
+      }
+    } catch (error) {
+      console.error('Error saving age verification settings:', error);
+      toast.error('Failed to save age verification settings');
+    } finally {
+      setSaving(false);
+    }
+  }, [serverId, ageSettings]);
+
+  // Load age verification settings when verification type changes to age_verification
+  useEffect(() => {
+    if (serverSettings?.verification_type === 'age_verification') {
+      loadAgeVerificationSettings();
+    }
+  }, [serverSettings?.verification_type, loadAgeVerificationSettings]);
 
   const handleCreateTicketPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
@@ -397,38 +494,22 @@ const ServerSettingsContent: React.FC = () => {
     }
   }, [serverId]);
 
-  const handleCreateCustomTicketPanel = useCallback(async (channelId: string) => {
-    if (!serverId || !channelId) return;
+  const handleSaveTicketPanelConfig = useCallback(async (config: TicketPanelConfig) => {
+    if (!serverId || !serverSettings?.ticket_panel_channel_id) return;
 
     setSaving(true);
     try {
-      // Create a custom ticket panel with enhanced styling
-      const response = await apiService.createCustomTicketPanelMessage(serverId, channelId, {
-        title: '🎫 Support Ticket System',
-        description: '**Need help?** Create a support ticket and our staff team will assist you!\n\n📋 **Before creating a ticket:**\n• Check our rules and FAQ first\n• Be clear and detailed about your issue\n• Be patient - we\'ll respond as soon as possible\n\n🔒 **Your ticket will be private** between you and our staff team.',
-        color: '#7C3AED',
-        footer: 'Support System • Click the button below to get started',
-        buttonText: '🎫 Create Support Ticket',
-        fields: [
-          {
-            name: '⏰ Response Time',
-            value: 'Usually within 24 hours',
-            inline: true
-          },
-          {
-            name: '👥 Staff Available',
-            value: 'Mon-Sun 9AM-11PM EST',
-            inline: true
-          }
-        ]
-      });
+      const response = await apiService.createCustomTicketPanelMessage(
+        serverId, 
+        serverSettings.ticket_panel_channel_id, 
+        config
+      );
 
       if (response.success) {
         toast.success('Custom ticket panel created successfully!');
         // Update server settings with new panel info
         setServerSettings(prev => prev ? {
           ...prev,
-          ticket_panel_channel_id: channelId,
           ticket_panel_message_id: response.data?.messageId
         } : prev);
       } else {
@@ -440,15 +521,18 @@ const ServerSettingsContent: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  }, [serverId]);
+  }, [serverId, serverSettings?.ticket_panel_channel_id]);
 
   const handleCreateVerificationPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
 
     setSaving(true);
     try {
-      // Create a custom verification panel with enhanced styling
-      const response = await apiService.createCustomVerificationMessage(serverId, channelId, {
+      // First, load the saved verification configuration
+      console.log('[ServerSettings] Loading verification config for server:', serverId);
+      const configResponse = await apiService.getVerificationConfig(serverId);
+      
+      let verificationConfig = {
         title: '✅ Server Verification Required',
         description: '**Welcome to our server!**\n\nTo access all channels and features, please verify yourself by clicking the button below.\n\nThis helps us maintain a safe and friendly community for everyone.',
         color: '#00D166',
@@ -470,7 +554,27 @@ const ServerSettingsContent: React.FC = () => {
             inline: true
           }
         ]
-      });
+      };
+
+      // Use saved configuration if available
+      if (configResponse.success && configResponse.data) {
+        console.log('[ServerSettings] Using saved verification config:', configResponse.data);
+        verificationConfig = {
+          title: configResponse.data.title || verificationConfig.title,
+          description: configResponse.data.description || verificationConfig.description,
+          color: configResponse.data.color || verificationConfig.color,
+          buttonText: configResponse.data.buttonText || verificationConfig.buttonText,
+          fields: (configResponse.data.fields || verificationConfig.fields).map(field => ({
+            ...field,
+            inline: field.inline ?? false
+          }))
+        };
+      } else {
+        console.log('[ServerSettings] No saved config found, using defaults');
+      }
+
+      // Create verification panel with the configuration
+      const response = await apiService.createCustomVerificationMessage(serverId, channelId, verificationConfig);
 
       if (response.success) {
         toast.success('Verification panel created successfully!');
@@ -510,7 +614,8 @@ const ServerSettingsContent: React.FC = () => {
       'server_log_channel_id': 'General Logs Channel',
       'ticket_panel_channel_id': 'Ticket Panel Channel',
       'ticket_logs_channel_id': 'Ticket Logs Channel',
-      'ticket_category_id': 'Ticket Category'
+      'ticket_category_id': 'Ticket Category',
+      'verification_type': 'Verification Type'
     };
     return names[setting] || setting;
   };
@@ -933,12 +1038,12 @@ const ServerSettingsContent: React.FC = () => {
                 size="sm"
                 className="flex-1"
               >
-                Create Default Panel
+                🎫 Create Default Ticket Panel
               </ActionButton>
               <ActionButton
                 onClick={() => {
                   if (serverSettings?.ticket_panel_channel_id) {
-                    handleCreateCustomTicketPanel(serverSettings.ticket_panel_channel_id);
+                    setIsTicketPanelModalOpen(true);
                   } else {
                     toast.error('Please select a ticket panel channel first');
                   }
@@ -949,7 +1054,7 @@ const ServerSettingsContent: React.FC = () => {
                 size="sm"
                 className="flex-1"
               >
-                🎨 Customize Panel
+                🎨 Customize Ticket Panel
               </ActionButton>
             </div>
           </div>
@@ -1023,7 +1128,7 @@ const ServerSettingsContent: React.FC = () => {
             </div>
             <select
               value={serverSettings?.verification_type || 'button'}
-              onChange={(e) => handleServerChannelChange('verification_type', e.target.value)}
+              onChange={(e) => handleVerificationTypeChange(e.target.value)}
               disabled={saving}
               className="w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
@@ -1033,6 +1138,117 @@ const ServerSettingsContent: React.FC = () => {
               <option value="age_verification">🔞 Age Verification</option>
             </select>
           </div>
+
+          {/* Age Verification Settings */}
+          {serverSettings?.verification_type === 'age_verification' && (
+            <div className="p-3 rounded-lg border space-y-2 content-area">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-orange-600 dark:text-orange-400 mr-2">🔞</span>
+                  <h4 className="font-medium text-foreground">
+                    Age Verification Settings
+                  </h4>
+                </div>
+                {ageSettingsLoading && (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Configure minimum age requirements for your server.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Minimum Age
+                  </label>
+                  <input
+                    type="number"
+                    min="13"
+                    max="21"
+                    value={ageSettings.min_age}
+                    onChange={(e) => setAgeSettings({
+                      ...ageSettings,
+                      min_age: parseInt(e.target.value) || 18
+                    })}
+                    disabled={ageSettingsLoading}
+                    className="w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    placeholder="18"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Account Age (days)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="365"
+                    value={ageSettings.min_account_age_days}
+                    onChange={(e) => setAgeSettings({
+                      ...ageSettings,
+                      min_account_age_days: parseInt(e.target.value) || 30
+                    })}
+                    disabled={ageSettingsLoading || !ageSettings.require_account_age}
+                    className="w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    placeholder="30"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <input
+                  type="checkbox"
+                  id="require-account-age"
+                  checked={ageSettings.require_account_age}
+                  onChange={(e) => setAgeSettings({
+                    ...ageSettings,
+                    require_account_age: e.target.checked
+                  })}
+                  disabled={ageSettingsLoading}
+                  className="rounded border-border focus:ring-primary focus:ring-2"
+                />
+                <label htmlFor="require-account-age" className="text-sm text-foreground">
+                  Require minimum Discord account age
+                </label>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={saveAgeVerificationSettings}
+                  disabled={saving || ageSettingsLoading}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save Age Settings'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Custom Questions Settings */}
+          {serverSettings?.verification_type === 'custom_question' && (
+            <div className="p-3 rounded-lg border space-y-2 content-area">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">❓</span>
+                  <h4 className="font-medium text-foreground">
+                    Custom Questions
+                  </h4>
+                </div>
+                <button
+                  className="px-3 py-1 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+                  onClick={() => setCustomQuestionsModalOpen(true)}
+                >
+                  Manage Questions
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Create custom verification questions that users must answer correctly.
+              </p>
+              <div className="bg-muted/30 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  ℹ️ Click "Manage Questions" to add, edit, or remove custom verification questions.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Create Verification Panel */}
           <div className="p-3 rounded-lg border space-y-2 content-area">
@@ -1045,6 +1261,28 @@ const ServerSettingsContent: React.FC = () => {
             <p className="text-xs text-muted-foreground">
               Create verification panel in selected channel.
             </p>
+            
+            {/* Status Message */}
+            {(!serverSettings?.verification_channel_id || !serverSettings?.verified_role_id) && (
+              <div className={classNames(
+                "p-2 rounded-md border text-xs",
+                "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300"
+              )}>
+                <div className="flex items-center gap-1">
+                  <span className="text-yellow-500">⚠️</span>
+                  <span className="font-medium">Required:</span>
+                </div>
+                <div className="mt-1">
+                  {!serverSettings?.verification_channel_id && !serverSettings?.verified_role_id 
+                    ? "Select verification channel and verified role above"
+                    : !serverSettings?.verification_channel_id 
+                    ? "Select verification channel above"
+                    : "Select verified role above"
+                  }
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <ActionButton
                 onClick={() => setVerificationModalOpen(true)}
@@ -1056,13 +1294,17 @@ const ServerSettingsContent: React.FC = () => {
               </ActionButton>
               <ActionButton
                 onClick={() => {
-                  if (serverSettings?.verification_channel_id) {
-                    handleCreateVerificationPanel(serverSettings.verification_channel_id);
-                  } else {
+                  if (!serverSettings?.verification_channel_id) {
                     toast.error('Please select a verification channel first');
+                    return;
                   }
+                  if (!serverSettings?.verified_role_id) {
+                    toast.error('Please select a verified role first');
+                    return;
+                  }
+                  handleCreateVerificationPanel(serverSettings.verification_channel_id);
                 }}
-                disabled={saving || !serverSettings?.verification_channel_id}
+                disabled={saving || !serverSettings?.verification_channel_id || !serverSettings?.verified_role_id}
                 loading={saving}
                 variant="primary"
                 size="sm"
@@ -1816,6 +2058,17 @@ const ServerSettingsContent: React.FC = () => {
         isOpen={rolesConfigModalOpen}
         onClose={() => setRolesConfigModalOpen(false)}
         serverId={serverId || ''}
+      />
+      <CustomQuestionsModal
+        isOpen={customQuestionsModalOpen}
+        onClose={() => setCustomQuestionsModalOpen(false)}
+        serverId={serverId || ''}
+      />
+
+      <TicketPanelConfigModal
+        isOpen={isTicketPanelModalOpen}
+        onClose={() => setIsTicketPanelModalOpen(false)}
+        onSave={handleSaveTicketPanelConfig}
       />
     </div>
   );

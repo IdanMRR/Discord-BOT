@@ -311,8 +311,42 @@ const LogsContent: React.FC = () => {
           const getValidTimestamp = (log: any) => {
             const dateStr = log.created_at || log.timestamp;
             if (!dateStr) return -1; // Put entries without dates at the end
-            const date = new Date(dateStr);
-            return isNaN(date.getTime()) ? -1 : date.getTime(); // Put invalid dates at the end
+            
+            let date: Date;
+            
+            try {
+              // Handle timestamp as number (seconds)
+              if (!isNaN(Number(dateStr)) && Number(dateStr) > 1000000000) {
+                date = new Date(Number(dateStr) * 1000);
+              }
+              // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss)
+              else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+                const [datePart, timePart] = dateStr.split(', ');
+                const [day, month, year] = datePart.split(/[/.]/);
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                               parseInt(timePart.split(':')[0]), 
+                               parseInt(timePart.split(':')[1]), 
+                               parseInt(timePart.split(':')[2]));
+              }
+              // Handle formatted timestamps with "at" (DD/MM/YYYY at HH:mm:ss) or (DD.MM.YYYY at HH:mm:ss)
+              else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4} at \d{2}:\d{2}:\d{2}$/)) {
+                const [datePart, timePart] = dateStr.split(' at ');
+                const [day, month, year] = datePart.split(/[/.]/);
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                               parseInt(timePart.split(':')[0]), 
+                               parseInt(timePart.split(':')[1]), 
+                               parseInt(timePart.split(':')[2]));
+              }
+              // Handle ISO format or standard date parsing
+              else {
+                date = new Date(dateStr);
+              }
+              
+              return isNaN(date.getTime()) ? -1 : date.getTime();
+            } catch (error) {
+              console.warn('Failed to parse date:', dateStr, error);
+              return -1;
+            }
           };
           
           const dateA = getValidTimestamp(a);
@@ -760,7 +794,27 @@ const LogsContent: React.FC = () => {
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
                             <h4 className="font-semibold text-lg text-foreground">
-                              {log.action || log.command || 'Unknown Action'}
+                              {(() => {
+                                const action = log.action || log.command || 'Unknown Action';
+                                // Format verification actions
+                                if (action === 'memberVerificationSuccess') {
+                                  return 'Verification System';
+                                } else if (action === 'memberVerificationFailed') {
+                                  return 'Verification System';
+                                }
+                                // Format moderation actions
+                                else if (action === 'MemberKick' || action === 'memberKick') {
+                                  return 'Kick';
+                                } else if (action === 'MemberBan' || action === 'memberBan') {
+                                  return 'Ban';
+                                } else if (action === 'MemberTimeout' || action === 'memberTimeout') {
+                                  return 'Timeout';
+                                } else if (action === 'MemberWarn' || action === 'memberWarn') {
+                                  return 'Warning';
+                                }
+                                // Format other common actions
+                                return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                              })()}
                             </h4>
                             <span className={classNames(
                               "px-2 py-1 rounded-lg text-xs font-medium border",
@@ -782,17 +836,11 @@ const LogsContent: React.FC = () => {
                             )}
 
                             {((log.moderatorName || log.moderatorId) || 
-                              (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick')))) && (
+                              (log.action && (log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('warn')))) && (
                               <div className="flex items-center space-x-2">
                                 <ShieldCheckIcon className="h-4 w-4 text-primary-400" />
                                 <span className="text-sm text-muted-foreground">
-                                  Moderator: {log.moderatorId === 'dashboard' || log.moderatorId === 'system' || log.moderatorId === 'automod' || 
-                                             log.moderatorName === 'dashboard' || log.moderatorName === 'system' || log.moderatorName === 'automod' ||
-                                             (log.moderatorName && log.moderatorName.startsWith('User_')) ||
-                                             (log.moderatorId && log.moderatorId.startsWith('User_')) ||
-                                             (log.action && (log.action.toLowerCase().includes('auto') || log.action.toLowerCase().includes('timeout') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('kick')) && (!log.moderatorName || log.moderatorName.startsWith('User_') || !log.moderatorId || log.moderatorId.startsWith('User_'))) ||
-                                             (log.details && log.details.toLowerCase().includes('automatic'))
-                                             ? 'AutoMod System' : (log.moderatorName || log.moderatorId || 'Unknown')}
+                                  Moderator: {log.moderatorName || log.moderatorId || 'Unknown'}
                                 </span>
                               </div>
                             )}
@@ -911,13 +959,15 @@ const LogsContent: React.FC = () => {
                         </div>
 
                         {/* Timestamp */}
-                        <div className="flex items-center space-x-1 text-right">
-                          <div>
-                            <p className={classNames(
-                              "text-sm font-medium",
-                              darkMode ? "text-gray-300" : "text-gray-600"
-                            )}>
-                              <ClockIcon className="h-4 w-4" />
+                        <div className="flex items-start space-x-1 text-right">
+                          <div className="flex flex-col items-end space-y-1">
+                            {/* Relative time with clock emoji */}
+                            <div className="flex items-center space-x-2">
+                              <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                              <p className={classNames(
+                                "text-sm font-medium",
+                                darkMode ? "text-gray-300" : "text-gray-600"
+                              )}>
                               {(() => {
                                 const dateStr = log.created_at || log.timestamp;
                                 if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
@@ -939,6 +989,17 @@ const LogsContent: React.FC = () => {
                                   // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss) - already in Israeli timezone
                                   else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
                                     const [datePart, timePart] = dateStr.split(', ');
+                                    const [day, month, year] = datePart.split(/[/.]/);
+                                    // Create date object - the backend already added +3 hours for Israeli time
+                                    date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
+                                                   parseInt(timePart.split(':')[0]), 
+                                                   parseInt(timePart.split(':')[1]), 
+                                                   parseInt(timePart.split(':')[2]));
+                                    // Date is already in correct timezone
+                                  }
+                                  // Handle formatted timestamps with "at" (DD/MM/YYYY at HH:mm:ss) or (DD.MM.YYYY at HH:mm:ss)
+                                  else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4} at \d{2}:\d{2}:\d{2}$/)) {
+                                    const [datePart, timePart] = dateStr.split(' at ');
                                     const [day, month, year] = datePart.split(/[/.]/);
                                     // Create date object - the backend already added +3 hours for Israeli time
                                     date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 
@@ -994,7 +1055,10 @@ const LogsContent: React.FC = () => {
                                   return `Raw: ${dateStr}`;
                                 }
                               })()}
-                            </p>
+                              </p>
+                            </div>
+                            
+                            {/* Full date/time below */}
                             <p className="text-xs text-muted-foreground/70">
                               {(() => {
                                 const dateStr = log.created_at || log.timestamp;
@@ -1016,6 +1080,10 @@ const LogsContent: React.FC = () => {
                                   }
                                   // Handle formatted timestamps (DD/MM/YYYY, HH:mm:ss) or (DD.MM.YYYY, HH:mm:ss) - already in Israeli timezone
                                   else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4}, \d{2}:\d{2}:\d{2}$/)) {
+                                    return dateStr.replace(/\./g, '/'); // Normalize dots to slashes for display
+                                  }
+                                  // Handle formatted timestamps with "at" (DD/MM/YYYY at HH:mm:ss) or (DD.MM.YYYY at HH:mm:ss)
+                                  else if (dateStr.match(/^\d{2}[/.]\d{2}[/.]\d{4} at \d{2}:\d{2}:\d{2}$/)) {
                                     return dateStr.replace(/\./g, '/'); // Normalize dots to slashes for display
                                   }
                                   // Handle ISO format

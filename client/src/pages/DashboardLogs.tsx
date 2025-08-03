@@ -7,10 +7,13 @@ import {
   XCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  FunnelIcon,
+  ServerIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import FilterSystem, { FilterField } from '../components/common/FilterSystem';
+import SortableTableHeader, { SortConfig } from '../components/common/SortableTableHeader';
 import { useTheme } from '../contexts/ThemeContext';
 import { useActivityLogs } from '../hooks/useActivityLogs';
 import { formatDashboardLogDate } from '../utils/dateUtils';
@@ -31,7 +34,7 @@ const DashboardLogs: React.FC = () => {
   const [userIdFilter, setUserIdFilter] = useState('');
   const [actionTypeFilter, setActionTypeFilter] = useState('');
   const [guildIdFilter, setGuildIdFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>();
 
   // Memoize filters to prevent unnecessary re-renders
   const filters = useMemo(() => ({
@@ -67,27 +70,50 @@ const DashboardLogs: React.FC = () => {
   };
 
   const getActionTypeColor = (actionType: string) => {
-    switch (actionType.toLowerCase()) {
+    const type = actionType.toLowerCase();
+    
+    // Handle verification actions
+    if (type.includes('verification success')) {
+      return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30';
+    }
+    if (type.includes('verification failed')) {
+      return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30';
+    }
+    
+    // Handle other actions
+    switch (type) {
       case 'login':
+      case 'user login':
         return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30';
       case 'logout':
+      case 'user logout':
         return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30';
       case 'export_data':
+      case 'data export':
         return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30';
       case 'manage_warnings':
+      case 'manage warnings':
       case 'manage_tickets':
+      case 'manage tickets':
       case 'manage_settings':
+      case 'manage settings':
       case 'update_server_settings':
+      case 'update server settings':
       case 'update_settings':
+      case 'update settings':
       case 'update_ticket':
       case 'update_warning':
         return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30';
       case 'create_ticket':
+      case 'create ticket':
       case 'create_warning':
+      case 'create warning':
       case 'create_resource':
         return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30';
       case 'delete_ticket':
+      case 'delete ticket':
       case 'delete_warning':
+      case 'delete warning':
       case 'delete_resource':
         return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30';
       case 'admin':
@@ -108,6 +134,95 @@ const DashboardLogs: React.FC = () => {
     if (userAgent.includes('Edge')) return 'Edge';
     
     return 'Other';
+  };
+
+  // Filter configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'userId',
+      label: 'User ID',
+      type: 'text',
+      placeholder: 'Search by user ID...',
+      value: userIdFilter,
+      onChange: setUserIdFilter,
+      width: 'md',
+      icon: <UserIcon className="h-4 w-4" />
+    },
+    {
+      key: 'actionType',
+      label: 'Action Type',
+      type: 'select',
+      placeholder: 'All Actions',
+      value: actionTypeFilter,
+      onChange: setActionTypeFilter,
+      width: 'md',
+      icon: <BoltIcon className="h-4 w-4" />,
+      options: [
+        { value: 'login', label: 'Login' },
+        { value: 'logout', label: 'Logout' },
+        { value: 'view_page', label: 'View Page' },
+        { value: 'view_logs', label: 'View Logs' },
+        { value: 'manage_warnings', label: 'Manage Warnings' },
+        { value: 'manage_tickets', label: 'Manage Tickets' },
+        { value: 'manage_settings', label: 'Manage Settings' },
+        { value: 'update_server_settings', label: 'Update Server Settings' },
+        { value: 'export_data', label: 'Export Data' },
+        { value: 'create_ticket', label: 'Create Ticket' },
+        { value: 'create_warning', label: 'Create Warning' },
+        { value: 'update_ticket', label: 'Update Ticket' },
+        { value: 'update_warning', label: 'Update Warning' },
+        { value: 'delete_ticket', label: 'Delete Ticket' },
+        { value: 'delete_warning', label: 'Delete Warning' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'xp_management', label: 'XP Management' },
+        { value: 'xp_modification', label: 'XP Modification' },
+        { value: 'level_reset', label: 'Level Reset' }
+      ]
+    },
+    {
+      key: 'guildId',
+      label: 'Guild ID',
+      type: 'text',
+      placeholder: 'Search by guild ID...',
+      value: guildIdFilter,
+      onChange: setGuildIdFilter,
+      width: 'md',
+      icon: <ServerIcon className="h-4 w-4" />
+    }
+  ];
+
+  // Client-side sorting of logs based on current sort config
+  const sortedLogs = useMemo(() => {
+    if (!sortConfig || !logs) return logs;
+
+    return [...logs].sort((a, b) => {
+      let aValue: any = a[sortConfig.key as keyof typeof a];
+      let bValue: any = b[sortConfig.key as keyof typeof b];
+
+      // Handle different data types
+      if (sortConfig.key === 'timestamp') {
+        aValue = new Date(a.timestamp as string).getTime();
+        bValue = new Date(b.timestamp as string).getTime();
+      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [logs, sortConfig]);
+
+  const handleClearAllFilters = () => {
+    setUserIdFilter('');
+    setActionTypeFilter('');
+    setGuildIdFilter('');
+    setSortConfig(undefined);
   };
 
   // Use the proper Israeli date formatting utility
@@ -281,113 +396,13 @@ const DashboardLogs: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={classNames(
-              "text-lg font-medium",
-              darkMode ? "text-white" : "text-gray-900"
-            )}>
-              Filters
-            </h3>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={classNames(
-                "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md",
-                darkMode 
-                  ? "text-gray-300 bg-gray-700 hover:bg-gray-600" 
-                  : "text-gray-700 bg-gray-100 hover:bg-gray-200"
-              )}
-            >
-              <FunnelIcon className="h-4 w-4 mr-2" />
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </button>
-          </div>
-          
-          {showFilters && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  value={userIdFilter}
-                  onChange={(e) => setUserIdFilter(e.target.value)}
-                  placeholder="Filter by user ID"
-                  className={classNames(
-                    "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" 
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  )}
-                />
-              </div>
-              
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Action Type
-                </label>
-                <select
-                  value={actionTypeFilter}
-                  onChange={(e) => setActionTypeFilter(e.target.value)}
-                  className={classNames(
-                    "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white" 
-                      : "bg-white border-gray-300 text-gray-900"
-                  )}
-                >
-                  <option value="">All Actions</option>
-                  <option value="login">Login</option>
-                  <option value="logout">Logout</option>
-                  <option value="view_page">View Page</option>
-                  <option value="view_logs">View Logs</option>
-                  <option value="manage_warnings">Manage Warnings</option>
-                  <option value="manage_tickets">Manage Tickets</option>
-                  <option value="manage_settings">Manage Settings</option>
-                  <option value="update_server_settings">Update Server Settings</option>
-                  <option value="export_data">Export Data</option>
-                  <option value="create_ticket">Create Ticket</option>
-                  <option value="create_warning">Create Warning</option>
-                  <option value="update_ticket">Update Ticket</option>
-                  <option value="update_warning">Update Warning</option>
-                  <option value="delete_ticket">Delete Ticket</option>
-                  <option value="delete_warning">Delete Warning</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className={classNames(
-                  "block text-sm font-medium mb-2",
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                )}>
-                  Guild ID
-                </label>
-                <input
-                  type="text"
-                  value={guildIdFilter}
-                  onChange={(e) => setGuildIdFilter(e.target.value)}
-                  placeholder="Filter by guild ID"
-                  className={classNames(
-                    "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
-                    darkMode 
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" 
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  )}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
+      <FilterSystem
+        fields={filterFields}
+        onClearAll={handleClearAllFilters}
+        collapsible={true}
+        defaultCollapsed={false}
+        showActiveCount={true}
+      />
 
       {/* Logs Table */}
       <Card>
@@ -398,36 +413,36 @@ const DashboardLogs: React.FC = () => {
                 darkMode ? "bg-gray-800" : "bg-gray-50"
               )}>
                 <tr>
-                  <th className={classNames(
-                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  )}>
-                    User
-                  </th>
-                  <th className={classNames(
-                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  )}>
-                    Action
-                  </th>
-                  <th className={classNames(
-                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  )}>
-                    Page
-                  </th>
-                  <th className={classNames(
-                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  )}>
-                    Status
-                  </th>
-                  <th className={classNames(
-                    "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                    darkMode ? "text-gray-300" : "text-gray-500"
-                  )}>
-                    Time
-                  </th>
+                  <SortableTableHeader
+                    label="User"
+                    sortKey="user"
+                    currentSort={sortConfig}
+                    onSort={setSortConfig}
+                  />
+                  <SortableTableHeader
+                    label="Action"
+                    sortKey="type"
+                    currentSort={sortConfig}
+                    onSort={setSortConfig}
+                  />
+                  <SortableTableHeader
+                    label="Page"
+                    sortKey="serverName"
+                    currentSort={sortConfig}
+                    onSort={setSortConfig}
+                  />
+                  <SortableTableHeader
+                    label="Status"
+                    sortKey="details"
+                    currentSort={sortConfig}
+                    onSort={setSortConfig}
+                  />
+                  <SortableTableHeader
+                    label="Time"
+                    sortKey="timestamp"
+                    currentSort={sortConfig}
+                    onSort={setSortConfig}
+                  />
                   <th className={classNames(
                     "px-6 py-3 text-left text-xs font-medium uppercase tracking-wider",
                     darkMode ? "text-gray-300" : "text-gray-500"
@@ -440,7 +455,7 @@ const DashboardLogs: React.FC = () => {
                 "divide-y divide-gray-200 dark:divide-gray-700",
                 darkMode ? "bg-gray-900" : "bg-white"
               )}>
-                {(logs || []).map((log) => (
+                {(sortedLogs || []).map((log) => (
                   <tr key={log.id} className={classNames(
                     darkMode ? "hover:bg-gray-800" : "hover:bg-gray-50"
                   )}>
@@ -473,9 +488,9 @@ const DashboardLogs: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={classNames(
                         "inline-flex px-2 py-1 text-xs font-semibold rounded-full",
-                        getActionTypeColor(log.type)
+                        getActionTypeColor(log.actionDisplay || log.type)
                       )}>
-                        {log.type}
+                        {log.actionDisplay || log.type}
                       </span>
                     </td>
                     <td className={classNames(

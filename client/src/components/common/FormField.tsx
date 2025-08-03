@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 // Utility function for conditional class names
 function classNames(...classes: (string | boolean | undefined)[]) {

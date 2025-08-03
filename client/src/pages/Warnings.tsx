@@ -516,8 +516,8 @@ const WarningsContent: React.FC = () => {
       </div>
 
 
-        <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-border bg-muted/30">
+        <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden ring-1 ring-border">
+        <div className="p-6 border-b border-border bg-muted/50">
           <div className="flex items-center justify-between">
           <div>
             <h3 className={classNames(
@@ -592,7 +592,7 @@ const WarningsContent: React.FC = () => {
                   "min-w-full divide-y-2",
                 darkMode ? "divide-gray-700" : "divide-gray-200"
               )}>
-                <thead className="rounded-t-lg bg-muted">
+                <thead className="rounded-t-lg bg-muted/80">
                   <tr>
                       <th className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                       <input
@@ -704,11 +704,7 @@ const WarningsContent: React.FC = () => {
                           {isWarningActive(warning.active) && (
                           <button
                             onClick={() => openRemoveModal(warning.id)}
-                            className={classNames(
-                                "inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105",
-                                "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2",
-                                darkMode ? "focus:ring-offset-gray-900" : "focus:ring-offset-white"
-                            )}
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2 shadow-sm"
                           >
                               🗑️ Remove
                           </button>

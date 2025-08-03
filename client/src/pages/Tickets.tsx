@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback, Fragment } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
 import { useParams } from 'react-router-dom';
 import { Ticket } from '../types';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Pagination from '../components/common/Pagination';
 import PermissionGuard from '../components/common/PermissionGuard';
+import SimpleFilter from '../components/common/SimpleFilter';
+import SortableTableHeader, { SortConfig } from '../components/common/SortableTableHeader';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
@@ -24,7 +26,9 @@ const TicketsContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
-  const [statusFilter] = useState<'all' | 'open' | 'closed' | 'deleted'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed' | 'deleted'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>();
   const { serverId } = useParams<{ serverId: string }>();
   const itemsPerPage = 20;
   
@@ -45,7 +49,8 @@ const TicketsContent: React.FC = () => {
       const options: any = {
         page,
         limit: itemsPerPage,
-        status: statusFilter === 'all' ? undefined : statusFilter
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        search: searchTerm || undefined
       };
       
       if (serverId) {
@@ -97,11 +102,61 @@ const TicketsContent: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, itemsPerPage, serverId]);
+  }, [statusFilter, searchTerm, itemsPerPage, serverId]);
 
   useEffect(() => {
     fetchTickets(1);
   }, [fetchTickets]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm !== undefined) {
+        setCurrentPage(1); // Reset to first page when searching
+        fetchTickets(1);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]); // Only depend on searchTerm for debouncing
+
+  // Effect for status filter changes (immediate)
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchTickets(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  // Client-side sorting of tickets
+  const sortedTickets = useMemo(() => {
+    if (!sortConfig || !tickets) return tickets;
+
+    return [...tickets].sort((a, b) => {
+      let aValue: any = a[sortConfig.key as keyof Ticket];
+      let bValue: any = b[sortConfig.key as keyof Ticket];
+
+      // Handle different data types
+      if (sortConfig.key === 'created_at' || sortConfig.key === 'last_message_at') {
+        aValue = new Date(aValue as string).getTime();
+        bValue = new Date(bValue as string).getTime();
+      } else if (sortConfig.key === 'ticket_number' || sortConfig.key === 'rating') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [tickets, sortConfig]);
 
   // Register auto-refresh
   useEffect(() => {
@@ -429,14 +484,8 @@ const TicketsContent: React.FC = () => {
         </div>
       </div>
 
-        <Card className={classNames(
-          "shadow-xl border-0 rounded-xl overflow-hidden",
-          "bg-card ring-1 ring-border"
-        )}>
-        <div className={classNames(
-          "p-6 border-b",
-          "border-border bg-muted"
-        )}>
+        <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden ring-1 ring-border">
+        <div className="p-6 border-b border-border bg-muted/50">
           <div className="flex items-center justify-between">
             <div>
               <h3 className={classNames(
@@ -462,17 +511,35 @@ const TicketsContent: React.FC = () => {
                 )}>{selectedTickets.size} selected</span>
                 <button
                   onClick={openBulkDeleteConfirm}
-                  className={classNames(
-                    "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105",
-                    "text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                    darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white"
-                  )}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
                 >
                   🎫 Bulk Action
                 </button>
               </div>
             )}
           </div>
+        </div>
+
+        {/* Filter Section */}
+        <div className="p-6 border-b border-border">
+          <SimpleFilter
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search tickets by subject, user, or ticket number..."
+            selectValue={statusFilter}
+            onSelectChange={(value) => setStatusFilter(value as any)}
+            selectOptions={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'open', label: 'Open' },
+              { value: 'closed', label: 'Closed' },
+              { value: 'deleted', label: 'Deleted' }
+            ]}
+            selectPlaceholder="All Statuses"
+            onClear={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+            }}
+          />
         </div>
 
         <div className={classNames(
@@ -514,103 +581,87 @@ const TicketsContent: React.FC = () => {
                   "min-w-full divide-y-2",
                   darkMode ? "divide-gray-700" : "divide-gray-200"
                 )}>
-                  <thead className={classNames(
-                    "rounded-t-lg",
-                    darkMode ? "bg-gray-800" : "bg-gray-100"
-                  )}>
+                  <thead className="rounded-t-lg bg-muted/80">
                     <tr>
                       <th className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                         <input
                           type="checkbox"
-                          className={classNames(
-                            "h-5 w-5 rounded border-2 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all duration-200",
-                            darkMode ? "border-gray-500 bg-gray-700" : "border-gray-400 bg-white"
-                          )}
+                          className="h-5 w-5 rounded border-2 text-primary border-input bg-background focus:ring-primary focus:ring-2 transition-all duration-200"
                           checked={selectedTickets.size > 0 && selectedTickets.size === tickets.length}
                           onChange={selectAllTickets}
                         />
                       </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        🎫 Ticket
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        🏠 Server
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        👤 User
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        📝 Subject
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        📊 Status
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        📅 Created
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        ⏰ Last Activity
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
-                        ⭐ Rating
-                      </th>
-                      <th className={classNames(
-                        "px-6 py-4 text-left text-sm font-bold uppercase tracking-wider",
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      )}>
+                      <SortableTableHeader
+                        label="🎫 Ticket"
+                        sortKey="ticket_number"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="🏠 Server"
+                        sortKey="server_name"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="👤 User"
+                        sortKey="username"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="📝 Subject"
+                        sortKey="subject"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="📊 Status"
+                        sortKey="status"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="📅 Created"
+                        sortKey="created_at"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="⏰ Last Activity"
+                        sortKey="last_message_at"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <SortableTableHeader
+                        label="⭐ Rating"
+                        sortKey="rating"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                      />
+                      <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         ⚙️ Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={classNames(
-                    "divide-y",
-                    darkMode ? "bg-gray-900 divide-gray-800" : "bg-white divide-gray-100"
-                  )}>
-                    {tickets.map((ticket) => (
+                  <tbody className="bg-card divide-y divide-border">
+                    {sortedTickets.map((ticket) => (
                       <tr 
                         key={ticket.id} 
                         className={classNames(
-                          "transition-all duration-200 hover:shadow-lg",
+                          "transition-all duration-200 hover:shadow-lg relative group",
                           selectedTickets.has(ticket.id) 
-                            ? darkMode ? 'bg-blue-900/30 ring-1 ring-blue-500' : 'bg-blue-50 ring-1 ring-blue-300'
-                            : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-50',
-                          'relative group'
+                            ? 'bg-primary/10 ring-1 ring-primary/30'
+                            : 'hover:bg-muted/50'
                         )}
                       >
                         <td className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                           {selectedTickets.has(ticket.id) && (
-                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r" />
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary to-primary/80 rounded-r" />
                           )}
                           <input
                             type="checkbox"
-                            className={classNames(
-                              "h-5 w-5 rounded border-2 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all duration-200",
-                              darkMode ? "border-gray-500 bg-gray-700" : "border-gray-400 bg-white"
-                            )}
+                            className="h-5 w-5 rounded border-2 text-primary border-input bg-background focus:ring-primary focus:ring-2 transition-all duration-200"
                             checked={selectedTickets.has(ticket.id)}
                             onChange={() => toggleTicketSelection(ticket.id)}
                           />
@@ -694,11 +745,7 @@ const TicketsContent: React.FC = () => {
                             {ticket.status === 'open' && (
                               <button
                                 onClick={() => openReasonModal(ticket, 'close')}
-                                className={classNames(
-                                  "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105",
-                                  "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2",
-                                  darkMode ? "focus:ring-offset-gray-900" : "focus:ring-offset-white"
-                                )}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2 shadow-sm"
                               >
                                 ❌ Close
                               </button>
@@ -706,32 +753,21 @@ const TicketsContent: React.FC = () => {
                             {ticket.status === 'closed' && (
                               <button
                                 onClick={() => openReasonModal(ticket, 'reopen')}
-                                className={classNames(
-                                  "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105",
-                                  "text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
-                                  darkMode ? "focus:ring-offset-gray-900" : "focus:ring-offset-white"
-                                )}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 shadow-sm"
                               >
                                 🔄 Reopen
                               </button>
                             )}
                             <button
                               onClick={() => viewTicketTranscript(ticket)}
-                              className={classNames(
-                                "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105",
-                                "text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                                darkMode ? "focus:ring-offset-gray-900" : "focus:ring-offset-white"
-                              )}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 shadow-sm"
                             >
                               📄 Transcript
                             </button>
                             {ticket.status === 'closed' && (
                               <button
                                 onClick={() => autoDeleteTicket(ticket)}
-                                className={classNames(
-                                  "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105",
-                                  darkMode ? "text-gray-400 hover:text-gray-300 bg-gray-700 hover:bg-gray-600" : "text-gray-600 hover:text-gray-500 bg-gray-200 hover:bg-gray-300"
-                                )}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 shadow-sm"
                               >
                                 🗑️ Delete
                               </button>
@@ -1086,10 +1122,7 @@ const TicketsContent: React.FC = () => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className={classNames(
-                  "w-full max-w-4xl transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all",
-                  "bg-card ring-1 ring-border"
-                )}>
+                <Dialog.Panel className="content-area w-full max-w-4xl transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-2xl transition-all">
                   <Dialog.Title
                     as="h3"
                     className={classNames(
@@ -1117,10 +1150,7 @@ const TicketsContent: React.FC = () => {
                       <XMarkIcon className="h-5 w-5" aria-hidden="true" />
                     </button>
                   </Dialog.Title>
-                  <div className={classNames(
-                    "max-h-[70vh] overflow-y-auto rounded-lg border-2",
-                    darkMode ? "border-gray-600 bg-gray-900" : "border-gray-200 bg-gray-50"
-                  )}>
+                  <div className="max-h-[70vh] overflow-y-auto rounded-lg border-2 border-border bg-muted/30">
                     {loadingTranscript ? (
                       <div className="flex justify-center py-16">
                         <div className="text-center">
@@ -1134,16 +1164,13 @@ const TicketsContent: React.FC = () => {
                     ) : transcript && transcript.length > 0 ? (
                       <div className="space-y-4 p-4">
                         {transcript.map((message) => (
-                          <div key={message.id} className={classNames(
-                            "rounded-xl p-4 ring-1 transition-all duration-200 hover:shadow-lg",
-                            darkMode ? "bg-gray-800 ring-gray-600" : "bg-white ring-gray-200"
-                          )}>
+                          <div key={message.id} className="content-area rounded-xl p-4 ring-1 ring-border transition-all duration-200 hover:shadow-lg">
                             <div className="flex items-center mb-3">
                               <div className={classNames(
                                 "w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm font-bold",
                                 message.author.bot 
-                                  ? darkMode ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-                                  : darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+                                  ? "bg-primary/20 text-primary"
+                                  : "bg-muted text-muted-foreground"
                               )}>
                                 {message.author.bot ? '🤖' : message.author.username.charAt(0).toUpperCase()}
                               </div>
@@ -1152,38 +1179,26 @@ const TicketsContent: React.FC = () => {
                                   <span className={classNames(
                                     "font-semibold",
                                     message.author.bot 
-                                      ? darkMode ? "text-blue-400" : "text-blue-600"
-                                      : darkMode ? "text-white" : "text-gray-900"
+                                      ? "text-primary"
+                                      : "text-foreground"
                                   )}>
                                     {message.author.username}
                                   </span>
                                   {message.author.bot && (
-                                    <span className={classNames(
-                                      "ml-2 px-2 py-1 text-xs font-medium rounded-full",
-                                      darkMode ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-                                    )}>
+                                    <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full bg-primary/20 text-primary">
                                       BOT
                                     </span>
                                   )}
-                                  <span className={classNames(
-                                    "text-xs ml-2",
-                                    darkMode ? "text-gray-400" : "text-gray-500"
-                                  )}>
+                                  <span className="text-xs ml-2 text-muted-foreground">
                                     {new Date(message.timestamp).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
                             </div>
-                            <div className={classNames(
-                              "whitespace-pre-wrap text-sm leading-relaxed",
-                              darkMode ? "text-gray-200" : "text-gray-800"
-                            )}>{message.content}</div>
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{message.content}</div>
                             {message.attachments && message.attachments.length > 0 && (
                               <div className="mt-3">
-                                <p className={classNames(
-                                  "text-sm font-medium mb-2",
-                                  darkMode ? "text-gray-300" : "text-gray-700"
-                                )}>📎 Attachments:</p>
+                                <p className="text-sm font-medium mb-2 text-foreground">📎 Attachments:</p>
                                 <div className="flex flex-wrap gap-2">
                                   {message.attachments.map((att: any, index: number) => (
                                     <a
@@ -1191,10 +1206,7 @@ const TicketsContent: React.FC = () => {
                                       href={att.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className={classNames(
-                                        "inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105",
-                                        darkMode ? "bg-blue-900/30 text-blue-400 hover:bg-blue-900/50" : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                                      )}
+                                      className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 bg-primary/20 text-primary hover:bg-primary/30"
                                     >
                                       🔗 {att.name || `Attachment ${index + 1}`}
                                     </a>
@@ -1205,34 +1217,19 @@ const TicketsContent: React.FC = () => {
                             {message.embeds && message.embeds.length > 0 && (
                               <div className="mt-3">
                                 {message.embeds.map((embed: any, index: number) => (
-                                  <div key={index} className={classNames(
-                                    "border-l-4 pl-4 py-2 rounded-r-lg",
-                                    darkMode ? "border-blue-400 bg-blue-900/10" : "border-blue-500 bg-blue-50"
-                                  )}>
+                                  <div key={index} className="border-l-4 border-primary pl-4 py-2 rounded-r-lg bg-primary/10">
                                     {embed.title && (
-                                      <p className={classNames(
-                                        "font-semibold mb-1",
-                                        "text-foreground"
-                                      )}>{embed.title}</p>
+                                      <p className="font-semibold mb-1 text-foreground">{embed.title}</p>
                                     )}
                                     {embed.description && (
-                                      <p className={classNames(
-                                        "text-sm mb-2",
-                                        darkMode ? "text-gray-300" : "text-gray-700"
-                                      )}>{embed.description}</p>
+                                      <p className="text-sm mb-2 text-foreground/80">{embed.description}</p>
                                     )}
                                     {embed.fields && embed.fields.length > 0 && (
                                       <div className="grid grid-cols-2 gap-2">
                                         {embed.fields.map((field: any, fieldIndex: number) => (
                                           <div key={fieldIndex} className="text-xs">
-                                            <p className={classNames(
-                                              "font-medium mb-1",
-                                              darkMode ? "text-gray-300" : "text-gray-700"
-                                            )}>{field.name}</p>
-                                            <p className={classNames(
-                                              "text-xs",
-                                              darkMode ? "text-gray-400" : "text-gray-600"
-                                            )}>{field.value}</p>
+                                            <p className="font-medium mb-1 text-foreground/90">{field.name}</p>
+                                            <p className="text-xs text-muted-foreground">{field.value}</p>
                                           </div>
                                         ))}
                                       </div>
