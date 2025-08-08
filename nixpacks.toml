@@ -1,0 +1,11 @@
+[providers]
+node = "20"
+
+[build]
+buildCommand = "npm run railway:build"
+
+[start]
+cmd = "npm run start:prod"
+
+[variables]
+NODE_ENV = "production"
