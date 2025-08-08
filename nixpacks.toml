@@ -1,10 +1,10 @@
-[providers]
-node = "20"
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "npm"]
 
-[build]
-buildCommand = "npm run railway:build"
+[phases.build]
+cmds = ["npm run railway:build"]
 
-[start]
+[phases.start]
 cmd = "npm run start:prod"
 
 [variables]
