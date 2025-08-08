@@ -19,7 +19,7 @@
     "start:prod": "NODE_ENV=production node dist/index.js",
     "build:docker": "docker build -t discord-bot .",
     "prod:full": "npm run build:prod && npm run dashboard:build",
-    "railway:build": "npm run build && cd client && npm install && npm run build",
+    "railway:build": "npm run build && npm --prefix client install && npm --prefix client run build",
     "railway:start": "node dist/index.js",
     "heroku-postbuild": "npm run build && cd client && npm install && npm run build",
     "watch": "tsc -w",
