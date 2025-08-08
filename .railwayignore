@@ -1,4 +1,15 @@
+# Force Railway to ignore all Docker-related files
 Dockerfile*
 docker-compose*
 .dockerignore
 *.dockerfile
+**/*docker*
+**/*Docker*
+
+# Ignore node_modules Docker files
+client/node_modules/**/Dockerfile*
+node_modules/**/Dockerfile*
+
+# Documentation files that might confuse Railway
+FIX_DOCKER_ERROR.md
+DEPLOYMENT.md
