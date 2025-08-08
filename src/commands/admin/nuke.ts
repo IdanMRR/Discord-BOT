@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
 import { Colors } from '../../utils/embeds';
-import { logWarning } from '../../utils/logger';
+import { logWarning, logInfo, logError } from '../../utils/logger';
 import { getContextLanguage, getTranslation as t } from '../../utils/language';
 
 export const data = new SlashCommandBuilder()
@@ -79,10 +79,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
       } catch (deferError: any) {
         if (deferError.code === 10062 || deferError.code === 10008) {
-          console.log('[Nuke] Modal interaction expired before we could defer');
+          logInfo('Nuke', 'Modal interaction expired before we could defer');
           return; // Exit early if interaction expired
         }
-        console.error('[Nuke] Error deferring modal reply:', deferError);
+        logError('Nuke', `Error deferring modal reply: ${deferError}`);
         return;
       }
 
@@ -93,7 +93,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
         } catch (editError: any) {
           if (editError.code === 10062 || editError.code === 10008) {
-            console.log('[Nuke] Modal interaction expired during cancellation message');
+            logInfo('Nuke', 'Modal interaction expired during cancellation message');
           }
         }
         return;
@@ -110,9 +110,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       // Try to DM the owner BEFORE starting the nuke (in case channels get deleted)
       let dmSent = false;
       try {
-        console.log(`[Nuke] Attempting to fetch owner for guild ${guild.id}`);
+        logInfo('Nuke', `Attempting to fetch owner for guild ${guild.id}`);
         const owner = await guild.fetchOwner();
-        console.log(`[Nuke] Owner fetched: ${owner.user.tag} (${owner.user.id})`);
+        logInfo('Nuke', `Owner fetched: ${owner.user.tag} (${owner.user.id})`);
         
         const dmEmbed = new EmbedBuilder()
           .setColor(Colors.WARNING)
@@ -120,18 +120,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           .setDescription(`Your server "${guild.name}" nuke operation has begun.\n\n**Initiated by:** ${interaction.user.tag} (${interaction.user.id})\n\nI'll send you another message when it's complete.`)
           .setTimestamp();
 
-        console.log(`[Nuke] Attempting to send start DM to owner ${owner.user.tag}`);
+        logInfo('Nuke', `Attempting to send start DM to owner ${owner.user.tag}`);
         await owner.send({ embeds: [dmEmbed] });
         dmSent = true;
-        console.log(`[Nuke] Successfully sent start DM to owner ${owner.user.tag}`);
+        logInfo('Nuke', `Successfully sent start DM to owner ${owner.user.tag}`);
       } catch (dmError: any) {
-        console.error(`[Nuke] Failed to DM server owner (start notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+        logError('Nuke', `Failed to DM server owner (start notification). Error code: ${dmError.code}, message: ${dmError.message}`);
         if (dmError.code === 50007) {
-          console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled`);
+          logInfo('Nuke', `Owner ${guild.ownerId} has DMs disabled`);
         } else if (dmError.code === 10013) {
-          console.log(`[Nuke] Unknown user - owner may have left Discord`);
+          logInfo('Nuke', 'Unknown user - owner may have left Discord');
         } else {
-          console.error(`[Nuke] Unexpected DM error:`, dmError);
+          logError('Nuke', `Unexpected DM error: ${dmError}`);
         }
       }
 
@@ -148,7 +148,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
               await channel.delete();
               deletedCount++;
             } catch (error) {
-              console.error(`Failed to delete channel ${channel.name}:`, error);
+              logError('Nuke', `Failed to delete channel ${channel.name}: ${error}`);
             }
           }
         }
@@ -175,15 +175,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
         } catch (editError: any) {
           if (editError.code === 10008) {
-            console.log('[Nuke] Modal interaction expired, but nuke completed successfully');
+            logInfo('Nuke', 'Modal interaction expired, but nuke completed successfully');
           } else {
-            console.error('Error updating modal reply:', editError);
+            logError('Nuke', `Error updating modal reply: ${editError}`);
           }
         }
 
         // Send completion DM to owner
         try {
-          console.log(`[Nuke] Attempting to send completion DM to owner`);
+          logInfo('Nuke', 'Attempting to send completion DM to owner');
           const owner = await guild.fetchOwner();
           const completionDmEmbed = new EmbedBuilder()
             .setColor(Colors.SUCCESS)
@@ -192,20 +192,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setTimestamp();
 
           await owner.send({ embeds: [completionDmEmbed] });
-          console.log(`[Nuke] Successfully sent completion DM to owner ${owner.user.tag}`);
+          logInfo('Nuke', `Successfully sent completion DM to owner ${owner.user.tag}`);
         } catch (dmError: any) {
-          console.error(`[Nuke] Failed to DM server owner (completion notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+          logError('Nuke', `Failed to DM server owner (completion notification). Error code: ${dmError.code}, message: ${dmError.message}`);
           if (dmError.code === 50007) {
-            console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled - cannot send completion notification`);
+            logInfo('Nuke', `Owner ${guild.ownerId} has DMs disabled - cannot send completion notification`);
           } else if (dmError.code === 10013) {
-            console.log(`[Nuke] Unknown user - owner may have left Discord`);
+            logInfo('Nuke', 'Unknown user - owner may have left Discord');
           } else {
-            console.error(`[Nuke] Unexpected completion DM error:`, dmError);
+            logError('Nuke', `Unexpected completion DM error: ${dmError}`);
           }
         }
 
       } catch (nukeError) {
-        console.error('Error during nuke operation:', nukeError);
+        logError('Nuke', `Error during nuke operation: ${nukeError}`);
         
         try {
           await submission.editReply({
@@ -213,15 +213,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
         } catch (editError: any) {
           if (editError.code === 10008) {
-            console.log('[Nuke] Modal interaction expired during error handling');
+            logInfo('Nuke', 'Modal interaction expired during error handling');
           } else {
-            console.error('Error updating modal reply:', editError);
+            logError('Nuke', `Error updating modal reply: ${editError}`);
           }
         }
 
         // Send error DM to owner
         try {
-          console.log(`[Nuke] Attempting to send error DM to owner`);
+          logInfo('Nuke', 'Attempting to send error DM to owner');
           const owner = await guild.fetchOwner();
           const errorDmEmbed = new EmbedBuilder()
             .setColor(Colors.ERROR)
@@ -230,15 +230,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setTimestamp();
 
           await owner.send({ embeds: [errorDmEmbed] });
-          console.log(`[Nuke] Successfully sent error DM to owner`);
+          logInfo('Nuke', 'Successfully sent error DM to owner');
         } catch (dmError: any) {
-          console.error(`[Nuke] Failed to DM server owner (error notification). Error code: ${dmError.code}, message: ${dmError.message}`);
+          logError('Nuke', `Failed to DM server owner (error notification). Error code: ${dmError.code}, message: ${dmError.message}`);
           if (dmError.code === 50007) {
-            console.log(`[Nuke] Owner ${guild.ownerId} has DMs disabled - cannot send error notification`);
+            logInfo('Nuke', `Owner ${guild.ownerId} has DMs disabled - cannot send error notification`);
           } else if (dmError.code === 10013) {
-            console.log(`[Nuke] Unknown user - owner may have left Discord`);
+            logInfo('Nuke', 'Unknown user - owner may have left Discord');
           } else {
-            console.error(`[Nuke] Unexpected error DM error:`, dmError);
+            logError('Nuke', `Unexpected error DM error: ${dmError}`);
           }
         }
       }
@@ -246,18 +246,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     } catch (modalError: any) {
       // Modal timed out or other error
       if (modalError.code === 'InteractionCollectorError') {
-        console.log('[Nuke] Modal timed out - user did not respond within 60 seconds');
+        logInfo('Nuke', 'Modal timed out - user did not respond within 60 seconds');
       } else if (modalError.code === 10062 || modalError.code === 10008) {
-        console.log('[Nuke] Modal interaction expired or unknown');
+        logInfo('Nuke', 'Modal interaction expired or unknown');
       } else {
-        console.error('Error waiting for modal submission:', modalError);
+        logError('Nuke', `Error waiting for modal submission: ${modalError}`);
       }
       // Don't try to respond - the modal interaction may have expired
       return;
     }
 
   } catch (error) {
-    console.error('Error in nuke command:', error);
+    logError('Nuke', `Error in nuke command: ${error}`);
     
     // Only try to respond if we haven't shown a modal yet
     try {
@@ -268,7 +268,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
       }
     } catch (replyError) {
-      console.error('Error sending error message:', replyError);
+      logError('Nuke', `Error sending error message: ${replyError}`);
     }
   }
 }

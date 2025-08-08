@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, PermissionFlagsBits, TextChannel, ChannelType, EmbedBuilder, MessageFlags } from 'discord.js';
 import { setWeatherChannel, setCustomCities } from '../../handlers/utility/weather-scheduler';
 import { getCoordinates, defaultCoordinates, commonCountries, CityData } from '../../handlers/utility/geocoding';
+import { logInfo, logError } from '../../utils/logger';
 
 export const data = new SlashCommandBuilder()
     .setName('set-weather-channel')
@@ -100,11 +101,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         
         // Set the weather channel with guild ID
-        console.log(`[WEATHER DEBUG] Setting weather channel ${channel.id} (${channel.name}) for guild ${interaction.guildId}`);
+        logInfo('Weather', `Setting weather channel ${channel.id} (${channel.name}) for guild ${interaction.guildId}`);
         const success = await setWeatherChannel(interaction.guildId!, channel.id);
         
         if (!success) {
-            console.error(`[WEATHER DEBUG] Failed to save weather channel settings for guild ${interaction.guildId}`);
+            logError('Weather', `Failed to save weather channel settings for guild ${interaction.guildId}`);
             await interaction.followUp({ 
                 content: 'Failed to save the weather channel settings. Please try again.', 
                 flags: MessageFlags.Ephemeral 
@@ -112,7 +113,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
         
-        console.log(`[WEATHER DEBUG] Successfully set weather channel ${channel.id} (${channel.name}) for guild ${interaction.guildId}`);
+        logInfo('Weather', `Successfully set weather channel ${channel.id} (${channel.name}) for guild ${interaction.guildId}`);
         
         // Check if custom cities were provided
         const city1 = interaction.options.getString('city1');
@@ -132,7 +133,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             
             if (Object.keys(defaultCoordinates).includes(city1Lower)) {
                 cityData = defaultCoordinates[city1Lower];
-                console.log(`[WEATHER DEBUG] Using preset coordinates for ${city1}`);
+                logInfo('Weather', `Using preset coordinates for ${city1}`);
             } else {
                 // Fetch coordinates using geocoding
                 cityData = await getCoordinates(city1, country1);
@@ -203,7 +204,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             }
             
             // Set the custom cities in the database
-            console.log(`[WEATHER DEBUG] Setting ${cities.length} custom cities for guild ${interaction.guildId}`);
+            logInfo('Weather', `Setting ${cities.length} custom cities for guild ${interaction.guildId}`);
             const citiesSuccess = await setCustomCities(interaction.guildId!, cities);
             
             if (citiesSuccess) {
@@ -214,9 +215,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                     cityList += `${index + 1}. **${city.name}, ${city.country}** (${city.lat.toFixed(4)}, ${city.lon.toFixed(4)})\n`;
                 });
                 
-                console.log(`[WEATHER DEBUG] Successfully set ${cities.length} custom cities for guild ${interaction.guildId}`);
+                logInfo('Weather', `Successfully set ${cities.length} custom cities for guild ${interaction.guildId}`);
             } else {
-                console.error(`[WEATHER DEBUG] Failed to save custom cities for guild ${interaction.guildId}`);
+                logError('Weather', `Failed to save custom cities for guild ${interaction.guildId}`);
             }
         }
         
@@ -285,7 +286,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             flags: MessageFlags.Ephemeral
         });
     } catch (error) {
-        console.error('Error in set-weather-channel command:', error);
+        logError('Weather', `Error in set-weather-channel command: ${error}`);
         
         // Make sure we respond even if there's an error
         if (interaction.deferred) {

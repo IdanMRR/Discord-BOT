@@ -94,60 +94,96 @@ module.exports = {
         
         // Show the modal to the user
         await interaction.showModal(modal);
+        
+        // Wait for modal submission
+        const modalFilter = (i: ModalSubmitInteraction) => 
+          i.customId.startsWith('staff-message-modal-') && i.user.id === interaction.user.id;
+        
+        try {
+          const modalSubmission = await interaction.awaitModalSubmit({ filter: modalFilter, time: 300000 });
+          
+          // Get the message content from the modal
+          const messageContent = modalSubmission.fields.getTextInputValue('staff-message-content');
+          
+          // Validate the message content
+          if (!messageContent || messageContent.trim().length === 0) {
+            try {
+              await modalSubmission.reply({
+                content: '❌ **Invalid Message:** Message cannot be empty. Please provide a valid message.',
+                flags: MessageFlags.Ephemeral
+              });
+            } catch (replyError: any) {
+              logError('Staff Message', `Could not send validation error: ${replyError}`);
+            }
+            return;
+          }
+          
+          // Defer the modal submission
+          try {
+            await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+          } catch (deferError: any) {
+            logError('Staff Message', `Could not defer modal submission: ${deferError}`);
+            // Try to reply instead
+            try {
+              await modalSubmission.reply({
+                content: '🔄 Sending staff message...',
+                flags: MessageFlags.Ephemeral
+              });
+            } catch (replyError: any) {
+              logError('Staff Message', `Could not reply to modal submission: ${replyError}`);
+              return;
+            }
+          }
+          
+          // Send the staff message
+          if (!modalSubmission.channel || modalSubmission.channel.type !== ChannelType.GuildText) {
+            await modalSubmission.editReply({
+              content: 'Error: This command can only be used in text channels.'
+            });
+            return;
+          }
+          
+          const channel = modalSubmission.channel as TextChannel;
+          await sendStaffOnlyMessage(channel, modalSubmission.user, messageContent.trim());
+          
+          // Log staff activity
+          if (modalSubmission.guildId && modalSubmission.channelId) {
+            await logStaffActivity(modalSubmission.guildId, modalSubmission.channelId, modalSubmission.user.id, 'staff_message');
+          } else {
+            logError('Staff Activity', 'Missing guild ID or channel ID for activity logging in modal submission');
+          }
+          
+          // Reply with success message
+          const successEmbed = createSuccessEmbed(
+            'Staff Message Sent',
+            'Your restricted message has been sent in this channel.'
+          );
+          await modalSubmission.editReply({ embeds: [successEmbed] });
+          
+        } catch (error: any) {
+          logError('Staff Message', `Modal timeout or error: ${error}`);
+          
+          // Check error type and log appropriately
+          if (error.code === 'InteractionCollectorError' || error.message?.includes('time')) {
+            logInfo('Staff Message', `Modal timed out for ${interaction.user.tag} - no action taken`);
+          } else if (error.code === 10062) {
+            logError('Staff Message', `Unknown interaction error - modal may have expired`);
+          } else {
+            logError('Staff Message', `Unexpected modal error: ${error.message}`);
+          }
+        }
       }
     } catch (error) {
       logError('Staff Message', `Error sending staff message: ${error}`);
-      const errorEmbed = createErrorEmbed(
-        'Error', 
-        'An error occurred while sending the staff message.'
-      );
-      await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
-    }
-  },
-  
-  // Handle the modal submission
-  async handleModalSubmit(interaction: ModalSubmitInteraction) {
-    try {
-      if (!interaction.isModalSubmit()) return;
-      
-      // Only handle modals with our custom ID
-      if (!interaction.customId.startsWith('staff-message-modal-')) return;
-      
-      // Get the message content from the modal
-      const messageContent = interaction.fields.getTextInputValue('staff-message-content');
-      
-      // Send the staff message
-      if (!interaction.channel || interaction.channel.type !== ChannelType.GuildText) {
-        await interaction.reply({ 
-          content: 'Error: This command can only be used in text channels.',
-          flags: MessageFlags.Ephemeral
-        });
-        return;
+      try {
+        const errorEmbed = createErrorEmbed(
+          'Error', 
+          'An error occurred while sending the staff message.'
+        );
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+      } catch (replyError) {
+        logError('Staff Message', `Could not send error message: ${replyError}`);
       }
-      
-      const channel = interaction.channel as TextChannel;
-      await sendStaffOnlyMessage(channel, interaction.user, messageContent);
-      
-      // Log staff activity
-      if (interaction.guildId && interaction.channelId) {
-        await logStaffActivity(interaction.guildId, interaction.channelId, interaction.user.id, 'staff_message');
-      } else {
-        logError('Staff Activity', 'Missing guild ID or channel ID for activity logging in modal submission');
-      }
-      
-      // Reply with success message
-      const successEmbed = createSuccessEmbed(
-        'Staff Message Sent',
-        'Your restricted message has been sent in this channel.'
-      );
-      await interaction.reply({ embeds: [successEmbed], flags: MessageFlags.Ephemeral });
-    } catch (error) {
-      logError('Staff Message Modal', `Error handling modal submission: ${error}`);
-      const errorEmbed = createErrorEmbed(
-        'Error', 
-        'An error occurred while sending the staff message.'
-      );
-      await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
   }
 }; 

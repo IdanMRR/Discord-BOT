@@ -49,6 +49,7 @@ export interface Ticket {
   closed_at?: string;
   closed_by?: string;
   last_message_at?: string;
+  last_activity_at?: string;
   rating?: number;
   feedback?: string;
 }
@@ -117,7 +118,6 @@ export interface ServerSettings {
   ticket_panel_channel_id?: string;
   ticket_panel_message_id?: string;
   ticket_logs_channel_id?: string;
-  rules_channel_id?: string;
   staff_role_ids?: string;
   auto_mod_enabled?: number;
   auto_mod_settings?: string;

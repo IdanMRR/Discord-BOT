@@ -13,7 +13,7 @@ export async function addTicketTranscriptsTable() {
         ticket_id INTEGER NOT NULL,
         transcript TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        FOREIGN KEY (ticket_id) REFERENCES tickets(id)
       )
     `);
 

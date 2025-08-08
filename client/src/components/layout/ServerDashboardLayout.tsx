@@ -13,6 +13,8 @@ import Tickets from '../../pages/Tickets';
 import Leveling from '../../pages/LevelingEnhanced';
 import ServerSettings from '../../pages/ServerSettings';
 import Members from '../../pages/Members';
+import IntegrationsHub from '../../pages/IntegrationsHub';
+import Giveaways from '../../pages/Giveaways';
 
 import {
   DocumentTextIcon,
@@ -23,6 +25,8 @@ import {
   UsersIcon,
   ServerIcon,
   ArrowLeftIcon,
+  LinkIcon,
+  GiftIcon,
 } from '@heroicons/react/24/outline';
 
 // Utility function for conditional class names
@@ -83,6 +87,20 @@ const ServerDashboardLayout: React.FC = () => {
       description: 'Server member management'
     },
     {
+      name: 'Integrations',
+      href: 'integrations',
+      icon: LinkIcon,
+      component: IntegrationsHub,
+      description: 'External integrations and webhooks'
+    },
+    {
+      name: 'Giveaways',
+      href: 'giveaways',
+      icon: GiftIcon,
+      component: Giveaways,
+      description: 'Manage server giveaways and contests'
+    },
+    {
       name: 'Settings',
       href: 'settings',
       icon: Cog6ToothIcon,
@@ -127,12 +145,10 @@ const ServerDashboardLayout: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="page-container p-6">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="text-primary-600" />
-            <p className="mt-4 text-lg font-medium text-muted-foreground">Loading server dashboard...</p>
-          </div>
+      <div className="flex justify-center items-center h-full p-6">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="text-primary-600" />
+          <p className="mt-4 text-lg font-medium text-muted-foreground">Loading server dashboard...</p>
         </div>
       </div>
     );
@@ -140,31 +156,29 @@ const ServerDashboardLayout: React.FC = () => {
 
   if (error || !server || !hasServerAccess) {
     return (
-      <div className="page-container p-6">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <ServerIcon className="mx-auto h-12 w-12 mb-4 text-destructive" />
-            <h3 className="text-xl font-semibold mb-2 text-destructive">Access Denied</h3>
-            <p className="text-base mb-4 text-muted-foreground">
-              {error || 'You do not have permission to access this server dashboard.'}
-            </p>
-            <button
-              onClick={() => navigate('/select-server')}
-              className="btn-primary"
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Select Different Server
-            </button>
-          </div>
+      <div className="flex justify-center items-center h-full p-6">
+        <div className="text-center">
+          <ServerIcon className="mx-auto h-12 w-12 mb-4 text-destructive" />
+          <h3 className="text-xl font-semibold mb-2 text-destructive">Access Denied</h3>
+          <p className="text-base mb-4 text-muted-foreground">
+            {error || 'You do not have permission to access this server dashboard.'}
+          </p>
+          <button
+            onClick={() => navigate('/select-server')}
+            className="btn-primary"
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Select Different Server
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      {/* Server Header */}
-      <div className="border-b sticky top-0 z-30 bg-card border-border">
+    <div className="flex flex-col h-full">
+      {/* Server Header - Fixed at top */}
+      <div className="flex-shrink-0 border-b bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Server Info */}
@@ -211,8 +225,8 @@ const ServerDashboardLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="border-b sticky top-16 z-20 bg-card border-border">
+      {/* Navigation Tabs - Fixed below header */}
+      <div className="flex-shrink-0 border-b bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="-mb-px flex space-x-8 overflow-x-auto">
             {navigationTabs.map((tab) => (
@@ -237,19 +251,23 @@ const ServerDashboardLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Routes>
-          <Route path="" element={<Analytics />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="logs" element={<Logs />} />
-          <Route path="warnings" element={<Warnings />} />
-          <Route path="tickets" element={<Tickets />} />
-          <Route path="leveling" element={<Leveling />} />
-          <Route path="members" element={<Members />} />
-          <Route path="settings/*" element={<ServerSettings />} />
-          <Route path="*" element={<Navigate to={`/server/${serverId}`} replace />} />
-        </Routes>
+      {/* Main Content - Scrollable area */}
+      <div className="flex-1 min-h-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">
+          <Routes>
+            <Route path="" element={<Analytics />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="logs" element={<Logs />} />
+            <Route path="warnings" element={<Warnings />} />
+            <Route path="tickets" element={<Tickets />} />
+            <Route path="leveling" element={<Leveling />} />
+            <Route path="members" element={<Members />} />
+            <Route path="integrations" element={<IntegrationsHub />} />
+            <Route path="giveaways" element={<Giveaways />} />
+            <Route path="settings/*" element={<ServerSettings />} />
+            <Route path="*" element={<Navigate to={`/server/${serverId}`} replace />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );

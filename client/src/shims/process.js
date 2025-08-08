@@ -1,7 +1,7 @@
 // Custom process shim
 const processShim = {
   env: {
-    NODE_ENV: 'development'
+    NODE_ENV: process.env.NODE_ENV || 'development'
   },
   browser: true,
   version: '',

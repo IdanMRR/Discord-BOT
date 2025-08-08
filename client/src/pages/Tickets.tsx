@@ -10,9 +10,14 @@ import SortableTableHeader, { SortConfig } from '../components/common/SortableTa
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ArrowPathIcon, CogIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSettings } from '../contexts/SettingsContext';
+import ChannelSelector from '../components/common/ChannelSelector';
+import CategorySelector from '../components/common/CategorySelector';
+import ActionButton from '../components/common/ActionButton';
+import SettingsCard from '../components/common/SettingsCard';
+import { TicketPanelConfigModal, TicketPanelConfig } from '../components/modals/TicketPanelConfigModal';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -41,7 +46,14 @@ const TicketsContent: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState<'close' | 'reopen' | 'delete' | null>(null);
   const [transcript, setTranscript] = useState<any[] | null>(null);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
+  
+  // Ticket configuration states
+  const [serverSettings, setServerSettings] = useState<any>(null);
+  const [isTicketPanelModalOpen, setIsTicketPanelModalOpen] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
 
   const fetchTickets = useCallback(async (page: number = 1) => {
     try {
@@ -55,8 +67,12 @@ const TicketsContent: React.FC = () => {
       
       if (serverId) {
         options.guildId = serverId;
+        console.log(`[Tickets] Fetching tickets for server: ${serverId}`);
+      } else {
+        console.log('[Tickets] No serverId provided - will fetch all tickets');
       }
       
+      console.log('[Tickets] API call options:', options);
       const response = await apiService.getTickets(options);
 
       if (response.success && response.data) {
@@ -104,9 +120,106 @@ const TicketsContent: React.FC = () => {
     }
   }, [statusFilter, searchTerm, itemsPerPage, serverId]);
 
+  // Fetch server settings for ticket configuration
+  const fetchServerSettings = useCallback(async () => {
+    if (!serverId) return;
+    try {
+      const response = await apiService.getServerSettings(serverId);
+      if (response.success && response.data) {
+        setServerSettings(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching server settings:', error);
+    }
+  }, [serverId]);
+
+  // Handle ticket panel creation
+  const handleCreateTicketPanel = useCallback(async (channelId: string) => {
+    if (!serverId) return;
+    setSavingConfig(true);
+    try {
+      const response = await apiService.createTicketPanel(serverId, {
+        channel_id: channelId,
+        panel_type: 'default'
+      });
+      
+      if (response.success) {
+        toast.success('Ticket panel created successfully!');
+        setServerSettings((prev: any) => ({
+          ...prev,
+          ticket_panel_channel_id: channelId,
+          ticket_panel_message_id: response.data?.messageId
+        }));
+      } else {
+        toast.error('Failed to create ticket panel');
+      }
+    } catch (error) {
+      console.error('Error creating ticket panel:', error);
+      toast.error('Failed to create ticket panel');
+    } finally {
+      setSavingConfig(false);
+    }
+  }, [serverId]);
+
+  // Handle custom ticket panel config
+  const handleSaveTicketPanelConfig = useCallback(async (config: TicketPanelConfig) => {
+    if (!serverId || !serverSettings?.ticket_panel_channel_id) return;
+    setSavingConfig(true);
+    try {
+      const response = await apiService.createCustomTicketPanelMessage(
+        serverId, 
+        serverSettings.ticket_panel_channel_id, 
+        config
+      );
+      
+      if (response.success) {
+        toast.success('Custom ticket panel created successfully!');
+        setServerSettings((prev: any) => ({
+          ...prev,
+          ticket_panel_message_id: response.data?.messageId
+        }));
+      } else {
+        toast.error('Failed to create custom ticket panel');
+      }
+    } catch (error) {
+      console.error('Error creating custom ticket panel:', error);
+      toast.error('Failed to create custom ticket panel');
+    } finally {
+      setSavingConfig(false);
+      setIsTicketPanelModalOpen(false);
+    }
+  }, [serverId, serverSettings?.ticket_panel_channel_id]);
+
+  // Handle server setting change
+  const handleServerChannelChange = useCallback(async (setting: string, value: string) => {
+    if (!serverId) return;
+    setSavingConfig(true);
+    try {
+      const response = await apiService.updateServerSettings(serverId, {
+        [setting]: value
+      });
+      
+      if (response.success) {
+        toast.success('Setting updated successfully');
+        setServerSettings((prev: any) => ({
+          ...prev,
+          [setting]: value
+        }));
+      } else {
+        toast.error('Failed to update setting');
+      }
+    } catch (error) {
+      console.error('Error updating setting:', error);
+      toast.error('Failed to update setting');
+    } finally {
+      setSavingConfig(false);
+    }
+  }, [serverId]);
+
   useEffect(() => {
     fetchTickets(1);
-  }, [fetchTickets]);
+    fetchServerSettings();
+  }, [fetchTickets, fetchServerSettings]);
 
   // Debounced search effect
   useEffect(() => {
@@ -335,34 +448,75 @@ const TicketsContent: React.FC = () => {
   };
   
   const handleTicketAction = async () => {
-    if (!selectedTicket || !selectedAction) return;
+    if (!selectedTicket || !selectedAction || loadingAction) {
+      return;
+    }
+    
+    // Prevent spam clicking by setting loading state immediately
+    setLoadingAction(true);
+    
+    // Validate reason before proceeding
+    const trimmedReason = actionReason.trim();
+    if (!trimmedReason) {
+      // Dismiss any existing toasts first
+      toast.dismiss();
+      toast.error('❌ Reason cannot be empty. Please provide a valid reason.');
+      setLoadingAction(false);
+      return;
+    }
+    
+    if (trimmedReason.length < 3) {
+      toast.dismiss();
+      toast.error('❌ Reason must be at least 3 characters long.');
+      setLoadingAction(false);
+      return;
+    }
+    
+    // Check for meaningless content (must contain at least one letter)
+    if (!/[a-zA-Z]/.test(trimmedReason)) {
+      toast.dismiss();
+      toast.error('❌ Please provide a meaningful reason with actual words.');
+      setLoadingAction(false);
+      return;
+    }
+    
+    // Add a small delay to prevent rapid-fire clicks
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     try {
       let response;
       
       switch (selectedAction) {
         case 'close':
-          response = await apiService.closeTicket(selectedTicket.id, actionReason);
+          response = await apiService.closeTicket(selectedTicket.id, trimmedReason);
           break;
         case 'reopen':
-          response = await apiService.reopenTicket(selectedTicket.id, actionReason);
+          response = await apiService.reopenTicket(selectedTicket.id, trimmedReason);
           break;
         case 'delete':
           setIsReasonModalOpen(false);
           setIsDeleteConfirmOpen(true);
+          setLoadingAction(false);
           return;
       }
       
       if (response && response.success) {
-        toast.success(`Ticket ${selectedAction === 'close' ? 'closed' : 'reopened'} successfully`);
-        fetchTickets(currentPage);
+        // Dismiss any existing toasts to prevent stacking
+        toast.dismiss();
+        toast.success(`✅ Ticket ${selectedAction === 'close' ? 'closed' : 'reopened'} successfully!`);
+        await fetchTickets(currentPage);
         setIsReasonModalOpen(false);
+        setActionReason(''); // Clear the reason
       } else if (response) {
-        toast.error(`Failed to ${selectedAction} ticket: ${response.error || 'Unknown error'}`);
+        toast.dismiss();
+        toast.error(`❌ Failed to ${selectedAction} ticket: ${response.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(`Error ${selectedAction}ing ticket:`, error);
-      toast.error(`Failed to ${selectedAction} ticket`);
+      toast.dismiss();
+      toast.error(`❌ Failed to ${selectedAction} ticket due to network error`);
+    } finally {
+      setLoadingAction(false);
     }
   };
   
@@ -484,6 +638,149 @@ const TicketsContent: React.FC = () => {
         </div>
       </div>
 
+      {/* Ticket Configuration Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-foreground">Ticket Configuration</h2>
+          <button
+            onClick={() => setShowConfig(!showConfig)}
+            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+          >
+            <CogIcon className="h-4 w-4" />
+            <span>{showConfig ? 'Hide Config' : 'Show Config'}</span>
+          </button>
+        </div>
+        
+        {showConfig && (
+          <SettingsCard
+            title="Ticket System Setup"
+            description="Configure channels and create ticket panels"
+            icon="🎫"
+            variant="compact"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Ticket Panel Channel */}
+              <div className="p-3 rounded-lg border space-y-2 content-area">
+                <div className="flex items-center">
+                  <span className="text-purple-600 dark:text-purple-400 mr-2">📧</span>
+                  <h4 className="font-medium text-foreground">
+                    Ticket Panel Channel
+                  </h4>
+                </div>
+                <ChannelSelector
+                  value={serverSettings?.ticket_panel_channel_id}
+                  onChange={(channelId) => handleServerChannelChange('ticket_panel_channel_id', channelId)}
+                  disabled={savingConfig}
+                  serverId={serverId!}
+                  placeholder="-- Select Channel --"
+                />
+                <div className="flex items-center">
+                  {serverSettings?.ticket_panel_channel_id ? (
+                    <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
+                  ) : (
+                    <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Ticket Logs Channel */}
+              <div className="p-3 rounded-lg border space-y-2 content-area">
+                <div className="flex items-center">
+                  <span className="text-green-600 dark:text-green-400 mr-2">📄</span>
+                  <h4 className="font-medium text-foreground">
+                    Ticket Logs Channel
+                  </h4>
+                </div>
+                <ChannelSelector
+                  value={serverSettings?.ticket_logs_channel_id}
+                  onChange={(channelId) => handleServerChannelChange('ticket_logs_channel_id', channelId)}
+                  disabled={savingConfig}
+                  serverId={serverId!}
+                  placeholder="-- Select Channel --"
+                />
+                <div className="flex items-center">
+                  {serverSettings?.ticket_logs_channel_id ? (
+                    <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
+                  ) : (
+                    <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Ticket Category */}
+              <div className="p-3 rounded-lg border space-y-2 content-area">
+                <div className="flex items-center">
+                  <span className="text-gray-600 dark:text-gray-400 mr-2">📁</span>
+                  <h4 className="font-medium text-foreground">
+                    Ticket Category
+                  </h4>
+                </div>
+                <CategorySelector
+                  value={serverSettings?.ticket_category_id}
+                  onChange={(categoryId) => handleServerChannelChange('ticket_category_id', categoryId)}
+                  disabled={savingConfig}
+                  serverId={serverId!}
+                />
+                <div className="flex items-center">
+                  {serverSettings?.ticket_category_id ? (
+                    <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
+                  ) : (
+                    <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Create Ticket Panel */}
+              <div className="p-3 rounded-lg border space-y-2 content-area">
+                <div className="flex items-center">
+                  <span className="text-indigo-600 mr-2">🔧</span>
+                  <h4 className="font-medium text-foreground">
+                    Create Ticket Panel
+                  </h4>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Create a ticket panel message in your selected channel.
+                </p>
+                <div className="flex gap-2">
+                  <ActionButton
+                    onClick={() => {
+                      if (serverSettings?.ticket_panel_channel_id) {
+                        handleCreateTicketPanel(serverSettings.ticket_panel_channel_id);
+                      } else {
+                        toast.error('Please select a ticket panel channel first');
+                      }
+                    }}
+                    disabled={savingConfig || !serverSettings?.ticket_panel_channel_id}
+                    loading={savingConfig}
+                    variant="primary"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    🎫 Create Default Panel
+                  </ActionButton>
+                  <ActionButton
+                    onClick={() => {
+                      if (serverSettings?.ticket_panel_channel_id) {
+                        setIsTicketPanelModalOpen(true);
+                      } else {
+                        toast.error('Please select a ticket panel channel first');
+                      }
+                    }}
+                    disabled={savingConfig || !serverSettings?.ticket_panel_channel_id}
+                    loading={savingConfig}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    🎨 Custom Panel
+                  </ActionButton>
+                </div>
+              </div>
+            </div>
+          </SettingsCard>
+        )}
+      </div>
+
         <Card className="content-area shadow-xl border-0 rounded-xl overflow-hidden ring-1 ring-border">
         <div className="p-6 border-b border-border bg-muted/50">
           <div className="flex items-center justify-between">
@@ -534,7 +831,6 @@ const TicketsContent: React.FC = () => {
               { value: 'closed', label: 'Closed' },
               { value: 'deleted', label: 'Deleted' }
             ]}
-            selectPlaceholder="All Statuses"
             onClear={() => {
               setSearchTerm('');
               setStatusFilter('all');
@@ -576,12 +872,12 @@ const TicketsContent: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg">
+              <div className="overflow-x-auto max-h-[65vh] overflow-auto rounded-lg">
                 <table className={classNames(
                   "min-w-full divide-y-2",
                   darkMode ? "divide-gray-700" : "divide-gray-200"
                 )}>
-                  <thead className="rounded-t-lg bg-muted/80">
+                  <thead className="sticky top-0 z-10 rounded-t-lg bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
                     <tr>
                       <th className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                         <input
@@ -649,7 +945,7 @@ const TicketsContent: React.FC = () => {
                       <tr 
                         key={ticket.id} 
                         className={classNames(
-                          "transition-all duration-200 hover:shadow-lg relative group",
+                          "transition-all duration-200 hover:shadow-lg relative group odd:bg-muted/30",
                           selectedTickets.has(ticket.id) 
                             ? 'bg-primary/10 ring-1 ring-primary/30'
                             : 'hover:bg-muted/50'
@@ -713,7 +1009,7 @@ const TicketsContent: React.FC = () => {
                           "px-6 py-4 whitespace-nowrap text-sm",
                           darkMode ? "text-gray-400" : "text-gray-500"
                         )}>
-                          {ticket.last_message_at ? formatDate(ticket.last_message_at) : 'No activity'}
+                          {(ticket.last_activity_at || ticket.last_message_at) ? formatDate(ticket.last_activity_at || ticket.last_message_at || '') : 'No activity'}
                         </td>
                         <td className={classNames(
                           "px-6 py-4 whitespace-nowrap text-sm",
@@ -743,34 +1039,38 @@ const TicketsContent: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
                             {ticket.status === 'open' && (
-                              <button
+                              <ActionButton
+                                size="xs"
+                                variant="danger"
                                 onClick={() => openReasonModal(ticket, 'close')}
-                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2 shadow-sm"
                               >
-                                ❌ Close
-                              </button>
+                                🔒 Close
+                              </ActionButton>
                             )}
                             {ticket.status === 'closed' && (
-                              <button
+                              <ActionButton
+                                size="xs"
+                                variant="success"
                                 onClick={() => openReasonModal(ticket, 'reopen')}
-                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 shadow-sm"
                               >
                                 🔄 Reopen
-                              </button>
+                              </ActionButton>
                             )}
-                            <button
+                            <ActionButton
+                              size="xs"
+                              variant="primary"
                               onClick={() => viewTicketTranscript(ticket)}
-                              className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-white bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 shadow-sm"
                             >
                               📄 Transcript
-                            </button>
+                            </ActionButton>
                             {ticket.status === 'closed' && (
-                              <button
+                              <ActionButton
+                                size="xs"
+                                variant="outline"
                                 onClick={() => autoDeleteTicket(ticket)}
-                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 shadow-sm"
                               >
                                 🗑️ Delete
-                              </button>
+                              </ActionButton>
                             )}
                           </div>
                         </td>
@@ -798,7 +1098,10 @@ const TicketsContent: React.FC = () => {
       
       {/* Reason Modal */}
       <Transition appear show={isReasonModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setIsReasonModalOpen(false)}>
+        <Dialog as="div" className="relative z-50" onClose={() => {
+          setIsReasonModalOpen(false);
+          setLoadingAction(false);
+        }}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -874,7 +1177,10 @@ const TicketsContent: React.FC = () => {
                           ? "text-gray-400 hover:text-gray-300 hover:bg-gray-700" 
                           : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                       )}
-                      onClick={() => setIsReasonModalOpen(false)}
+                      onClick={() => {
+                        setIsReasonModalOpen(false);
+                        setLoadingAction(false);
+                      }}
                     >
                       <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                     </button>
@@ -920,10 +1226,21 @@ const TicketsContent: React.FC = () => {
                       placeholder={`Enter reason for ${selectedAction === 'close' ? 'closing' : selectedAction === 'reopen' ? 'reopening' : 'deleting'} this ticket...`}
                     />
                     <div className={classNames(
-                      "mt-2 text-sm",
+                      "mt-2 text-sm flex justify-between",
                       darkMode ? "text-gray-400" : "text-gray-500"
                     )}>
-                      {actionReason.length}/500 characters
+                      <span className={classNames(
+                        actionReason.trim().length > 0 && actionReason.trim().length < 3 
+                          ? (darkMode ? "text-red-400" : "text-red-600")
+                          : ""
+                      )}>
+                        {actionReason.trim().length > 0 && actionReason.trim().length < 3 
+                          ? "Minimum 3 characters required"
+                          : actionReason.trim().length >= 3
+                          ? "✓ Valid reason"
+                          : "Enter a reason (minimum 3 characters)"}
+                      </span>
+                      <span>{actionReason.length}/500 characters</span>
                     </div>
                   </div>
 
@@ -932,31 +1249,51 @@ const TicketsContent: React.FC = () => {
                     <button
                       type="button"
                       className={classNames(
-                        "flex-1 px-8 py-4 border-2 text-base font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-3 focus:ring-gray-500/30",
+                        "flex-1 px-8 py-4 text-base font-bold rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 shadow-lg border relative overflow-hidden group",
                         darkMode 
-                          ? "border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500" 
-                          : "border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+                          ? "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 hover:from-gray-600 hover:via-gray-700 hover:to-gray-800 text-gray-100 border-gray-600/50 focus:ring-gray-500/40 hover:shadow-gray-700/30" 
+                          : "bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 hover:from-gray-200 hover:via-gray-300 hover:to-gray-400 text-gray-800 border-gray-300/50 focus:ring-gray-400/40 hover:shadow-gray-400/30"
                       )}
-                      onClick={() => setIsReasonModalOpen(false)}
+                      onClick={() => {
+                        setIsReasonModalOpen(false);
+                        setLoadingAction(false);
+                      }}
                     >
-                      Cancel
+                      <div className="relative z-10">❌ Cancel</div>
+                      <div className="absolute inset-0 bg-white/10 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                     </button>
                     <button
                       type="button"
                       className={classNames(
-                        "flex-1 px-8 py-4 border border-transparent text-base font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-3",
+                        "flex-1 px-8 py-4 text-base font-bold rounded-xl shadow-xl transition-all duration-300 transform focus:outline-none focus:ring-4 relative overflow-hidden group",
                         selectedAction === 'close' 
-                          ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white focus:ring-red-500/30' 
+                          ? 'bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white focus:ring-red-500/40 border border-red-500/30 hover:shadow-red-500/30'
                           : selectedAction === 'reopen' 
-                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white focus:ring-green-500/30' 
-                          : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white focus:ring-gray-500/30'
+                          ? 'bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 text-white focus:ring-emerald-500/40 border border-emerald-500/30 hover:shadow-emerald-500/30'
+                          : 'bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:from-gray-600 hover:via-gray-700 hover:to-gray-800 text-white focus:ring-gray-500/40 border border-gray-500/30 hover:shadow-gray-500/30',
+                        loadingAction ? "animate-pulse cursor-not-allowed" : "hover:scale-105 active:scale-95",
+                        (!actionReason.trim() || actionReason.trim().length < 3) ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                       )}
                       onClick={handleTicketAction}
-                      disabled={!actionReason.trim()}
+                      disabled={!actionReason.trim() || actionReason.trim().length < 3 || loadingAction}
                     >
-                      {selectedAction === 'close' ? '🔒 Close Ticket' : 
-                       selectedAction === 'reopen' ? '🔄 Reopen Ticket' : 
-                       '🗑️ Delete Ticket'}
+                      <div className="relative z-10">
+                        {loadingAction ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>
+                              {selectedAction === 'close' ? 'Closing...' : 
+                               selectedAction === 'reopen' ? 'Reopening...' : 
+                               'Processing...'}
+                            </span>
+                          </div>
+                        ) : (
+                          selectedAction === 'close' ? '🔒 Close Ticket' : 
+                          selectedAction === 'reopen' ? '🔄 Reopen Ticket' : 
+                          '🗑️ Delete Ticket'
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-white/10 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                     </button>
                   </div>
                 </Dialog.Panel>
@@ -968,7 +1305,7 @@ const TicketsContent: React.FC = () => {
       
       {/* Delete Confirmation Modal */}
       <Transition appear show={isDeleteConfirmOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setIsDeleteConfirmOpen(false)}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsDeleteConfirmOpen(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -1095,7 +1432,7 @@ const TicketsContent: React.FC = () => {
       
       {/* Transcript Modal */}
       <Transition appear show={isTranscriptModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={() => setIsTranscriptModalOpen(false)}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsTranscriptModalOpen(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -1261,13 +1598,14 @@ const TicketsContent: React.FC = () => {
                     <button
                       type="button"
                       className={classNames(
-                        "inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                        "text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
-                        darkMode ? "focus:ring-offset-gray-800" : "focus:ring-offset-white"
+                        "inline-flex items-center px-8 py-3 text-base font-bold rounded-xl shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 relative overflow-hidden group border",
+                        "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800",
+                        "text-white border-blue-500/30 focus:ring-blue-500/40 hover:shadow-blue-500/30"
                       )}
                       onClick={() => setIsTranscriptModalOpen(false)}
                     >
-                      ✅ Close
+                      <div className="relative z-10">✅ Close Transcript</div>
+                      <div className="absolute inset-0 bg-white/10 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                     </button>
                   </div>
                 </Dialog.Panel>
@@ -1279,7 +1617,7 @@ const TicketsContent: React.FC = () => {
 
       {/* Bulk Delete Confirmation Modal */}
       <Transition appear show={isBulkDeleteConfirmOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeBulkDeleteConfirm}>
+        <Dialog as="div" className="relative z-50" onClose={closeBulkDeleteConfirm}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -1392,6 +1730,13 @@ const TicketsContent: React.FC = () => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Ticket Panel Config Modal */}
+      <TicketPanelConfigModal
+        isOpen={isTicketPanelModalOpen}
+        onClose={() => setIsTicketPanelModalOpen(false)}
+        onSave={handleSaveTicketPanelConfig}
+      />
     </div>
   );
 };

@@ -382,7 +382,6 @@ export interface ServerSettings {
   ticket_panel_message_id?: string;
   ticket_logs_channel_id?: string;
   faq_channel_id?: string;
-  rules_channel_id?: string;
   log_all_commands?: boolean;
   staff_role_ids?: string[];
   language?: string;

@@ -2,7 +2,8 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, 
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
 import { logModerationToDatabase } from '../../utils/databaseLogger';
-import { ModerationCaseService } from '../../database/services/sqliteService';
+import { ModerationCaseService, WarningService } from '../../database/services/sqliteService';
+import { validateReason, sanitizeReason } from '../../utils/validation';
 
 export const data = new SlashCommandBuilder()
   .setName('timeout')
@@ -126,7 +127,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         
         // Get the values from the modal
         const durationString = modalSubmission.fields.getTextInputValue('timeout-duration');
-        const reason = modalSubmission.fields.getTextInputValue('timeout-reason');
+        const rawReason = modalSubmission.fields.getTextInputValue('timeout-reason');
+        
+        // Validate the reason
+        const validation = validateReason(rawReason);
+        if (!validation.isValid) {
+          await modalSubmission.reply({
+            content: validation.message!,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+        
+        // Sanitize and use the reason
+        const reason = sanitizeReason(rawReason);
         
         // Parse the duration string (e.g., "10m", "1h", "1d")
         const duration = parseDuration(durationString);
@@ -166,7 +180,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
-            caseNumber: moderationCase.case_number,
+            case_number: moderationCase.case_number,
             additionalFields: [
               { name: '⏱️ Duration', value: formatDuration(duration), inline: true },
               { name: '🏠 Server', value: guild.name, inline: true },
@@ -188,17 +202,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Now perform the timeout
         await member.timeout(duration, reason);
         
+        // Get current warning count for the user
+        const activeWarningCount = await WarningService.countActiveWarnings(guild.id, targetUser.id);
+        
         // Create a stylish moderation embed for the server
         const timeoutEmbed = createModerationEmbed({
           action: 'Timeout',
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-          caseNumber: moderationCase.case_number,
+          case_number: moderationCase.case_number,
           additionalFields: [
             { name: '⏱️ Duration', value: formatDuration(duration), inline: true },
             { name: '🔚 Expires', value: `<t:${Math.floor((Date.now() + duration) / 1000)}:R>`, inline: true },
-            { name: '🏠 Server', value: guild.name, inline: true }
+            { name: '🏠 Server', value: guild.name, inline: true },
+            { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
           ]
         });
         
@@ -214,6 +232,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           duration: formatDuration(duration),
           additionalInfo: `Timeout Case #${moderationCase.case_number} - User was timed out in ${guild.name} for ${formatDuration(duration)}`
         });
+        
+        // Log to moderation channel
+        const logResult = await logModeration({
+          guild: guild,
+          action: 'Timeout',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          duration: formatDuration(duration),
+          caseNumber: moderationCase.case_number
+        });
+        
+        // If logging failed, notify in console
+        if (!logResult.success && logResult.message) {
+          logError('Timeout Command', `Moderation logging failed: ${logResult.message}`);
+        }
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {

@@ -17,6 +17,7 @@ import {
 import { logInfo, logError } from '../../utils/logger';
 import { db } from '../../database/sqlite';
 import { Colors } from '../../utils/embeds';
+import { validateChannelIds } from '../../utils/channel-validator';
 
 // Store guild invites and member join timestamps
 const guildInvites = new Map<string, Collection<string, Invite>>();
@@ -188,6 +189,12 @@ function getMemberEventConfig(serverSettings: any): MemberEventConfig {
  */
 async function getTextChannel(guildId: string, channelId: string): Promise<TextChannel | null> {
   try {
+    // Validate input parameters
+    if (!channelId || channelId === 'null' || channelId === 'undefined') {
+      logInfo('UnifiedMemberHandler', `Skipping invalid channel ID: ${channelId}`);
+      return null;
+    }
+
     const { getClient } = await import('../../utils/client-utils');
     const client = getClient();
     
@@ -204,8 +211,47 @@ async function getTextChannel(guildId: string, channelId: string): Promise<TextC
     }
     
     return null;
+  } catch (error: any) {
+    // Handle specific Discord API errors more gracefully
+    if (error.code === 10003) {
+      logError('UnifiedMemberHandler', `Channel ${channelId} not found or no longer exists. Please update your server configuration.`);
+    } else if (error.code === 50001) {
+      logError('UnifiedMemberHandler', `Bot lacks permission to access channel ${channelId}.`);
+    } else {
+      logError('UnifiedMemberHandler', `Error fetching channel ${channelId}: ${error.message || error}`);
+    }
+    return null;
+  }
+}
+
+/**
+ * Get the best available logging channel with fallback options
+ */
+async function getBestLoggingChannel(guildId: string, serverSettings: any): Promise<TextChannel | null> {
+  try {
+    const { getClient } = await import('../../utils/client-utils');
+    const client = getClient();
+    
+    if (!client) {
+      logError('UnifiedMemberHandler', 'Discord client is not initialized');
+      return null;
+    }
+
+    // Use validation utility to find the first working channel
+    const validChannelId = await validateChannelIds(client, guildId, [
+      serverSettings?.member_log_channel_id,
+      serverSettings?.log_channel_id,
+      serverSettings?.mod_log_channel_id
+    ]);
+
+    if (validChannelId) {
+      return await getTextChannel(guildId, validChannelId);
+    }
+
+    logInfo('UnifiedMemberHandler', `No valid logging channels found for guild ${guildId}`);
+    return null;
   } catch (error) {
-    logError('UnifiedMemberHandler', `Error fetching channel ${channelId}: ${error}`);
+    logError('UnifiedMemberHandler', `Error getting best logging channel: ${error}`);
     return null;
   }
 }
@@ -447,11 +493,10 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     memberJoinTimestamps.get(guild.id)!.set(member.id, timestamp);
     storeInviteData(guild.id, member.id, inviteCode, inviter, inviterId);
     
-    // Send to member logs channel (detailed logging)
-    if (serverSettings?.member_log_channel_id) {
-      const memberLogsChannel = await getTextChannel(guild.id, serverSettings.member_log_channel_id);
-      
-      if (memberLogsChannel) {
+    // Send to member logs channel (detailed logging) with automatic fallback
+    const memberLogsChannel = await getBestLoggingChannel(guild.id, serverSettings);
+    
+    if (memberLogsChannel) {
         const joinEmbed = new EmbedBuilder()
           .setColor('#43b581' as ColorResolvable)
           .setTitle('🎉 New Member Joined')
@@ -477,7 +522,6 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
         await memberLogsChannel.send({ embeds: [joinEmbed] });
         logInfo('UnifiedMemberHandler', `Sent detailed join log for ${member.user.tag}`);
       }
-    }
     
     // Send to welcome channel (public welcome)
     if (config.welcome_channel_id) {
@@ -649,8 +693,8 @@ async function handleMemberLeave(member: GuildMember | PartialGuildMember): Prom
     }
     
     // Send to member logs channel (detailed logging) - Only if member is not partial
-    if (!member.partial && serverSettings?.member_log_channel_id) {
-      const memberLogsChannel = await getTextChannel(guild.id, serverSettings.member_log_channel_id);
+    if (!member.partial) {
+      const memberLogsChannel = await getBestLoggingChannel(guild.id, serverSettings);
       
       if (memberLogsChannel && member.user) {
         const leaveEmbed = new EmbedBuilder()

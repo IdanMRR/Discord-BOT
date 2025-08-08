@@ -153,6 +153,12 @@ export function errorHandler(
 
 // 404 handler for unmatched routes
 export function notFoundHandler(req: Request, res: Response, next: NextFunction): void {
+  // Skip creating error for webpack hot-update.json files to reduce noise
+  if (req.originalUrl.includes('.hot-update.json')) {
+    res.status(204).end();
+    return;
+  }
+  
   const error = new NotFoundError(`Route ${req.method} ${req.originalUrl} not found`);
   next(error);
 }

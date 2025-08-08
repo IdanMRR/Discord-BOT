@@ -1,12 +1,18 @@
-import { db } from '../sqlite';
 import { logInfo, logError } from '../../utils/logger';
+import type Database from 'better-sqlite3';
 
 /**
  * Migration to add ticket status fields and modify existing status field
  */
-export async function addTicketStatusMigration() {
+export async function addTicketStatusMigration(database?: Database.Database) {
   try {
-    // Check if db is available
+    // If no database provided, import it here to avoid circular dependency issues
+    let db = database;
+    if (!db) {
+      const { db: importedDb } = await import('../sqlite');
+      db = importedDb;
+    }
+
     if (!db) {
       logError('Migration', 'Database connection not available');
       return false;

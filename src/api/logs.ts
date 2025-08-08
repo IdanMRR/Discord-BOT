@@ -23,7 +23,7 @@ const resolveUsername = async (userId: string): Promise<string> => {
   
   // Handle special system users that aren't Discord snowflakes
   if (userId === 'AUTOMOD_SYSTEM' || userId === 'automod') return 'Automated System';
-  if (userId === 'dashboard') return 'Dashboard User';
+  if (userId === 'dashboard') return 'Dashboard';
   if (userId === 'system') return 'System';
   if (userId === 'bot') return 'Bot';
   

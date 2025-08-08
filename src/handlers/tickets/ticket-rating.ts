@@ -124,18 +124,6 @@ export async function showRatingModal(interaction: ButtonInteraction | any) {
           logError('Ticket Rating', `Error saving rating: ${error}`);
           // Remove the active rating to allow the user to try again
           activeRatings.delete(ratingKey);
-          
-          // Try to send an error message
-          try {
-            if (!i.replied && !i.deferred) {
-              await i.reply({
-                content: 'An error occurred while processing your rating. Please try again.',
-                flags: MessageFlags.Ephemeral
-              });
-            }
-          } catch (replyError) {
-            logError('Ticket Rating', `Could not send error message: ${replyError}`);
-          }
         }
       }
     });
@@ -224,10 +212,12 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
     
     // Validate rating
     if (isNaN(rating) || rating < 1 || rating > 5) {
-      await interaction.reply({ 
-        content: 'Please provide a valid rating between 1 and 5.',
-        flags: MessageFlags.Ephemeral
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ 
+          content: 'Please provide a valid rating between 1 and 5.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
       
       // Remove from active ratings so user can try again
       activeRatings.delete(ratingKey);
@@ -250,10 +240,12 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
       
       if (!ticket) {
         logError('Ticket Rating', `Could not find ticket #${ticketNumber} in database`);
-        await interaction.reply({ 
-          content: 'We could not find your ticket. Please contact support.',
-          flags: MessageFlags.Ephemeral
-        });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ 
+            content: 'We could not find your ticket. Please contact support.',
+            flags: MessageFlags.Ephemeral
+          });
+        }
         // Remove from active ratings
         activeRatings.delete(ratingKey);
         return false;
@@ -302,10 +294,12 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
       }
     } catch (dbError) {
       logError('Ticket Rating', `Database error saving rating: ${dbError}`);
-      await interaction.reply({ 
-        content: 'An error occurred while saving your rating. Please try again later.',
-        flags: MessageFlags.Ephemeral
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ 
+          content: 'An error occurred while saving your rating. Please try again later.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
       // Remove from active ratings
       activeRatings.delete(ratingKey);
       return false;
@@ -324,11 +318,13 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
       .setFooter({ text: 'Made by Soggra.' })
       .setTimestamp();
     
-    // Reply to the user
-    await interaction.reply({ 
-      embeds: [thankYouEmbed],
-      flags: MessageFlags.Ephemeral
-    });
+    // Update the interaction with the thank you message
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.update({ 
+        embeds: [thankYouEmbed],
+        components: [] // Remove the rating buttons
+      });
+    }
     
     // Send the rating to log channels
     try {
@@ -336,8 +332,8 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
         SELECT * FROM server_settings WHERE guild_id = ?
       `).get(interaction.guildId) as any;
       
-      if (settings && settings.mod_log_channel_id) {
-        const logChannel = await interaction.guild?.channels.fetch(settings.mod_log_channel_id);
+      if (settings && settings.ticket_logs_channel_id) {
+        const logChannel = await interaction.guild?.channels.fetch(settings.ticket_logs_channel_id);
         
         if (logChannel && logChannel.isTextBased()) {
           const ratingLogEmbed = new EmbedBuilder()
@@ -356,7 +352,7 @@ async function saveRatingDirectly(interaction: ButtonInteraction, ticketNumber: 
         }
       }
     } catch (logError) {
-      console.error('Error sending rating to log channels:', logError);
+      console.error('Error sending rating to ticket log channel:', logError);
     }
     
     // Remove from active ratings when done

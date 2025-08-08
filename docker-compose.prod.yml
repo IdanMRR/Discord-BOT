@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    build: .
+    container_name: discord-bot-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - bot_data:/app/data
+      - bot_logs:/app/logs
+    networks:
+      - bot_network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "node", "dist/health-check.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: discord-bot-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - bot_network
+    depends_on:
+      - discord-bot
+
+  redis:
+    image: redis:7-alpine
+    container_name: discord-bot-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - bot_network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+networks:
+  bot_network:
+    driver: bridge
+
+volumes:
+  bot_data:
+    driver: local
+  bot_logs:
+    driver: local
+  redis_data:
+    driver: local

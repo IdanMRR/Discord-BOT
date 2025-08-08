@@ -13,7 +13,6 @@ import InviteJoinMessageConfigModal from '../components/modals/InviteJoinMessage
 import InviteLeaveMessageConfigModal from '../components/modals/InviteLeaveMessageConfigModal';
 import RolesConfigModal from '../components/modals/RolesConfigModal';
 import CustomQuestionsModal from '../components/modals/CustomQuestionsModal';
-import { TicketPanelConfigModal, TicketPanelConfig } from '../components/modals/TicketPanelConfigModal';
 import toast from 'react-hot-toast';
 import { dashboardLogger } from '../services/dashboardLogger';
 import { useNavigate } from 'react-router-dom';
@@ -41,20 +40,10 @@ interface LoggingSettings {
   message_delete_logging: boolean;
   message_edit_logging: boolean;
   command_logging: boolean;
-  dm_logging: boolean;
   log_channel_id?: string;
-  message_log_channel_id?: string;
-  command_log_channel_id?: string;
-  dm_log_channel_id?: string;
 }
 
 
-interface Category {
-  id: string;
-  name: string;
-  type: number;
-  position: number;
-}
 
 interface Role {
   id: string;
@@ -88,7 +77,6 @@ const ServerSettingsContent: React.FC = () => {
   const [loggingSettings, setLoggingSettings] = useState<LoggingSettings | null>(null);
   const [serverSettings, setServerSettings] = useState<ServerSettingsType | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
 
   // Modal states
@@ -99,7 +87,6 @@ const ServerSettingsContent: React.FC = () => {
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [rolesConfigModalOpen, setRolesConfigModalOpen] = useState(false);
   const [customQuestionsModalOpen, setCustomQuestionsModalOpen] = useState(false);
-  const [isTicketPanelModalOpen, setIsTicketPanelModalOpen] = useState(false);
 
   // Age verification settings
   const [ageSettings, setAgeSettings] = useState({
@@ -111,9 +98,7 @@ const ServerSettingsContent: React.FC = () => {
 
   // Scroll to section function
   const scrollToSection = (sectionId: string) => {
-    console.log('Scrolling to section:', sectionId); // Debug log
     const element = document.getElementById(sectionId);
-    console.log('Found element:', element); // Debug log
     
     if (element) {
       // Simple scrollIntoView with block: 'start' and offset for header
@@ -164,11 +149,9 @@ const ServerSettingsContent: React.FC = () => {
         }
 
         if (channelsResponse.success && channelsResponse.data) {
-          // Filter for text channels and categories
+          // Filter for text channels only
           const textChannels = channelsResponse.data.filter((channel: Channel) => channel.type === 0);
-          const categoryChannels = channelsResponse.data.filter((channel: Category) => channel.type === 4);
           setChannels(textChannels);
-          setCategories(categoryChannels);
         } else {
           toast.error('Failed to load server channels');
         }
@@ -202,8 +185,7 @@ const ServerSettingsContent: React.FC = () => {
               guild_id: serverId,
               message_delete_logging: true,
               message_edit_logging: true,
-              command_logging: true,
-              dm_logging: false
+              command_logging: true
             });
           }
         } catch (error) {
@@ -212,8 +194,7 @@ const ServerSettingsContent: React.FC = () => {
             guild_id: serverId,
             message_delete_logging: true,
             message_edit_logging: true,
-            command_logging: true,
-            dm_logging: false
+            command_logging: true
           });
         }
 
@@ -235,23 +216,12 @@ const ServerSettingsContent: React.FC = () => {
     [channels]
   );
 
-  const categoryChannels = useMemo(() => 
-    categories.filter((category: Category) => category.type === 4),
-    [categories]
-  );
-
   // Memoize expensive lookups
   const channelLookup = useMemo(() => {
     const lookup = new Map();
     channels.forEach(channel => lookup.set(channel.id, channel));
     return lookup;
   }, [channels]);
-
-  const categoryLookup = useMemo(() => {
-    const lookup = new Map();
-    categories.forEach(category => lookup.set(category.id, category));
-    return lookup;
-  }, [categories]);
 
   const handleSettingToggle = useCallback(async (setting: keyof LoggingSettings, value: boolean) => {
     if (!loggingSettings || !serverId) return;
@@ -288,43 +258,6 @@ const ServerSettingsContent: React.FC = () => {
     }
   }, [loggingSettings, serverId]);
 
-  const handleChannelChange = useCallback(async (setting: keyof LoggingSettings, channelId: string) => {
-    if (!loggingSettings || !serverId) return;
-
-    setSaving(true);
-    try {
-      const oldChannelId = loggingSettings[setting] as string;
-      const updatedSettings = {
-        ...loggingSettings,
-        [setting]: channelId || undefined
-      };
-
-      const response = await apiService.updateLoggingSettings(serverId, updatedSettings);
-      
-      if (response.success) {
-        setLoggingSettings(updatedSettings);
-        const channelName = channels.find(c => c.id === channelId)?.name || 'None';
-        const oldChannelName = channels.find(c => c.id === oldChannelId)?.name || 'None';
-        toast.success(`${getSettingDisplayName(setting)} set to #${channelName}`);
-        
-        // Log the settings change
-        dashboardLogger.logSettingsChanged(
-          serverId, 
-          getSettingDisplayName(setting), 
-          oldChannelName === 'None' ? 'No channel' : `#${oldChannelName}`,
-          channelName === 'None' ? 'No channel' : `#${channelName}`,
-          'User'
-        );
-      } else {
-        toast.error('Failed to update channel setting');
-      }
-    } catch (error) {
-      console.error('Error updating channel setting:', error);
-      toast.error('Failed to update channel setting');
-    } finally {
-      setSaving(false);
-    }
-  }, [loggingSettings, serverId, channels]);
 
   const handleServerChannelChange = useCallback(async (setting: keyof ServerSettingsType, channelId: string) => {
     if (!serverSettings || !serverId) return;
@@ -355,34 +288,6 @@ const ServerSettingsContent: React.FC = () => {
     }
   }, [serverSettings, serverId, channelLookup]);
 
-  const handleCategoryChange = useCallback(async (setting: keyof ServerSettingsType, categoryId: string) => {
-    if (!serverSettings || !serverId) return;
-
-    setSaving(true);
-    try {
-      const updatePayload = {
-        [setting]: categoryId || null
-      };
-
-      const response = await apiService.updateServerSettings(serverId, updatePayload);
-      
-      if (response.success) {
-        setServerSettings({
-          ...serverSettings,
-          [setting]: categoryId || undefined
-        });
-        const categoryName = categoryLookup.get(categoryId)?.name || 'None';
-        toast.success(`${getServerSettingDisplayName(setting)} set to ${categoryName}`);
-      } else {
-        toast.error('Failed to update server setting');
-      }
-    } catch (error) {
-      console.error('Error updating server setting:', error);
-      toast.error('Failed to update server setting');
-    } finally {
-      setSaving(false);
-    }
-  }, [serverSettings, serverId, categoryLookup]);
 
   const handleVerificationTypeChange = useCallback(async (verificationType: string) => {
     if (!serverSettings || !serverId) return;
@@ -465,63 +370,6 @@ const ServerSettingsContent: React.FC = () => {
     }
   }, [serverSettings?.verification_type, loadAgeVerificationSettings]);
 
-  const handleCreateTicketPanel = useCallback(async (channelId: string) => {
-    if (!serverId || !channelId) return;
-
-    setSaving(true);
-    try {
-      const response = await apiService.createTicketPanel(serverId, {
-        channel_id: channelId,
-        panel_type: 'default'
-      });
-
-      if (response.success) {
-        toast.success('Ticket panel created successfully!');
-        // Update server settings with new panel info
-        setServerSettings(prev => prev ? {
-          ...prev,
-          ticket_panel_channel_id: channelId,
-          ticket_panel_message_id: response.data?.messageId
-        } : prev);
-      } else {
-        toast.error('Failed to create ticket panel');
-      }
-    } catch (error) {
-      console.error('Error creating ticket panel:', error);
-      toast.error('Failed to create ticket panel');
-    } finally {
-      setSaving(false);
-    }
-  }, [serverId]);
-
-  const handleSaveTicketPanelConfig = useCallback(async (config: TicketPanelConfig) => {
-    if (!serverId || !serverSettings?.ticket_panel_channel_id) return;
-
-    setSaving(true);
-    try {
-      const response = await apiService.createCustomTicketPanelMessage(
-        serverId, 
-        serverSettings.ticket_panel_channel_id, 
-        config
-      );
-
-      if (response.success) {
-        toast.success('Custom ticket panel created successfully!');
-        // Update server settings with new panel info
-        setServerSettings(prev => prev ? {
-          ...prev,
-          ticket_panel_message_id: response.data?.messageId
-        } : prev);
-      } else {
-        toast.error('Failed to create custom ticket panel');
-      }
-    } catch (error) {
-      console.error('Error creating custom ticket panel:', error);
-      toast.error('Failed to create custom ticket panel');
-    } finally {
-      setSaving(false);
-    }
-  }, [serverId, serverSettings?.ticket_panel_channel_id]);
 
   const handleCreateVerificationPanel = useCallback(async (channelId: string) => {
     if (!serverId || !channelId) return;
@@ -599,11 +447,7 @@ const ServerSettingsContent: React.FC = () => {
     const names: Record<string, string> = {
       'message_delete_logging': 'Message Delete Logging',
       'message_edit_logging': 'Message Edit Logging',
-      'command_logging': 'Command Logging',
-      'dm_logging': 'DM Logging',
-      'message_log_channel_id': 'Message Log Channel',
-      'command_log_channel_id': 'Command Log Channel',
-      'dm_log_channel_id': 'DM Log Channel'
+      'command_logging': 'Command Logging'
     };
     return names[setting] || setting;
   };
@@ -612,9 +456,6 @@ const ServerSettingsContent: React.FC = () => {
     const names: Record<string, string> = {
       'mod_log_channel_id': 'Mod Logs Channel',
       'server_log_channel_id': 'General Logs Channel',
-      'ticket_panel_channel_id': 'Ticket Panel Channel',
-      'ticket_logs_channel_id': 'Ticket Logs Channel',
-      'ticket_category_id': 'Ticket Category',
       'verification_type': 'Verification Type'
     };
     return names[setting] || setting;
@@ -667,28 +508,6 @@ const ServerSettingsContent: React.FC = () => {
     </select>
   );
 
-  const CategorySelector: React.FC<{
-    value?: string;
-    onChange: (categoryId: string) => void;
-    disabled?: boolean;
-  }> = ({ value, onChange, disabled = false }) => (
-    <select
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className={classNames(
-        "w-full px-3 py-2 rounded-lg border transition-colors bg-background border-border text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
-        disabled ? "opacity-50 cursor-not-allowed" : ""
-      )}
-    >
-      <option value="">-- Select Category --</option>
-                        {categoryChannels.map((category) => (
-        <option key={category.id} value={category.id}>
-          {category.name}
-        </option>
-      ))}
-    </select>
-  );
 
   const RoleSelector: React.FC<{
     value?: string;
@@ -929,133 +748,6 @@ const ServerSettingsContent: React.FC = () => {
               ) : (
                 <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
               )}
-            </div>
-          </div>
-        </div>
-      </SettingsCard>
-
-      {/* Ticket System */}
-      <SettingsCard
-        title="Ticket System"
-        description="Configure support ticket system and panel creation"
-        icon="🎫"
-        variant="compact"
-        className="mb-8"
-      >
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Ticket Panel Channel */}
-          <div className="p-3 rounded-lg border space-y-2 content-area">
-            <div className="flex items-center">
-              <span className="text-purple-600 dark:text-purple-400 mr-2">📧</span>
-              <h4 className="font-medium text-foreground">
-                Ticket Panel Channel
-              </h4>
-            </div>
-            <ChannelSelector
-              value={serverSettings?.ticket_panel_channel_id}
-              onChange={(channelId) => handleServerChannelChange('ticket_panel_channel_id', channelId)}
-              disabled={saving}
-              placeholder="-- Select Channel --"
-            />
-            <div className="flex items-center">
-              {serverSettings?.ticket_panel_channel_id && serverSettings.ticket_panel_channel_id !== '' ? (
-                <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
-              ) : (
-                <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
-              )}
-            </div>
-          </div>
-
-          {/* Ticket Logs Channel */}
-          <div className="p-3 rounded-lg border space-y-2 content-area">
-            <div className="flex items-center">
-              <span className="text-green-600 dark:text-green-400 mr-2">📄</span>
-              <h4 className="font-medium text-foreground">
-                Ticket Logs Channel
-              </h4>
-            </div>
-            <ChannelSelector
-              value={serverSettings?.ticket_logs_channel_id}
-              onChange={(channelId) => handleServerChannelChange('ticket_logs_channel_id', channelId)}
-              disabled={saving}
-              placeholder="-- Select Channel --"
-            />
-            <div className="flex items-center">
-              {serverSettings?.ticket_logs_channel_id && serverSettings.ticket_logs_channel_id !== '' ? (
-                <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
-              ) : (
-                <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
-              )}
-            </div>
-          </div>
-
-          {/* Ticket Category */}
-          <div className="p-3 rounded-lg border space-y-2 content-area">
-            <div className="flex items-center">
-              <span className="text-gray-600 dark:text-gray-400 mr-2">📁</span>
-              <h4 className="font-medium text-foreground">
-                Ticket Category
-              </h4>
-            </div>
-            <CategorySelector
-              value={serverSettings?.ticket_category_id}
-              onChange={(categoryId) => handleCategoryChange('ticket_category_id', categoryId)}
-              disabled={saving}
-            />
-            <div className="flex items-center">
-              {serverSettings?.ticket_category_id && serverSettings.ticket_category_id !== '' ? (
-                <span className="text-green-600 dark:text-green-400 text-xs">✅ Configured</span>
-              ) : (
-                <span className="text-red-600 dark:text-red-400 text-xs">❌ Not configured</span>
-              )}
-            </div>
-          </div>
-
-          {/* Create Ticket Panel */}
-          <div className="p-3 rounded-lg border space-y-2 md:col-span-2 content-area">
-            <div className="flex items-center">
-              <span className="text-indigo-600 mr-2">🔧</span>
-              <h4 className="font-medium text-foreground">
-                Create Ticket Panel
-              </h4>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Create a ticket panel message in your selected channel.
-            </p>
-            <div className="flex gap-2">
-              <ActionButton
-                onClick={() => {
-                  if (serverSettings?.ticket_panel_channel_id) {
-                    handleCreateTicketPanel(serverSettings.ticket_panel_channel_id);
-                  } else {
-                    toast.error('Please select a ticket panel channel first');
-                  }
-                }}
-                disabled={saving || !serverSettings?.ticket_panel_channel_id}
-                loading={saving}
-                variant="primary"
-                size="sm"
-                className="flex-1"
-              >
-                🎫 Create Default Ticket Panel
-              </ActionButton>
-              <ActionButton
-                onClick={() => {
-                  if (serverSettings?.ticket_panel_channel_id) {
-                    setIsTicketPanelModalOpen(true);
-                  } else {
-                    toast.error('Please select a ticket panel channel first');
-                  }
-                }}
-                disabled={saving || !serverSettings?.ticket_panel_channel_id}
-                loading={saving}
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              >
-                🎨 Customize Ticket Panel
-              </ActionButton>
             </div>
           </div>
         </div>
@@ -1376,30 +1068,6 @@ const ServerSettingsContent: React.FC = () => {
               </div>
             </div>
 
-            {/* Rules Channel */}
-            <div className="p-4 rounded-lg border content-area">
-              <div className="flex items-center mb-3">
-                <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-yellow-600 dark:text-yellow-400">📜</span>
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  Rules Channel
-                </h3>
-              </div>
-              <ChannelSelector
-                value={serverSettings?.rules_channel_id}
-                onChange={(channelId) => handleServerChannelChange('rules_channel_id', channelId)}
-                disabled={saving}
-                placeholder="-- Select Channel --"
-              />
-              <div className="mt-2 flex items-center">
-                {serverSettings?.rules_channel_id && serverSettings.rules_channel_id !== '' ? (
-                  <span className="text-green-600 dark:text-green-400 text-sm">✅ Configured</span>
-                ) : (
-                  <span className="text-red-600 dark:text-red-400 text-sm">❌ Not configured</span>
-                )}
-              </div>
-            </div>
 
             {/* Welcome Message Configuration */}
             <div className="p-4 rounded-lg border content-area">
@@ -1911,13 +1579,11 @@ const ServerSettingsContent: React.FC = () => {
                 </p>
                 <div className="mt-3">
                   <label className="block text-sm font-medium mb-2 text-foreground">
-                    Log Channel
+                    Log Channel (configured in Server Settings)
                   </label>
-                  <ChannelSelector
-                    value={loggingSettings.message_log_channel_id}
-                    onChange={(channelId) => handleChannelChange('message_log_channel_id', channelId)}
-                    disabled={saving || !loggingSettings.message_delete_logging}
-                  />
+                  <p className="text-xs text-muted-foreground">
+                    Uses the Message Log Channel from Server Settings section
+                  </p>
                 </div>
               </div>
               <ToggleSwitch
@@ -1940,13 +1606,11 @@ const ServerSettingsContent: React.FC = () => {
                 </p>
                 <div className="mt-3">
                   <label className="block text-sm font-medium mb-2 text-foreground">
-                    Log Channel (shares with delete logs if not set)
+                    Log Channel (configured in Server Settings)
                   </label>
-                  <ChannelSelector
-                    value={loggingSettings.message_log_channel_id}
-                    onChange={(channelId) => handleChannelChange('message_log_channel_id', channelId)}
-                    disabled={saving || !loggingSettings.message_edit_logging}
-                  />
+                  <p className="text-xs text-muted-foreground">
+                    Uses the Message Log Channel from Server Settings section
+                  </p>
                 </div>
               </div>
               <ToggleSwitch
@@ -1965,18 +1629,8 @@ const ServerSettingsContent: React.FC = () => {
                   ⚡ Command Logging
                 </h3>
                 <p className="text-sm mt-1 text-muted-foreground">
-                  Log when bot commands are used, including success/failure status
+                  Log when bot commands are used (logs to General Log Channel)
                 </p>
-                <div className="mt-3">
-                  <label className="block text-sm font-medium mb-2 text-foreground">
-                    Log Channel
-                  </label>
-                  <ChannelSelector
-                    value={loggingSettings.command_log_channel_id}
-                    onChange={(channelId) => handleChannelChange('command_log_channel_id', channelId)}
-                    disabled={saving || !loggingSettings.command_logging}
-                  />
-                </div>
               </div>
               <ToggleSwitch
                 checked={loggingSettings.command_logging}
@@ -1987,32 +1641,6 @@ const ServerSettingsContent: React.FC = () => {
 
             <hr className="border-border" />
 
-            {/* DM Logging */}
-            <div className="flex items-start justify-between">
-              <div className="flex-1 mr-6">
-                <h3 className="text-lg font-semibold text-foreground">
-                  💬 Direct Message Logging
-                </h3>
-                <p className="text-sm mt-1 text-muted-foreground">
-                  Log DMs sent to the bot from server members (privacy sensitive)
-                </p>
-                <div className="mt-3">
-                  <label className="block text-sm font-medium mb-2 text-foreground">
-                    Log Channel
-                  </label>
-                  <ChannelSelector
-                    value={loggingSettings.dm_log_channel_id}
-                    onChange={(channelId) => handleChannelChange('dm_log_channel_id', channelId)}
-                    disabled={saving || !loggingSettings.dm_logging}
-                  />
-                </div>
-              </div>
-              <ToggleSwitch
-                checked={loggingSettings.dm_logging}
-                onChange={(checked) => handleSettingToggle('dm_logging', checked)}
-                disabled={saving}
-              />
-            </div>
           </div>
 
         {/* Save Status */}
@@ -2065,11 +1693,6 @@ const ServerSettingsContent: React.FC = () => {
         serverId={serverId || ''}
       />
 
-      <TicketPanelConfigModal
-        isOpen={isTicketPanelModalOpen}
-        onClose={() => setIsTicketPanelModalOpen(false)}
-        onSave={handleSaveTicketPanelConfig}
-      />
     </div>
   );
 };

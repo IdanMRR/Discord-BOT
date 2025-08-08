@@ -14,8 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
   return 'discord-dashboard-jwt-secret-2024-secure-key';
 })();
 
-// Log the actual JWT secret being used for debugging
-console.log('🔑 Auth API using JWT_SECRET:', JWT_SECRET.substring(0, 20) + '...');
+// JWT secret configured - logging removed for security
 
 // Function to fetch real Discord user data using the bot client
 async function fetchDiscordUserData(userId: string) {
@@ -821,19 +820,15 @@ async function getServerSpecificPermissions(userId: string): Promise<Record<stri
     const serverPermissions: Record<string, string[]> = {};
     
     if (client && client.guilds.cache.size > 0) {
-      console.log(`[INFO][Auth] Checking permissions for user ${userId} across ${client.guilds.cache.size} guilds`);
-      
       for (const guild of client.guilds.cache.values()) {
         const guildPermissions = getDashboardPermissions(userId, guild.id);
         
         if (guildPermissions && Array.isArray(guildPermissions) && guildPermissions.length > 0) {
-          console.log(`[INFO][Auth] Found permissions for user ${userId} in guild ${guild.name} (${guild.id}):`, guildPermissions);
           serverPermissions[guild.id] = guildPermissions;
         }
       }
     }
     
-    console.log(`[INFO][Auth] Server-specific permissions for user ${userId}:`, serverPermissions);
     return serverPermissions;
   } catch (error) {
     console.error('[ERROR][Auth] Error getting server-specific permissions:', error);
@@ -875,25 +870,19 @@ async function getPermissions(userId: string, guildId?: string): Promise<string[
       const dbPermissions = getDashboardPermissions(userId, guildId);
       
       if (!dbPermissions || !Array.isArray(dbPermissions)) {
-        console.log(`[INFO][Auth] No database permissions found for user ${userId} in guild ${guildId}`);
         return [];
       }
       
-      console.log(`[INFO][Auth] Retrieved permissions for user ${userId} in guild ${guildId}:`, dbPermissions);
       return dbPermissions;
     } else {
       // If no specific guild ID, check ALL guilds the bot is in
       const allPermissions: string[] = [];
       
       if (client && client.guilds.cache.size > 0) {
-        console.log(`[INFO][Auth] Checking permissions for user ${userId} across ${client.guilds.cache.size} guilds`);
-        
         for (const guild of client.guilds.cache.values()) {
           const guildPermissions = getDashboardPermissions(userId, guild.id);
           
           if (guildPermissions && Array.isArray(guildPermissions) && guildPermissions.length > 0) {
-            console.log(`[INFO][Auth] Found permissions for user ${userId} in guild ${guild.name} (${guild.id}):`, guildPermissions);
-            
             // Add permissions that aren't already in the array
             for (const permission of guildPermissions) {
               if (!allPermissions.includes(permission)) {
@@ -905,10 +894,8 @@ async function getPermissions(userId: string, guildId?: string): Promise<string[
       }
       
       if (allPermissions.length > 0) {
-        console.log(`[INFO][Auth] Combined permissions for user ${userId} across all guilds:`, allPermissions);
         return allPermissions;
       } else {
-        console.log(`[INFO][Auth] No permissions found for user ${userId} in any guild`);
         return [];
       }
     }

@@ -576,10 +576,10 @@ app.use((req: express.Request, res: express.Response) => {
   sendResponse(res, false, null, 'Endpoint not found');
 });
 
-const PORT = process.env.SETTINGS_API_PORT || 3003;
-
-app.listen(PORT, () => {
-  logInfo('SettingsAPI', `Comprehensive Settings API server running on port ${PORT}`);
-});
+// Removed auto-start - this app is now mounted by the main server.ts
+// const PORT = process.env.SETTINGS_API_PORT || 3003;
+// app.listen(PORT, () => {
+//   logInfo('SettingsAPI', `Comprehensive Settings API server running on port ${PORT}`);
+// });
 
 export { app };

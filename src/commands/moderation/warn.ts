@@ -4,6 +4,7 @@ import { logModeration, logError, logInfo, LogResult } from '../../utils/logger'
 import { WarningService, ModerationCaseService } from '../../database/services/sqliteService';
 import { logModerationToDatabase } from '../../utils/databaseLogger';
 import { AutomodEscalationHandler } from '../../handlers/automod/automodEscalationHandler';
+import { validateReason, sanitizeReason } from '../../utils/validation';
 
 export const data = new SlashCommandBuilder()
   .setName('warn')
@@ -98,8 +99,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Wait for the modal submission (5 minute timeout)
         const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 300000 });
         
-        // Get the reason from the modal
-        const reason = modalSubmission.fields.getTextInputValue('warn-reason');
+        // Get and validate the reason from the modal
+        const rawReason = modalSubmission.fields.getTextInputValue('warn-reason');
+        
+        // Validate the reason
+        const validation = validateReason(rawReason);
+        if (!validation.isValid) {
+          await modalSubmission.reply({
+            content: validation.message!,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+        
+        // Sanitize and use the reason
+        const reason = sanitizeReason(rawReason);
         
         // Defer the reply to the modal submission with proper error handling
         try {
@@ -226,7 +240,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-          caseNumber: moderationCase.case_number,
+          case_number: moderationCase.case_number,
           additionalFields: additionalFields
         });
         
@@ -249,7 +263,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
-            caseNumber: moderationCase.case_number,
+            case_number: moderationCase.case_number,
             additionalFields: [
               { name: '🏠 Server', value: guild.name, inline: true },
               { name: '⚠️ Warning Information', value: 'This is a formal warning. Continued rule violations may result in kicks, timeouts, or bans.' }
@@ -274,8 +288,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-                      additionalInfo: `Warning Case #${moderationCase.case_number} - Warning issued to user in ${guild.name}`
+          additionalInfo: `Warning Case #${moderationCase.case_number} - Warning issued to user in ${guild.name}`
         });
+        
+        // Log to the moderation log channel
+        const logResult = await logModeration({
+          guild: guild,
+          action: 'Warning',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          caseNumber: moderationCase.case_number,
+          additionalInfo: escalationResult && escalationResult.success ? 
+            `Auto-punishment applied: ${escalationResult.action}` : undefined
+        });
+        
+        // If logging failed, notify the moderator
+        if (!logResult.success && logResult.message) {
+          logError('Warn Command', `Moderation logging failed: ${logResult.message}`);
+        }
       } catch (error: any) {
         // Modal timed out or was cancelled
         if (error?.code === 'InteractionCollectorError') {

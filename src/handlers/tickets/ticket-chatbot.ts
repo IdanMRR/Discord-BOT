@@ -166,7 +166,7 @@ export async function processTicketMessage(message: Message): Promise<boolean> {
     // If staff member sent a message, update the staff activity timestamp and don't respond
     if (isStaff) {
       staffActiveTickets.set(ticketKey, new Date());
-      logInfo('Ticket Activity', `Updated staff activity timestamp for ticket #${ticketNumber} in ${message.guild.name}`);
+      // Staff activity updates are too frequent for console logging
       return false;
     }
     

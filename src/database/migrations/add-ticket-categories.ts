@@ -1,12 +1,23 @@
-import { db } from '../sqlite';
 import { logInfo, logError } from '../../utils/logger';
+import type Database from 'better-sqlite3';
 
 /**
  * Update the tickets table to include category information
  * Also create ticket_categories table for custom categories per server
  */
-export async function addTicketCategoriesSupport() {
+export async function addTicketCategoriesSupport(database?: Database.Database) {
   try {
+    // If no database provided, import it here to avoid circular dependency issues
+    let db = database;
+    if (!db) {
+      const { db: importedDb } = await import('../sqlite');
+      db = importedDb;
+    }
+
+    if (!db) {
+      throw new Error('Database connection is not available');
+    }
+
     // Check if the tickets table exists
     const tableExists = db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='tickets'"
@@ -87,8 +98,3 @@ export async function addTicketCategoriesSupport() {
     throw error;
   }
 }
-
-// Run the migration when this file is imported
-addTicketCategoriesSupport()
-  .then(() => console.log('Ticket categories migration completed successfully'))
-  .catch(error => console.error('Failed to run ticket categories migration:', error));

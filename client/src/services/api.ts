@@ -28,7 +28,6 @@ class ApiService {
     if (process.env.NODE_ENV === 'development' && environment.features.enableAutoDetection) {
       detectApiUrl().then(url => {
         if (url !== this.baseURL) {
-          console.log(`🔄 Switching API URL from ${this.baseURL} to ${url}`);
           this.baseURL = url;
           this.api.defaults.baseURL = url;
         }
@@ -72,10 +71,6 @@ class ApiService {
             }
           }
         } catch (error) {
-          // Only log JWT errors in development mode
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[API] JWT token validation failed:', error);
-          }
           // Clear invalid token
           localStorage.removeItem('auth_token');
         }

@@ -3,7 +3,7 @@ import { logError, logInfo } from '../utils/logger';
 import { ServerSettingsService } from '../database/services/serverSettingsService';
 import { TicketTranscriptService } from '../database/services/ticketTranscriptService';
 import { createTextTranscript } from '../utils/transcript-utils';
-import { TextChannel, NewsChannel, ThreadChannel, PermissionFlagsBits } from 'discord.js';
+import { TextChannel, NewsChannel, ThreadChannel, PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import { createModerationEmbed } from '../utils/embeds';
 import { getClient } from '../utils/client-utils';
 
@@ -65,7 +65,7 @@ export async function validateTicketAction(ticketId: number, allowDeleted: boole
  * Helper function to send a ticket update notification to both the ticket channel and log channel
  * Also handles sending transcript to the user for closed and deleted tickets
  */
-export async function sendTicketNotification(ticket: any, action: 'closed' | 'reopened' | 'deleted', reason?: string): Promise<void> {
+export async function sendTicketNotification(ticket: any, action: 'closed' | 'reopened' | 'deleted', reason?: string, closedBy?: { id?: string, username?: string }): Promise<void> {
   try {
     const client = getClient();
     if (!client) {
@@ -73,8 +73,8 @@ export async function sendTicketNotification(ticket: any, action: 'closed' | 're
       return;
     }
     
-    // For closed or deleted tickets, send a transcript to the user
-    if (action === 'closed' || action === 'deleted') {
+    // For closed tickets, send a transcript to the user (but not for deleted)
+    if (action === 'closed') {
       try {
         // Get the user to send the transcript to
         const user = await client.users.fetch(ticket.user_id).catch((err: Error) => {
@@ -90,29 +90,102 @@ export async function sendTicketNotification(ticket: any, action: 'closed' | 're
             // Create a simple text transcript for the user
             const textTranscript = createTextTranscript(storedTranscript.transcript);
             
-            // Send the transcript to the user
+            // Format ticket number with leading zeros
+            const formattedTicketNumber = String(ticket.ticket_number).padStart(4, '0');
+            
+            // Get current time in a nice format
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const dateString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+            
+            // Get guild name
+            const guild = client.guilds.cache.get(ticket.guild_id);
+            const guildName = guild ? guild.name : 'Unknown Server';
+            
+            // Create the comprehensive closure notification embed (only for closed tickets)
+            const notificationEmbed = {
+              color: 0xFEE75C, // Yellow for closed
+              title: `🔒 Your Ticket Has Been Closed | #${formattedTicketNumber}`,
+              description: `Your support ticket in **${guildName}** has been closed.`,
+              fields: [
+                { name: '📋 Ticket Number', value: `#${formattedTicketNumber}`, inline: true },
+                { name: '🏷️ Category', value: ticket.category || 'General Support', inline: true },
+                { name: '📝 Reason', value: reason || 'Information Provided', inline: false },
+                { name: '🔒 Closed By', value: closedBy?.username ? `@${closedBy.username}` : '@API Request', inline: true },
+                { name: '🕒 Closed At', value: timeString, inline: true }
+              ],
+              footer: {
+                text: `Made by Soggra. • ${timeString}`,
+              },
+              timestamp: new Date().toISOString()
+            };
+            
+            // Create transcript info embed
             const transcriptEmbed = {
               color: 0x5865F2, // Discord blue
-              title: `Ticket #${ticket.ticket_number} Transcript`,
-              description: `Your ticket has been ${action}. A transcript is attached for your records.`,
+              title: `🗒️ Ticket Transcript | #${formattedTicketNumber}`,
+              description: `A complete transcript of your ticket conversation is attached for your records.`,
+              fields: [
+                { name: '📊 Total Messages', value: 'See attachment', inline: true },
+                { name: '📅 Closed On', value: `${dateString}, ${timeString}`, inline: true }
+              ],
               footer: {
-                text: `Ticket ID: ${ticket.id} | ${action.charAt(0).toUpperCase() + action.slice(1)} on: ${new Date().toLocaleString()}`
+                text: `Transcript generated • ${timeString}`
               }
             };
             
-            // Send the embed and the transcript as a text file
-            await user.send({ embeds: [transcriptEmbed] });
+            // Send both embeds together first
             
             // Create a buffer from the text transcript
             const buffer = Buffer.from(textTranscript, 'utf-8');
             
-            // Send the transcript as a file attachment
+            // Send both embeds and the transcript file in a single message
             await user.send({
+              embeds: [notificationEmbed, transcriptEmbed],
               files: [{
                 attachment: buffer,
-                name: `ticket-${ticket.ticket_number}-transcript.txt`
+                name: `ticket-${String(ticket.ticket_number).padStart(4, '0')}-transcript.txt`
               }]
             });
+            
+            // Send rating experience embed for closed tickets
+            try {
+              const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+              
+              const ratingEmbed = {
+                color: 0x5865F2, // Discord blue
+                title: '⭐ Rate Your Support Experience',
+                description: 'We value your feedback! Please rate your support experience to help us improve our service.',
+                fields: [
+                  { name: '📋 Ticket', value: `#${formattedTicketNumber}`, inline: true },
+                  { name: '🏷️ Category', value: ticket.category || 'General Support', inline: true }
+                ],
+                footer: {
+                  text: 'Your feedback helps us improve • Made by Soggra'
+                },
+                timestamp: new Date().toISOString()
+              };
+              
+              // Create rating button
+              const ratingButton = new ButtonBuilder()
+                .setCustomId(`rate_ticket_${ticket.ticket_number}`)
+                .setLabel('Rate Support Experience')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('⭐');
+              
+              const ratingRow = new ActionRowBuilder()
+                .addComponents(ratingButton);
+              
+              // Send the rating request via DM
+              await user.send({ 
+                embeds: [ratingEmbed],
+                components: [ratingRow]
+              });
+              
+              logInfo('TicketHandlers', `Sent rating request for ticket #${ticket.ticket_number} to user ${user.tag}`);
+            } catch (ratingError) {
+              logError('TicketHandlers', `Could not send rating request to user ${user.tag}: ${ratingError}`);
+            }
             
             logInfo('TicketHandlers', `Sent transcript for ticket #${ticket.ticket_number} to user ${user.tag}`);
           } else {
@@ -143,21 +216,61 @@ export async function sendTicketNotification(ticket: any, action: 'closed' | 're
               const logChannel = await guild.channels.fetch(logChannelId) as TextChannel;
               
               if (logChannel && logChannel.isTextBased()) {
-                // Create embed for log channel
-                const logEmbed = {
-                  color: action === 'reopened' ? 0x00ff00 : (action === 'closed' ? 0xff0000 : 0x5865F2), // Red for closed, Green for reopened, Discord blue for deleted
-                  title: action === 'reopened' ? '🔓 Ticket Reopened' : (action === 'closed' ? '🔒 Ticket Closed' : '🗑️ Ticket Deleted'),
-                  description: `Ticket #${ticket.id} has been ${action} via Dashboard.${reason ? `\n**Reason:** ${reason}` : ''}`,
-                  fields: [
-                    { name: 'Ticket ID', value: `${ticket.id}`, inline: true },
-                    { name: 'User', value: ticket.user_id ? `<@${ticket.user_id}>` : 'Unknown', inline: true },
-                    { name: 'Status', value: action === 'reopened' ? 'Reopened' : (action === 'closed' ? 'Closed' : 'Deleted'), inline: true }
-                  ],
-                  footer: {
-                    text: `${action.charAt(0).toUpperCase() + action.slice(1)} via Dashboard`
-                  },
-                  timestamp: new Date().toISOString()
-                };
+                // Format ticket number with leading zeros for log channel
+                const formattedTicketNumber = String(ticket.ticket_number).padStart(4, '0');
+                const closingUserDisplay = closedBy?.username ? `@${closedBy.username}` : '@Unknown User';
+                
+                // Create enhanced embed for log channel
+                let logEmbed;
+                
+                if (action === 'reopened') {
+                  logEmbed = {
+                    color: 0x00ff00, // Green for reopened
+                    title: '🔓 Ticket Reopened',
+                    description: `Ticket #${formattedTicketNumber} has been reopened via Dashboard by ${closingUserDisplay}.`,
+                    fields: [
+                      { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                      { name: '👤 User', value: ticket.user_id ? `<@${ticket.user_id}>` : 'Unknown', inline: true },
+                      { name: '📝 Reason', value: reason || 'User Request', inline: true },
+                      { name: '📊 Status', value: 'OPEN - Accepting messages', inline: false }
+                    ],
+                    footer: {
+                      text: 'Reopened via Dashboard • Made by Soggra'
+                    },
+                    timestamp: new Date().toISOString()
+                  };
+                } else if (action === 'closed') {
+                  logEmbed = {
+                    color: 0xff0000, // Red for closed
+                    title: '🔒 Ticket Closed',
+                    description: `Ticket #${formattedTicketNumber} has been closed via Dashboard by ${closingUserDisplay}.`,
+                    fields: [
+                      { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                      { name: '👤 User', value: ticket.user_id ? `<@${ticket.user_id}>` : 'Unknown', inline: true },
+                      { name: '📝 Reason', value: reason || 'Issue Resolved', inline: true }
+                    ],
+                    footer: {
+                      text: 'Closed via Dashboard • Made by Soggra'
+                    },
+                    timestamp: new Date().toISOString()
+                  };
+                } else {
+                  // Deleted case
+                  logEmbed = {
+                    color: 0x5865F2, // Discord blue for deleted
+                    title: '🗑️ Ticket Deleted',
+                    description: `Ticket #${formattedTicketNumber} has been deleted via Dashboard by ${closingUserDisplay}.`,
+                    fields: [
+                      { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                      { name: '👤 User', value: ticket.user_id ? `<@${ticket.user_id}>` : 'Unknown', inline: true },
+                      { name: '📝 Reason', value: reason || 'No reason provided', inline: true }
+                    ],
+                    footer: {
+                      text: 'Deleted via Dashboard • Made by Soggra'
+                    },
+                    timestamp: new Date().toISOString()
+                  };
+                }
                 
                 await logChannel.send({ embeds: [logEmbed] });
                 logInfo('TicketHandlers', `Sent ticket ${action} notification to log channel ${logChannelId}`);
@@ -184,26 +297,101 @@ export async function sendTicketNotification(ticket: any, action: 'closed' | 're
           
           // Ensure the channel is a TextChannel which has the required methods
           if (channel && channel.isTextBased() && (channel instanceof TextChannel || channel instanceof NewsChannel || channel instanceof ThreadChannel)) {
-            // Create embed for ticket channel
-            const embed = {
-              color: action === 'reopened' ? 0x00ff00 : (action === 'closed' ? 0xff0000 : 0x5865F2), // Red for closed, Green for reopened, Discord blue for deleted
-              title: action === 'reopened' ? '🔓 Ticket Reopened' : (action === 'closed' ? '🔒 Ticket Closed' : '🗑️ Ticket Deleted'),
-              description: `This ticket has been ${action} via Dashboard.${reason ? `\n**Reason:** ${reason}` : ''}`,
-              footer: {
-                text: `Ticket ID: ${ticket.id}`
-              },
-              timestamp: new Date().toISOString()
-            };
+            // Format ticket number with leading zeros
+            const formattedTicketNumber = String(ticket.ticket_number).padStart(4, '0');
             
-            // For closed tickets, add a delete button
+            // Get current time in a nice format
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            // Get closing user display name
+            const closingUserDisplay = closedBy?.username ? `@${closedBy.username}` : '@Unknown User';
+            
+            // Get full date for reopened tickets
+            const dateString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+            
+            // Create enhanced embed for ticket channel
+            let embed;
+            
+            if (action === 'reopened') {
+              embed = {
+                color: 0x00ff00, // Green for reopened
+                title: '🔓 Ticket Reopened',
+                description: `This ticket has been reopened by ${closingUserDisplay}.`,
+                fields: [
+                  { name: '📝 Reason', value: reason || 'User Request', inline: false },
+                  { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                  { name: '👤 Reopened By', value: closingUserDisplay, inline: true },
+                  { name: '📅 Reopened At', value: dateString, inline: true },
+                  { name: '📊 Status', value: 'This ticket is now **OPEN** and accepting messages.', inline: false },
+                  { name: '⚙️ Actions', value: 'You can continue the conversation. The ticket can be closed again when the issue is resolved.', inline: false }
+                ],
+                footer: {
+                  text: `Reopened via Discord • Made by Soggra • Today at ${timeString}`
+                },
+                timestamp: new Date().toISOString()
+              };
+            } else if (action === 'closed') {
+              embed = {
+                color: 0xff0000, // Red for closed
+                title: '🔒 Ticket Closed',
+                description: `This ticket has been closed by ${closingUserDisplay}.`,
+                fields: [
+                  { name: '📝 Reason', value: reason || 'Issue Resolved', inline: false },
+                  { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                  { name: '👤 Closed By', value: closingUserDisplay, inline: true },
+                  { name: '🕒 Closed At', value: timeString, inline: true },
+                  { name: '⚙️ Actions', value: 'Staff can reopen or permanently delete this ticket using the buttons below.', inline: false }
+                ],
+                footer: {
+                  text: `Closed via Discord • Made by Soggra • Today at ${timeString}`
+                },
+                timestamp: new Date().toISOString()
+              };
+            } else {
+              // Deleted case
+              embed = {
+                color: 0x5865F2, // Discord blue for deleted
+                title: '🗑️ Ticket Deleted',
+                description: `This ticket has been deleted by ${closingUserDisplay}.`,
+                fields: [
+                  { name: '📝 Reason', value: reason || 'No reason provided', inline: false },
+                  { name: '🎫 Ticket ID', value: `#${formattedTicketNumber}`, inline: true },
+                  { name: '👤 Deleted By', value: closingUserDisplay, inline: true },
+                  { name: '📅 Deleted At', value: timeString, inline: true }
+                ],
+                footer: {
+                  text: `Deleted via Discord • Made by Soggra • Today at ${timeString}`
+                },
+                timestamp: new Date().toISOString()
+              };
+            }
+            
+            // Add appropriate buttons based on action
             if (action === 'closed') {
               const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
               
               const row = new ActionRowBuilder()
                 .addComponents(
                   new ButtonBuilder()
+                    .setCustomId(`reopen_ticket_${ticket.id}`)
+                    .setLabel('Reopen Ticket')
+                    .setStyle(ButtonStyle.Success),
+                  new ButtonBuilder()
                     .setCustomId(`delete_ticket_${ticket.id}`)
                     .setLabel('Delete Ticket')
+                    .setStyle(ButtonStyle.Danger)
+                );
+              
+              await channel.send({ embeds: [embed], components: [row] });
+            } else if (action === 'reopened') {
+              const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+              
+              const row = new ActionRowBuilder()
+                .addComponents(
+                  new ButtonBuilder()
+                    .setCustomId(`close_ticket_${ticket.id}`)
+                    .setLabel('Close Ticket')
                     .setStyle(ButtonStyle.Danger)
                 );
               

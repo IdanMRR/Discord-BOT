@@ -1,0 +1,32 @@
+# Discord Bot Management Platform - Product Plan
+
+## Product Vision
+A comprehensive Discord bot management platform designed for gaming and educational communities, featuring advanced moderation, analytics, engagement tools, and monetization-ready architecture.
+
+## Business Model
+- **Primary**: Code licensing and SaaS subscriptions
+- **Target Markets**: Gaming communities, educational servers, corporate Discord servers
+- **Revenue Streams**: One-time license sales, monthly/annual subscriptions, premium feature tiers
+
+## Core Value Propositions
+1. **All-in-One Solution**: Complete bot + dashboard ecosystem
+2. **Advanced Analytics**: Real-time community insights and engagement metrics
+3. **Professional Moderation**: Comprehensive ticket system with staff management
+4. **Scalable Architecture**: SQLite foundation ready for enterprise scaling
+5. **White-Label Ready**: Customizable branding and deployment options
+
+## Technical Foundation
+- **Backend**: Node.js/TypeScript with Discord.js v14
+- **Frontend**: React 19 with Material-UI and Tailwind CSS
+- **Database**: SQLite (lightweight, file-based, easy deployment)
+- **Real-time**: Socket.io for live dashboard updates
+- **Testing**: Playwright for E2E reliability
+- **Integration**: MCP support for AI/automation workflows
+
+## Architecture Decisions
+- **SQLite Choice**: Lightweight, zero-config, perfect for distribution and scaling
+- **TypeScript**: Type safety for enterprise-grade reliability
+- **Modular Design**: Plugin-based architecture for feature expansion
+- **API-First**: RESTful design enabling third-party integrations
+
+Refer to @roadmap.mdc for implementation phases and @create-spec.mdc for feature development workflows.

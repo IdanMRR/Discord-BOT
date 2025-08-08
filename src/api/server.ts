@@ -27,6 +27,7 @@ import ticketsRouter from './tickets';
 import statsRouter from './stats';
 import serversRouter from './servers';
 import authRouter from './auth';
+import { authenticateToken } from '../middleware/auth';
 import adminPanelRouter from './admin-panel';
 import integrationsRouter from './integrations';
 const activityRouter = require('./activity');
@@ -47,6 +48,8 @@ import analyticsRouter from './analytics';
 import comprehensiveLogsRouter from './comprehensive-logs';
 import usersRouter from './users';
 import xpManagementRouter from './xp-management';
+import { validateReason } from '../utils/validation';
+import giveawaysRouter from './giveaways';
 
 // Helper function to extract user info from request
 function extractUserInfo(req: Request): { userId: string; username?: string } | null {
@@ -411,7 +414,7 @@ app.use('/api/servers', serversRouter);
 // Register the logging settings router under /api/servers path
 console.log('Registering logging settings router at /api/servers');
 app.use('/api/servers', loggingSettingsRouter);
-app.use('/api/settings', levelingSettingsRouter);
+app.use('/api/settings', authenticateToken, levelingSettingsRouter);
 
 // Register system metrics router
 console.log('Registering system metrics router at /api/system');
@@ -422,7 +425,7 @@ console.log('Registering moderation cases router at /api/moderation-cases');
 app.use('/api/moderation-cases', moderationCasesRouter);
 
 app.use('/api/direct-servers', directServersRouter);
-app.use('/api', membersRouter);
+app.use('/api', authenticateToken, membersRouter);
 
 // Register the automod escalation router
 console.log('Registering automod escalation router at /api/automod-escalation');
@@ -434,11 +437,15 @@ app.use('/api/analytics', analyticsRouter);
 
 // Register the integrations router
 console.log('Registering integrations router at /api/integrations');
-app.use('/api/integrations', integrationsRouter);
+app.use('/api/integrations', authenticateToken, integrationsRouter);
+
+// Register the giveaways router under /api/servers path
+console.log('Registering giveaways router at /api/servers/:serverId/giveaways');
+app.use('/api/servers/:serverId/giveaways', giveawaysRouter);
 
 // Register the comprehensive logs router
 console.log('Registering comprehensive logs router at /api/logs');
-app.use('/api/logs', comprehensiveLogsRouter);
+app.use('/api/logs', authenticateToken, comprehensiveLogsRouter);
     
 // Mount activity router BEFORE authentication middleware to make it public
 app.use('/api/activity', activityRouter);
@@ -675,14 +682,14 @@ app.put('/api/direct-server/:serverId/settings', async (req: Request, res: Respo
 // app.use('/api', authenticateRequest, router); // Commented out - router is not defined
 
 // Add the missing API routes that were accidentally removed
-app.use('/api/logs', logsRouter);
-app.use('/api/users', usersRouter);
+app.use('/api/logs', authenticateToken, logsRouter);
+app.use('/api/users', authenticateToken, usersRouter);
 
 // Add dashboard logging middleware (after basic middleware, before API routes)
 app.use(dashboardLogger);
 
 // Add dashboard logs API routes (BEFORE comprehensive settings to prevent route conflicts)
-app.use('/api/dashboard-logs', dashboardLogsRouter);
+app.use('/api/dashboard-logs', authenticateToken, dashboardLogsRouter);
 
 // Add comprehensive settings API routes (this should be last to avoid conflicts)
 app.use('/api/settings', comprehensiveSettingsApp);
@@ -910,6 +917,23 @@ app.put('/tickets/:id/close', async (req: Request, res: Response) => {
 app.put('/tickets/:id/reopen', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { reason } = req.body;
+    
+    // Validate the reason input
+    if (!reason || typeof reason !== 'string') {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Reason is required and must be a valid string'
+      });
+    }
+
+    const validation = validateReason(reason);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: validation.message || 'Invalid reason provided'
+      });
+    }
     
     // Find the ticket first to get the channel_id
     const allTickets = await TicketService.getTickets(null as unknown as string);
@@ -974,6 +998,12 @@ app.put('/tickets/:id/reopen', async (req: Request, res: Response) => {
 // Mock warnings endpoint removed - using real warningsRouter
 
 // Test endpoint removed - using main status endpoint defined earlier
+
+// Handle webpack hot-update.json requests to prevent 404 warnings
+app.get('*hot-update.json', (req: Request, res: Response) => {
+  // Return empty response for hot-update.json files
+  res.status(204).end();
+});
 
 // Add a test endpoint specifically for CORS testing
 app.get('/api/cors-test', (req, res) => {

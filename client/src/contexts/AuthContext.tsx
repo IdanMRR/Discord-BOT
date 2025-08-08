@@ -68,7 +68,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           throw new Error(response.error || 'Failed to get user data');
         }
       } catch (error: any) {
-        console.error('Login error:', error);
         toast.error('Login failed: ' + error.message, { id: 'login-error' });
         logout();
         throw error;
@@ -122,7 +121,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout();
       }
     } catch (error) {
-      console.error('Auth check error:', error);
       logout();
     } finally {
       setLoading(false);
@@ -142,12 +140,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const hasAdminFlags = databasePermissions.length === 0 && 
                          !!(user.flags && (user.flags & 0x1) !== 0);
     
-    console.log('Admin check for user:', user.id, { 
-      hasAdminPermission, 
-      hasAdminFlags, 
-      databasePermissions,
-      finalResult: hasAdminPermission || hasAdminFlags
-    });
     
     return hasAdminPermission || hasAdminFlags;
   };
@@ -156,11 +148,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Use permissions directly from the database (sent by backend API)
     const databasePermissions = user.permissions || [];
     
-    console.log('Database permissions for user:', user.id, databasePermissions);
     
     // If user has no database permissions, they only get basic view access
     if (databasePermissions.length === 0) {
-      console.log('No database permissions found for user:', user.id, 'denying access');
       return []; // Return empty array - no permissions
     }
     

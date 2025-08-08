@@ -72,18 +72,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const savedSettings = localStorage.getItem('dashboard_settings');
-      console.log('Loading settings from localStorage:', savedSettings); // Debug log
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        console.log('Parsed settings:', parsed); // Debug log
         const merged = { ...defaultSettings, ...parsed };
-        console.log('Merged settings:', merged); // Debug log
         return merged;
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
     }
-    console.log('Using default settings:', defaultSettings); // Debug log
     return defaultSettings;
   });
   
@@ -106,7 +101,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           try {
             callback();
           } catch (error) {
-            console.error('Error in auto-refresh callback:', error);
           }
         });
       }, settings.refreshInterval * 1000);
@@ -143,16 +137,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   }, []);
 
   const updateSetting = (key: keyof UserSettings, value: any) => {
-    console.log(`Updating setting ${key}:`, value); // Debug log
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value };
       
       // Save to localStorage
       try {
         localStorage.setItem('dashboard_settings', JSON.stringify(newSettings));
-        console.log('Settings saved to localStorage:', newSettings); // Debug log
       } catch (error) {
-        console.error('Error saving setting:', error);
       }
       
       return newSettings;

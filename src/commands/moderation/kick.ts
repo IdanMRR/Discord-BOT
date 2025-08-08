@@ -2,7 +2,8 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, Permissi
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
 import { logModerationToDatabase } from '../../utils/databaseLogger';
-import { ModerationCaseService } from '../../database/services/sqliteService';
+import { ModerationCaseService, WarningService } from '../../database/services/sqliteService';
+import { validateReason, sanitizeReason } from '../../utils/validation';
 
 export const data = new SlashCommandBuilder()
   .setName('kick')
@@ -118,8 +119,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Wait for the modal submission (5 minute timeout)
         const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 300000 });
         
-        // Get the reason from the modal
-        const reason = modalSubmission.fields.getTextInputValue('kick-reason');
+        // Get and validate the reason from the modal
+        const rawReason = modalSubmission.fields.getTextInputValue('kick-reason');
+        
+        // Validate the reason
+        const validation = validateReason(rawReason);
+        if (!validation.isValid) {
+          await modalSubmission.reply({
+            content: validation.message!,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+        
+        // Sanitize and use the reason
+        const reason = sanitizeReason(rawReason);
         
         // Defer the reply to the modal submission
         await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
@@ -148,7 +162,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
-            caseNumber: moderationCase.case_number,
+            case_number: moderationCase.case_number,
             additionalFields: [
               { name: '🏠 Server', value: guild.name, inline: true },
               { name: '🔗 Rejoin Information', value: 'You may be able to rejoin the server with a new invite link.' }
@@ -169,16 +183,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         // Now perform the kick
         await member.kick(reason);
         
+        // Get current warning count for the user
+        const activeWarningCount = await WarningService.countActiveWarnings(guild.id, targetUser.id);
+        
         // Create a stylish moderation embed
         const kickEmbed = createModerationEmbed({
           action: 'Kick',
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-          caseNumber: moderationCase.case_number,
+          case_number: moderationCase.case_number,
           additionalFields: [
             { name: '🕒 Action Time', value: new Date().toLocaleString(), inline: true },
-            { name: '🏠 Server', value: guild.name, inline: true }
+            { name: '🏠 Server', value: guild.name, inline: true },
+            { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
           ]
         });
         
@@ -193,6 +211,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           reason: reason,
           additionalInfo: `Kick Case #${moderationCase.case_number} - User was kicked from ${guild.name}`
         });
+        
+        // Log to moderation channel
+        const logResult = await logModeration({
+          guild: guild,
+          action: 'Kick',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          caseNumber: moderationCase.case_number
+        });
+        
+        // If logging failed, notify in console
+        if (!logResult.success && logResult.message) {
+          logError('Kick Command', `Moderation logging failed: ${logResult.message}`);
+        }
         
       } catch (error: any) {
         // Modal timed out or was cancelled

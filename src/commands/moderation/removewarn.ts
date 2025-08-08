@@ -4,18 +4,17 @@ import { logModerationToDatabase } from '../../utils/databaseLogger';
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed, createSuccessEmbed } from '../../utils/embeds';
 import { WarningService, ModerationCaseService } from '../../database/services/sqliteService';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('removewarn')
-    .setDescription('Remove a warning from a user')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to remove a warning from')
-        .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
+export const data = new SlashCommandBuilder()
+  .setName('removewarn')
+  .setDescription('Remove a warning from a user')
+  .addUserOption(option => 
+    option
+      .setName('user')
+      .setDescription('The user to remove a warning from')
+      .setRequired(true))
+  .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers);
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if user has permission to moderate members
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) {
@@ -135,35 +134,24 @@ module.exports = {
         // Get remaining active warnings count
         const remainingActiveWarnings = await WarningService.countActiveWarnings(guild.id, targetUser.id);
         
-        // Format current time correctly (Israeli format)
-        const now = new Date();
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        const formattedTime = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} at ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
-        // Create a stylish success embed
-        const successEmbed = createSuccessEmbed(
-          'Warning Removed',
-          `A warning has been removed from ${targetUser} by ${interaction.user}.\n\n**Reason:** ${reason}`
-        );
-        
-        // Add additional fields to the embed
-        const embedFields = [
-          { name: '👤 User', value: `${targetUser.tag} (${targetUser.id})`, inline: true },
-          { name: '🛡️ Moderator', value: `${interaction.user.tag}`, inline: true },
-          { name: '⚠️ Remaining Warnings', value: `${remainingActiveWarnings}`, inline: true },
-          { name: '🕒 Time', value: formattedTime, inline: false }
-        ];
-
-        // Add case number if moderation case was created
-        if (moderationCase) {
-          embedFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
-        }
-
-        successEmbed.addFields(embedFields);
+        // Create a proper moderation embed that matches all other moderation commands
+        const moderationEmbed = createModerationEmbed({
+          action: 'Warning Removed',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          case_number: moderationCase?.case_number,
+          issuedAt: warningToRemove.created_at,
+          removedAt: new Date().toISOString(),
+          removedBy: interaction.user.username,
+          additionalFields: [
+            { name: '🏠 Server', value: guild.name, inline: true },
+            { name: '⚠️ Active Warnings', value: remainingActiveWarnings.toString(), inline: true }
+          ]
+        });
         
         try {
-          await modalSubmission.editReply({ embeds: [successEmbed] });
+          await modalSubmission.editReply({ embeds: [moderationEmbed] });
         } catch (editError: any) {
           if (editError.code === 10062 || editError.code === 10008) {
             console.log('[Remove Warning] Modal interaction expired during success message');
@@ -173,27 +161,24 @@ module.exports = {
           return;
         }
         
-        // Try to DM the user about the removed warning
+        // Try to DM the user about the removed warning with consistent moderation embed style
         try {
-          const userEmbed = createSuccessEmbed(
-            'Warning Removed',
-            `A warning has been removed from your account in **${guild.name}**.\n\n**Reason:** ${reason}`
-          );
+          const userModerationEmbed = createModerationEmbed({
+            action: 'Warning Removed',
+            target: targetUser,
+            moderator: interaction.user,
+            reason: reason,
+            case_number: moderationCase?.case_number,
+            issuedAt: warningToRemove.created_at,
+            removedAt: new Date().toISOString(),
+            removedBy: interaction.user.username,
+            additionalFields: [
+              { name: '🏠 Server', value: guild.name, inline: true },
+              { name: '⚠️ Active Warnings', value: remainingActiveWarnings.toString(), inline: true }
+            ]
+          });
           
-          const userEmbedFields = [
-            { name: '🛡️ Moderator', value: `${interaction.user.tag}`, inline: true },
-            { name: '⚠️ Remaining Warnings', value: `${remainingActiveWarnings}`, inline: true },
-            { name: '🕒 Time', value: formattedTime, inline: true }
-          ];
-
-          // Add case number if available
-          if (moderationCase) {
-            userEmbedFields.unshift({ name: '📋 Case Number', value: `#${moderationCase.case_number}`, inline: true });
-          }
-
-          userEmbed.addFields(userEmbedFields);
-          
-          await targetUser.send({ embeds: [userEmbed] });
+          await targetUser.send({ embeds: [userModerationEmbed] });
           console.log(`Successfully sent warning removal DM to ${targetUser.tag}`);
         } catch (error) {
           // Couldn't DM the user
@@ -242,5 +227,4 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to remove the warning. Please try again later.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  },
-};
+}

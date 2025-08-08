@@ -7,7 +7,7 @@ export interface Integration {
   id?: number;
   guild_id: string;
   name: string;
-  integration_type: 'webhook' | 'api' | 'rss' | 'github' | 'twitter' | 'twitch' | 'youtube' | 'minecraft' | 'steam' | 'custom';
+  integration_type: 'webhook' | 'rest_api' | 'rss' | 'github' | 'weather' | 'custom';
   provider: string;
   config: any;
   credentials_encrypted?: string;

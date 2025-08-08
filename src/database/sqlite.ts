@@ -70,6 +70,10 @@ function createIndexes(): void {
     db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_guild_status ON tickets(guild_id, status)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(guild_id, ticket_number)');
+    
+    // Ticket transcripts indexes
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_ticket_id ON ticket_transcripts(ticket_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_created_at ON ticket_transcripts(created_at)');
 
     // Server logs indexes
     db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_guild_id ON server_logs(guild_id)');
@@ -293,6 +297,14 @@ function initDatabase() {
       )
     `);
     
+    // Create unique index for case numbers (partial index where case_number IS NOT NULL)
+    try {
+      db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_warnings_unique_case_number ON warnings(guild_id, case_number) WHERE case_number IS NOT NULL');
+    } catch (error) {
+      // Index might already exist or partial indexes not supported in older SQLite
+      logError('SQLite', `Could not create partial unique index: ${error}`);
+    }
+    
     // Check if case_number column exists, add it if it doesn't
     try {
       const hasColumn = db.prepare("PRAGMA table_info(warnings)").all()
@@ -321,7 +333,8 @@ function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         closed_at TIMESTAMP,
         closed_by TEXT,
-        last_message_at TIMESTAMP
+        last_message_at TIMESTAMP,
+        UNIQUE(guild_id, ticket_number)
       )
     `);
     
@@ -351,7 +364,7 @@ function initDatabase() {
         options TEXT,
         channel_id TEXT,
         success INTEGER NOT NULL,
-        error TEXT,
+        error_message TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

@@ -390,10 +390,6 @@ async function applyTemplate(
   try {
     // Different actions based on template type
     switch (templateType) {
-      case 'rules':
-        // Apply rules template
-        await applyRulesTemplate(interaction, templateId);
-        break;
       case 'welcome':
         // Apply welcome template
         await applyWelcomeTemplate(interaction, templateId);
@@ -427,71 +423,6 @@ async function applyTemplate(
   }
 }
 
-// Apply rules template
-async function applyRulesTemplate(
-  interaction: ChatInputCommandInteraction,
-  templateId: string
-) {
-  const { guild } = interaction;
-  
-  if (!guild) return;
-  
-  // Get the template
-  const template = (await getGuildTemplates(guild.id, 'rules')).find(t => t.id === templateId);
-  
-  if (!template) {
-    throw new Error('Template not found');
-  }
-  
-  // Get or create rules channel
-  const settings = await settingsManager.getSettings(guild.id);
-  let rulesChannel = settings.rules_channel_id ? 
-    guild.channels.cache.get(settings.rules_channel_id) : null;
-  
-  if (!rulesChannel) {
-    // Create rules channel if it doesn't exist
-    rulesChannel = await guild.channels.create({
-      name: '📜-rules',
-      topic: 'Server Rules',
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-          deny: [PermissionFlagsBits.SendMessages]
-        }
-      ]
-    });
-    
-    // Update settings with new channel
-    await settingsManager.setSetting(guild.id, 'rules_channel_id', rulesChannel.id);
-  }
-  
-  // Make sure the channel is a text channel
-  if (rulesChannel && rulesChannel.isTextBased()) {
-    // Send rules message
-    if (template.embed) {
-      const rulesEmbed = new EmbedBuilder()
-        .setTitle(template.embedTitle || 'Server Rules')
-        .setDescription(template.content.replace(/{server}/g, guild.name))
-        .setColor(template.embedColor ? 
-          (typeof template.embedColor === 'string' ? parseInt(template.embedColor, 16) : template.embedColor) : 
-          Colors.Blue);
-      
-      if (template.embedFooter) {
-        rulesEmbed.setFooter({ 
-          text: template.embedFooter.replace(/{server}/g, guild.name),
-          iconURL: guild.iconURL() || undefined
-        });
-      }
-      
-      await rulesChannel.send({ embeds: [rulesEmbed] });
-    } else {
-      await rulesChannel.send({ 
-        content: template.content.replace(/{server}/g, guild.name)
-      });
-    }
-  }
-}
 
 // Apply welcome template
 async function applyWelcomeTemplate(
@@ -628,7 +559,6 @@ async function applyFaqTemplate(
 // Helper functions
 function getEmojiForType(type: TemplateType): string {
   switch (type) {
-    case 'rules': return '📜';
     case 'welcome': return '👋';
     case 'ticket': return '🎫';
     case 'faq': return '❓';
@@ -638,7 +568,6 @@ function getEmojiForType(type: TemplateType): string {
 
 function getNameForType(type: TemplateType): string {
   switch (type) {
-    case 'rules': return 'Rules';
     case 'welcome': return 'Welcome Message';
     case 'ticket': return 'Ticket Panel';
     case 'faq': return 'FAQ';

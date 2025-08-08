@@ -97,7 +97,12 @@ export interface ServerSettings {
 export const WarningService = {
   async getWarnings(guildId: string | null, userId?: string, active?: boolean): Promise<{data: Warning[], error: any}> {
     try {
-      console.log(`🔍 WarningService.getWarnings called with: guildId=${guildId}, userId=${userId}, active=${active}`);
+      // Clean parameters to handle string "undefined" values
+      const cleanGuildId = guildId && guildId !== 'undefined' && guildId !== 'null' ? guildId : null;
+      const cleanUserId = userId && userId !== 'undefined' && userId !== 'null' && userId.trim() !== '' ? userId : undefined;
+      const cleanActive = active !== undefined && active !== null && String(active) !== 'undefined' ? active : undefined;
+      
+      console.log(`🔍 WarningService.getWarnings called with: guildId=${cleanGuildId}, userId=${cleanUserId}, active=${cleanActive}`);
       
       // Check if users table exists
       const usersTableExists = db.prepare(`
@@ -122,19 +127,19 @@ export const WarningService = {
       const conditions: string[] = [];
       
       // Add guild filter if guildId is provided
-      if (guildId) {
+      if (cleanGuildId) {
         conditions.push('guild_id = ?');
-        params.push(guildId);
+        params.push(cleanGuildId);
       }
       
-      if (userId) {
+      if (cleanUserId) {
         conditions.push('user_id = ?');
-        params.push(userId);
+        params.push(cleanUserId);
       }
       
-      if (active !== undefined) {
+      if (cleanActive !== undefined) {
         conditions.push('active = ?');
-        params.push(active ? 1 : 0);
+        params.push(cleanActive ? 1 : 0);
       }
       
       // Add WHERE clause if we have conditions
@@ -329,7 +334,7 @@ export const TicketService = {
       }
       
       // Order by status priority (open first, then in_progress, on_hold, closed, deleted)
-      // then by ticket number descending for newest first
+      // then by last activity (most recent activity first)
       query += ` ORDER BY 
         CASE 
           WHEN status = 'open' THEN 1
@@ -339,7 +344,7 @@ export const TicketService = {
           WHEN status = 'deleted' THEN 5
           ELSE 6
         END,
-        ticket_number DESC`;
+        COALESCE(last_activity_at, last_message_at, updated_at, created_at) DESC`;
       
       const stmt = db.prepare(query);
       const tickets = stmt.all(...params) as Ticket[];

@@ -327,7 +327,7 @@ export class AutomodPunishmentHandler {
         target: user,
         moderator: automodUser,
         reason: rule.punishment_reason,
-        caseNumber: caseNumber,
+        case_number: caseNumber,
         additionalFields: additionalFields
       });
 

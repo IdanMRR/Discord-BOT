@@ -66,6 +66,8 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
     const limit = parseInt(req.query.limit as string) || 25;
     const status = req.query.status as string;
     
+    logInfo('Tickets API', `Request params: guildId=${guildId}, page=${page}, limit=${limit}, status=${status}`);
+    
     // Check if user has server permissions
     if (!req.user?.serverPermissions) {
       sendJsonResponse(res, 403, {
@@ -96,6 +98,7 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
     let targetGuildId: string | null = null;
     if (guildId) {
       if (!accessibleServerIds.includes(guildId as string)) {
+        logError('Tickets API', `User doesn't have access to server ${guildId}. Accessible servers: ${accessibleServerIds.join(', ')}`);
         sendJsonResponse(res, 403, {
           success: false,
           error: 'No permission to access this server'
@@ -103,6 +106,9 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
         return;
       }
       targetGuildId = guildId as string;
+      logInfo('Tickets API', `Filtering tickets for specific server: ${targetGuildId}`);
+    } else {
+      logInfo('Tickets API', `No guildId specified, showing tickets from all accessible servers: ${accessibleServerIds.join(', ')}`);
     }
 
     try {
@@ -113,10 +119,20 @@ const getTickets: express.RequestHandler = async (req, res, next) => {
         req.query.userId as string
       );
 
+      logInfo('Tickets API', `TicketService returned ${tickets.data.length} tickets`);
+      
       // Filter tickets to only include those from accessible servers
       const filteredTickets = tickets.data.filter(ticket => 
         accessibleServerIds.includes(ticket.guild_id)
       );
+      
+      logInfo('Tickets API', `After accessibility filter: ${filteredTickets.length} tickets`);
+      
+      // Log first few ticket guild_ids for debugging
+      if (filteredTickets.length > 0) {
+        const guildIds = [...new Set(filteredTickets.map(t => t.guild_id))];
+        logInfo('Tickets API', `Tickets from servers: ${guildIds.join(', ')}`);
+      }
 
       // Fetch usernames and server names for tickets
       const ticketsWithUsernames = await Promise.all(filteredTickets.map(async (ticket) => {
@@ -259,24 +275,30 @@ const closeTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         logInfo('API', `Closed ticket #${ticket.ticket_number} via API request`);
         
-        // Enhanced dashboard activity logging with Discord usernames
-        try {
-          // Get admin username from Discord
-          let adminUsername = 'Unknown Admin';
-          const adminUserId = req.user?.userId;
-          if (adminUserId) {
-            try {
-              const client = getDiscordClient();
-              if (client && isClientReady()) {
-                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
-                if (adminUser) {
-                  adminUsername = adminUser.username;
-                }
+        // Get admin username - prioritize dashboard username, fallback to Discord username
+        let adminUsername = 'Unknown Admin';
+        const adminUserId = req.user?.userId;
+        
+        if (req.user?.username) {
+          // Use dashboard username if available
+          adminUsername = req.user.username;
+        } else if (adminUserId) {
+          // Fallback to Discord username
+          try {
+            const client = getDiscordClient();
+            if (client && isClientReady()) {
+              const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+              if (adminUser) {
+                adminUsername = adminUser.username;
               }
-            } catch (fetchError) {
-              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
             }
+          } catch (fetchError) {
+            adminUsername = `Admin ${adminUserId.slice(-4)}`;
           }
+        }
+        
+        // Enhanced dashboard activity logging
+        try {
 
           await DashboardLogsService.logActivity({
             user_id: adminUserId || 'unknown',
@@ -295,8 +317,14 @@ const closeTicket: express.RequestHandler = async (req, res, next) => {
           logError('API', `Error logging ticket close activity: ${logErr}`);
         }
         
+        // Get the user who closed the ticket
+        const closedByInfo = { 
+          id: req.user?.userId, 
+          username: adminUsername || 'Unknown Admin' 
+        };
+        
         // Send notification in Discord channel and log channel
-        await sendTicketNotification(ticket, 'closed', reason);
+        await sendTicketNotification(ticket, 'closed', reason, closedByInfo);
         
         sendJsonResponse(res, 200, { success: true, message: 'Ticket closed successfully' });
       } else {
@@ -348,24 +376,30 @@ const reopenTicket: express.RequestHandler = async (req, res, next) => {
         // Log the action
         logInfo('API', `Ticket #${ticket.ticket_number} reopened via API. Reason: ${reason || 'Not specified'}`);
         
-        // Enhanced dashboard activity logging with Discord usernames
-        try {
-          // Get admin username from Discord
-          let adminUsername = 'Unknown Admin';
-          const adminUserId = req.user?.userId;
-          if (adminUserId) {
-            try {
-              const client = getDiscordClient();
-              if (client && isClientReady()) {
-                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
-                if (adminUser) {
-                  adminUsername = adminUser.username;
-                }
+        // Get admin username - prioritize dashboard username, fallback to Discord username
+        let adminUsername = 'Unknown Admin';
+        const adminUserId = req.user?.userId;
+        
+        if (req.user?.username) {
+          // Use dashboard username if available
+          adminUsername = req.user.username;
+        } else if (adminUserId) {
+          // Fallback to Discord username
+          try {
+            const client = getDiscordClient();
+            if (client && isClientReady()) {
+              const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+              if (adminUser) {
+                adminUsername = adminUser.username;
               }
-            } catch (fetchError) {
-              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
             }
+          } catch (fetchError) {
+            adminUsername = `Admin ${adminUserId.slice(-4)}`;
           }
+        }
+        
+        // Enhanced dashboard activity logging
+        try {
 
           await DashboardLogsService.logActivity({
             user_id: adminUserId || 'unknown',
@@ -384,8 +418,14 @@ const reopenTicket: express.RequestHandler = async (req, res, next) => {
           logError('API', `Error logging ticket reopen activity: ${logErr}`);
         }
         
+        // Get the user who reopened the ticket
+        const reopenedByInfo = { 
+          id: req.user?.userId, 
+          username: adminUsername || 'Unknown Admin' 
+        };
+        
         // Send notification in Discord channel and log channel
-        await sendTicketNotification(ticket, 'reopened', reason);
+        await sendTicketNotification(ticket, 'reopened', reason, reopenedByInfo);
         
         // Return success response
         sendJsonResponse(res, 200, { success: true, message: 'Ticket reopened successfully' });
@@ -469,24 +509,30 @@ const deleteTicket: express.RequestHandler = async (req, res, next) => {
       if (result.changes > 0) {
         logInfo('API', `Deleted ticket #${ticket.ticket_number} via API request`);
         
-        // Enhanced dashboard activity logging with Discord usernames
-        try {
-          // Get admin username from Discord
-          let adminUsername = 'Unknown Admin';
-          const adminUserId = req.user?.userId;
-          if (adminUserId) {
-            try {
-              const client = getDiscordClient();
-              if (client && isClientReady()) {
-                const adminUser = await client.users.fetch(adminUserId).catch(() => null);
-                if (adminUser) {
-                  adminUsername = adminUser.username;
-                }
+        // Get admin username - prioritize dashboard username, fallback to Discord username
+        let adminUsername = 'Unknown Admin';
+        const adminUserId = req.user?.userId;
+        
+        if (req.user?.username) {
+          // Use dashboard username if available
+          adminUsername = req.user.username;
+        } else if (adminUserId) {
+          // Fallback to Discord username
+          try {
+            const client = getDiscordClient();
+            if (client && isClientReady()) {
+              const adminUser = await client.users.fetch(adminUserId).catch(() => null);
+              if (adminUser) {
+                adminUsername = adminUser.username;
               }
-            } catch (fetchError) {
-              adminUsername = req.user?.username || `Admin ${adminUserId.slice(-4)}`;
             }
+          } catch (fetchError) {
+            adminUsername = `Admin ${adminUserId.slice(-4)}`;
           }
+        }
+        
+        // Enhanced dashboard activity logging
+        try {
 
           await DashboardLogsService.logActivity({
             user_id: adminUserId || 'unknown',
@@ -505,8 +551,14 @@ const deleteTicket: express.RequestHandler = async (req, res, next) => {
           logError('API', `Error logging ticket delete activity: ${logErr}`);
         }
         
+        // Get the user who deleted the ticket
+        const deletedByInfo = { 
+          id: req.user?.userId, 
+          username: adminUsername || 'Unknown Admin' 
+        };
+        
         // Send notification in log channel (don't try to send to the ticket channel as it's being deleted)
-        await sendTicketNotification(ticket, 'deleted', reason);
+        await sendTicketNotification(ticket, 'deleted', reason, deletedByInfo);
         
         sendJsonResponse(res, 200, { success: true });
       } else {

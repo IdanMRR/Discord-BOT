@@ -218,7 +218,7 @@ router.get('/stats', (req, res) => {
     // Get commands used count
     let commandsUsed = 0;
     try {
-      const commandsResult = db.prepare("SELECT COUNT(*) as count FROM command_logs").get();
+      const commandsResult = db.prepare("SELECT COUNT(*) as count FROM command_logs WHERE command NOT IN ('kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban')").get();
       commandsUsed = commandsResult?.count || 0;
     } catch (e) {
       // Silent fail for missing tables
@@ -1034,7 +1034,8 @@ router.get('/recent-activity', async (req, res) => {
           created_at as timestamp,
           guild_id as serverId
         FROM command_logs 
-        ${guild_id ? 'WHERE guild_id = ?' : ''}
+        WHERE command NOT IN ('kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban')
+        ${guild_id ? 'AND guild_id = ?' : ''}
         ORDER BY created_at DESC 
         LIMIT 5
       `;
@@ -1209,11 +1210,12 @@ router.get('/command-logs', async (req, res) => {
         error,
         created_at
       FROM command_logs
+      WHERE command NOT IN ('kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban')
     `;
     
     const params = [];
     if (guild_id) {
-      query += ' WHERE guild_id = ?';
+      query += ' AND guild_id = ?';
       params.push(guild_id);
     }
     
@@ -1288,6 +1290,15 @@ router.post('/command-logs', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: guild_id, user_id, command'
+      });
+    }
+    
+    // Skip logging for moderation commands - they have their own logging system
+    const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban'];
+    if (moderationCommands.includes(command)) {
+      return res.json({
+        success: true,
+        message: 'Moderation commands are not logged in general command logs'
       });
     }
     
@@ -1455,7 +1466,7 @@ router.get('/mod-logs', async (req, res) => {
           created_at,
           'moderation' as log_type
         FROM server_logs
-        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
+        WHERE action_type IN ('memberBan', 'memberUnban', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
       `;
       
       const params = [];
@@ -1479,6 +1490,9 @@ router.get('/mod-logs', async (req, res) => {
           case 'memberBan':
             log.action = 'Ban';
             break;
+          case 'memberUnban':
+            log.action = 'Unban';
+            break;
           case 'memberKick':
             log.action = 'Kick';
             break;
@@ -1498,6 +1512,10 @@ router.get('/mod-logs', async (req, res) => {
           case 'memberBan':
             actionEmoji = '🔨';
             moderationCaseType = 'Ban';
+            break;
+          case 'memberUnban':
+            actionEmoji = '🔓';
+            moderationCaseType = 'Unban';
             break;
           case 'memberKick':
             actionEmoji = '👢';
@@ -2266,7 +2284,7 @@ router.get('/test-command-log', async (req, res) => {
       return res.json({ error: 'Database not available' });
     }
     
-    const log = db.prepare('SELECT * FROM command_logs ORDER BY created_at DESC LIMIT 1').get();
+    const log = db.prepare('SELECT * FROM command_logs WHERE command NOT IN (\'kick\', \'ban\', \'timeout\', \'warn\', \'removewarn\', \'mute\', \'unmute\', \'dm\', \'unban\') ORDER BY created_at DESC LIMIT 1').get();
     
     if (!log) {
       return res.json({ error: 'No command logs found' });
@@ -2378,11 +2396,12 @@ router.get('/logs', async (req, res) => {
           created_at,
           success
         FROM command_logs
+        WHERE command NOT IN ('kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban')
       `;
       
       const commandParams = [];
       if (guild_id) {
-        commandQuery += ' WHERE guild_id = ?';
+        commandQuery += ' AND guild_id = ?';
         commandParams.push(guild_id);
       }
       
@@ -2436,7 +2455,7 @@ router.get('/logs', async (req, res) => {
           created_at,
           guild_id
         FROM server_logs
-        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
+        WHERE action_type IN ('memberBan', 'memberUnban', 'memberKick', 'memberTimeout', 'memberWarning', 'warningRemoved')
       `;
       
       const moderationParams = [];
@@ -2532,6 +2551,7 @@ router.get('/logs', async (req, res) => {
               emoji = '🔨';
               break;
             case 'unban':
+            case 'memberUnban':
               actionDisplay = 'Unban';
               emoji = '🔓';
               break;
@@ -2572,6 +2592,7 @@ router.get('/logs', async (req, res) => {
               moderationCaseType = 'Ban';
               break;
             case 'unban':
+            case 'memberUnban':
               moderationCaseType = 'Unban';
               break;
             case 'kick':
@@ -2686,11 +2707,12 @@ router.get('/all-logs', async (req, res) => {
           guild_id,
           success
         FROM command_logs
+        WHERE command NOT IN ('kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban')
       `;
       
       const commandParams = [];
       if (guild_id) {
-        commandQuery += ' WHERE guild_id = ?';
+        commandQuery += ' AND guild_id = ?';
         commandParams.push(guild_id);
       }
       
@@ -2735,7 +2757,7 @@ router.get('/all-logs', async (req, res) => {
           created_at,
           guild_id
         FROM server_logs
-        WHERE action_type IN ('memberBan', 'memberKick', 'memberTimeout', 'warningRemoved')
+        WHERE action_type IN ('memberBan', 'memberUnban', 'memberKick', 'memberTimeout', 'warningRemoved')
       `;
       
       const modParams = [];
@@ -2794,6 +2816,9 @@ router.get('/all-logs', async (req, res) => {
         switch(log.action) {
           case 'memberBan':
             log.action = 'Ban';
+            break;
+          case 'memberUnban':
+            log.action = 'Unban';
             break;
           case 'memberKick':
             log.action = 'Kick';
@@ -3037,6 +3062,7 @@ router.get('/all-logs', async (req, res) => {
           'dm' as log_type,
           sender_id as user_id,
           recipient_id,
+          content,
           command,
           success,
           error,
@@ -3058,8 +3084,10 @@ router.get('/all-logs', async (req, res) => {
       for (const log of dmLogs) {
         log.userName = await getUserNameAsync(log.user_id);
         const recipientName = await getUserNameAsync(log.recipient_id);
+        log.action = 'dm'; // Set action for consistent formatting
         
-        log.details = `💬 DM ${log.success ? 'sent' : 'failed'} | From: ${log.userName} | To: ${recipientName} | Command: ${log.command || 'Manual'}${log.error ? ` | Error: ${log.error}` : ''}`;
+        const messagePreview = log.content && log.content.length > 100 ? log.content.substring(0, 97) + '...' : log.content || 'No content';
+        log.details = `💬 From: ${log.userName} | To: ${recipientName} | "${messagePreview}"${log.error ? ` | Error: ${log.error}` : ''}`;
         
         // Convert to Israeli time (+3 hours) and format cleanly
         const israeliTime = new Date(new Date(log.created_at).getTime() + (3 * 60 * 60 * 1000));

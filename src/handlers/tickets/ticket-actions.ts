@@ -1,4 +1,4 @@
-import { ButtonInteraction, TextChannel, EmbedBuilder, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder } from 'discord.js';
+import { ButtonInteraction, TextChannel, EmbedBuilder, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
 import { Colors } from '../../utils/embeds';
@@ -20,6 +20,23 @@ function wasActionRecentlyPerformed(key: string, action: string, timeWindowMs: n
   // Mark this action as performed
   recentActions.set(actionKey, Date.now());
   return false;
+}
+
+// Helper function to validate reason input
+function validateReason(reason: string): { isValid: boolean; message?: string } {
+  if (!reason || reason.trim().length === 0) {
+    return { isValid: false, message: 'Reason cannot be empty. Please provide a valid reason.' };
+  }
+  
+  if (reason.trim().length < 3) {
+    return { isValid: false, message: 'Reason must be at least 3 characters long.' };
+  }
+  
+  if (reason.length > 1000) {
+    return { isValid: false, message: 'Reason cannot exceed 1000 characters.' };
+  }
+  
+  return { isValid: true };
 }
 
 /**
@@ -70,8 +87,25 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
     // Generate and send the transcript using our function - specify that we're deleting
     await saveAndSendTranscript(channel, interaction.user, 'Ticket deleted by staff', true);
     
-    // We no longer send a notification to the staff member who deleted the ticket
-    // as per user requirements
+    // Send a deletion embed to the channel before it's deleted
+    try {
+      const deleteEmbed = new EmbedBuilder()
+        .setColor(0x5865F2) // Discord blue/purple color for delete
+        .setTitle('🗑️ Ticket Scheduled for Deletion')
+        .setDescription(`This ticket is being permanently deleted by <@${interaction.user.id}>.`)
+        .addFields([
+          { name: '📝 Reason', value: 'Staff Decision', inline: false },
+          { name: '🎫 Ticket ID', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+          { name: '👤 Deleted By', value: `<@${interaction.user.id}>`, inline: true },
+          { name: '⚠️ Warning', value: 'This channel will be deleted in a few seconds. This action cannot be undone.', inline: false }
+        ])
+        .setFooter({ text: `Deleted via Discord • Made by Soggra` })
+        .setTimestamp();
+      
+      await channel.send({ embeds: [deleteEmbed] });
+    } catch (embedError) {
+      logError('Ticket Delete', `Error sending deletion embed: ${embedError}`);
+    }
     
     // Log the ticket deletion
     if (!wasActionRecentlyPerformed(actionKey, 'log_delete')) {
@@ -93,11 +127,11 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
       } catch (deleteError) {
         logError('Ticket Delete', `Error deleting channel: ${deleteError}`);
       }
-    }, 2000);
+    }, 3000); // Increased to 3 seconds to ensure embed is visible
     
     // Send success message
     await interaction.editReply({
-      content: '✅ Ticket deleted successfully. The channel will be removed shortly.'
+      content: '✅ Ticket will be permanently deleted. Transcript has been sent to the user and logs.'
     });
     
   } catch (error) {
@@ -115,9 +149,11 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
 }
 
 /**
- * Handle the ticket reopening process
+ * Handle the ticket reopening process with reason modal
  */
 export async function handleReopenTicket(interaction: ButtonInteraction) {
+  const channelKey = `${interaction.channel?.id}_reopen`;
+  
   try {
     // Check if interaction has already been replied to
     if (interaction.replied) {
@@ -125,12 +161,21 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
       return;
     }
 
-    // The main handler already deferred this interaction
+    // Check for recent action to prevent spam (per-channel, not per-user)
+    if (wasActionRecentlyPerformed(channelKey, 'reopen', 60000)) { // 1 minute cooldown
+      await interaction.reply({
+        content: '⏳ A reopen request is already being processed for this ticket. Please wait...',
+        flags: MessageFlags.Ephemeral
+      });
+      return;
+    }
+
     const channel = interaction.channel as TextChannel;
     
     if (!channel || channel.type !== ChannelType.GuildText) {
-      await interaction.editReply({
-        content: 'This action can only be performed in a ticket channel.'
+      await interaction.reply({
+        content: 'This action can only be performed in a ticket channel.',
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
@@ -158,20 +203,122 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     } | undefined;
     
     if (!ticket) {
-      await interaction.editReply({
-        content: 'No closed ticket found in this channel.'
+      await interaction.reply({
+        content: 'No closed ticket found in this channel.',
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
     
     // Check if the user is the ticket creator or has staff permissions
     if (ticket.user_id !== interaction.user.id && !isStaff) {
-      await interaction.editReply({
-        content: 'Only the ticket creator or server staff can reopen this ticket.'
+      await interaction.reply({
+        content: 'Only the ticket creator or server staff can reopen this ticket.',
+        flags: MessageFlags.Ephemeral
       });
       return;
     }
+
+    // Create modal for reopen reason
+    const modal = new ModalBuilder()
+      .setCustomId(`reopen-modal-${ticket.ticket_number}-${Date.now()}`)
+      .setTitle(`Reopen Ticket #${ticket.ticket_number.toString().padStart(4, '0')}`);
     
+    // Create the reason input field
+    const reasonInput = new TextInputBuilder()
+      .setCustomId('reopen-reason')
+      .setLabel('Reason for Reopening')
+      .setPlaceholder('Please provide a reason for reopening this ticket...')
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true)
+      .setMaxLength(1000)
+      .setMinLength(3);
+    
+    // Create action row to hold the input
+    const reasonRow = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
+    modal.addComponents(reasonRow);
+    
+    // Show the modal directly
+    await interaction.showModal(modal);
+    
+    // Wait for modal submission
+    const modalFilter = (i: ModalSubmitInteraction) => 
+      i.customId.startsWith(`reopen-modal-${ticket.ticket_number}`) && i.user.id === interaction.user.id;
+    
+    try {
+      const modalSubmission = await interaction.awaitModalSubmit({ filter: modalFilter, time: 300000 });
+      
+      // Get and validate the reason
+      const reason = modalSubmission.fields.getTextInputValue('reopen-reason');
+      const validation = validateReason(reason);
+      
+      if (!validation.isValid) {
+        try {
+          await modalSubmission.reply({
+            content: validation.message!,
+            flags: MessageFlags.Ephemeral
+          });
+        } catch (replyError: any) {
+          logError('Ticket Reopen', `Could not send validation error: ${replyError}`);
+        }
+        return;
+      }
+
+      // Defer the modal submission
+      try {
+        await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+      } catch (deferError: any) {
+        logError('Ticket Reopen', `Could not defer modal submission: ${deferError}`);
+        // Try to reply instead
+        try {
+          await modalSubmission.reply({
+            content: '🔄 Processing ticket reopen...',
+            flags: MessageFlags.Ephemeral
+          });
+        } catch (replyError: any) {
+          logError('Ticket Reopen', `Could not reply to modal submission: ${replyError}`);
+          return;
+        }
+      }
+      
+      // Process the reopen with the provided reason
+      await processTicketReopen(ticket, channel, interaction.user.id, reason.trim(), modalSubmission);
+      
+    } catch (error: any) {
+      logError('Ticket Reopen', `Modal timeout or error: ${error}`);
+      
+      // Clean up tracking set
+      recentActions.delete(channelKey);
+      
+      // Check if it's a timeout error
+      if (error.code === 'InteractionCollectorError' || error.message?.includes('time')) {
+        logInfo('Ticket Reopen', `Modal timed out for ${interaction.user.tag} - no action taken`);
+      } else if (error.code === 10062) {
+        logError('Ticket Reopen', `Unknown interaction error - modal may have expired`);
+      } else {
+        logError('Ticket Reopen', `Unexpected modal error: ${error.message}`);
+      }
+    }
+    
+  } catch (error) {
+    logError('Ticket Reopen', `Error handling reopen ticket: ${error}`);
+    
+    try {
+      await interaction.editReply({
+        content: 'An error occurred while reopening the ticket. Please try again later or contact a staff member.',
+        components: []
+      });
+    } catch (replyError) {
+      logError('Ticket Reopen', `Failed to send error message: ${replyError}`);
+    }
+  }
+}
+
+/**
+ * Process the actual ticket reopening with validated reason
+ */
+async function processTicketReopen(ticket: any, channel: TextChannel, userId: string, reason: string, interaction: ModalSubmitInteraction) {
+  try {
     // Update the ticket status in the database
     const updateStmt = db.prepare(`
       UPDATE tickets SET status = 'open', closed_at = NULL, closed_by = NULL WHERE channel_id = ?
@@ -188,16 +335,20 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     const formattedTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     
-    // Create a reopened ticket embed
+    // Create a reopened ticket embed (matching website style)
     const reopenedEmbed = new EmbedBuilder()
-      .setColor('#57F287') // Green color like in the screenshot
+      .setColor(0x00ff00) // Green color like website
       .setTitle('🔓 Ticket Reopened')
-      .setDescription(`This ticket has been reopened by ${interaction.user.tag}.`)
+      .setDescription(`This ticket has been reopened by <@${userId}>.`)
       .addFields([
-        { name: '📝 Reason', value: 'User Request', inline: false },
-        { name: '⚙️ Actions', value: 'You can now continue the conversation in this ticket.', inline: false }
+        { name: '📝 Reason', value: reason, inline: false },
+        { name: '🎫 Ticket ID', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+        { name: '👤 Reopened By', value: `<@${userId}>`, inline: true },
+        { name: '📅 Reopened At', value: formattedDate, inline: true },
+        { name: '📊 Status', value: 'This ticket is now **OPEN** and accepting messages.', inline: false },
+        { name: '⚙️ Actions', value: 'You can continue the conversation. The ticket can be closed again when the issue is resolved.', inline: false }
       ])
-      .setFooter({ text: `Made by Soggra • Ticket #${ticket.ticket_number.toString().padStart(4, '0')} • Today at ${formattedTime}` })
+      .setFooter({ text: `Reopened via Discord • Made by Soggra` })
       .setTimestamp();
     
     // Send the reopened embed to the channel
@@ -205,29 +356,51 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
     
     // Log ticket reopen event to database and channel
     await logTicketEvent({
-      guildId: interaction.guildId!,
+      guildId: channel.guildId,
       actionType: 'ticketReopen',
-      userId: interaction.user.id,
+      userId: userId,
       channelId: channel.id,
       ticketNumber: ticket.ticket_number
     });
     
-    // Reply to the user
+    // Reply to the user with notification
     await interaction.editReply({
-      content: `✅ Ticket #${ticket.ticket_number.toString().padStart(4, '0')} has been successfully reopened.`
+      content: `✅ **Ticket Reopened Successfully!**\n\n🎫 **Ticket ID:** #${ticket.ticket_number.toString().padStart(4, '0')}\n📝 **Reason:** ${reason}\n👤 **Reopened by:** ${interaction.user.username}\n\n🔓 The ticket is now **OPEN** and accepting messages.`
     });
+    
+    // Also send a channel notification
+    try {
+      const notificationEmbed = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .setTitle('✅ Ticket Action Completed')
+        .setDescription(`Ticket has been reopened by ${interaction.user.username}`)
+        .addFields([
+          { name: '📝 Reason', value: reason, inline: false },
+          { name: '⏰ Reopened At', value: new Date().toLocaleString(), inline: true }
+        ])
+        .setFooter({ text: 'Ticket System' })
+        .setTimestamp();
+        
+      await channel.send({ 
+        content: `🔔 **Notification:** <@${ticket.user_id}>`,
+        embeds: [notificationEmbed] 
+      });
+    } catch (notifError) {
+      logError('Ticket Reopen', `Could not send channel notification: ${notifError}`);
+    }
     
     // Try to send a DM to the ticket creator
     try {
-      const ticketCreator = await interaction.client.users.fetch(ticket.user_id);
+      const ticketCreator = await channel.client.users.fetch(ticket.user_id);
       
-      if (ticketCreator && ticketCreator.id !== interaction.user.id) {
+      if (ticketCreator && ticketCreator.id !== userId) {
         const dmEmbed = new EmbedBuilder()
           .setColor(Colors.SUCCESS)
           .setTitle(`🔓 Your Ticket Has Been Reopened | #${ticket.ticket_number.toString().padStart(4, '0')}`)
-          .setDescription(`Your ticket in ${interaction.guild!.name} has been reopened by ${interaction.user.username}.`)
+          .setDescription(`Your ticket in ${channel.guild.name} has been reopened.`)
           .addFields([
-            { name: '📋 Ticket Number', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+            { name: '📝 Reason', value: reason, inline: false },
+            { name: '👤 Reopened By', value: interaction.user.username, inline: true },
             { name: '🕒 Reopened On', value: formattedDate, inline: true }
           ])
           .setFooter({ text: `Made by Soggra. • ${formattedTime}` });
@@ -235,21 +408,15 @@ export async function handleReopenTicket(interaction: ButtonInteraction) {
         await ticketCreator.send({ embeds: [dmEmbed] });
       }
     } catch (error) {
-      console.error('Could not send DM to ticket creator:', error);
+      logError('Ticket Reopen', `Could not send DM to ticket creator: ${error}`);
     }
     
-    return true;
+    logInfo('Ticket Reopen', `Ticket #${ticket.ticket_number} reopened by ${interaction.user.tag} with reason: ${reason}`);
+    
   } catch (error) {
-    console.error('Error reopening ticket:', error);
-    
-    try {
-      await interaction.editReply({
-        content: 'An error occurred while reopening the ticket. Please try again later or contact a staff member.'
-      });
-    } catch (replyError) {
-      console.error('Failed to send error message:', replyError);
-    }
-    
-    return false;
+    logError('Ticket Reopen', `Error processing reopen: ${error}`);
+    await interaction.editReply({
+      content: '❌ An error occurred while processing the reopen. Please try again later.'
+    });
   }
 }

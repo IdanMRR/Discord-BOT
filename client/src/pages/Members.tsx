@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import PermissionGuard from '../components/common/PermissionGuard';
 import Pagination from '../components/common/Pagination';
 import DMModal from '../components/modals/DMModal';
 import toast from 'react-hot-toast';
@@ -342,7 +343,7 @@ const ModerationModal: React.FC<ModerationModalProps> = ({
   );
 };
 
-const Members: React.FC = () => {
+const MembersContent: React.FC = () => {
   const { darkMode } = useTheme();
   const navigate = useNavigate();
   const { serverId } = useParams<{ serverId: string }>();
@@ -1057,6 +1058,17 @@ const Members: React.FC = () => {
         loading={dmLoading}
       />
     </div>
+  );
+};
+
+const Members: React.FC = () => {
+  return (
+    <PermissionGuard 
+      requiredPermission={['view_members', 'manage_members', 'admin']}
+      fallbackMessage="You need member management permissions to access this page."
+    >
+      <MembersContent />
+    </PermissionGuard>
   );
 };
 

@@ -189,8 +189,6 @@ export class MessageLogger {
       
       // Log to channel
       await this.logToChannel(message, 'delete');
-      
-      logInfo('Message Logger', `Logged deleted message from ${message.author?.tag} in ${message.guild.name}`);
     } catch (error) {
       logError('Message Logger', `Error handling message delete: ${error}`);
     }
@@ -214,8 +212,6 @@ export class MessageLogger {
       
       // Log to channel
       await this.logToChannel(newMessage, 'edit', oldMessage.content || undefined);
-      
-      logInfo('Message Logger', `Logged edited message from ${newMessage.author?.tag} in ${newMessage.guild.name}`);
     } catch (error) {
       logError('Message Logger', `Error handling message update: ${error}`);
     }
@@ -275,46 +271,8 @@ export class MessageLogger {
   }
 
   private static async handleDMMessage(message: Message): Promise<void> {
-    try {
-      // Get all guilds that have DM logging enabled and contain this user
-      const guilds = message.client.guilds.cache.filter(guild => {
-        const member = guild.members.cache.get(message.author.id);
-        return member && this.isLoggingEnabled(guild.id, 'dm');
-      });
-
-      for (const guild of guilds.values()) {
-        const settings = this.getLoggingSettings(guild.id);
-        const logChannelId = settings?.dm_log_channel_id;
-        
-        if (!logChannelId) continue;
-        
-        const logChannel = guild.channels.cache.get(logChannelId) as TextChannel;
-        if (!logChannel) continue;
-
-        const embed = new EmbedBuilder()
-          .setColor(Colors.INFO)
-          .setTitle('💬 Direct Message Received')
-          .setDescription(`**From:** ${message.author.tag}\n**Content:** ${message.content || '*No text content*'}`)
-          .addFields(
-            { name: 'User ID', value: message.author.id, inline: true },
-            { name: 'Received At', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setThumbnail(message.author.displayAvatarURL())
-          .setTimestamp();
-
-        if (message.attachments.size > 0) {
-          const attachments = Array.from(message.attachments.values())
-            .map(att => `[${att.name}](${att.url})`)
-            .join('\n');
-          embed.addFields({ name: 'Attachments', value: attachments, inline: false });
-        }
-
-        await logChannel.send({ embeds: [embed] });
-        logInfo('Message Logger', `Logged DM from ${message.author.tag} to guild ${guild.name}`);
-      }
-    } catch (error) {
-      logError('Message Logger', `Error handling DM message: ${error}`);
-    }
+    // DM logging disabled - no need to log direct messages to the bot
+    return;
   }
 }
 

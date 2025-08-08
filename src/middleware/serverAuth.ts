@@ -25,24 +25,48 @@ declare global {
 export const checkServerAccess = (requiredPermission?: string) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const authHeader = req.headers.authorization;
+      // Check for API key first (for dashboard access)
+      const apiKey = req.headers['x-api-key'];
+      const expectedApiKey = process.env.API_KEY || 'f8e7d6c5b4a3928170615243cba98765';
       
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({
-          success: false,
-          error: 'No valid authorization token provided'
-        });
-        return;
-      }
+      let decoded: ServerJwtPayload;
+      
+      // If API key is provided and matches expected value, use API key authentication
+      if (apiKey && apiKey === expectedApiKey) {
+        const userId = req.headers['x-user-id'] as string;
+        
+        if (!userId) {
+          res.status(401).json({
+            success: false,
+            error: 'User ID required for dashboard access'
+          });
+          return;
+        }
+        
+        decoded = { userId: userId };
+      } else {
+        // Otherwise, proceed with token-based authentication
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          res.status(401).json({
+            success: false,
+            error: 'No valid authorization token provided'
+          });
+          return;
+        }
 
-      const token = authHeader.substring(7);
-      const decoded = jwt.verify(token, JWT_SECRET) as ServerJwtPayload;
+        const token = authHeader.substring(7);
+        decoded = jwt.verify(token, JWT_SECRET) as ServerJwtPayload;
+      }
       
       // Get server ID from request (query, params, or body)
       const guildId = req.query.guildId as string || 
+                     req.query.serverId as string ||
                      req.params.guildId as string || 
                      req.params.serverId as string ||
-                     req.body.guildId as string;
+                     req.body.guildId as string ||
+                     req.body.serverId as string;
 
       if (!guildId) {
         res.status(400).json({

@@ -410,8 +410,63 @@ let giveawayCheckInterval: NodeJS.Timeout | null = null;
 // Cache for the next giveaway end time to avoid unnecessary queries
 let nextGiveawayEndTime: number | null = null;
 
+export async function startGiveaway(client: Client, giveawayId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Get giveaway from database
+    const giveawayResult = GiveawayService.getGiveawayById(giveawayId);
+    if (!giveawayResult.success || !giveawayResult.giveaway) {
+      return { success: false, error: 'Giveaway not found' };
+    }
+
+    const giveaway = giveawayResult.giveaway;
+
+    // Get channel
+    const channel = await client.channels.fetch(giveaway.channel_id) as TextChannel;
+    if (!channel) {
+      return { success: false, error: 'Channel not found' };
+    }
+
+    // Create giveaway embed
+    const embed = new EmbedBuilder()
+      .setTitle('🎉 ' + giveaway.title)
+      .setDescription(`**Prize:** ${giveaway.prize}\n\n${giveaway.description || 'Click the button below to enter!'}`)
+      .addFields([
+        { name: '⏰ Ends', value: `<t:${Math.floor(new Date(giveaway.end_time).getTime() / 1000)}:R>`, inline: true },
+        { name: '👑 Winners', value: giveaway.winner_count.toString(), inline: true },
+        { name: '🎫 Entries', value: '0', inline: true }
+      ])
+      .setColor(Colors.PRIMARY)
+      .setFooter({ text: `Giveaway ID: ${giveaway.id}` })
+      .setTimestamp();
+
+    // Create enter button
+    const enterButton = new ButtonBuilder()
+      .setCustomId(`giveaway_enter_${giveaway.id}`)
+      .setLabel('🎉 Enter Giveaway')
+      .setStyle(ButtonStyle.Primary);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(enterButton);
+
+    // Send the message
+    const message = await channel.send({
+      embeds: [embed],
+      components: [row]
+    });
+
+    // Update giveaway with message ID
+    GiveawayService.updateMessageId(giveaway.id, message.id);
+
+    logInfo('Giveaway', `Started giveaway "${giveaway.title}" (ID: ${giveaway.id}) in channel ${channel.name}`);
+    return { success: true };
+
+  } catch (error) {
+    logError('Giveaway', `Error starting giveaway ${giveawayId}: ${error}`);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 export async function startGiveawayChecker(client: Client): Promise<void> {
-  logInfo('Giveaway Checker', 'Starting optimized giveaway checker (10 min intervals)...');
+  logInfo('Giveaway Checker', 'Starting giveaway checker (30 second intervals)...');
   
   // Clear any existing interval to prevent multiple checkers
   if (giveawayCheckInterval) {
@@ -420,19 +475,19 @@ export async function startGiveawayChecker(client: Client): Promise<void> {
     giveawayCheckInterval = null;
   }
   
-  // Check every 10 minutes for ended giveaways (increased to reduce spam further)
+  // Check every 30 seconds for ended giveaways (much more responsive)
   giveawayCheckInterval = setInterval(async () => {
     try {
-      // Rate limiting: Don't check more than once every 8 minutes even if interval is shorter
+      // Rate limiting: Don't check more than once every 15 seconds even if interval is shorter
       const now = Date.now();
-      if (now - lastGiveawayCheck < 8 * 60 * 1000) {
+      if (now - lastGiveawayCheck < 15 * 1000) {
         return; // Skip check if we checked recently
       }
       
-      // Additional optimization: Skip check if we know there are no giveaways ending soon
-      if (nextGiveawayEndTime && now < nextGiveawayEndTime - (5 * 60 * 1000)) {
-        return; // Skip if next giveaway doesn't end for at least 5 more minutes
-      }
+      // Skip optimization for now to ensure accurate timing
+      // if (nextGiveawayEndTime && now < nextGiveawayEndTime - (5 * 60 * 1000)) {
+      //   return; // Skip if next giveaway doesn't end for at least 5 more minutes
+      // }
       
       lastGiveawayCheck = now;
 
@@ -468,5 +523,5 @@ export async function startGiveawayChecker(client: Client): Promise<void> {
     } catch (error) {
       logError('Giveaway Checker', `Error checking for ended giveaways: ${error}`);
     }
-  }, 10 * 60 * 1000); // 10 minutes (increased from 5 minutes to prevent query spam further)
+  }, 30 * 1000); // 30 seconds for accurate timing
 } 

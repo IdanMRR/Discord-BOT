@@ -467,7 +467,6 @@ async function setupLoggingChannels(interaction: ChatInputCommandInteraction, lo
       mod_log_channel_id: modLogChannel.id,
       message_log_channel_id: messageLogChannel.id,
       member_log_channel_id: memberLogChannel.id,
-      server_log_channel_id: generalLogChannel.id,
       log_all_commands: true
     };
 

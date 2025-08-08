@@ -1,12 +1,18 @@
-import { db } from '../sqlite';
 import { logInfo, logError } from '../../utils/logger';
+import type Database from 'better-sqlite3';
 
 /**
  * Migration to add last_activity_at column to tickets table
  */
-export async function addTicketLastActivityColumn() {
+export async function addTicketLastActivityColumn(database?: Database.Database) {
   try {
-    // Check if db is available
+    // If no database provided, import it here to avoid circular dependency issues
+    let db = database;
+    if (!db) {
+      const { db: importedDb } = await import('../sqlite');
+      db = importedDb;
+    }
+
     if (!db) {
       logError('Migration', 'Database connection not available');
       return false;
@@ -23,9 +29,9 @@ export async function addTicketLastActivityColumn() {
     }
     
     // Check if last_activity_at column exists
-    const columns = db.pragma('table_info(tickets)') as { name: string }[];
+    const columns = db.pragma('table_info(tickets)') as any[];
     
-    if (!columns.some(col => col.name === 'last_activity_at')) {
+    if (!columns.some((col: any) => col.name === 'last_activity_at')) {
       // Add the last_activity_at column with a constant default value
       db.exec(`ALTER TABLE tickets ADD COLUMN last_activity_at TEXT DEFAULT NULL`);
       logInfo('Migration', 'Added last_activity_at column to tickets table');
@@ -47,4 +53,6 @@ export async function addTicketLastActivityColumn() {
     logError('Migration', `Error during last_activity_at migration: ${error}`);
     return false;
   }
-} 
+}
+
+ 

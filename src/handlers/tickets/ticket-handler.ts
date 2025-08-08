@@ -222,12 +222,12 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     // Log the category selection
     logInfo('Tickets', `User ${interaction.user.tag} (${interaction.user.id}) selected category: ${category.label}`);
     
-    // Get the next ticket number for this guild
+    // Get the next ticket number for this guild using MAX to avoid duplicates
     const ticketNumberStmt = db.prepare(`
-      SELECT COUNT(*) as count FROM tickets WHERE guild_id = ?
+      SELECT COALESCE(MAX(ticket_number), 0) as max_number FROM tickets WHERE guild_id = ?
     `);
-    const { count } = ticketNumberStmt.get(interaction.guildId) as { count: number };
-    const ticketNumber = count + 1;
+    const { max_number } = ticketNumberStmt.get(interaction.guildId) as { max_number: number };
+    const ticketNumber = max_number + 1;
     
     // Format the ticket number with leading zeros (e.g., 0001, 0002)
     const formattedTicketNumber = ticketNumber.toString().padStart(4, '0');
@@ -289,11 +289,18 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       ...staffRoles
     ];
     
+    // Get server settings first (before creating channel)
+    const settings = await settingsManager.getSettings(interaction.guildId!);
+    const ticketCategoryId = settings?.ticket_category_id;
+    
+    logInfo('Ticket Creation', `Creating ticket channel with category ID: ${ticketCategoryId || 'none (will be created in root)'}`);
+    
     // Create the ticket channel
     const ticketChannel = await interaction.guild?.channels.create({
       name: channelName,
       type: ChannelType.GuildText,
       topic: `${category.emoji} ${category.label} | Ticket #${formattedTicketNumber} | ${priorityInfo.emoji} ${priorityInfo.label} Priority | Created by ${interaction.user.tag}`,
+      parent: ticketCategoryId || undefined, // Use the configured ticket category
       permissionOverwrites: permissionOverwrites
     });
     
@@ -327,9 +334,7 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
         `${joinedDays} day${joinedDays !== 1 ? 's' : ''} ago`;
     }
     
-    // Get the rules channel ID from settings if available
-    const settings = await settingsManager.getSettings(interaction.guildId!);
-    const rulesChannelId = settings?.rules_channel_id;
+    // Rules channel is no longer configured
     
     // Send initial waiting message
     const waitingMessage = await ticketChannel.send({
@@ -367,15 +372,6 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
       
     ticketEmbed.setFooter({ text: `Support Ticket System • ${formattedTime}` });
       
-    // Add rules channel reference if available
-    if (rulesChannelId) {
-      ticketEmbed.addFields([
-        {
-          name: '📜 Server Rules',
-          value: `Please make sure to read our server rules in <#${rulesChannelId}> before proceeding.`
-        }
-      ]);
-    }
     
     // Create buttons for ticket management
     const closeButton = new ButtonBuilder()
@@ -432,10 +428,17 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
     
     // Save the ticket to the database
     try {
+      // Get the next case number for this guild (for moderation tracking)
+      const caseNumberStmt = db.prepare(`
+        SELECT COALESCE(MAX(case_number), 0) as max_case FROM tickets WHERE guild_id = ?
+      `);
+      const { max_case } = caseNumberStmt.get(interaction.guildId) as { max_case: number };
+      const caseNumber = max_case + 1;
+      
       const stmt = db.prepare(`
         INSERT INTO tickets 
-        (guild_id, channel_id, user_id, ticket_number, category, subject, status, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        (guild_id, channel_id, user_id, ticket_number, case_number, category, subject, status, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `);
       
       stmt.run(
@@ -443,6 +446,7 @@ export async function handleCategorySelection(interaction: StringSelectMenuInter
         ticketChannel.id,
         interaction.user.id,
         ticketNumber,
+        caseNumber,
         categoryId,
         category.label,
         'open'

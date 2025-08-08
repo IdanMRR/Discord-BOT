@@ -1,4 +1,4 @@
-import { ButtonInteraction, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageComponentInteraction, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, SelectMenuComponentOptionData, Collection, Message, User } from 'discord.js';
+import { ButtonInteraction, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageComponentInteraction, PermissionFlagsBits, MessageFlags, ChannelType, AttachmentBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, SelectMenuComponentOptionData, Collection, Message, User, ModalSubmitInteraction } from 'discord.js';
 import { replyEphemeral, convertEphemeralToFlags } from '../../utils/interaction-utils';
 import { db } from '../../database/sqlite';
 import { logTicketEvent } from '../../utils/databaseLogger';
@@ -7,6 +7,7 @@ import { logInfo, logError } from '../../utils/logger';
 import { createRatingButton } from './ticket-rating';
 import { saveAndSendTranscript } from './ticket-transcript';
 import { formatIsraeliTime } from '../../utils/time-formatter';
+import { validateReason } from '../../utils/validation';
 
 // Create a simple map to track recent ticket actions (simplified)
 const recentCloseActions = new Set<string>();
@@ -102,16 +103,19 @@ async function processTicketClose(
     const actionRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(reopenButton, deleteButton);
     
-    // Create a styled embed for the closure message
+    // Create a styled embed for the closure message (matching website style)
     const closedEmbed = new EmbedBuilder()
-      .setColor('#f0ad4e') // Orange/yellow color
+      .setColor(0xff0000) // Red color like website
       .setTitle('🔒 Ticket Closed')
-      .setDescription(`This ticket has been closed.`)
+      .setDescription(`This ticket has been closed by <@${closedBy}>.`)
       .addFields([
         { name: '📝 Reason', value: reasonText || 'User Request', inline: false },
-        { name: '⚙️ Actions', value: 'You can delete this ticket or reopen it using the buttons below.', inline: false }
+        { name: '🎫 Ticket ID', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+        { name: '👤 Closed By', value: `<@${closedBy}>`, inline: true },
+        { name: '📅 Closed At', value: formatIsraeliTime(new Date()), inline: true },
+        { name: '⚙️ Actions', value: 'Staff can reopen or permanently delete this ticket using the buttons below.', inline: false }
       ])
-      .setFooter({ text: `Made by Soggra • Ticket #${ticket.ticket_number.toString().padStart(4, '0')} • Today at ${formatIsraeliTime(new Date())}` })
+      .setFooter({ text: `Closed via Discord • Made by Soggra` })
       .setTimestamp();
     
     // Send the closed message
@@ -129,33 +133,13 @@ async function processTicketClose(
       logError('Ticket Close', `Could not update permissions: ${permError}`);
     }
     
-    // Send rating DM to ticket creator
+    // Send rating DM to ticket creator (notification will be sent with transcript)
     try {
       const client = channel.client;
       const ticketCreator = await client.users.fetch(ticket.user_id);
       
       if (ticketCreator) {
-        // First send a notification about the ticket closure
-        const closureEmbed = new EmbedBuilder()
-          .setColor(Colors.WARNING)
-          .setTitle(`🔒 Your Ticket Has Been Closed | #${ticket.ticket_number.toString().padStart(4, '0')}`)
-          .setDescription(`Your support ticket in **${channel.guild.name}** has been closed.`)
-          .addFields([
-            { name: '📋 Ticket Number', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
-            { name: '🏷️ Category', value: ticket.subject || 'General Support', inline: true },
-            { name: '📝 Reason', value: reasonText || 'User Request', inline: false },
-            { name: '🔒 Closed By', value: `<@${closedBy}>`, inline: true },
-            { name: '🕒 Closed At', value: formatIsraeliTime(new Date()), inline: true }
-          ])
-          .setFooter({ text: `Made by Soggra. • ${formatIsraeliTime(new Date())}` })
-          .setTimestamp();
-
-        // Send closure notification
-        await ticketCreator.send({ embeds: [closureEmbed] }).catch(() => {
-          logError('Ticket Close', `Could not send closure notification DM to ticket creator ${ticketCreator.tag}`);
-        });
-
-        // Then send the rating request
+        // Only send the rating request - the closure notification is sent with the transcript
         const ratingEmbed = new EmbedBuilder()
           .setColor(Colors.PRIMARY)
           .setTitle('⭐ Rate Your Support Experience')
@@ -180,7 +164,7 @@ async function processTicketClose(
         });
       }
     } catch (error) {
-      logError('Ticket Close', `Could not send notifications to ticket creator: ${error}`);
+      logError('Ticket Close', `Could not send rating notification to ticket creator: ${error}`);
     }
     
     // Log the ticket closure
@@ -204,7 +188,7 @@ async function processTicketClose(
  * Handle the ticket closure process - completely simplified
  */
 export async function handleCloseTicket(interaction: ButtonInteraction) {
-  const ticketKey = `${interaction.channel?.id}_${interaction.user.id}`;
+  const channelKey = `${interaction.channel?.id}_close`;
   
   try {
     // Check if interaction has already been replied to
@@ -238,16 +222,16 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
       throw channelError;
     }
     
-    // Check if this close action was recently performed
-    if (recentCloseActions.has(ticketKey)) {
+    // Check if this close action was recently performed (per-channel, not per-user)
+    if (recentCloseActions.has(channelKey)) {
       await interaction.editReply({
-        content: '⏳ This ticket is already being closed. Please wait...'
+        content: '⏳ A close request is already being processed for this ticket. Please wait...'
       });
       return;
     }
     
     // Mark this action as being performed
-    recentCloseActions.add(ticketKey);
+    recentCloseActions.add(channelKey);
     
     // Get ticket info from database
     const ticketStmt = db.prepare(`
@@ -262,7 +246,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
       await interaction.editReply({
         content: '❌ This channel is not a valid ticket.'
       });
-      recentCloseActions.delete(ticketKey);
+      recentCloseActions.delete(channelKey);
       return;
     }
     
@@ -271,7 +255,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
       await interaction.editReply({
         content: '❌ This ticket is already closed.'
       });
-      recentCloseActions.delete(ticketKey);
+      recentCloseActions.delete(channelKey);
       return;
     }
 
@@ -330,6 +314,12 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
             description: 'Other reason not listed above',
             value: 'Other Reason',
             emoji: '📌'
+          },
+          {
+            label: 'Custom Reason',
+            description: 'Provide your own custom reason',
+            value: 'Custom Reason',
+            emoji: '✏️'
           }
         ]);
 
@@ -409,7 +399,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
               });
 
               // Clean up the tracking set after successful close
-              recentCloseActions.delete(ticketKey);
+              recentCloseActions.delete(channelKey);
 
             } else {
               // Cancel
@@ -420,7 +410,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
               });
               
               // Clean up the tracking set after cancellation
-              recentCloseActions.delete(ticketKey);
+              recentCloseActions.delete(channelKey);
             }
           } catch (error) {
             logError('Ticket Close', `Error processing confirmation: ${error}`);
@@ -431,7 +421,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
             }).catch(() => {});
             
             // Clean up the tracking set after error
-            recentCloseActions.delete(ticketKey);
+            recentCloseActions.delete(channelKey);
           }
         });
 
@@ -444,7 +434,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
             }).catch(() => {});
           }
           // Always clean up the tracking set when collector ends
-          recentCloseActions.delete(ticketKey);
+          recentCloseActions.delete(channelKey);
         });
 
       } catch (error) {
@@ -454,7 +444,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
           embeds: [],
           components: []
         }).catch(() => {});
-        recentCloseActions.delete(ticketKey);
+        recentCloseActions.delete(channelKey);
       }
     }
 
@@ -462,7 +452,7 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
     logError('Ticket Close', `Error closing ticket: ${error}`);
     
     // Clean up the recent actions tracker
-    recentCloseActions.delete(ticketKey);
+    recentCloseActions.delete(channelKey);
     
     try {
       await interaction.editReply({
@@ -481,60 +471,179 @@ export async function handleCloseTicket(interaction: ButtonInteraction) {
  * Handle close reason selection from select menu
  */
 export async function handleCloseReasonSelection(interaction: StringSelectMenuInteraction) {
-  const ticketKey = `${interaction.channel?.id}_${interaction.user.id}`;
+  const channelKey = `${interaction.channel?.id}_close`;
   
   try {
     // Extract the original interaction ID from the custom ID
     const originalInteractionId = interaction.customId.replace('close_reason_', '');
     const reasonText = interaction.values[0];
     
-    // Update the select menu interaction
-    await interaction.update({
-      content: `🔒 Closing ticket with reason: **${reasonText}**`,
-      embeds: [],
-      components: []
-    });
-    
-    const channel = interaction.channel as TextChannel;
-    
-    // Get ticket info from database
-    const ticketStmt = db.prepare(`
-      SELECT t.*, u.username 
-      FROM tickets t 
-      LEFT JOIN users u ON t.user_id = u.user_id 
-      WHERE t.channel_id = ?
-    `);
-    const ticket = ticketStmt.get(channel.id) as any;
-    
-    if (!ticket) {
+    // Check if custom reason was selected
+    if (reasonText === 'Custom Reason') {
+      // Show modal for custom reason
+      const modal = new ModalBuilder()
+        .setCustomId(`custom-close-modal-${Date.now()}`)
+        .setTitle('🔒 Close Ticket - Custom Reason');
+      
+      // Create the reason input field
+      const reasonInput = new TextInputBuilder()
+        .setCustomId('custom-close-reason')
+        .setLabel('Custom Reason for Closing')
+        .setPlaceholder('Please provide a detailed reason for closing this ticket...')
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setMaxLength(1000)
+        .setMinLength(3);
+      
+      // Create action row to hold the input
+      const reasonRow = new ActionRowBuilder<TextInputBuilder>().addComponents(reasonInput);
+      modal.addComponents(reasonRow);
+      
+      // Show the modal
+      await interaction.showModal(modal);
+      
+      // Wait for modal submission
+      const modalFilter = (i: ModalSubmitInteraction) => 
+        i.customId.startsWith('custom-close-modal-') && i.user.id === interaction.user.id;
+      
+      try {
+        const modalSubmission = await interaction.awaitModalSubmit({ filter: modalFilter, time: 300000 });
+        
+        // Get and validate the custom reason
+        const customReason = modalSubmission.fields.getTextInputValue('custom-close-reason');
+        
+        // Use the validation utility
+        const validation = validateReason(customReason);
+        if (!validation.isValid) {
+          try {
+            await modalSubmission.reply({
+              content: validation.message!,
+              flags: MessageFlags.Ephemeral
+            });
+          } catch (replyError: any) {
+            logError('Ticket Close', `Could not send validation error: ${replyError}`);
+          }
+          recentCloseActions.delete(channelKey);
+          return;
+        }
+        
+        // Defer the modal submission
+        try {
+          await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+        } catch (deferError: any) {
+          logError('Ticket Close', `Could not defer modal submission: ${deferError}`);
+          // Try to reply instead
+          try {
+            await modalSubmission.reply({
+              content: '🔄 Processing ticket closure...',
+              flags: MessageFlags.Ephemeral
+            });
+          } catch (replyError: any) {
+            logError('Ticket Close', `Could not reply to modal submission: ${replyError}`);
+            recentCloseActions.delete(channelKey);
+            return;
+          }
+        }
+        
+        const channel = modalSubmission.channel as TextChannel;
+        
+        // Get ticket info from database
+        const ticketStmt = db.prepare(`
+          SELECT t.*, u.username 
+          FROM tickets t 
+          LEFT JOIN users u ON t.user_id = u.user_id 
+          WHERE t.channel_id = ?
+        `);
+        const ticket = ticketStmt.get(channel.id) as any;
+        
+        if (!ticket) {
+          await modalSubmission.editReply({
+            content: '❌ This channel is not a valid ticket.'
+          });
+          recentCloseActions.delete(channelKey);
+          return;
+        }
+        
+        // Process the ticket close with custom reason
+        await processTicketClose(channel, ticket, modalSubmission.user.id, customReason.trim());
+        
+        // Send enhanced success message
+        await modalSubmission.editReply({
+          content: `✅ **Ticket Closed Successfully!**\n\n🎫 **Ticket ID:** #${ticket.ticket_number.toString().padStart(4, '0')}\n📝 **Custom Reason:** ${customReason.trim()}\n👤 **Closed by:** ${modalSubmission.user.username}\n\n🔒 The ticket has been closed and a transcript has been sent.`
+        });
+        
+        // Clean up tracking set after successful close
+        recentCloseActions.delete(channelKey);
+        
+        logInfo('Ticket Close', `Ticket #${ticket.ticket_number} closed by ${modalSubmission.user.tag} with custom reason: ${customReason.trim()}`);
+        
+      } catch (modalError: any) {
+        // Modal timed out or error occurred
+        logError('Ticket Close', `Custom reason modal error: ${modalError}`);
+        
+        // Clean up tracking set
+        recentCloseActions.delete(channelKey);
+        
+        // Check error type and log appropriately
+        if (modalError.code === 'InteractionCollectorError' || modalError.message?.includes('time')) {
+          logInfo('Ticket Close', `Custom reason modal timed out for ${interaction.user.tag} - no action taken`);
+        } else if (modalError.code === 10062) {
+          logError('Ticket Close', `Unknown interaction error - custom reason modal may have expired`);
+        } else {
+          logError('Ticket Close', `Unexpected custom reason modal error: ${modalError.message}`);
+        }
+      }
+      
+    } else {
+      // Handle predefined reasons
+      // Update the select menu interaction
+      await interaction.update({
+        content: `🔒 Closing ticket with reason: **${reasonText}**`,
+        embeds: [],
+        components: []
+      });
+      
+      const channel = interaction.channel as TextChannel;
+      
+      // Get ticket info from database
+      const ticketStmt = db.prepare(`
+        SELECT t.*, u.username 
+        FROM tickets t 
+        LEFT JOIN users u ON t.user_id = u.user_id 
+        WHERE t.channel_id = ?
+      `);
+      const ticket = ticketStmt.get(channel.id) as any;
+      
+      if (!ticket) {
+        await interaction.followUp({
+          content: '❌ This channel is not a valid ticket.',
+          flags: MessageFlags.Ephemeral
+        });
+        // Clean up tracking set
+        recentCloseActions.delete(channelKey);
+        return;
+      }
+      
+      // Process the ticket close
+      await processTicketClose(channel, ticket, interaction.user.id, reasonText);
+      
+      // Send enhanced success message
       await interaction.followUp({
-        content: '❌ This channel is not a valid ticket.',
+        content: `✅ **Ticket Closed Successfully!**\n\n🎫 **Ticket ID:** #${ticket.ticket_number.toString().padStart(4, '0')}\n📝 **Reason:** ${reasonText}\n👤 **Closed by:** ${interaction.user.username}\n\n🔒 The ticket has been closed and a transcript has been sent.`,
         flags: MessageFlags.Ephemeral
       });
-      // Clean up tracking set
-      recentCloseActions.delete(ticketKey);
-      return;
+      
+      // Clean up tracking set after successful close
+      recentCloseActions.delete(channelKey);
+      
+      logInfo('Ticket Close', `Ticket #${ticket.ticket_number} closed by ${interaction.user.tag} with reason: ${reasonText}`);
     }
-    
-    // Process the ticket close
-    await processTicketClose(channel, ticket, interaction.user.id, reasonText);
-    
-    // Send success message
-    await interaction.followUp({
-      content: `✅ Ticket closed successfully with reason: **${reasonText}**`,
-      flags: MessageFlags.Ephemeral
-    });
-    
-    // Clean up tracking set after successful close
-    recentCloseActions.delete(ticketKey);
-    
-    logInfo('Ticket Close', `Ticket #${ticket.ticket_number} closed by ${interaction.user.tag} with reason: ${reasonText}`);
     
   } catch (error) {
     logError('Ticket Close', `Error handling close reason selection: ${error}`);
     
     // Clean up tracking set after error
-    recentCloseActions.delete(ticketKey);
+    recentCloseActions.delete(channelKey);
     
     try {
       await interaction.followUp({

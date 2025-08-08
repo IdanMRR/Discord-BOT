@@ -5,17 +5,20 @@ import { authenticateToken } from '../middleware/auth';
 import { checkServerAccess } from '../middleware/serverAuth';
 import { logInfo, logError } from '../utils/logger';
 import { client } from '../index';
-import { endGiveaway } from '../handlers/giveaway/giveaway-handler';
+import { endGiveaway, startGiveaway } from '../handlers/giveaway/giveaway-handler';
+import { getUserName } from './user-helper';
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 // Apply middleware
 router.use(authenticateToken);
 router.use(dashboardLogger);
 
 interface GiveawayRequest extends Request {
-  query: {
+  params: {
     serverId: string;
+  };
+  query: {
     page?: string;
     limit?: string;
     status?: 'active' | 'ended' | 'cancelled';
@@ -23,8 +26,10 @@ interface GiveawayRequest extends Request {
 }
 
 interface CreateGiveawayRequest extends Request {
-  body: {
+  params: {
     serverId: string;
+  };
+  body: {
     channelId: string;
     title: string;
     description?: string;
@@ -41,7 +46,8 @@ interface CreateGiveawayRequest extends Request {
 // Get all giveaways for a server
 router.get('/', checkServerAccess(), async (req: GiveawayRequest, res: Response) => {
   try {
-    const { serverId, page = '1', limit = '20', status } = req.query;
+    const { serverId } = req.params;
+    const { page = '1', limit = '20', status } = req.query;
     
     if (!serverId) {
       return res.status(400).json({
@@ -64,18 +70,32 @@ router.get('/', checkServerAccess(), async (req: GiveawayRequest, res: Response)
     const giveaways = result.giveaways || [];
     
     // Enhance giveaways with additional data
-    const enhancedGiveaways = giveaways.map(giveaway => {
+    const enhancedGiveaways = await Promise.all(giveaways.map(async giveaway => {
       const entryCountResult = GiveawayService.getEntryCount(giveaway.id);
       const winnersResult = GiveawayService.getGiveawayWinners(giveaway.id);
+      
+      // Enhance winners with user information from Discord
+      let enhancedWinners: any[] = [];
+      if (winnersResult.success && winnersResult.winners) {
+        enhancedWinners = await Promise.all(winnersResult.winners.map(async (winner) => {
+          const username = await getUserName(client, winner.user_id);
+          return {
+            ...winner,
+            username: username,
+            displayName: username,
+            nickname: null
+          };
+        }));
+      }
       
       return {
         ...giveaway,
         entryCount: entryCountResult.success ? entryCountResult.count || 0 : 0,
-        winners: winnersResult.success ? winnersResult.winners || [] : [],
+        winners: enhancedWinners,
         timeRemaining: giveaway.status === 'active' ? 
           Math.max(0, new Date(giveaway.end_time).getTime() - Date.now()) : 0
       };
-    });
+    }));
 
     // Pagination
     const pageNum = parseInt(page);
@@ -112,7 +132,7 @@ router.get('/', checkServerAccess(), async (req: GiveawayRequest, res: Response)
 router.get('/:id', checkServerAccess(), async (req: Request, res: Response) => {
   try {
     const giveawayId = parseInt(req.params.id);
-    const { serverId } = req.query;
+    const { serverId } = req.params;
 
     if (!serverId) {
       return res.status(400).json({
@@ -153,10 +173,24 @@ router.get('/:id', checkServerAccess(), async (req: Request, res: Response) => {
     const winnersResult = GiveawayService.getGiveawayWinners(giveawayId);
     const requirementsResult = GiveawayService.getGiveawayRequirements(giveawayId);
 
+    // Enhance winners with user information from Discord
+    let enhancedWinners: any[] = [];
+    if (winnersResult.success && winnersResult.winners) {
+      enhancedWinners = await Promise.all(winnersResult.winners.map(async (winner) => {
+        const username = await getUserName(client, winner.user_id);
+        return {
+          ...winner,
+          username: username,
+          displayName: username,
+          nickname: null
+        };
+      }));
+    }
+
     const enhancedGiveaway = {
       ...giveaway,
       entries: entriesResult.success ? entriesResult.entries || [] : [],
-      winners: winnersResult.success ? winnersResult.winners || [] : [],
+      winners: enhancedWinners,
       requirements: requirementsResult.success ? requirementsResult.requirements || [] : [],
       timeRemaining: giveaway.status === 'active' ? 
         Math.max(0, new Date(giveaway.end_time).getTime() - Date.now()) : 0
@@ -178,10 +212,16 @@ router.get('/:id', checkServerAccess(), async (req: Request, res: Response) => {
 });
 
 // Create new giveaway
-router.post('/', checkServerAccess(), async (req: CreateGiveawayRequest, res: Response) => {
+router.post('/', checkServerAccess('giveaway_manage'), async (req: CreateGiveawayRequest, res: Response) => {
   try {
+    const { serverId } = req.params;
+    
+    // Debug: Log the full request
+    console.log('[GIVEAWAY DEBUG] Request params:', req.params);
+    console.log('[GIVEAWAY DEBUG] Request body:', JSON.stringify(req.body, null, 2));
+    console.log('[GIVEAWAY DEBUG] User:', req.user);
+    
     const { 
-      serverId, 
       channelId, 
       title, 
       description, 
@@ -192,7 +232,17 @@ router.post('/', checkServerAccess(), async (req: CreateGiveawayRequest, res: Re
     } = req.body;
 
     // Validation
+    console.log('[GIVEAWAY DEBUG] Validation check:', {
+      serverId: !!serverId,
+      channelId: !!channelId,
+      title: !!title,
+      prize: !!prize,
+      winnerCount: !!winnerCount,
+      duration: !!duration
+    });
+    
     if (!serverId || !channelId || !title || !prize || !winnerCount || !duration) {
+      console.log('[GIVEAWAY DEBUG] Validation failed - missing fields');
       return res.status(400).json({
         success: false,
         error: 'Missing required fields'
@@ -224,12 +274,16 @@ router.post('/', checkServerAccess(), async (req: CreateGiveawayRequest, res: Re
       description,
       prize,
       winner_count: winnerCount,
-      host_user_id: (req as any).user.id, // From auth middleware
+      host_user_id: (req as any).user.userId, // From auth middleware
       end_time: endTime
     };
 
+    console.log('[GIVEAWAY DEBUG] Prepared giveaway data:', JSON.stringify(giveawayData, null, 2));
+
     // Create giveaway
     const result = GiveawayService.createGiveaway(giveawayData);
+    
+    console.log('[GIVEAWAY DEBUG] Service result:', result);
     
     if (!result.success || !result.giveaway) {
       return res.status(500).json({
@@ -261,6 +315,18 @@ router.post('/', checkServerAccess(), async (req: CreateGiveawayRequest, res: Re
       }
     }
 
+    // Send Discord message for the giveaway
+    console.log('[GIVEAWAY DEBUG] Starting Discord giveaway message...');
+    const startResult = await startGiveaway(client, result.giveaway.id);
+    
+    if (!startResult.success) {
+      console.log('[GIVEAWAY DEBUG] Failed to start Discord giveaway:', startResult.error);
+      // Don't fail the entire request if Discord message fails
+      logError('Giveaway API', `Failed to send Discord message for giveaway ${result.giveaway.id}: ${startResult.error}`);
+    } else {
+      console.log('[GIVEAWAY DEBUG] Successfully started Discord giveaway message');
+    }
+
     res.status(201).json({
       success: true,
       data: result.giveaway
@@ -277,7 +343,7 @@ router.post('/', checkServerAccess(), async (req: CreateGiveawayRequest, res: Re
 });
 
 // End giveaway
-router.post('/:id/end', checkServerAccess(), async (req: Request, res: Response) => {
+router.post('/:id/end', checkServerAccess('giveaway_manage'), async (req: Request, res: Response) => {
   try {
     const giveawayId = parseInt(req.params.id);
     const { serverId } = req.body;
@@ -343,7 +409,7 @@ router.post('/:id/end', checkServerAccess(), async (req: Request, res: Response)
 });
 
 // Cancel giveaway
-router.post('/:id/cancel', checkServerAccess(), async (req: Request, res: Response) => {
+router.post('/:id/cancel', checkServerAccess('giveaway_manage'), async (req: Request, res: Response) => {
   try {
     const giveawayId = parseInt(req.params.id);
     const { serverId } = req.body;
@@ -416,7 +482,7 @@ router.post('/:id/cancel', checkServerAccess(), async (req: Request, res: Respon
 });
 
 // Delete giveaway
-router.delete('/:id', checkServerAccess(), async (req: Request, res: Response) => {
+router.delete('/:id', checkServerAccess('giveaway_manage'), async (req: Request, res: Response) => {
   try {
     const giveawayId = parseInt(req.params.id);
     const { serverId } = req.query;

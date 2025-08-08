@@ -2,20 +2,20 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, Permissi
 import { createModerationEmbed, createErrorEmbed, createInfoEmbed } from '../../utils/embeds';
 import { logModeration, logError, logInfo, LogResult } from '../../utils/logger';
 import { logModerationToDatabase } from '../../utils/databaseLogger';
-import { ModerationCaseService } from '../../database/services/sqliteService';
+import { ModerationCaseService, WarningService } from '../../database/services/sqliteService';
+import { validateReason, sanitizeReason } from '../../utils/validation';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('ban')
-    .setDescription('Ban a user from the server')
-    .addUserOption(option => 
-      option
-        .setName('user')
-        .setDescription('The user to ban')
-        .setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
+export const data = new SlashCommandBuilder()
+  .setName('ban')
+  .setDescription('Ban a user from the server')
+  .addUserOption(option => 
+    option
+      .setName('user')
+      .setDescription('The user to ban')
+      .setRequired(true))
+  .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers);
+
+export async function execute(interaction: ChatInputCommandInteraction) {
     try {
       // Check if user has permission to ban members
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.BanMembers)) {
@@ -94,8 +94,21 @@ module.exports = {
         const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 300000 });
         
         // Get the values from the modal
-        const reason = modalSubmission.fields.getTextInputValue('ban-reason');
+        const rawReason = modalSubmission.fields.getTextInputValue('ban-reason');
         const daysValue = modalSubmission.fields.getTextInputValue('ban-days');
+        
+        // Validate the reason
+        const validation = validateReason(rawReason);
+        if (!validation.isValid) {
+          await modalSubmission.reply({
+            content: validation.message!,
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+        
+        // Sanitize and use the reason
+        const reason = sanitizeReason(rawReason);
         
         // Parse the days value, ensuring it's between 0-7
         let days = parseInt(daysValue) || 0;
@@ -128,7 +141,7 @@ module.exports = {
             target: targetUser,
             moderator: interaction.user,
             reason: reason,
-            caseNumber: moderationCase.case_number,
+            case_number: moderationCase.case_number,
             additionalFields: [
               { name: '⏱️ Message History Deleted', value: `${days} day(s)`, inline: true },
               { name: '🏠 Server', value: guild.name, inline: true },
@@ -153,17 +166,21 @@ module.exports = {
           reason: reason 
         });
         
+        // Get current warning count for the user
+        const activeWarningCount = await WarningService.countActiveWarnings(guild.id, targetUser.id);
+        
         // Create a stylish moderation embed
         const banEmbed = createModerationEmbed({
           action: 'Ban',
           target: targetUser,
           moderator: interaction.user,
           reason: reason,
-          caseNumber: moderationCase.case_number,
+          case_number: moderationCase.case_number,
           additionalFields: [
             { name: '⏱️ Message History Deleted', value: `${days} day(s)`, inline: true },
             { name: '🕒 Action Time', value: new Date().toLocaleString(), inline: true },
-            { name: '🏠 Server', value: guild.name, inline: true }
+            { name: '🏠 Server', value: guild.name, inline: true },
+            { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
           ]
         });
         
@@ -178,6 +195,21 @@ module.exports = {
           reason: reason,
           additionalInfo: `Ban Case #${moderationCase.case_number} - User was banned from ${guild.name}. Message history deleted: ${days} day(s).`
         });
+        
+        // Log to moderation channel
+        const logResult = await logModeration({
+          guild: guild,
+          action: 'Ban',
+          target: targetUser,
+          moderator: interaction.user,
+          reason: reason,
+          caseNumber: moderationCase.case_number
+        });
+        
+        // If logging failed, notify in console
+        if (!logResult.success && logResult.message) {
+          logError('Ban Command', `Moderation logging failed: ${logResult.message}`);
+        }
         
       } catch (error: any) {
         // Modal timed out or was cancelled
@@ -195,5 +227,4 @@ module.exports = {
       const errorEmbed = createErrorEmbed('Command Error', 'There was an error trying to ban this user. Check my permissions and try again.');
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
-  },
-};
+}

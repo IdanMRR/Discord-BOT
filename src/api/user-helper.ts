@@ -18,6 +18,11 @@ async function getUserName(client: Client | null, userId: string | undefined | n
       return 'Unknown User';
     }
     
+    // Special case for dashboard moderator
+    if (userId === 'dashboard') {
+      return 'Dashboard';
+    }
+    
     // Check cache first to avoid duplicate API calls
     if (usernameCache.has(userId)) {
       return usernameCache.get(userId) as string;

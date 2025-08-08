@@ -587,12 +587,12 @@ const WarningsContent: React.FC = () => {
           </div>
         ) : (
           <>
-              <div className="overflow-x-auto rounded-lg">
+            <div className="overflow-x-auto max-h-[65vh] overflow-auto rounded-lg">
               <table className={classNames(
                   "min-w-full divide-y-2",
                 darkMode ? "divide-gray-700" : "divide-gray-200"
               )}>
-                <thead className="rounded-t-lg bg-muted/80">
+                <thead className="sticky top-0 z-10 rounded-t-lg bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
                   <tr>
                       <th className="relative w-12 px-6 py-4 sm:w-16 sm:px-8">
                       <input
@@ -633,7 +633,7 @@ const WarningsContent: React.FC = () => {
                     <tr 
                       key={warning.id} 
                       className={classNames(
-                          "transition-all duration-200 hover:shadow-lg relative group",
+                          "transition-all duration-200 hover:shadow-lg relative group odd:bg-muted/30",
                         selectedWarnings.has(warning.id) 
                             ? 'bg-primary/10 ring-1 ring-primary/30'
                             : 'hover:bg-muted/50'

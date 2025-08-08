@@ -63,13 +63,14 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const userHasAnyPermissions = user?.permissions && user.permissions.length > 0;
   const userHasRequiredPermission = hasPermission(requiredPermission);
   
-  console.log('PermissionGuard check:', {
-    user: user?.username,
-    userPermissions: user?.permissions,
-    requiredPermission,
-    userHasAnyPermissions,
-    userHasRequiredPermission
-  });
+  // Debug logging (removed to prevent console spam)
+  // console.log('PermissionGuard check:', {
+  //   user: user?.username,
+  //   userPermissions: user?.permissions,
+  //   requiredPermission,
+  //   userHasAnyPermissions,
+  //   userHasRequiredPermission
+  // });
   
   if (!userHasAnyPermissions || !userHasRequiredPermission) {
     return (

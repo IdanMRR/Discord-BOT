@@ -8,10 +8,7 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ToastPortal from './components/common/ToastPortal';
 
-// Stagewise imports
-import { StagewiseToolbar } from '@stagewise/toolbar-react';
-import ReactPlugin from '@stagewise-plugins/react';
-import { environment } from './config/environment';
+
 
 // Import global settings CSS
 import './styles/global-settings.css';
@@ -120,7 +117,6 @@ const SettingsApplier: React.FC = () => {
 
   // Apply custom settings
   React.useEffect(() => {
-    console.log('SettingsApplier applying settings:', settings);
     const root = document.documentElement;
     const body = document.body;
     
@@ -173,7 +169,6 @@ const SettingsApplier: React.FC = () => {
       root.style.setProperty('--primary-hue', hsl.h.toString());
       root.style.setProperty('--primary-saturation', `${hsl.s}%`);
       
-      console.log(`Primary color updated: H:${hsl.h} S:${hsl.s}% L:${hsl.l}%`);
     }
     
     // Apply animations setting
@@ -282,15 +277,6 @@ function App() {
           </SettingsProvider>
         </AuthProvider>
       </OldThemeProvider>
-      
-      {/* Stagewise Toolbar - only in development */}
-      {environment.isDevelopment && (
-        <StagewiseToolbar 
-          config={{
-            plugins: [ReactPlugin]
-          }}
-        />
-      )}
     </ErrorBoundary>
   );
 }

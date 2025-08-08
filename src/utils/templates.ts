@@ -7,7 +7,7 @@ import { Language, getTranslation as t } from './language';
 /**
  * Template types supported by the system
  */
-export type TemplateType = 'rules' | 'welcome' | 'ticket' | 'faq';
+export type TemplateType = 'welcome' | 'ticket' | 'faq';
 
 /**
  * Template structure
@@ -29,48 +29,13 @@ export interface Template {
  * Default templates for various components
  */
 export const defaultTemplates: Record<TemplateType, Template[]> = {
-  rules: [
-    {
-      id: 'rules-default',
-      name: 'Default Rules',
-      description: 'Standard server rules template',
-      content: 'Welcome to {server}! To ensure everyone has a positive experience, please follow these rules:\n\n' +
-        '1. **Be Respectful** - Treat all members with respect. Harassment, hate speech, discrimination, or bullying will not be tolerated.\n\n' +
-        '2. **No Inappropriate Content** - Do not post NSFW, illegal, or offensive content in any channel.\n\n' +
-        '3. **No Spamming** - Avoid sending repeated messages, excessive mentions, or flooding channels with messages.\n\n' +
-        '4. **Follow Discord TOS** - Adhere to Discord\'s Terms of Service and Community Guidelines at all times.\n\n' +
-        '5. **Use Appropriate Channels** - Post content in the relevant channels. Keep discussions on-topic.',
-      embed: true,
-      embedTitle: '📜 Server Rules',
-      embedColor: Colors.INFO,
-      embedFooter: 'Last updated: {date}',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'rules-minimal',
-      name: 'Minimal Rules',
-      description: 'A simplified set of essential rules',
-      content: 'Welcome to {server}! Please follow these basic rules:\n\n' +
-        '1. Be respectful to all members\n' +
-        '2. No inappropriate content\n' +
-        '3. No spamming\n' +
-        '4. Follow Discord TOS',
-      embed: true,
-      embedTitle: '📜 Server Rules',
-      embedColor: Colors.INFO,
-      embedFooter: 'Last updated: {date}',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  ],
   welcome: [
     {
       id: 'welcome-default',
       name: 'Default Welcome',
       description: 'Standard welcome message for new members',
       content: 'Welcome to {server}, {user}! We\'re glad to have you here.\n\n' +
-        'Please read our rules in <#{rules_channel}> and enjoy your stay!\n\n' +
+        'Enjoy your stay and feel free to explore our community!\n\n' +
         'If you need help, feel free to create a ticket in <#{ticket_channel}>.',
       embed: true,
       embedTitle: '👋 Welcome to {server}!',
@@ -86,7 +51,6 @@ export const defaultTemplates: Record<TemplateType, Template[]> = {
       content: 'Welcome to {server}, {user}!\n\n' +
         '**About Us**\nWe are a community focused on creating a friendly environment for everyone.\n\n' +
         '**Important Channels**\n' +
-        '• <#{rules_channel}> - Server rules\n' +
         '• <#{ticket_channel}> - Get support\n\n' +
         'Enjoy your stay and don\'t hesitate to reach out if you need anything!',
       embed: true,

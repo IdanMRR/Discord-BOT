@@ -1,0 +1,304 @@
+# Discord Bot Platform - Task Execution Guidelines
+
+## Development Workflow
+
+When implementing features for the Discord Bot Management Platform, follow these guidelines to maintain code quality, security, and consistency with the existing architecture.
+
+## Pre-Implementation Checklist
+
+### Environment Setup
+- [ ] Node.js and npm installed
+- [ ] SQLite database accessible
+- [ ] Environment variables configured (.env file)
+- [ ] Discord bot token and application setup
+- [ ] Development server running (`npm run dev`)
+
+### Code Quality Tools
+- [ ] TypeScript compiler working (`npm run build`)
+- [ ] Linting passes without errors
+- [ ] Prettier formatting applied
+- [ ] Tests run successfully (`npm test`)
+
+## Implementation Standards
+
+### Backend Development (src/)
+
+#### Database Operations
+```typescript
+// Use existing services and migrations
+import { DatabaseService } from './database/services/sqliteService';
+import { AnalyticsService } from './database/services/analyticsService';
+
+// Always include proper error handling
+try {
+  const result = await DatabaseService.query(sql, params);
+  logInfo('Database operation successful', { operation: 'feature_name' });
+} catch (error) {
+  logError('Database operation failed', error);
+  throw error;
+}
+```
+
+#### API Endpoints
+```typescript
+// Follow existing patterns in src/api/
+import { authenticateToken } from '../middleware/auth';
+import { validateServerAccess } from '../middleware/serverAuth';
+import { logInfo, logError } from '../utils/logger';
+
+// Always include authentication and authorization
+router.get('/api/servers/:serverId/feature', 
+  authenticateToken, 
+  validateServerAccess, 
+  async (req, res) => {
+    try {
+      // Implementation
+      res.json({ success: true, data: result });
+    } catch (error) {
+      logError('API error', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+```
+
+#### Discord Bot Commands
+```typescript
+// Place in appropriate src/commands/ subdirectory
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { CommandInteraction } from 'discord.js';
+import { createSuccessEmbed, createErrorEmbed } from '../../utils/embeds';
+import { logCommandUsage } from '../../utils/logger';
+
+export const data = new SlashCommandBuilder()
+  .setName('feature')
+  .setDescription('Description of the feature');
+
+export async function execute(interaction: CommandInteraction) {
+  try {
+    logCommandUsage(interaction);
+    // Implementation
+    await interaction.reply({ embeds: [createSuccessEmbed('Success message')] });
+  } catch (error) {
+    logError('Command execution failed', error);
+    await interaction.reply({ embeds: [createErrorEmbed('Error message')] });
+  }
+}
+```
+
+### Frontend Development (client/src/)
+
+#### Component Structure
+```tsx
+// Use existing patterns and styling
+import React, { useState, useEffect } from 'react';
+import { Card } from '../components/common/Card';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { useDataFetching } from '../hooks/useDataFetching';
+
+interface FeatureComponentProps {
+  serverId: string;
+}
+
+export const FeatureComponent: React.FC<FeatureComponentProps> = ({ serverId }) => {
+  const { data, loading, error, refetch } = useDataFetching(`/api/servers/${serverId}/feature`);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div>Error loading feature</div>;
+
+  return (
+    <Card>
+      {/* Component implementation */}
+    </Card>
+  );
+};
+```
+
+#### State Management
+```tsx
+// Use existing context patterns
+import { useSettings } from '../contexts/SettingsContext';
+import { useAuth } from '../contexts/AuthContext';
+
+// For real-time updates
+import { useEffect } from 'react';
+import { socket } from '../services/websocket';
+
+useEffect(() => {
+  socket.on('feature_update', (data) => {
+    // Handle real-time updates
+  });
+
+  return () => {
+    socket.off('feature_update');
+  };
+}, []);
+```
+
+### Database Migrations
+
+#### Creating Migrations
+```typescript
+// Create in src/database/migrations/
+// Follow naming: add-feature-name.ts
+
+import { Database } from 'better-sqlite3';
+import { logInfo } from '../../utils/logger';
+
+export function up(db: Database): void {
+  logInfo('Running migration: add-feature-name');
+  
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS feature_table (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE INDEX idx_feature_server_id ON feature_table(server_id);
+  `);
+}
+
+export function down(db: Database): void {
+  db.exec('DROP TABLE IF EXISTS feature_table;');
+}
+```
+
+## Testing Requirements
+
+### Backend Testing
+- Unit tests for database operations
+- API endpoint testing with proper authentication
+- Error handling verification
+- Performance testing for database queries
+
+### Frontend Testing
+```typescript
+// Playwright E2E tests in tests/
+import { test, expect } from '@playwright/test';
+
+test('feature functionality', async ({ page }) => {
+  // Login and navigate to feature
+  await page.goto('/login');
+  // Test implementation
+  await expect(page.locator('[data-testid="feature-element"]')).toBeVisible();
+});
+```
+
+### Discord Bot Testing
+- Command execution testing
+- Event handler verification
+- Integration testing with dashboard
+- Error handling validation
+
+## Security Best Practices
+
+### Input Validation
+```typescript
+// Validate all user inputs
+import Joi from 'joi';
+
+const schema = Joi.object({
+  serverId: Joi.string().required(),
+  data: Joi.object().required()
+});
+
+const { error, value } = schema.validate(req.body);
+if (error) {
+  return res.status(400).json({ error: error.details[0].message });
+}
+```
+
+### Permission Checks
+```typescript
+// Always verify permissions
+import { checkServerPermissions } from '../middleware/serverAuth';
+
+// In API routes
+if (!checkServerPermissions(userId, serverId, 'FEATURE_ACCESS')) {
+  return res.status(403).json({ error: 'Insufficient permissions' });
+}
+```
+
+### Data Sanitization
+```typescript
+// Sanitize outputs for Discord and web
+import { escapeMarkdown, escapeHtml } from '../utils/sanitization';
+
+const safeContent = escapeMarkdown(userInput);
+```
+
+## Performance Guidelines
+
+### Database Optimization
+- Use proper indexing for frequent queries
+- Implement pagination for large datasets
+- Use prepared statements for repeated queries
+- Monitor query performance with logging
+
+### Caching Strategy
+```typescript
+// Implement caching for expensive operations
+const cache = new Map();
+
+async function getCachedData(key: string) {
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  
+  const data = await expensiveOperation();
+  cache.set(key, data);
+  return data;
+}
+```
+
+### Memory Management
+- Clean up event listeners
+- Dispose of database connections properly
+- Monitor memory usage in production
+- Use streaming for large data operations
+
+## Deployment Checklist
+
+### Pre-deployment
+- [ ] All tests passing
+- [ ] Database migrations tested
+- [ ] Environment variables configured
+- [ ] Security review completed
+- [ ] Performance testing conducted
+
+### Production Deployment
+- [ ] Database backup created
+- [ ] Migrations run successfully
+- [ ] Service health checks passing
+- [ ] Logging configured properly
+- [ ] Monitoring alerts set up
+
+### Post-deployment
+- [ ] Feature functionality verified
+- [ ] Error logs monitored
+- [ ] Performance metrics reviewed
+- [ ] User feedback collected
+
+## Troubleshooting
+
+### Common Issues
+1. **Database locks**: Ensure proper connection management
+2. **Authentication failures**: Verify token validity and permissions
+3. **Real-time updates not working**: Check Socket.io connection and events
+4. **Discord API rate limits**: Implement proper rate limiting and retries
+
+### Debugging Tools
+- Winston logs in `logs/` directory
+- Database query logging
+- Browser developer tools for frontend issues
+- Discord bot console output
+
+### Performance Monitoring
+- Database query performance
+- Memory usage tracking
+- API response times
+- User interaction analytics
+
+Refer to @plan-product.mdc for business context and @roadmap.mdc for feature prioritization.

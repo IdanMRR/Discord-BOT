@@ -310,8 +310,8 @@ export async function saveAndSendTranscript(
       logError('Transcript', `Error sending transcript to log channel: ${error}`);
     }
     
-    // Only send transcript to user if the ticket is being closed (not deleted) and sendToUser is true
-    if (!isDeleting && sendToUser) {
+    // Only send transcript to user if sendToUser is true
+    if (sendToUser) {
       try {
         const user = await channel.client.users.fetch(ticketInfo.user_id);
         
@@ -319,30 +319,45 @@ export async function saveAndSendTranscript(
           // Format time for user message in Israeli timezone
           const timeString = formatIsraeliTime();
           
-          // Create a more styled embed
-          const userEmbed = new EmbedBuilder()
+          // Create a comprehensive closure/deletion notification embed
+          const notificationEmbed = new EmbedBuilder()
+            .setColor(isDeleting ? Colors.ERROR : Colors.WARNING)
+            .setTitle(isDeleting ? `🗑️ Your Ticket Has Been Deleted | #${formattedTicketNumber}` : `🔒 Your Ticket Has Been Closed | #${formattedTicketNumber}`)
+            .setDescription(isDeleting ? 
+              `Your support ticket in **${channel.guild.name}** has been deleted.` :
+              `Your support ticket in **${channel.guild.name}** has been closed.`)
+            .addFields([
+              { name: '📋 Ticket Number', value: `#${formattedTicketNumber}`, inline: true },
+              { name: '🏷️ Category', value: ticketInfo.category || 'General Support', inline: true },
+              { name: '📝 Reason', value: reason || 'User Request', inline: false },
+              { name: isDeleting ? '🗑️ Deleted By' : '🔒 Closed By', value: closedByDisplay, inline: true },
+              { name: '🕒 Time', value: timeString, inline: true }
+            ])
+            .setFooter({ text: `Made by Soggra. • ${timeString}` })
+            .setTimestamp();
+          
+          // Create transcript embed
+          const transcriptEmbed = new EmbedBuilder()
             .setColor(Colors.INFO)
             .setTitle(`🗒️ Ticket Transcript | #${formattedTicketNumber}`)
-            .setDescription(`Your ticket #${formattedTicketNumber} has been closed.\nA transcript is attached for your records.`)
+            .setDescription(`A complete transcript of your ticket conversation is attached for your records.`)
             .addFields([
-              { name: '📋 Category', value: ticketInfo.category, inline: true },
-              { name: '🔒 Closed By', value: `<@${closedById}>`, inline: true },
-              { name: '📝 Reason', value: reason || 'No reason provided', inline: false }
+              { name: '📊 Total Messages', value: sortedMessages.length.toString(), inline: true },
+              { name: '📅 Duration', value: ticketInfo.created_at ? `From ${ticketInfo.created_at}` : 'Unknown', inline: true }
             ])
-            .setFooter({ text: `Made by Soggra. • Today at ${timeString}` })
-            .setTimestamp();
+            .setFooter({ text: `Transcript generated • ${timeString}` });
           
           // Create a new attachment for the user to ensure it's not consumed by the previous send
           const userAttachment = new AttachmentBuilder(buffer, { name: `ticket-${formattedTicketNumber}-transcript.txt` });
           
-          // Send transcript to user WITHOUT a rating button (the rating will be sent separately via DM)
+          // Send both embeds and transcript in a single message
           await user.send({
-            embeds: [userEmbed],
+            embeds: [notificationEmbed, transcriptEmbed],
             files: [userAttachment]
           });
           
           // Log the success
-          logInfo('Transcript', `Sent transcript to user ${user.tag} for ticket #${formattedTicketNumber}`);
+          logInfo('Transcript', `Sent ${isDeleting ? 'deletion' : 'closure'} notification and transcript to user ${user.tag} for ticket #${formattedTicketNumber}`);
           transcriptSuccess = true;
         }
       } catch (userError) {
@@ -351,7 +366,7 @@ export async function saveAndSendTranscript(
       }
     }
     
-    // Log the ticket close event with transcript information
+    // ONLY log through logTicketEvent to avoid duplicates - it now handles dashboard logging internally
     await logTicketEvent({
       guildId: channel.guild.id,
       actionType: isDeleting ? 'ticketDelete' : 'ticketClose',
@@ -360,7 +375,7 @@ export async function saveAndSendTranscript(
       ticketNumber: ticketInfo.ticket_number,
       subject: ticketInfo.category,
       closedBy: closedById,
-      note: `Transcript saved: ticket-${formattedTicketNumber}-transcript.txt`, // Include transcript filename in the logs
+      note: reason || 'Transcript saved and sent to user',
       skipChannelLog: true // Skip sending to channel since we're already sending a transcript
     });
     

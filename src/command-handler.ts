@@ -115,7 +115,17 @@ class CommandLoadingState {
         
         try {
           const commandFiles = fs.readdirSync(commandsPath)
-            .filter(file => file.endsWith('.js') && !file.endsWith('.d.ts'));
+            .filter(file => {
+              if (!file.endsWith('.js') || file.endsWith('.d.ts')) return false;
+              
+              // Skip test commands in production
+              if (process.env.NODE_ENV === 'production' && file.startsWith('test-')) {
+                console.log(`[Command Loader] Skipping test command in production: ${file}`);
+                return false;
+              }
+              
+              return true;
+            });
           
           console.log(`[Command Loader] Found ${commandFiles.length} command files in ${folder}`);
           
@@ -243,22 +253,45 @@ class CommandLoadingState {
         // Continue anyway - this is not critical
       }
 
-      // Register new commands to GUILD for instant availability
-      const guildId = process.env.TEST_GUILD_ID;
+      // AUTO-REGISTER to ALL GUILDS the bot is in for instant availability
       let registrationSuccess = false;
+      let registeredCount = 0;
       
-      if (guildId) {
-        console.log(`[Command Register] Registering ${commandsJson.length} commands to guild ${guildId} (INSTANT)...`);
+      try {
+        // Get client instance to access all guilds
+        const { getClient } = await import('./utils/client-utils');
+        const client = getClient();
         
-        try {
-          await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId), { body: commandsJson });
-          console.log(`[Command Register] ✅ Successfully registered ${commandsJson.length} commands to guild!`);
-          console.log('[Command Register] 🚀 Commands are available IMMEDIATELY in your Discord server!');
-          registrationSuccess = true;
-          this.registrationComplete = true;
-        } catch (guildError) {
-          console.warn('[Command Register] ⚠️ Guild registration failed, falling back to global...', guildError);
+        if (client && client.guilds.cache.size > 0) {
+          console.log(`[Command Register] 🚀 AUTO-REGISTERING commands to ALL ${client.guilds.cache.size} servers for INSTANT availability...`);
+          
+          // Register to all guilds in parallel for speed
+          const registrationPromises = client.guilds.cache.map(async (guild) => {
+            try {
+              await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, guild.id), { body: commandsJson });
+              console.log(`[Command Register] ✅ Guild: ${guild.name} (${guild.id})`);
+              return true;
+            } catch (guildError: any) {
+              console.warn(`[Command Register] ⚠️ Failed: ${guild.name} (${guild.id}):`, guildError?.message || guildError);
+              return false;
+            }
+          });
+          
+          const results = await Promise.all(registrationPromises);
+          registeredCount = results.filter(Boolean).length;
+          registrationSuccess = registeredCount > 0;
+          
+          console.log(`[Command Register] 🎉 Successfully registered commands to ${registeredCount}/${client.guilds.cache.size} servers!`);
+          console.log('[Command Register] 🚀 Commands are available IMMEDIATELY in all Discord servers!');
+        } else {
+          console.log('[Command Register] ⚠️ No guilds found, bot may not be connected yet');
         }
+      } catch (error) {
+        console.warn('[Command Register] ⚠️ Auto-registration failed:', error);
+      }
+      
+      if (registrationSuccess) {
+        this.registrationComplete = true;
       }
       
       // Fallback to global registration if guild registration failed

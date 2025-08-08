@@ -31,19 +31,45 @@ export async function updateTicketActivity(message: Message): Promise<boolean> {
     
     const ticketNumber = parseInt(match[1]);
     
-    // Update the last_activity_at timestamp in the database
-    db.prepare(`
-      UPDATE tickets 
-      SET last_message_at = CURRENT_TIMESTAMP
-      WHERE guild_id = ? AND ticket_number = ?
-    `).run(message.guild.id, ticketNumber);
+    // Update the last_activity_at and updated_at timestamps in the database
+    try {
+      db.prepare(`
+        UPDATE tickets 
+        SET last_activity_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE guild_id = ? AND ticket_number = ?
+      `).run(message.guild.id, ticketNumber);
+    } catch (dbError: any) {
+      // Fallback: try last_message_at if last_activity_at column doesn't exist
+      if (dbError.message && dbError.message.includes('no such column: last_activity_at')) {
+        try {
+          db.prepare(`
+            UPDATE tickets 
+            SET last_message_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            WHERE guild_id = ? AND ticket_number = ?
+          `).run(message.guild.id, ticketNumber);
+        } catch (fallbackError: any) {
+          // Final fallback: just update updated_at if it exists
+          if (fallbackError.message && fallbackError.message.includes('no such column: last_message_at')) {
+            db.prepare(`
+              UPDATE tickets 
+              SET updated_at = CURRENT_TIMESTAMP
+              WHERE guild_id = ? AND ticket_number = ?
+            `).run(message.guild.id, ticketNumber);
+          } else {
+            throw fallbackError;
+          }
+        }
+      } else {
+        throw dbError;
+      }
+    }
     
     // If message is from a staff member, update staff activity
     if (!message.author.bot) {
       await updateStaffActivity(message, ticketNumber);
     }
     
-    logInfo('Ticket Activity', `Updated activity timestamp for ticket #${ticketNumber} in ${message.guild.name}`);
+    // Only log on errors - activity updates are too frequent for console logging
     return true;
   } catch (error) {
     logError('Ticket Activity', `Error updating ticket activity: ${error}`);
@@ -112,7 +138,7 @@ async function updateStaffActivity(message: Message, ticketNumber: number): Prom
         insertStmt.run(ticket.id, message.guild.id, message.author.id);
       }
       
-      logInfo('Ticket Staff Activity', `Updated staff activity timestamp for ticket #${ticketNumber} by ${message.author.tag}`);
+      // Only log on errors - staff activity updates are too frequent for console logging
       return true;
     } catch (error) {
       // If there's an error (like table doesn't exist), log it but don't fail

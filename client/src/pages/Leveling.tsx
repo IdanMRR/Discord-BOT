@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import PermissionGuard from '../components/common/PermissionGuard';
 import toast from 'react-hot-toast';
 import {
   ChartBarIcon,
@@ -69,7 +70,7 @@ interface LevelingSettings {
   leaderboard_update_interval?: number;
 }
 
-const LevelingPage: React.FC = () => {
+const LevelingPageContent: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
   const { darkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -925,6 +926,17 @@ const LevelingPage: React.FC = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const LevelingPage: React.FC = () => {
+  return (
+    <PermissionGuard 
+      requiredPermission={['view_leveling', 'manage_leveling', 'admin']}
+      fallbackMessage="You need leveling system permissions to access this page."
+    >
+      <LevelingPageContent />
+    </PermissionGuard>
   );
 };
 

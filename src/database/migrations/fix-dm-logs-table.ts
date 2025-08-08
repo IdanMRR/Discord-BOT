@@ -1,14 +1,19 @@
 import { logInfo, logError } from '../../utils/logger';
+import type Database from 'better-sqlite3';
 
 /**
  * Migration to fix dm_logs table schema
  * Add missing columns that the logger expects
  */
-export async function fixDmLogsTable() {
+export async function fixDmLogsTable(database?: Database.Database) {
   try {
-    // Import db dynamically to ensure connection is ready
-    const { db } = await import('../sqlite');
-    
+    // If no database provided, import it here to avoid circular dependency issues
+    let db = database;
+    if (!db) {
+      const { db: importedDb } = await import('../sqlite');
+      db = importedDb;
+    }
+
     if (!db) {
       logError('Migration', 'Database connection not available for dm_logs migration');
       return false;
@@ -72,13 +77,4 @@ export async function fixDmLogsTable() {
   }
 }
 
-// Run the migration with proper async handling
-(async () => {
-  try {
-    // Wait a bit for database to be initialized
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await fixDmLogsTable();
-  } catch (error) {
-    logError('Migration', `Failed to run dm_logs migration: ${error}`);
-  }
-})(); 
+ 

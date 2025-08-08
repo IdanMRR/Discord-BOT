@@ -169,10 +169,8 @@ const Settings: React.FC = (): React.ReactElement => {
 
   // Load settings on mount
   useEffect(() => {
-    console.log('Settings loading:', settings); // Debug log
     if (settings && isInitialLoad.current) {
       isInitialLoad.current = false;
-      console.log('Loading saved settings:', settings); // Debug log
       
       setTheme(settings.theme || 'auto');
       setPrimaryColor(settings.primaryColor || '#3b82f6');
@@ -287,11 +285,9 @@ const Settings: React.FC = (): React.ReactElement => {
 
   // Apply primary color (save immediately and let SettingsApplier handle the CSS)
   const handleColorChange = React.useCallback((color: string) => {
-    console.log('Color changing to:', color);
     const oldColor = primaryColor;
     setPrimaryColor(color);
     updateSetting('primaryColor', color);
-    console.log('Color setting saved to context');
     
     // Log the settings change
     dashboardLogger.logSettingsChanged('dashboard', 'Primary Color', oldColor, color, 'User');

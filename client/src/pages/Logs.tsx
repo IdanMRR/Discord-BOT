@@ -290,14 +290,6 @@ const LogsContent: React.FC = () => {
             };
           });
           
-          // Debug: Log first few entries to see timestamps
-          console.log('Sample log timestamps:', allLogs.slice(0, 5).map(log => ({
-            id: log.id,
-            action: log.action,
-            created_at: log.created_at,
-            timestamp: log.timestamp,
-            dateValid: !isNaN(new Date(log.created_at || log.timestamp || '').getTime())
-          })));
         } else {
           console.error('Failed to fetch logs:', response.error);
           throw new Error(response.error || 'Failed to fetch logs');

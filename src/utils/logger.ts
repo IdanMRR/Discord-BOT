@@ -119,7 +119,7 @@ export async function logModeration(options: {
     
     // Check if the guild has a log channel set
     const serverSettings = await ServerSettingsService.getOrCreate(options.guild.id, options.guild.name);
-    const logChannelId = serverSettings?.log_channel_id || serverSettings?.member_log_channel_id;
+    const logChannelId = serverSettings?.member_log_channel_id || serverSettings?.mod_log_channel_id || serverSettings?.log_channel_id;
     
     if (!logChannelId) {
       logWarning('Moderation', `No log channel set for guild ${options.guild.name} (${options.guild.id}). Skipping channel logging.`);
@@ -133,10 +133,10 @@ export async function logModeration(options: {
     const logChannel = options.guild.channels.cache.get(logChannelId) as TextChannel;
     
     if (!logChannel || !logChannel.isTextBased()) {
-      logWarning('Moderation', 'Log channel not found or is not a text channel. Skipping channel logging.');
+      logWarning('Moderation', `Log channel not found or is not a text channel. Channel ID: ${logChannelId}, Guild: ${options.guild.name} (${options.guild.id}). Skipping channel logging.`);
       return {
         success: true,
-        message: `⚠️ The configured log channel could not be found or is not a text channel. Moderation actions are saved in the database but won't be logged to a channel.`
+        message: `⚠️ The configured log channel (ID: ${logChannelId}) could not be found or is not a text channel. Moderation actions are saved in the database but won't be logged to a channel.`
       };
     }
     
@@ -171,16 +171,21 @@ export async function logModeration(options: {
       case 'warning':
         actionEmoji = '⚠️';
         break;
+      case 'unban':
+        actionEmoji = '🔓';
+        break;
+      case 'warning removed':
+        actionEmoji = '✅';
+        break;
       default:
         actionEmoji = '🛡️';
         break;
     }
     
-    // Create a rich moderation embed
+    // Create a rich moderation embed matching the expected format
     const logEmbed = new EmbedBuilder()
-      .setTitle(`${actionEmoji} ${options.action}`)
-      .setDescription(`**User:** ${options.target.tag} (<@${options.target.id}>)\n**Moderator:** ${options.moderator.tag}\n**Reason:** ${options.reason}`)
-      .setColor(0xFF6B6B) // Red color for moderation actions
+      .setTitle(`${actionEmoji} ${options.action.toUpperCase()} | Case #${formattedCaseNumber}`)
+      .setColor(getColorForAction(options.action)) // Use dynamic color based on action
       .setThumbnail(options.target.displayAvatarURL({ size: 128 }))
       .setTimestamp(now);
     
@@ -188,12 +193,34 @@ export async function logModeration(options: {
     const activeWarningsStmt = db.prepare(`
       SELECT COUNT(*) as count FROM warnings WHERE guild_id = ? AND user_id = ? AND active = 1
     `);
-    const { count: warningCount } = activeWarningsStmt.get(options.guild.id, options.target.id) as { count: number };
+    let { count: warningCount } = activeWarningsStmt.get(options.guild.id, options.target.id) as { count: number };
     
+    // For warning removed actions, the count reflects AFTER removal, so we add 1 to show what it was before
+    if (options.action.toLowerCase() === 'warning removed') {
+      warningCount += 1;
+    }
+    
+    // Add user information section
     logEmbed.addFields([
+      { 
+        name: '👤 User Information', 
+        value: `**Tag:** ${options.target.tag}\n**ID:** ${options.target.id}\n**Account Created:** <t:${Math.floor(options.target.createdTimestamp / 1000)}:D>`, 
+        inline: true 
+      },
+      { 
+        name: '🛡️ Moderator Information', 
+        value: `**Tag:** ${options.moderator.tag}\n**ID:** ${options.moderator.id}`, 
+        inline: true 
+      },
+      { name: '\u200B', value: '\u200B', inline: true }, // Spacer for layout
       { name: '🏠 Server', value: options.guild.name, inline: true },
       { name: '⚠️ Warning Count', value: warningCount.toString(), inline: true },
       { name: '📋 Case Number', value: `#${formattedCaseNumber}`, inline: true }
+    ]);
+    
+    // Add reason as a separate field
+    logEmbed.addFields([
+      { name: '📝 Reason', value: options.reason, inline: false }
     ]);
     
     // Format the footer with the current time in Israeli timezone
@@ -209,14 +236,16 @@ export async function logModeration(options: {
     }
     
     // Send the log embed to the log channel
+    logInfo('Moderation', `Attempting to send moderation log to channel ${logChannelId} in guild ${options.guild.name} (${options.guild.id})`);
     await logChannel.send({ embeds: [logEmbed] });
+    logInfo('Moderation', `Successfully sent moderation log for ${options.action} action (Case #${formattedCaseNumber})`);
     
     return { success: true };
   } catch (error) {
-    logError('Moderation', error);
+    logError('Moderation', `Failed to send moderation log to channel ${options.guild.name} (${options.guild.id}): ${error}`);
     return { 
       success: false, 
-      message: 'Failed to log moderation action. The action was still performed, but it may not have been recorded in all logs.'
+      message: `Failed to log moderation action to channel. The action was still performed and saved in the database. Error: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }

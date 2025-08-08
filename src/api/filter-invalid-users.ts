@@ -10,6 +10,10 @@ export function isValidUserId(id: string | undefined | null): boolean {
   if (!id) return false;
   if (id === '_soill_') return false;
   if (typeof id === 'string' && id.includes('_soill_')) return false;
+  
+  // Special case for dashboard system
+  if (id === 'dashboard') return true;
+  
   return /^\d{17,20}$/.test(id);
 }
 

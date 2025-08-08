@@ -230,6 +230,11 @@ class StructuredLogger {
 
   // Specialized logging methods
   logRequest(req: Request, res: any, duration?: number): void {
+    // Skip logging webpack hot-update.json 404s to reduce noise
+    if (req.path.includes('.hot-update.json') && res.statusCode === 404) {
+      return;
+    }
+    
     const userInfo = this.extractUserInfo(req);
     
     this.log({

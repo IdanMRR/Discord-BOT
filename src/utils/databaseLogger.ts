@@ -66,6 +66,9 @@ export async function logModerationToDatabase(options: {
       case 'ban':
         actionType = 'memberBan';
         break;
+      case 'unban':
+        actionType = 'memberUnban';
+        break;
       case 'kick':
         actionType = 'memberKick';
         break;
@@ -234,94 +237,136 @@ export async function logTicketEvent(options: {
     skipChannelLog = false
   } = options;
   
-  // First save to the server_logs table for general logging
-  const mainLogResult = await logToDatabase({
-    guildId,
-    actionType,
-    userId,
-    channelId,
-    details: {
-      ticketNumber,
-      subject,
-      closedBy,
-      priority,
-      targetUser,
-      note,
-      rating,
-      feedback,
-      timestamp: new Date().toISOString() // Add timestamp for accurate time tracking
-    }
-  });
+  // Skip old server_logs to avoid duplicates - ONLY use dashboard logging for cleaner display
+  let mainLogResult = true;
   
-  // Additionally, save to the ticket_action_logs table for specialized ticket logs
+  // Log to DashboardLogsService for dashboard display
   try {
-    // Get the ticket ID from the database if not provided
-    let ticketId = null;
+    const { DashboardLogsService } = await import('../database/services/dashboardLogsService');
+    const { getClient } = await import('../utils/client-utils');
+    
+    // Get user information for better logging
+    let username = 'Unknown User';
     try {
-      const { db } = require('../database/sqlite');
-      const ticketStmt = db.prepare(`SELECT id FROM tickets WHERE guild_id = ? AND ticket_number = ?`);
-      const ticket = ticketStmt.get(guildId, ticketNumber);
-      ticketId = ticket ? ticket.id : null;
-    } catch (error) {
-      logError('Ticket Logger', `Failed to get ticket ID: ${error}`);
+      const client = getClient();
+      if (client) {
+        const user = await client.users.fetch(userId);
+        username = user ? user.username : `User ${userId.slice(-4)}`;
+      }
+    } catch (userError) {
+      // Fallback to userId
+      username = `User ${userId.slice(-4)}`;
     }
     
-    // Convert action type to ticket action format
-    const action = actionType.replace('ticket', '').toLowerCase();
+    // Create readable log message based on action type - matching Discord embed format
+    let logMessage = '';
+    let logDetails = '';
+    const formattedTicketNumber = ticketNumber.toString().padStart(4, '0');
     
-    // Create details JSON
-    const details = JSON.stringify({
-      subject,
-      closedBy,
-      priority,
-      targetUser,
-      note,
-      rating,
-      feedback,
-      channelId
-    });
-    
-    // Insert into ticket_action_logs
-    const { db } = require('../database/sqlite');
-    const stmt = db.prepare(`
-      INSERT INTO ticket_action_logs 
-      (guild_id, ticket_id, ticket_number, user_id, action, details, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `);
-    
-    stmt.run(
-      guildId,
-      ticketId,
-      ticketNumber,
-      userId,
-      action,
-      details
-    );
-    
-    logInfo('Ticket Logger', `Logged ${action} action for ticket #${ticketNumber} to ticket_action_logs`);
-    
-    // Send log to the ticket logs channel if not skipped
-    if (!skipChannelLog) {
-      await sendLogToChannel(
-        guildId, 
-        userId, 
-        ticketNumber, 
-        actionType, 
-        subject, 
-        closedBy, 
-        targetUser, 
-        note,
-        rating,
-        feedback
-      );
+    // For ticket close, create multiple log entries like in the screenshot
+    if (actionType === 'ticketClose') {
+      const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      
+      // 1. First create the "Ticket Transcript" log entry
+      await DashboardLogsService.logActivity({
+        user_id: userId,
+        username: username,
+        action_type: 'ticketTranscript',
+        page: 'tickets',
+        target_type: 'ticket', 
+        target_id: ticketNumber.toString(),
+        old_value: null,
+        new_value: JSON.stringify({ ticketNumber, category: subject, transcriptGenerated: true }),
+        details: `📋 **Ticket Transcript | #${formattedTicketNumber}**\n\nYour ticket #${formattedTicketNumber} has been closed.\nA transcript is attached for your records.\n\n📂 **Category**\n${subject || 'question'}\n\n👤 **Closed By**\n@${username}\n\n🕒 **Closed At**\n<t:${Math.floor(Date.now() / 1000)}:f>\n\nMade by Soggra. • Today at ${currentTime} • Yesterday at ${currentTime}`,
+        success: true,
+        guild_id: guildId
+      });
+      
+      // 2. Then create the "Your Ticket Has Been Closed" log entry
+      await DashboardLogsService.logActivity({
+        user_id: userId,
+        username: username,
+        action_type: 'ticketClose',
+        page: 'tickets',
+        target_type: 'ticket',
+        target_id: ticketNumber.toString(),
+        old_value: null,
+        new_value: JSON.stringify({ ticketNumber, subject, closedBy, note }),
+        details: `🔒 **Your Ticket Has Been Closed | #${formattedTicketNumber}**\n\nYour support ticket in **Coding API** has been closed.\n\n📂 **Ticket Number**\n#${formattedTicketNumber}\n\n🏷️ **Category**\n${subject || 'General Question'}\n\n📝 **Reason**\n${note || 'Information Provided'}\n\n🔒 **Closed By**\n@${username}\n\n🕒 **Closed At**\n${currentTime}\n\nMade by Soggra. • ${currentTime} • Yesterday at ${currentTime}`,
+        success: true,
+        guild_id: guildId
+      });
+      
+      // 3. Finally create the "Rate Your Support Experience" log entry
+      await DashboardLogsService.logActivity({
+        user_id: userId,
+        username: username,
+        action_type: 'ticketRatingPrompt',
+        page: 'tickets',
+        target_type: 'ticket',
+        target_id: ticketNumber.toString(),
+        old_value: null,
+        new_value: JSON.stringify({ ticketNumber, category: subject, ratingPromptSent: true }),
+        details: `⭐ **Rate Your Support Experience**\n\nWe value your feedback! Please rate your support experience to help us improve our service.\n\n📂 **Ticket**\n#${formattedTicketNumber}\n\n🏷️ **Category**\n${subject || 'General Question'}\n\nYesterday at ${currentTime}`,
+        success: true,
+        guild_id: guildId
+      });
+      
+    } else {
+      // Handle other ticket actions normally
+      switch (actionType) {
+        case 'ticketCreate':
+          logMessage = `🆕 Ticket Created | #${formattedTicketNumber}`;
+          logDetails = `A new support ticket has been created.\n\n📂 **Category**\n${subject || 'General Support'}\n\n👤 **Created By**\n@${username}\n\n📅 **Created At**\n<t:${Math.floor(Date.now() / 1000)}:f>`;
+          break;
+        case 'ticketDelete':
+          logMessage = `🗑️ Ticket Deleted | #${formattedTicketNumber}`;
+          logDetails = `Your ticket #${formattedTicketNumber} has been deleted.\nA transcript is attached for your records.\n\n📂 **Category**\n${subject || 'General Support'}\n\n📝 **Reason**\n${note || 'Staff Decision'}\n\n🗑️ **Deleted By**\n@${username}\n\n🕒 **Deleted At**\n<t:${Math.floor(Date.now() / 1000)}:f>\n\n⚠️ This action is permanent and cannot be undone\n\nMade by Soggra. • Today at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+          break;
+        case 'ticketReopen':
+          logMessage = `🔓 Ticket Reopened | #${formattedTicketNumber}`;
+          logDetails = `Your ticket #${formattedTicketNumber} has been reopened.\n\n📂 **Category**\n${subject || 'General Support'}\n\n📝 **Reason**\n${note || 'User Request'}\n\n🔓 **Reopened By**\n@${username}\n\n📅 **Reopened At**\n<t:${Math.floor(Date.now() / 1000)}:f>\n\nMade by Soggra. • Today at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+          break;
+        case 'ticketRating':
+          logMessage = `⭐ Rate Your Support Experience`;
+          logDetails = `We value your feedback! Please rate your support experience to help us improve our service.\n\n📂 **Ticket**\n#${formattedTicketNumber}\n\n🏷️ **Category**\n${subject || 'General Support'}${rating ? `\n\n⭐ **Rating**\n${rating}/5 stars` : ''}${feedback ? `\n\n💬 **Feedback**\n${feedback}` : ''}\n\nYesterday at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+          break;
+        default:
+          logMessage = `🎫 Ticket Action | #${formattedTicketNumber}`;
+          logDetails = `Ticket action performed: ${actionType}\n\n👤 **User**\n@${username}\n\n📅 **Time**\n<t:${Math.floor(Date.now() / 1000)}:f>`;
+      }
+      
+      await DashboardLogsService.logActivity({
+        user_id: userId,
+        username: username,
+        action_type: actionType,
+        page: 'tickets',
+        target_type: 'ticket',
+        target_id: ticketNumber.toString(),
+        old_value: null,
+        new_value: JSON.stringify({ 
+          ticketNumber, 
+          subject, 
+          priority, 
+          rating, 
+          feedback,
+          closedBy,
+          targetUser,
+          note 
+        }),
+        details: logDetails,
+        success: true,
+        guild_id: guildId
+      });
     }
     
-    return true;
-  } catch (error) {
-    logError('Ticket Logger', `Failed to log to ticket_action_logs: ${error}`);
-    // Still return the result of the main log
-    return mainLogResult;
+    logInfo('Ticket Logger', `Logged ${actionType} to dashboard logs for ticket #${ticketNumber}`);
+  } catch (dashboardError) {
+    logError('Ticket Logger', `Failed to log to dashboard: ${dashboardError}`);
   }
+  
+  // Skip old ticket_action_logs and channel logging to avoid old embeds and duplicates
+  return true;
 }
 
 /**

@@ -78,25 +78,22 @@ module.exports = {
         // Wait for the modal submission (3 minute timeout to avoid Discord limits)
         const modalSubmission = await interaction.awaitModalSubmit({ filter, time: 180000 });
         
-        // Check if the modal submission is still valid
-        if (!modalSubmission || modalSubmission.replied || modalSubmission.deferred) {
-          logError('Staff DM Modal', 'Modal submission already handled or invalid');
-          return;
-        }
-        
         // Get the values from the modal
         const title = modalSubmission.fields.getTextInputValue('dm-title');
         const messageContent = modalSubmission.fields.getTextInputValue('dm-message');
         
-        // Defer the reply to the modal submission with error handling
-        try {
-        await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
-        } catch (deferError: any) {
-          if (deferError.code === 10062) {
-            logError('Staff DM Modal', 'Modal interaction expired - user took too long to submit');
+        // Check if we can still interact with the modal submission
+        if (!modalSubmission.replied && !modalSubmission.deferred) {
+          try {
+            await modalSubmission.deferReply({ flags: MessageFlags.Ephemeral });
+          } catch (deferError: any) {
+            if (deferError.code === 10062) {
+              logError('Staff DM Modal', 'Modal interaction expired - user took too long to submit');
+              return;
+            }
+            logError('Staff DM Modal', `Failed to defer reply: ${deferError.message}`);
             return;
           }
-          throw deferError;
         }
       
         // Create moderation case for tracking staff DM
@@ -180,7 +177,16 @@ module.exports = {
           
           successEmbed.setThumbnail(targetUser.displayAvatarURL({ size: 128 }));
           
-          await modalSubmission.editReply({ embeds: [successEmbed] });
+          // Send confirmation message to the staff member
+          try {
+            if (modalSubmission.deferred) {
+              await modalSubmission.editReply({ embeds: [successEmbed] });
+            } else if (!modalSubmission.replied) {
+              await modalSubmission.reply({ embeds: [successEmbed], flags: MessageFlags.Ephemeral });
+            }
+          } catch (replyError: any) {
+            logError('Staff DM Reply', `Failed to send confirmation: ${replyError.message}`);
+          }
           
           // Log the action to console
           logInfo('Staff DM', `${interaction.user.tag} sent a DM to ${targetUser.tag} in ${guild.name}: ${messageContent}`);
@@ -202,7 +208,16 @@ module.exports = {
             `Could not send a message to ${targetUser.tag}. They may have DMs disabled or have blocked the bot.`
           );
           
-          await modalSubmission.editReply({ embeds: [errorEmbed] });
+          // Send error message to the staff member
+          try {
+            if (modalSubmission.deferred) {
+              await modalSubmission.editReply({ embeds: [errorEmbed] });
+            } else if (!modalSubmission.replied) {
+              await modalSubmission.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
+            }
+          } catch (replyError: any) {
+            logError('Staff DM Reply', `Failed to send error message: ${replyError.message}`);
+          }
           logError('Staff DM', `Failed to send DM to ${targetUser.tag}: ${error}`);
           
           // Log the failed DM attempt to database and log channel

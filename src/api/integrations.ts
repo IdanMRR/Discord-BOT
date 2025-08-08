@@ -82,7 +82,7 @@ router.get('/:id',
 router.post('/',
   body('guild_id').isString().notEmpty(),
   body('name').isString().isLength({ min: 1, max: 100 }),
-  body('integration_type').isIn(['webhook', 'api', 'rss', 'github', 'twitter', 'twitch', 'youtube', 'minecraft', 'steam', 'custom']),
+  body('integration_type').isIn(['webhook', 'api', 'rss', 'github', 'twitter', 'twitch', 'youtube', 'minecraft', 'steam', 'weather', 'custom']),
   body('provider').isString().notEmpty(),
   body('config').isObject(),
   body('target_channel_id').optional().isString(),
@@ -219,13 +219,32 @@ router.post('/:id/sync',
         });
       }
       
-      // This would trigger a manual sync - implementation depends on your integration manager
+      // Get the integration details
+      const integration = await integrationService.getIntegration(integrationId);
+      if (!integration) {
+        return res.status(404).json({
+          success: false,
+          message: 'Integration not found'
+        });
+      }
+      
       logInfo('IntegrationsAPI', `Manual sync requested for integration ${integrationId}`);
       
-      res.json({
-        success: true,
-        message: 'Integration sync started'
-      });
+      // Actually trigger the sync
+      try {
+        await integrationManager.manualSync(integrationId);
+        
+        res.json({
+          success: true,
+          message: 'Integration sync completed successfully'
+        });
+      } catch (syncError) {
+        logError('IntegrationsAPI', `Sync failed for integration ${integrationId}: ${syncError}`);
+        res.status(500).json({
+          success: false,
+          message: `Sync failed: ${syncError instanceof Error ? syncError.message : 'Unknown error'}`
+        });
+      }
     } catch (error) {
       logError('IntegrationsAPI', `Error syncing integration: ${error}`);
       res.status(500).json({

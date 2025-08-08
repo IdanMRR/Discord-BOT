@@ -6,8 +6,39 @@ import { ServerSettingsService } from '../database/services/serverSettingsServic
 import { WarningService } from '../database/services/sqliteService';
 import { logModerationToDatabase } from '../utils/databaseLogger';
 import { TextChannel, GuildMember, User } from 'discord.js';
+import { getUserName } from './user-helper';
 
 const router = express.Router();
+
+// Helper function to create enhanced moderator object with actual Discord username
+async function createEnhancedModerator(req: Request): Promise<{ id: string; username: string; tag: string; toString(): string }> {
+  const client = getClient();
+  let moderatorUsername = 'Dashboard';
+  let actualUserId = req.user?.userId || 'dashboard';
+  
+  // Try to get the actual Discord username from the authenticated user
+  if (req.user?.userId && client) {
+    try {
+      const actualUsername = await getUserName(client, req.user.userId);
+      if (actualUsername && actualUsername !== 'Unknown User' && !actualUsername.startsWith('User ')) {
+        moderatorUsername = `Dashboard [${actualUsername}]`;
+      }
+    } catch (error) {
+      // Fallback to just "Dashboard" if we can't get the username
+      logError('Members API', `Could not get username for dashboard user ${req.user.userId}: ${error}`);
+    }
+  }
+  
+  // Create a proper user-like object with toString method
+  const userObject = { 
+    id: actualUserId,
+    username: moderatorUsername,
+    tag: `${moderatorUsername}#0000`,
+    toString() { return moderatorUsername; }
+  };
+  
+  return userObject;
+}
 
 interface Member {
   id: string;
@@ -316,8 +347,24 @@ router.post('/:serverId/members/:memberId/kick', async (req: Request, res: Respo
     // Perform the kick
     await member.kick(reason);
 
+    // Get current warning count for the user
+    const activeWarnings = await WarningService.getWarnings(serverId, memberId, true);
+    const activeWarningCount = activeWarnings.data.length;
+
+    // Create moderation case
+    const { ModerationCaseService } = await import('../database/services/sqliteService');
+    const moderationCase = await ModerationCaseService.create({
+      guild_id: serverId,
+      action_type: 'Kick',
+      user_id: memberId,
+      moderator_id: 'dashboard',
+      reason,
+      additional_info: 'Kick performed via Dashboard',
+      active: true
+    });
+
     // Log to database
-    const moderator = { id: 'dashboard', tag: 'Dashboard User', username: 'Dashboard' } as User;
+    const moderator = await createEnhancedModerator(req) as any as User;
     await logModerationToDatabase({
       guild,
       action: 'kick',
@@ -329,24 +376,35 @@ router.post('/:serverId/members/:memberId/kick', async (req: Request, res: Respo
     // Log to mod log channel
     try {
       const settings = await ServerSettingsService.getServerSettings(serverId);
+      logInfo('Members API', `Kick - Server settings: ${settings ? 'found' : 'not found'}, mod_log_channel_id: ${settings?.mod_log_channel_id}`);
+      
       if (settings?.mod_log_channel_id) {
         const modLogChannel = guild.channels.cache.get(settings.mod_log_channel_id) as TextChannel;
+        logInfo('Members API', `Kick - Mod log channel: ${modLogChannel ? 'found' : 'not found'}, isTextBased: ${modLogChannel?.isTextBased()}`);
+        
         if (modLogChannel?.isTextBased()) {
           const embed = createModerationEmbed({
             action: 'Kick',
             target: member.user,
             moderator,
             reason,
+            case_number: moderationCase?.case_number,
             additionalFields: [
-              { name: 'Kicked Via', value: 'Dashboard', inline: true }
+              { name: 'Kicked Via', value: 'Dashboard', inline: true },
+              { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
             ]
           });
           await modLogChannel.send({ embeds: [embed] });
+          logInfo('Members API', `Kick - Successfully sent log message to mod channel`);
+        } else {
+          logInfo('Members API', `Kick - Mod log channel not found or not text-based`);
         }
+      } else {
+        logInfo('Members API', `Kick - No mod_log_channel_id configured`);
       }
-         } catch (logErrorToChannel) {
-       logError('Members API', `Failed to log kick to mod channel: ${logErrorToChannel}`);
-     }
+    } catch (logErrorToChannel) {
+      logError('Members API', `Failed to log kick to mod channel: ${logErrorToChannel}`);
+    }
 
     logInfo('Members API', `Member ${member.user.tag} kicked from ${guild.name} via dashboard`);
 
@@ -412,8 +470,24 @@ router.post('/:serverId/members/:memberId/ban', async (req: Request, res: Respon
       deleteMessageDays: Math.min(Math.max(deleteMessageDays, 0), 7)
     });
 
+    // Get current warning count for the user
+    const activeWarnings = await WarningService.getWarnings(serverId, memberId, true);
+    const activeWarningCount = activeWarnings.data.length;
+
+    // Create moderation case
+    const { ModerationCaseService } = await import('../database/services/sqliteService');
+    const moderationCase = await ModerationCaseService.create({
+      guild_id: serverId,
+      action_type: 'Ban',
+      user_id: memberId,
+      moderator_id: 'dashboard',
+      reason,
+      additional_info: `Ban performed via Dashboard. Message days deleted: ${deleteMessageDays}`,
+      active: true
+    });
+
     // Log to database
-    const moderator = { id: 'dashboard', tag: 'Dashboard User', username: 'Dashboard' } as User;
+    const moderator = await createEnhancedModerator(req) as any as User;
     await logModerationToDatabase({
       guild,
       action: 'ban',
@@ -433,17 +507,19 @@ router.post('/:serverId/members/:memberId/ban', async (req: Request, res: Respon
             target: user,
             moderator,
             reason,
+            case_number: moderationCase?.case_number,
             additionalFields: [
               { name: 'Banned Via', value: 'Dashboard', inline: true },
-              { name: 'Message Days Deleted', value: deleteMessageDays.toString(), inline: true }
+              { name: 'Message Days Deleted', value: deleteMessageDays.toString(), inline: true },
+              { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
             ]
           });
           await modLogChannel.send({ embeds: [embed] });
         }
       }
-         } catch (logErrorToChannel) {
-       logError('Members API', `Failed to log ban to mod channel: ${logErrorToChannel}`);
-     }
+    } catch (logErrorToChannel) {
+      logError('Members API', `Failed to log ban to mod channel: ${logErrorToChannel}`);
+    }
 
     logInfo('Members API', `User ${user.tag} banned from ${guild.name} via dashboard`);
 
@@ -503,8 +579,24 @@ router.post('/:serverId/members/:memberId/timeout', async (req: Request, res: Re
     const timeoutDuration = Math.min(Math.max(duration, 60000), 2419200000); // Min 1 minute, max 28 days
     await member.timeout(timeoutDuration, reason);
 
+    // Get current warning count for the user
+    const activeWarnings = await WarningService.getWarnings(serverId, memberId, true);
+    const activeWarningCount = activeWarnings.data.length;
+
+    // Create moderation case
+    const { ModerationCaseService } = await import('../database/services/sqliteService');
+    const moderationCase = await ModerationCaseService.create({
+      guild_id: serverId,
+      action_type: 'Timeout',
+      user_id: memberId,
+      moderator_id: 'dashboard',
+      reason,
+      additional_info: `Timeout performed via Dashboard. Duration: ${Math.floor(timeoutDuration / 1000 / 60)} minutes`,
+      active: true
+    });
+
     // Log to database
-    const moderator = { id: 'dashboard', tag: 'Dashboard User', username: 'Dashboard' } as User;
+    const moderator = await createEnhancedModerator(req) as any as User;
     await logModerationToDatabase({
       guild,
       action: 'timeout',
@@ -525,17 +617,19 @@ router.post('/:serverId/members/:memberId/timeout', async (req: Request, res: Re
             target: member.user,
             moderator,
             reason,
+            case_number: moderationCase?.case_number,
             additionalFields: [
               { name: 'Duration', value: `${Math.floor(timeoutDuration / 1000 / 60)} minutes`, inline: true },
-              { name: 'Timeout Via', value: 'Dashboard', inline: true }
+              { name: 'Timeout Via', value: 'Dashboard', inline: true },
+              { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
             ]
           });
           await modLogChannel.send({ embeds: [embed] });
         }
       }
-         } catch (logErrorToChannel) {
-       logError('Members API', `Failed to log timeout to mod channel: ${logErrorToChannel}`);
-     }
+    } catch (logErrorToChannel) {
+      logError('Members API', `Failed to log timeout to mod channel: ${logErrorToChannel}`);
+    }
 
     logInfo('Members API', `Member ${member.user.tag} timed out in ${guild.name} via dashboard`);
 
@@ -583,14 +677,35 @@ router.post('/:serverId/members/:memberId/warn', async (req: Request, res: Respo
       });
     }
 
+              // Generate case number for this guild
+              const { db } = await import('../database/sqlite');
+              const caseNumberStmt = db.prepare(`
+                SELECT MAX(case_number) as max_case FROM warnings WHERE guild_id = ?
+              `);
+              const { max_case } = caseNumberStmt.get(serverId) as { max_case: number | null };
+              const caseNumber = (max_case !== null ? max_case + 1 : 1);
+
               // Create warning in database
      const warning = await WarningService.create({
        user_id: memberId,
        guild_id: serverId,
        moderator_id: 'dashboard',
        reason,
-       active: true
+       active: true,
+       case_number: caseNumber
      });
+
+              // Also create moderation case (like the Discord commands do)
+              const { ModerationCaseService } = await import('../database/services/sqliteService');
+              const moderationCase = await ModerationCaseService.create({
+                guild_id: serverId,
+                action_type: 'Warning',
+                user_id: memberId,
+                moderator_id: 'dashboard',
+                reason,
+                additional_info: 'Warning issued via Dashboard',
+                active: true
+              });
 
      if (!warning) {
        return res.status(500).json({
@@ -599,8 +714,12 @@ router.post('/:serverId/members/:memberId/warn', async (req: Request, res: Respo
        });
      }
 
+    // Get current warning count for the user AFTER creating the new warning
+    const activeWarnings = await WarningService.getWarnings(serverId, memberId, true);
+    const activeWarningCount = activeWarnings.data.length;
+
     // Log to database
-    const moderator = { id: 'dashboard', tag: 'Dashboard User', username: 'Dashboard' } as User;
+    const moderator = await createEnhancedModerator(req) as any as User;
     await logModerationToDatabase({
       guild,
       action: 'warning',
@@ -620,17 +739,18 @@ router.post('/:serverId/members/:memberId/warn', async (req: Request, res: Respo
             target: member.user,
             moderator,
             reason,
-                         caseNumber: warning.id,
-             additionalFields: [
+            case_number: moderationCase?.case_number || warning.case_number,
+            additionalFields: [
                { name: 'Warning Via', value: 'Dashboard', inline: true },
-               { name: 'Warning ID', value: warning.id?.toString() || 'Unknown', inline: true }
+               { name: 'Warning ID', value: warning.id?.toString() || 'Unknown', inline: true },
+               { name: '⚠️ Active Warnings', value: activeWarningCount.toString(), inline: true }
              ]
           });
           await modLogChannel.send({ embeds: [embed] });
         }
       }
-         } catch (logErrorToChannel) {
-       logError('Members API', `Failed to log warning to mod channel: ${logErrorToChannel}`);
+    } catch (logErrorToChannel) {
+      logError('Members API', `Failed to log warning to mod channel: ${logErrorToChannel}`);
     }
 
     logInfo('Members API', `Member ${member.user.tag} warned in ${guild.name} via dashboard`);
@@ -698,10 +818,11 @@ router.post('/:serverId/members/:memberId/dm', async (req: Request, res: Respons
 
     try {
       // Create DM embed
+      const moderator = await createEnhancedModerator(req) as any as User;
       const embed = createModerationEmbed({
         action: 'Direct Message',
         target: member.user,
-        moderator: { id: 'dashboard', tag: 'Dashboard Staff', username: 'Dashboard' } as User,
+        moderator,
         reason: message,
         additionalFields: [
           { name: 'Server', value: guild.name, inline: true },

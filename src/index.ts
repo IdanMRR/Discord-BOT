@@ -191,6 +191,15 @@ client.once(Events.ClientReady, async (readyClient) => {
   // Store the function globally so other events can use it
   (global as any).updateBotActivity = updateBotActivity;
   
+  // Initialize ticket chatbot system
+  try {
+    const { initializeTicketChatbot } = await import('./handlers/tickets/ticket-chatbot');
+    initializeTicketChatbot();
+    logInfo('Bot', '🤖 Ticket chatbot system initialized');
+  } catch (error) {
+    logError('Bot', `Failed to initialize ticket chatbot: ${error}`);
+  }
+  
   // Debug: Check guilds and permissions
   for (const guild of client.guilds.cache.values()) {
     const botMember = guild.members.me;
@@ -253,9 +262,37 @@ client.once(Events.ClientReady, async (readyClient) => {
   }
 });
 
-// Update bot activity when joining or leaving guilds
-client.on(Events.GuildCreate, (guild) => {
+// Update bot activity when joining or leaving guilds + AUTO-REGISTER COMMANDS
+client.on(Events.GuildCreate, async (guild) => {
   logInfo('Bot', `📈 Joined new guild: ${guild.name} (${guild.id}) with ${guild.memberCount} members`);
+  
+  // AUTO-REGISTER COMMANDS to new guild for instant availability
+  try {
+    logInfo('Bot', `🚀 Auto-registering commands to new guild: ${guild.name}...`);
+    
+    if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {
+      logError('Bot', 'Missing DISCORD_TOKEN or CLIENT_ID for command registration');
+      return;
+    }
+    
+    const { REST, Routes } = await import('discord.js');
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+    
+    // Get commands from client
+    const commandsJson = Array.from((client as any).commands.values())
+      .map((command: any) => command?.data?.toJSON?.())
+      .filter(Boolean);
+    
+    if (commandsJson.length > 0) {
+      await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID!, guild.id), { body: commandsJson });
+      logInfo('Bot', `✅ Successfully registered ${commandsJson.length} commands to ${guild.name}!`);
+      logInfo('Bot', `🎉 Commands are available IMMEDIATELY in ${guild.name}!`);
+    }
+  } catch (error) {
+    logError('Bot', `❌ Failed to register commands to new guild ${guild.name}: ${error}`);
+  }
+  
+  // Update bot activity
   if ((global as any).updateBotActivity) {
     (global as any).updateBotActivity();
   }
@@ -299,6 +336,29 @@ client.on(Events.GuildMemberRemove, async (member) => {
   }
 });
 
+// Handle messages for ticket activity tracking
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    // Skip bot messages
+    if (message.author.bot) return;
+    
+    // Skip if not in a guild
+    if (!message.guild) return;
+    
+    // Check if this is a ticket channel and update activity
+    if (message.channel.type === ChannelType.GuildText && message.channel.name.includes('ticket-')) {
+      const { updateTicketActivity } = await import('./utils/ticket-activity');
+      await updateTicketActivity(message);
+      
+      // Also process ticket chatbot if enabled
+      const { processTicketMessage } = await import('./handlers/tickets/ticket-chatbot');
+      await processTicketMessage(message);
+    }
+  } catch (error) {
+    logError('Bot', `Error processing message for ticket activity: ${error}`);
+  }
+});
+
 // Handle slash command interactions
 client.on(Events.InteractionCreate, async (interaction) => {
   // Handle slash commands
@@ -329,7 +389,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }).catch(error => logError('Analytics', `Failed to track command: ${error}`));
 
         // Log command usage for dashboard activity logs (exclude moderation commands - they have their own logging)
-        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute'];
+        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm', 'unban'];
         const isModCommand = moderationCommands.includes(interaction.commandName);
         
         if (!isModCommand) {
@@ -361,7 +421,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }).catch(analyticsError => logError('Analytics', `Failed to track failed command: ${analyticsError}`));
 
         // Log failed command usage for dashboard activity logs (exclude moderation commands - they have their own logging)
-        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute'];
+        const moderationCommands = ['kick', 'ban', 'timeout', 'warn', 'removewarn', 'mute', 'unmute', 'dm'];
         const isModCommand = moderationCommands.includes(interaction.commandName);
         
         if (!isModCommand) {
@@ -531,6 +591,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                customId.startsWith('ban-modal-') || 
                customId.startsWith('kick-modal-') || 
                customId.startsWith('timeout-modal-') || 
+               customId.startsWith('unban-modal-') || 
                customId.startsWith('dm-modal-') || 
                customId.startsWith('removewarn-modal-') || 
                customId.startsWith('staff-message-modal-')) {
@@ -598,7 +659,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
       
       // Ticket system buttons - defer them first since handlers expect it
-      else if (customId === 'close_ticket') {
+      else if (customId === 'close_ticket' || customId.startsWith('close_ticket_')) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         }
@@ -606,15 +667,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await handleCloseTicket(interaction);
         return;
       }
-      else if (customId === 'reopen_ticket') {
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        }
+      else if (customId === 'reopen_ticket' || customId.startsWith('reopen_ticket_')) {
+        // Don't defer for reopen - the handler shows a modal
         const { handleReopenTicket } = await import('./handlers/tickets/ticket-actions');
         await handleReopenTicket(interaction);
         return;
       }
-      else if (customId === 'delete_ticket') {
+      else if (customId === 'delete_ticket' || customId.startsWith('delete_ticket_')) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         }
@@ -644,6 +703,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.editReply({
           content: '❓ FAQ functionality is not yet implemented. Please contact staff for assistance.'
         });
+        return;
+      }
+      // Staff message view buttons
+      else if (customId.startsWith('view_staff_msg_')) {
+        const { handleViewStaffMessage } = await import('./utils/ticket-utils');
+        await handleViewStaffMessage(interaction);
         return;
       }
       else if (customId.startsWith('confirm_close_') || customId.startsWith('cancel_close_')) {

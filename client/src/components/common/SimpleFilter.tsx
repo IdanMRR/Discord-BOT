@@ -87,7 +87,6 @@ const SimpleFilter: React.FC<SimpleFilterProps> = ({
                   "pl-3 pr-10 py-2.5 appearance-none cursor-pointer"
                 )}
               >
-                <option value="">{selectPlaceholder}</option>
                 {selectOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

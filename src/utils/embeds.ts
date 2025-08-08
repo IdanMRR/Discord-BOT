@@ -52,11 +52,11 @@ export function createEmbed(options: {
   
   // Set footer with branding
   if (options.footer) {
-    embed.setFooter({ text: options.footer + ' • Made by Soggra.' });
+    embed.setFooter({ text: options.footer + ' • Made by Soggra' });
   } else {
     // Default footer with branding using Israeli timezone
     const timeString = formatIsraeliTime();
-    embed.setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
+    embed.setFooter({ text: `Made by Soggra • Today at ${timeString}` });
   }
   
   // Add timestamp if requested
@@ -86,14 +86,14 @@ export function createModerationEmbed(options: {
   reason: string;
   additionalFields?: { name: string; value: string; inline?: boolean }[];
   color?: ColorResolvable;
-  caseNumber?: number;
+  case_number?: number;
   issuedAt?: string;
   removedAt?: string;
   removedBy?: string;
 }) {
   // Get emoji based on action type
   const actionEmoji = getActionEmoji(options.action);
-  const caseNum = options.caseNumber ? options.caseNumber.toString().padStart(4, '0') : null;
+  const caseNum = options.case_number ? options.case_number.toString().padStart(4, '0') : null;
   
   // Get current time using Israeli timezone
   const timeString = formatIsraeliTime();
@@ -116,7 +116,7 @@ export function createModerationEmbed(options: {
     .addFields([{ name: 'This action was taken on', value: formattedDate }]);
   
   // Format the footer with the current time - using the already declared timeString variable
-  embed.setFooter({ text: `Made by Soggra. • Today at ${timeString}` });
+  embed.setFooter({ text: `Made by Soggra • Today at ${timeString}` });
   
   // Add user and moderator information sections exactly as requested
   embed.addFields([
@@ -154,8 +154,8 @@ export function createModerationEmbed(options: {
   }
   
   // Add the case number, server and warning count fields in a clean row
-  if (options.caseNumber) {
-    const caseNumFormatted = options.caseNumber.toString().padStart(4, '0');
+  if (options.case_number) {
+    const caseNumFormatted = options.case_number.toString().padStart(4, '0');
     
     // Add server, warning count, and case number in a row as shown in the screenshot
     const warningCount = options.additionalFields?.find(field => field.name === '⚠️ Active Warnings')?.value || '0';
@@ -187,7 +187,10 @@ export function createModerationEmbed(options: {
       case 'kick': return '👢';
       case 'mute': return '🔇';
       case 'warn': return '⚠️';
+      case 'warning': return '⚠️';
       case 'timeout': return '⏱️';
+      case 'warning removed': return '⚠️';
+      case 'unban': return '🔨';
       default: return '🛡️';
     }
   }
@@ -204,7 +207,7 @@ export function createSuccessEmbed(title: string, description: string) {
     description,
     color: Colors.SUCCESS,
     timestamp: true,
-  }).setFooter({ text: 'Made by Soggra.' });
+  }).setFooter({ text: 'Made by Soggra' });
 }
 
 // Error message embed
@@ -214,7 +217,7 @@ export function createErrorEmbed(title: string, description: string) {
     description,
     color: Colors.ERROR,
     timestamp: true,
-  }).setFooter({ text: 'Made by Soggra.' });
+  }).setFooter({ text: 'Made by Soggra' });
 }
 
 // Info message embed
@@ -224,5 +227,5 @@ export function createInfoEmbed(title: string, description: string) {
     description,
     color: Colors.INFO,
     timestamp: true,
-  }).setFooter({ text: 'Made by Soggra.' });
+  }).setFooter({ text: 'Made by Soggra' });
 }
