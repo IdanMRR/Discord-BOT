@@ -4,16 +4,15 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy backend package files and install
 COPY package*.json ./
+RUN npm ci
+
+# Copy client package files and install
 COPY client/package*.json ./client/
+RUN cd client && npm ci
 
-# Install dependencies for both backend and client
-RUN npm ci --only=production && \
-    npm ci --only=dev && \
-    cd client && npm ci
-
-# Copy source code
+# Copy all source code
 COPY . .
 
 # Build backend and client
