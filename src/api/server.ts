@@ -206,7 +206,7 @@ app.use(apiLimiter);
 // Authentication middleware - secure implementation
 const authenticateRequest = (req: Request, res: Response, next: NextFunction): void => {
   // Skip authentication for public endpoints
-  const publicEndpoints = ['/api/status', '/api/cors-test', '/auth/'];
+  const publicEndpoints = ['/api/status', '/api/health', '/api/cors-test', '/auth/', '/'];
   if (publicEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
     return next();
   }
