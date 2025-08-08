@@ -74,7 +74,11 @@ class WebSocketService {
     }
     
     // Use environment configuration for WebSocket URL
-    const wsUrl = environment.WS_URL || process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+    // In production, use wss:// with the current domain
+    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const wsUrl = isProduction 
+      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+      : (environment.WS_URL || 'ws://localhost:3001');
     console.log(`Attempting to connect to WebSocket at: ${wsUrl}`);
     
     this.socket = io(wsUrl, {

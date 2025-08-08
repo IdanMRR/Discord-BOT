@@ -12,7 +12,7 @@ RUN npm install --force && \
     cd client && npm install --force && \
     cd .. && \
     npm run build && \
-    cd client && REACT_APP_API_URL="" npm run build
+    cd client && NODE_ENV=production REACT_APP_API_URL="" REACT_APP_WS_URL="" npm run build
 
 # Expose port
 EXPOSE 3001
