@@ -1,8 +1,8 @@
 # Nixpacks configuration for Railway
-# This tells Railway exactly how to build your app
+providers = ["node"]
 
-[providers]
-node = "18"
+[variables]
+NODE_VERSION = "18"
 
 [phases.setup]
 nixPkgs = ["nodejs-18_x"]
@@ -13,9 +13,9 @@ cmds = [
     "cd client && npm install && cd .."
 ]
 
-[phases.build] 
+[phases.build]
 cmds = [
-    "npm run build",
+    "npm run build", 
     "cd client && npm run build && cd .."
 ]
 
