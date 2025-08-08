@@ -71,13 +71,6 @@ export const ServerSettingsService = {
         }
       }
 
-      if (settings.red_alert_channels && typeof settings.red_alert_channels === 'string') {
-        try {
-          settings.red_alert_channels = JSON.parse(settings.red_alert_channels);
-        } catch (e) {
-          settings.red_alert_channels = [];
-        }
-      }
 
       return settings;
     } catch (error) {
@@ -115,7 +108,7 @@ export const ServerSettingsService = {
       Object.entries(updates).forEach(([key, value]) => {
         if (value !== undefined) {
           // Handle special JSON fields
-          if (['staff_role_ids', 'auto_mod_settings', 'templates', 'active_templates', 'red_alert_channels'].includes(key)) {
+          if (['staff_role_ids', 'auto_mod_settings', 'templates', 'active_templates'].includes(key)) {
             updateFields.push(`${key} = ?`);
             params.push(JSON.stringify(value));
           } else if (['auto_mod_enabled', 'ticket_chatbot_enabled', 'ticket_chatbot_ai_enabled', 'log_all_commands'].includes(key)) {
@@ -404,7 +397,6 @@ export interface ServerSettings {
   };
   templates?: Record<string, any[]>;
   active_templates?: Record<string, string>;
-  red_alert_channels?: string[];
   // DM Settings - PDR requirement for default ON with server override capability
   dm_warnings_enabled?: boolean;
   dm_tickets_enabled?: boolean;

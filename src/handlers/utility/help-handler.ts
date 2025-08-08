@@ -30,8 +30,6 @@ export async function handleHelpButtonClick(interaction: ButtonInteraction) {
       category = 'moderation';
     } else if (buttonId === 'help_tickets') {
       category = 'tickets';
-    } else if (buttonId === 'help_redalert') {
-      category = 'redalert';
     } else if (buttonId === 'help_giveaways') {
       category = 'giveaways';
     } else if (buttonId === 'help_utility') {
@@ -85,7 +83,6 @@ async function showMainHelpMenu(interaction: ButtonInteraction | StringSelectMen
       { name: '⚙️ Admin Commands', value: '`Server setup, configurations, logs, and management tools`', inline: true },
       { name: '🛡️ Moderation Commands', value: '`User moderation, warnings, bans, and staff tools`', inline: true },
       { name: '🎫 Ticket Commands', value: '`Support ticket system and management`', inline: true },
-      { name: '🚨 Red Alert Commands', value: '`Israeli emergency alert system integration`', inline: true },
       { name: '🎁 Giveaway Commands', value: '`Create and manage server giveaways`', inline: true },
       { name: '🔧 Utility Commands', value: '`General purpose tools and information`', inline: true },
       { name: '👋 General Commands', value: '`Basic user commands and verification`', inline: true },
@@ -96,7 +93,6 @@ async function showMainHelpMenu(interaction: ButtonInteraction | StringSelectMen
       value: [
         '• **New Server?** Start with `/server-setup` for automated configuration',
         '• **Need Tickets?** Use `/ticket-config` to set up support system',
-        '• **Want Alerts?** Use `/setup-redalert` for emergency notifications',
         '• **Staff Management?** Check out `/roles-setup` and `/dashboard-perms`'
       ].join('\n'),
       inline: false
@@ -125,11 +121,6 @@ async function showMainHelpMenu(interaction: ButtonInteraction | StringSelectMen
             .setDescription('Support ticket system and management')
             .setValue('tickets')
             .setEmoji('🎫'),
-          new StringSelectMenuOptionBuilder()
-            .setLabel('Red Alert Commands')
-            .setDescription('Israeli emergency alert system')
-            .setValue('redalert')
-            .setEmoji('🚨'),
           new StringSelectMenuOptionBuilder()
             .setLabel('Giveaway Commands')
             .setDescription('Create and manage server giveaways')
@@ -271,57 +262,6 @@ async function showCategoryHelp(interaction: ButtonInteraction | StringSelectMen
         );
       break;
       
-    case 'redalert':
-      helpEmbed = new EmbedBuilder()
-        .setTitle('🚨 Red Alert Commands')
-        .setDescription('**Israeli Emergency Alert System Integration**\n\n*Real-time emergency notifications with comprehensive coverage*')
-        .setColor(Colors.ERROR)
-        .addFields(
-          // System Setup
-          { name: '🔧 **System Setup**', value: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', inline: false },
-          { name: '/setup-redalert', value: '🚨 Configure a channel to receive real-time Red Alert notifications', inline: false },
-          { name: '/remove-redalert', value: '🗑️ Remove Red Alert notifications from channels', inline: false },
-          { name: '/list-redalert', value: '📋 View all configured Red Alert channels and their status', inline: false },
-          
-          // Configuration & Settings
-          { name: '⚙️ **Configuration & Settings**', value: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', inline: false },
-          { name: '/redalert-settings view', value: '👀 Display current Red Alert configuration and preferences', inline: false },
-          { name: '/redalert-settings notifications', value: '📢 Configure mention preferences and notification settings', inline: false },
-          { name: '/redalert-settings filters', value: '🎯 Configure alert type and location filtering options', inline: false },
-          { name: '/redalert-settings reset', value: '🔄 Reset all Red Alert settings to default values', inline: false },
-          
-          // Monitoring & Analytics
-          { name: '📊 **Monitoring & Analytics**', value: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', inline: false },
-          { name: '/redalert-history', value: '📈 View recent Red Alert history with statistics and trends', inline: false },
-          { name: '/test-redalert', value: '🧪 Send test Red Alert notifications with different alert types', inline: false }
-        )
-        .addFields(
-          {
-            name: '🌍 **Coverage Areas**',
-            value: [
-              '• **עוטף גזה** (Gaza Envelope) - 15 second shelter time',
-              '• **מחוז המרכז** (Central District) - 90 second shelter time', 
-              '• **מחוז הצפון** (Northern District) - 30-60 second shelter time',
-              '• **מחוז הדרום** (Southern District) - 30-60 second shelter time',
-              '• **ירושלים** (Jerusalem District) - 90 second shelter time'
-            ].join('\n'),
-            inline: true
-          },
-          {
-            name: '⚡ **System Features**',
-            value: [
-              '✅ Real-time monitoring (10-second intervals)',
-              '✅ Hebrew & English dual language support',
-              '✅ Interactive map integration',
-              '✅ Population impact calculations',
-              '✅ Multiple alert type detection',
-              '✅ Smart spam prevention',
-              '✅ Historical data tracking'
-            ].join('\n'),
-            inline: true
-          }
-        );
-      break;
       
     case 'giveaways':
       helpEmbed = new EmbedBuilder()
@@ -450,12 +390,6 @@ async function showCategoryHelp(interaction: ButtonInteraction | StringSelectMen
         .setStyle(ButtonStyle.Primary)
         .setEmoji('🎫')
         .setDisabled(category === 'tickets'),
-      new ButtonBuilder()
-        .setCustomId('help_redalert')
-        .setLabel('Red Alert')
-        .setStyle(ButtonStyle.Danger)
-        .setEmoji('🚨')
-        .setDisabled(category === 'redalert')
     );
 
   const row2 = new ActionRowBuilder<ButtonBuilder>()

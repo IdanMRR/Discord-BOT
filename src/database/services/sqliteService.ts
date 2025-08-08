@@ -88,7 +88,6 @@ export interface ServerSettings {
   };
   templates?: Record<string, any[]>;
   active_templates?: Record<string, string>;
-  red_alert_channels?: string[];
   created_at?: string;
   updated_at?: string;
 }

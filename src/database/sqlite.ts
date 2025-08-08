@@ -531,7 +531,6 @@ export interface GuildSettings {
   ticket_panel_channel_id?: string;
   ticket_panel_message_id?: string;
   ticket_logs_channel_id?: string;
-  red_alert_channels?: string; // JSON string of channel IDs
   staff_role_ids?: string;
   welcome_role_id?: string; // Role assigned when users join
   muted_role_id?: string; // Role for muted users

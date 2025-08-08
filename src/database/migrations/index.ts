@@ -5,7 +5,6 @@ import { migrate as migrateAddTemplatesColumns } from './add_templates_columns';
 import { migrateAddWeatherChannelColumn } from './add_weather_channel_column';
 import { migrate as migrateTicketActionLogs } from './ticket-action-logs';
 import { migrateAddTicketLogsColumn } from './add_ticket_logs_column';
-import { migrateAddRedAlertChannels } from './add_red_alert_channels';
 import { up as migrateCreateLogChannelsTable } from './0002_create_log_channels_table';
 import { addTicketNotesColumn } from './add-ticket-notes';
 import { migrateAddUsersTable } from './add_users_table';
@@ -50,7 +49,6 @@ export async function runMigrations(): Promise<void> {
     await migrateAddWeatherChannelColumn();
     await migrateTicketActionLogs();
     await migrateAddTicketLogsColumn();
-    await migrateAddRedAlertChannels();
     
     // Create log channels table if it doesn't exist
     try {

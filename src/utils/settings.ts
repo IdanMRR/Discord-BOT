@@ -42,7 +42,6 @@ export interface ServerSettings {
   starboard_channel_id?: string;
   starboard_threshold?: number;
   ticket_channel_id?: string;
-  red_alert_channel_id?: string;
   custom_cities?: string;
   weather_schedule?: string;
   ticket_chatbot_enabled?: boolean;

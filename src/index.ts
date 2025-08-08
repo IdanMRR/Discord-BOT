@@ -225,11 +225,6 @@ client.once(Events.ClientReady, async (readyClient) => {
     await initializeUnifiedMemberHandler(client);
     logInfo('Bot', '✅ Unified member handler initialized successfully');
     
-    // Initialize the Red Alert tracking system
-    logInfo('Bot', '🚨 Initializing Red Alert tracking system...');
-    const { startRedAlertTracker } = await import('./handlers/alerts/red-alert-handler');
-    await startRedAlertTracker(client);
-    logInfo('Bot', '✅ Red Alert tracking system initialized successfully');
     
     // Initialize the Giveaway system
     logInfo('Bot', '🎁 Initializing Giveaway tracking system...');
