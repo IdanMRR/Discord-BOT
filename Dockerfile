@@ -8,9 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY client/package*.json ./client/
 
-# Install dependencies
-RUN npm ci --only=production && \
-    cd client && npm ci --only=production
+# Install dependencies - use npm install for better compatibility
+RUN npm install --production && \
+    cd client && npm install --production
 
 # Copy source code
 COPY . .

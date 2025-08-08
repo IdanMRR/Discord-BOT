@@ -1,0 +1,20 @@
+# Nixpacks configuration for Railway
+# This tells Railway exactly how to build your app
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "npm-9_x"]
+
+[phases.install]
+cmds = [
+    "npm install",
+    "cd client && npm install"
+]
+
+[phases.build]
+cmds = [
+    "npm run build",
+    "cd client && npm run build"
+]
+
+[start]
+cmd = "node dist/index.js"

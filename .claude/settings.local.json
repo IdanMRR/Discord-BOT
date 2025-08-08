@@ -83,7 +83,11 @@
       "Bash(del scriptsfix-warnings-table.js scriptstest-warnings-table.js)",
       "Bash(del create-open-ticket-test.js)",
       "Bash(del \"C:\\Users\\PC\\Desktop\\VSC\\DiscordBotN\\debug-transcript-issue.js\")",
-      "Bash(del test-create-ticket.js)"
+      "Bash(del test-create-ticket.js)",
+      "Bash(git push:*)",
+      "Bash(echo:*)",
+      "Bash(scriptslocal-deploy.bat)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   },

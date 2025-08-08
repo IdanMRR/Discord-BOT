@@ -19,6 +19,8 @@
     "start:prod": "set NODE_ENV=production && npm start",
     "build:docker": "docker build -t discord-bot .",
     "prod:full": "npm run build:prod && npm run dashboard:build",
+    "railway:build": "npm install && cd client && npm install && cd .. && npm run build && cd client && npm run build && cd ..",
+    "railway:start": "node dist/index.js",
     "watch": "tsc -w",
     "deploy-commands": "ts-node src/deploy-commands.ts",
     "clear-commands": "ts-node src/clear-commands.ts",

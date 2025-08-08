@@ -32,4 +32,4 @@ logs/
 *.db
 
 # Build cache
-.cache/ 
+.cache/ RAILWAY_ENV_VARS.txt

@@ -1,0 +1,25 @@
+# Simple single-stage Dockerfile for easier deployment
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+
+# Copy everything
+COPY . .
+
+# Install all dependencies (both backend and frontend)
+RUN npm install && \
+    cd client && npm install && cd ..
+
+# Build the application
+RUN npm run build && \
+    cd client && npm run build && cd ..
+
+# Create data and logs directories
+RUN mkdir -p /app/data /app/logs
+
+# Expose ports
+EXPOSE 3001 3002
+
+# Start the application
+CMD ["npm", "run", "start:prod"]
