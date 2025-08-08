@@ -4,6 +4,7 @@ import { logTicketEvent } from '../../utils/databaseLogger';
 import { Colors } from '../../utils/embeds';
 import { logInfo, logError } from '../../utils/logger';
 import { saveAndSendTranscript } from './ticket-transcript';
+import { createRatingButton } from './ticket-rating';
 
 // Create a map to track recent actions to prevent duplicates
 const recentActions = new Map<string, number>();
@@ -86,6 +87,39 @@ export async function handleDeleteTicket(interaction: ButtonInteraction) {
     
     // Generate and send the transcript using our function - specify that we're deleting
     await saveAndSendTranscript(channel, interaction.user, 'Ticket deleted by staff', true);
+    
+    // Send rating DM to ticket creator when ticket is deleted
+    try {
+      const client = channel.client;
+      const ticketCreator = await client.users.fetch(ticket.user_id);
+      
+      if (ticketCreator) {
+        const ratingEmbed = new EmbedBuilder()
+          .setColor(Colors.PRIMARY)
+          .setTitle('⭐ Rate Your Support Experience')
+          .setDescription('Your ticket has been deleted. We value your feedback! Please rate your support experience to help us improve our service.')
+          .addFields([
+            { name: '📋 Ticket', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
+            { name: '🏷️ Category', value: ticket.subject || 'General Support', inline: true }
+          ])
+          .setTimestamp();
+        
+        // Create rating button
+        const ratingButton = createRatingButton(ticket.ticket_number);
+        const ratingRow = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(ratingButton);
+        
+        // Send the rating request via DM
+        await ticketCreator.send({ 
+          embeds: [ratingEmbed],
+          components: [ratingRow]
+        }).catch(() => {
+          logError('Ticket Delete', `Could not send rating DM to ticket creator ${ticketCreator.tag}`);
+        });
+      }
+    } catch (error) {
+      logError('Ticket Delete', `Could not send rating notification to ticket creator: ${error}`);
+    }
     
     // Send a deletion embed to the channel before it's deleted
     try {

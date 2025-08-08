@@ -1320,14 +1320,14 @@ router.post('/command-logs', async (req, res) => {
           options TEXT,
           channel_id TEXT,
           success INTEGER NOT NULL,
-          error TEXT,
+          error_message TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
       
       // Insert the command log
       const stmt = db.prepare(`
-        INSERT INTO command_logs (guild_id, user_id, command, success, error, created_at)
+        INSERT INTO command_logs (guild_id, user_id, command, success, error_message, created_at)
         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `);
       

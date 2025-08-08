@@ -133,39 +133,7 @@ async function processTicketClose(
       logError('Ticket Close', `Could not update permissions: ${permError}`);
     }
     
-    // Send rating DM to ticket creator (notification will be sent with transcript)
-    try {
-      const client = channel.client;
-      const ticketCreator = await client.users.fetch(ticket.user_id);
-      
-      if (ticketCreator) {
-        // Only send the rating request - the closure notification is sent with the transcript
-        const ratingEmbed = new EmbedBuilder()
-          .setColor(Colors.PRIMARY)
-          .setTitle('⭐ Rate Your Support Experience')
-          .setDescription('We value your feedback! Please rate your support experience to help us improve our service.')
-          .addFields([
-            { name: '📋 Ticket', value: `#${ticket.ticket_number.toString().padStart(4, '0')}`, inline: true },
-            { name: '🏷️ Category', value: ticket.subject || 'General Support', inline: true }
-          ])
-          .setTimestamp();
-        
-        // Create rating button
-        const ratingButton = createRatingButton(ticket.ticket_number);
-        const ratingRow = new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(ratingButton);
-        
-        // Send the rating request via DM
-        await ticketCreator.send({ 
-          embeds: [ratingEmbed],
-          components: [ratingRow]
-        }).catch(() => {
-          logError('Ticket Close', `Could not send rating DM to ticket creator ${ticketCreator.tag}`);
-        });
-      }
-    } catch (error) {
-      logError('Ticket Close', `Could not send rating notification to ticket creator: ${error}`);
-    }
+    // No longer send rating DM on close - only on delete
     
     // Log the ticket closure
     await logTicketEvent({

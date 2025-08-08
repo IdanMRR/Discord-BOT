@@ -855,6 +855,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
       else if (customId.startsWith('rate_stars_')) {
         // Star rating buttons are handled by the collector in showRatingModal
+        // Defer the interaction to prevent "THINKING" state
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.deferUpdate();
+        }
         return;
       }
       

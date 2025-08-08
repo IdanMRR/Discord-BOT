@@ -483,14 +483,14 @@ export async function logCommandUsage(options: {
         options TEXT,
         channel_id TEXT NOT NULL,
         success INTEGER NOT NULL,
-        error TEXT,
+        error_message TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
     
     // Log to database
     const stmt = db.prepare(`
-      INSERT INTO command_logs (guild_id, user_id, command, options, channel_id, success, error, created_at)
+      INSERT INTO command_logs (guild_id, user_id, command, options, channel_id, success, error_message, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `);
     
