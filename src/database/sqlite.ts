@@ -71,9 +71,20 @@ function createIndexes(): void {
     db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_guild_status ON tickets(guild_id, status)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_ticket_number ON tickets(guild_id, ticket_number)');
     
-    // Ticket transcripts indexes
-    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_ticket_id ON ticket_transcripts(ticket_id)');
-    db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_created_at ON ticket_transcripts(created_at)');
+    // Ticket transcripts indexes (only if table exists)
+    try {
+      const tableExists = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='ticket_transcripts'
+      `).get();
+      
+      if (tableExists) {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_ticket_id ON ticket_transcripts(ticket_id)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_transcripts_created_at ON ticket_transcripts(created_at)');
+      }
+    } catch (error) {
+      logError('SQLite', `Error creating ticket_transcripts indexes: ${error}`);
+    }
 
     // Server logs indexes
     db.exec('CREATE INDEX IF NOT EXISTS idx_server_logs_guild_id ON server_logs(guild_id)');
@@ -493,6 +504,9 @@ initDatabase();
     try {
       await runMigrations();
       logInfo('Database', 'Migrations completed successfully');
+      
+      // Create indexes again after migrations complete (for any new tables)
+      createIndexes();
       
       // Seed server settings with channel IDs (but catch any errors)
       try {

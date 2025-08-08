@@ -699,7 +699,9 @@ let clientBuildPath;
 const possiblePaths = [
   path.join(__dirname, '../client/build'),  // Development path
   path.join(process.cwd(), 'client/build'), // Railway path
-  path.join(__dirname, '../../client/build') // Alternative build path
+  path.join(__dirname, '../../client/build'), // Alternative build path
+  path.join(process.cwd(), 'dist/client/build'), // Railway dist path
+  path.join(__dirname, '../../../client/build') // Deep nested path
 ];
 
 for (const testPath of possiblePaths) {
@@ -744,15 +746,34 @@ app.get('/', (req, res) => {
   if (require('fs').existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
+    // Debug information for troubleshooting
+    const pathResults = possiblePaths.map(p => ({
+      path: p,
+      exists: require('fs').existsSync(p),
+      indexExists: require('fs').existsSync(path.join(p, 'index.html'))
+    }));
+    
     res.send(`
       <html>
-        <head><title>Discord Bot Dashboard</title></head>
+        <head><title>Discord Bot Dashboard - DEBUG</title></head>
         <body>
           <h1>Discord Bot Server Running</h1>
           <p>Status: ✅ Online</p>
           <p>API: <a href="/api/health">/api/health</a></p>
-          <p>Build path: ${clientBuildPath}</p>
-          <p>Index exists: ${require('fs').existsSync(indexPath)}</p>
+          <p><strong>Build path:</strong> ${clientBuildPath}</p>
+          <p><strong>Index exists:</strong> ${require('fs').existsSync(indexPath)}</p>
+          <h2>Path Check Results:</h2>
+          <ul>
+            ${pathResults.map(r => `
+              <li>
+                <strong>${r.path}</strong><br>
+                Directory exists: ${r.exists}<br>
+                index.html exists: ${r.indexExists}
+              </li>
+            `).join('')}
+          </ul>
+          <p><strong>Current working directory:</strong> ${process.cwd()}</p>
+          <p><strong>__dirname:</strong> ${__dirname}</p>
           <p>Bot is running and ready to serve Discord commands!</p>
         </body>
       </html>
