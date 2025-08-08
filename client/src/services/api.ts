@@ -37,7 +37,7 @@ class ApiService {
     }
     
     this.api = axios.create({
-      baseURL: this.baseURL,
+      baseURL: this.baseURL || '',  // Empty string for same-origin requests
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
