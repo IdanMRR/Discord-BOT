@@ -701,7 +701,9 @@ const possiblePaths = [
   path.join(process.cwd(), 'client/build'), // Railway path
   path.join(__dirname, '../../client/build'), // Alternative build path
   path.join(process.cwd(), 'dist/client/build'), // Railway dist path
-  path.join(__dirname, '../../../client/build') // Deep nested path
+  path.join(__dirname, '../../../client/build'), // Deep nested path
+  path.join('/app/client/build'), // Docker absolute path
+  path.join('/app', 'client/build') // Docker workdir path
 ];
 
 for (const testPath of possiblePaths) {
