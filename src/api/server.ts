@@ -694,10 +694,43 @@ app.use('/api/dashboard-logs', authenticateToken, dashboardLogsRouter);
 // Add comprehensive settings API routes (this should be last to avoid conflicts)
 app.use('/api/settings', comprehensiveSettingsApp);
 
-// Serve React client build files
-const clientBuildPath = path.join(__dirname, '../client/build');
+// Serve React client build files - try multiple possible paths
+let clientBuildPath;
+const possiblePaths = [
+  path.join(__dirname, '../client/build'),  // Development path
+  path.join(process.cwd(), 'client/build'), // Railway path
+  path.join(__dirname, '../../client/build') // Alternative build path
+];
+
+for (const testPath of possiblePaths) {
+  try {
+    if (require('fs').existsSync(testPath)) {
+      clientBuildPath = testPath;
+      break;
+    }
+  } catch (e) {
+    // Continue trying other paths
+  }
+}
+
+if (!clientBuildPath) {
+  clientBuildPath = possiblePaths[1]; // Default to Railway path
+}
+
 console.log(`[API] Serving React client from: ${clientBuildPath}`);
 app.use(express.static(clientBuildPath));
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    clientBuildPath,
+    clientBuildExists: require('fs').existsSync(path.join(clientBuildPath, 'index.html'))
+  });
+});
 
 // Serve dashboard static files (legacy)
 const dashboardPath = path.join(__dirname, 'dashboard');
@@ -705,7 +738,26 @@ app.use('/dashboard', express.static(dashboardPath));
 
 // Root route serves React app
 app.get('/', (req, res) => {
-  res.sendFile(path.join(clientBuildPath, 'index.html'));
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  
+  // Check if React build exists, otherwise show status page
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send(`
+      <html>
+        <head><title>Discord Bot Dashboard</title></head>
+        <body>
+          <h1>Discord Bot Server Running</h1>
+          <p>Status: ✅ Online</p>
+          <p>API: <a href="/api/health">/api/health</a></p>
+          <p>Build path: ${clientBuildPath}</p>
+          <p>Index exists: ${require('fs').existsSync(indexPath)}</p>
+          <p>Bot is running and ready to serve Discord commands!</p>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // Catch-all handler for React Router (SPA)
