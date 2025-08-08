@@ -87,7 +87,9 @@
       "Bash(git push:*)",
       "Bash(echo:*)",
       "Bash(scriptslocal-deploy.bat)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   },
