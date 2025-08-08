@@ -80,8 +80,8 @@ setupGlobalErrorHandlers();
 
 // Create Express app
 const app = express();
-// Read API port from environment variables, fall back to 3001 if not set
-const PORT = process.env.API_PORT || 3001;
+// Read API port from environment variables - Railway uses PORT, fallback to API_PORT or 3001
+const PORT = process.env.PORT || process.env.API_PORT || 3001;
 console.log(`[API] Using port ${PORT} from environment variables or default`);
 
 // SQLite database is already initialized when imported
@@ -694,18 +694,28 @@ app.use('/api/dashboard-logs', authenticateToken, dashboardLogsRouter);
 // Add comprehensive settings API routes (this should be last to avoid conflicts)
 app.use('/api/settings', comprehensiveSettingsApp);
 
-// Serve dashboard static files first (no authentication needed)
+// Serve React client build files
+const clientBuildPath = path.join(__dirname, '../client/build');
+console.log(`[API] Serving React client from: ${clientBuildPath}`);
+app.use(express.static(clientBuildPath));
+
+// Serve dashboard static files (legacy)
 const dashboardPath = path.join(__dirname, 'dashboard');
 app.use('/dashboard', express.static(dashboardPath));
 
-// Root route redirect to dashboard
+// Root route serves React app
 app.get('/', (req, res) => {
-  res.redirect('/dashboard/vue-dashboard.html');
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
-// Add a redirect from old dashboard to new vue dashboard
-app.get('/dashboard', (req, res) => {
-  res.redirect('/dashboard/vue-dashboard.html');
+// Catch-all handler for React Router (SPA)
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/') || req.path.startsWith('/dashboard/')) {
+    return next();
+  }
+  // Serve React app for all other routes
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 // Import and use our simplified dashboard routes

@@ -33,3 +33,4 @@ logs/
 
 # Build cache
 .cache/ RAILWAY_ENV_VARS.txt
+SOGGRA_DEPLOYMENT_ENV.txt
