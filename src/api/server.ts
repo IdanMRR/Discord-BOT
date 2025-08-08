@@ -106,7 +106,12 @@ app.use(helmet({
 const getAllowedOrigins = () => {
   const productionOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : [];
+    : ['https://soggra.com', 'https://www.soggra.com'];
+  
+  // Add dashboard URL if configured
+  if (process.env.DASHBOARD_URL) {
+    productionOrigins.push(process.env.DASHBOARD_URL);
+  }
   
   const developmentOrigins = [
     "http://localhost:3000", 

@@ -1,8 +1,14 @@
 // Environment configuration for the Discord Bot Dashboard
 export const environment = {
-  // API Configuration
-  API_URL: process.env.REACT_APP_API_URL || '',  // Empty string to use proxy
-  WS_URL: process.env.REACT_APP_WS_URL || 'ws://localhost:3001',
+  // API Configuration - In production, use same origin; in dev, use proxy
+  API_URL: process.env.REACT_APP_API_URL || (
+    process.env.NODE_ENV === 'production' ? '' : ''
+  ),
+  WS_URL: process.env.REACT_APP_WS_URL || (
+    process.env.NODE_ENV === 'production' 
+      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+      : 'ws://localhost:3001'
+  ),
   
   // Security Configuration
   API_KEY: process.env.REACT_APP_API_KEY, // Remove hardcoded key
