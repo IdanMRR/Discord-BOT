@@ -90,7 +90,9 @@
       "Bash(git reset:*)",
       "Bash(git commit:*)",
       "Bash(git rm:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(del .dockerignore)",
+      "Bash(del docker-compose.prod.yml)"
     ],
     "deny": []
   },
