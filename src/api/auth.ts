@@ -803,14 +803,27 @@ router.get('/debug-permissions', async (req: Request, res: Response) => {
   }
 });
 
+// Add GET /login endpoint for clients that use GET instead of POST
+router.get('/login', (req: Request, res: Response) => {
+  // Return a helpful message about using POST
+  res.status(405).json({
+    success: false,
+    error: 'Please use POST /auth/discord/callback for authentication',
+    message: 'The /login endpoint requires POST method with authorization code'
+  });
+});
+
 // Debug: Catch-all route to see what requests are coming in
 router.all('*', (req: Request, res: Response) => {
-  logError('Auth', `Unknown auth endpoint requested: ${req.method} ${req.path} - Full URL: ${req.originalUrl}`);
+  // Only log if it's not a common scanner path
+  const scannerPaths = ['/login.php', '/admin', '/wp-admin', '/.env', '/config'];
+  if (!scannerPaths.some(path => req.path.includes(path))) {
+    logError('Auth', `Unknown auth endpoint requested: ${req.method} ${req.path} - Full URL: ${req.originalUrl}`);
+  }
   res.status(404).json({
     success: false,
     error: `Auth endpoint not found: ${req.path}`,
-    method: req.method,
-    originalUrl: req.originalUrl
+    method: req.method
   });
 });
 

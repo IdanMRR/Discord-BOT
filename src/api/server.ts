@@ -7,8 +7,17 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+// Remove old helmet and rateLimit imports - replaced with enhanced security
+// import helmet from 'helmet';
+// import rateLimit from 'express-rate-limit';
+
+// Import enhanced security middleware
+import { rateLimiters } from '../middleware/advancedRateLimit';
+import { securityHeadersMiddleware } from '../middleware/securityHeaders';
+import securityMiddleware from '../middleware/securityMiddleware';
+import enhancedValidation from '../middleware/enhancedValidation';
+import securityDashboardRouter from './security-dashboard';
+import { maliciousRequestHandler, handleCatchAllRoute } from '../middleware/maliciousRequestHandler';
 import * as path from 'path';
 import { WarningService, TicketService, ServerLogService } from '../database/services';
 import { logInfo, logError } from '../utils/logger';
@@ -87,20 +96,21 @@ console.log(`[API] Using port ${PORT} from environment variables or default`);
 // SQLite database is already initialized when imported
 logInfo('API', 'API server connected to SQLite database');
 
-// Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "*"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "*"],
-      connectSrc: ["'self'", "localhost:*", "127.0.0.1:*", "*"],
-      imgSrc: ["'self'", "data:", "*"],
-      styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "*"],
-      fontSrc: ["'self'", "data:", "cdnjs.cloudflare.com", "*"]
-    }
-  }
-})); // Security headers with relaxed CSP to allow Vue.js and external resources
+// Enhanced Security Middleware Stack (ORDER MATTERS!)
+// 1. Handle malicious requests first (prevents decoding errors)
+app.use(maliciousRequestHandler);
+
+// 2. Security headers (set response headers)
+app.use(securityHeadersMiddleware);
+
+// 3. Advanced rate limiting with IP threat detection
+app.use(rateLimiters.api.middleware());
+
+// 4. Request validation and threat detection
+app.use(securityMiddleware.middleware());
+
+// 5. Global input sanitization
+app.use(enhancedValidation.globalSanitizationMiddleware());
 
 // CORS configuration - environment-based security
 const getAllowedOrigins = () => {
@@ -182,31 +192,10 @@ app.use(express.json()); // Parse JSON bodies
 app.use(globalSanitizationMiddleware); // Add global input sanitization
 app.use(logger.createRequestMiddleware()); // Add structured logging
 
-// Rate limiting - configured to work with proxied requests
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 500, // Lower limit in production
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Skip rate limiting only in development mode
-  skip: (req, res) => {
-    // Always skip for certain endpoints
-    const skipEndpoints = ['/api/status', '/api/cors-test'];
-    if (skipEndpoints.includes(req.path)) {
-      return true;
-    }
-    // Skip in development, enforce in production
-    return process.env.NODE_ENV !== 'production';
-  },
-  message: {
-    success: false,
-    error: 'Too many requests, please try again later.'
-  }
-});
-
-// Trust proxy settings for Express
+// Trust proxy settings for Express (keep this)
 app.set('trust proxy', 1);
-app.use(apiLimiter);
+
+// Note: Rate limiting is now handled by the advanced rate limiter above
 
 // Authentication middleware - secure implementation
 const authenticateRequest = (req: Request, res: Response, next: NextFunction): void => {
@@ -692,6 +681,10 @@ app.use('/api/users', authenticateToken, usersRouter);
 
 // Add dashboard logging middleware (after basic middleware, before API routes)
 app.use(dashboardLogger);
+
+// Add Security Dashboard API routes (admin only)
+console.log('Registering security dashboard router at /api/security');
+app.use('/api/security', securityDashboardRouter);
 
 // Add dashboard logs API routes (BEFORE comprehensive settings to prevent route conflicts)
 app.use('/api/dashboard-logs', authenticateToken, dashboardLogsRouter);
@@ -1802,6 +1795,9 @@ dashboardRouter.use('/recent-activity', activityRouter);
 // Mount dashboard router at /api/dashboard
 console.log('Registering dashboard router at /api/dashboard');
 app.use('/api/dashboard', dashboardRouter);
+
+// Add catch-all route for undefined paths (before error handlers)
+app.all('*', handleCatchAllRoute);
 
 // Error handling middleware (must be last)
 app.use(notFoundHandler);
