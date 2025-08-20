@@ -45,6 +45,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
+    "setup-security": "node setup-security.js",
+    "install-security-deps": "node install-security-dependencies.js",
+    "security-test": "echo 'Testing security endpoint...' && curl -s -X POST http://localhost:3001/api/security/test-input -H 'Content-Type: application/json' -d '{\"input\":\"<script>alert(1)</script>\"}'",
+    "security-overview": "echo 'Getting security overview...' && curl -s -H 'x-api-key: %API_KEY%' http://localhost:3001/api/security/overview",
     "postinstall": "npm run build"
   },
   "keywords": [

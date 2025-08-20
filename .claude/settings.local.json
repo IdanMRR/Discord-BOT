@@ -92,7 +92,8 @@
       "Bash(git rm:*)",
       "Bash(python:*)",
       "Bash(del .dockerignore)",
-      "Bash(del docker-compose.prod.yml)"
+      "Bash(del docker-compose.prod.yml)",
+      "Bash(del run-message-logs-migration.js)"
     ],
     "deny": []
   },

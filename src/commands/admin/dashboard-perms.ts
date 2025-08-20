@@ -20,14 +20,15 @@ const DASHBOARD_PERMISSIONS = {
   'view_analytics': 'View server analytics and statistics',
   'view_dashboard': 'Basic dashboard access',
   'moderate_users': 'Moderate users (kick, ban, timeout)',
-  'manage_roles': 'Manage server roles and permissions'
+  'manage_roles': 'Manage server roles and permissions',
+  'giveaway_manage': 'Create, edit, and manage giveaways'
 };
 
 // Permission levels for easier management
 const PERMISSION_LEVELS = {
-  'owner': ['admin', 'system_admin', 'manage_users', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles'],
-  'admin': ['manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles'],
-  'moderator': ['manage_tickets', 'manage_warnings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users'],
+  'owner': ['admin', 'system_admin', 'manage_users', 'manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles', 'giveaway_manage'],
+  'admin': ['manage_tickets', 'manage_warnings', 'manage_settings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'manage_roles', 'giveaway_manage'],
+  'moderator': ['manage_tickets', 'manage_warnings', 'view_logs', 'view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard', 'moderate_users', 'giveaway_manage'],
   'support': ['view_tickets', 'view_warnings', 'view_analytics', 'view_dashboard'],
   'viewer': ['view_analytics', 'view_dashboard']
 };

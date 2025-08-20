@@ -7,16 +7,8 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
-// Remove old helmet and rateLimit imports - replaced with enhanced security
-// import helmet from 'helmet';
-// import rateLimit from 'express-rate-limit';
-
-// Import enhanced security middleware
-import { rateLimiters } from '../middleware/advancedRateLimit';
-import { securityHeadersMiddleware } from '../middleware/securityHeaders';
-import securityMiddleware from '../middleware/securityMiddleware';
-import enhancedValidation from '../middleware/enhancedValidation';
-import securityDashboardRouter from './security-dashboard';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { maliciousRequestHandler, handleCatchAllRoute } from '../middleware/maliciousRequestHandler';
 import * as path from 'path';
 import { WarningService, TicketService, ServerLogService } from '../database/services';
@@ -96,21 +88,25 @@ console.log(`[API] Using port ${PORT} from environment variables or default`);
 // SQLite database is already initialized when imported
 logInfo('API', 'API server connected to SQLite database');
 
-// Enhanced Security Middleware Stack (ORDER MATTERS!)
+// Security Middleware Stack (ORDER MATTERS!)
 // 1. Handle malicious requests first (prevents decoding errors)
 app.use(maliciousRequestHandler);
 
-// 2. Security headers (set response headers)
-app.use(securityHeadersMiddleware);
+// 2. Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for API
+  crossOriginEmbedderPolicy: false
+}));
 
-// 3. Advanced rate limiting with IP threat detection
-app.use(rateLimiters.api.middleware());
-
-// 4. Request validation and threat detection
-app.use(securityMiddleware.middleware());
-
-// 5. Global input sanitization
-app.use(enhancedValidation.globalSanitizationMiddleware());
+// 3. Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
 
 // CORS configuration - environment-based security
 const getAllowedOrigins = () => {
@@ -684,7 +680,8 @@ app.use(dashboardLogger);
 
 // Add Security Dashboard API routes (admin only)
 console.log('Registering security dashboard router at /api/security');
-app.use('/api/security', securityDashboardRouter);
+// Security dashboard router removed - not implemented yet
+// app.use('/api/security', securityDashboardRouter);
 
 // Add dashboard logs API routes (BEFORE comprehensive settings to prevent route conflicts)
 app.use('/api/dashboard-logs', authenticateToken, dashboardLogsRouter);
